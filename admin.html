@@ -1,0 +1,2513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洛克王国PVP - 后台管理</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #152238 0%, #243b55 45%, #f08a5d 100%);
+            min-height: 100vh;
+            padding: 0;
+            color: #1f2937;
+        }
+
+        .admin-shell {
+            max-width: 1900px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 24px;
+            align-self: start;
+            border-radius: 24px;
+            padding: 0;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            box-shadow:
+                0 4px 6px rgba(0, 0, 0, 0.05),
+                0 20px 50px rgba(15, 23, 42, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+
+        .sidebar-brand {
+            padding: 28px 20px 24px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(249, 115, 22, 0.1) 100%);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            position: relative;
+        }
+
+        .sidebar-brand::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #f97316, #3b82f6);
+            background-size: 200% 100%;
+            animation: gradient-shift 3s ease infinite;
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .sidebar-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #3b82f6 0%, #f97316 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            line-height: 1.5;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .sidebar-nav {
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .nav-item {
+            width: 100%;
+            border: none;
+            border-radius: 14px;
+            background: transparent;
+            color: #94a3b8;
+            text-align: left;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(249, 115, 22, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            border-radius: 14px;
+        }
+
+        .nav-item:hover {
+            color: #f8fafc;
+            transform: translateX(4px);
+        }
+
+        .nav-item:hover::before {
+            opacity: 1;
+        }
+
+        .nav-item:active {
+            transform: translateX(2px) scale(0.99);
+        }
+
+        .nav-item.active {
+            color: #f8fafc;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(249, 115, 22, 0.15) 100%);
+            box-shadow:
+                0 0 0 1px rgba(96, 165, 250, 0.3),
+                0 4px 12px rgba(59, 130, 246, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 24px;
+            background: linear-gradient(180deg, #3b82f6, #f97316);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .nav-item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(148, 163, 184, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-item:hover .nav-item-icon {
+            background: rgba(59, 130, 246, 0.2);
+            transform: scale(1.05);
+        }
+
+        .nav-item.active .nav-item-icon {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-item-content {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-item-title {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 3px;
+            letter-spacing: -0.01em;
+        }
+
+        .nav-item-desc {
+            display: block;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #64748b;
+            transition: color 0.25s ease;
+        }
+
+        .nav-item:hover .nav-item-desc,
+        .nav-item.active .nav-item-desc {
+            color: #94a3b8;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px 20px;
+            border-top: 1px solid rgba(148, 163, 184, 0.08);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-note {
+            font-size: 11px;
+            line-height: 1.6;
+            color: #64748b;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .sidebar-note-icon {
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .content-shell {
+            min-width: 0;
+        }
+
+        .content-view {
+            display: none;
+        }
+
+        .content-view.active {
+            display: block;
+        }
+
+        .container {
+            max-width: none;
+            margin: 0;
+        }
+
+        h1 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .panel,
+        .info-box {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+        }
+
+        .panel h2,
+        .info-box h3 {
+            color: #102a43;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .panel-header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .auto-save-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #f8fafc;
+            border: 1px solid #d9e2ec;
+            color: #243b53;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .auto-save-toggle input {
+            accent-color: #2563eb;
+        }
+
+        .counter {
+            font-size: 13px;
+            color: #486581;
+            background: #e9f2ff;
+            border-radius: 999px;
+            padding: 6px 12px;
+        }
+
+        .panel-layout {
+            display: grid;
+            grid-template-columns: 240px minmax(0, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .panel-layout.preview-right {
+            grid-template-columns: minmax(0, 1fr) 240px;
+        }
+
+        .panel-main {
+            min-width: 0;
+        }
+
+        .slot-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            width: 240px;
+            padding: 12px;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #111827, #243b53);
+        }
+
+        .panel-slot {
+            width: 148px;
+            height: 148px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .panel-slot.active {
+            outline: 3px solid #f97316;
+            z-index: 2;
+        }
+
+        .panel-slot img {
+            position: absolute;
+            inset: 0;
+            width: 148px;
+            height: 148px;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+        }
+
+        .slot-placeholder {
+            color: rgba(255, 255, 255, 0.62);
+            font-size: 12px;
+        }
+
+        .controls {
+            display: grid;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e5edf5;
+        }
+
+        .controls2 {
+            display: grid;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 14px;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            margin-bottom: 16px;
+        }
+
+        .controls-title {
+            font-size: 13px;
+            color: #52606d;
+        }
+
+        .controls2 .controls-title {
+            color: #9a3412;
+        }
+
+        .controls-collapsible {
+            margin-bottom: 16px;
+            border-radius: 14px;
+            border: 1px solid #d9e2ec;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .controls-collapsible summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #243b53;
+            background: #eef4fb;
+        }
+
+        .controls-collapsible summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .controls-collapsible summary::after {
+            content: "展开";
+            float: right;
+            font-size: 12px;
+            color: #486581;
+        }
+
+        .controls-collapsible[open] summary::after {
+            content: "收起";
+        }
+
+        .controls-collapsible .controls {
+            margin-bottom: 0;
+            border: none;
+            border-radius: 0;
+        }
+
+        .toggle-row,
+        .opacity-row,
+        .saturation-row,
+        .protection-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #243b53;
+        }
+
+        .opacity-row input[type="range"],
+        .saturation-row input[type="range"],
+        .protection-row input[type="range"] {
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .opacity-row input[type="number"],
+        .saturation-row input[type="number"],
+        .protection-row input[type="number"] {
+            width: 82px;
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .controls-subtitle {
+            font-size: 12px;
+            color: #52606d;
+            line-height: 1.5;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 10px;
+            padding: 8px 10px;
+        }
+
+        .quick-fill-box {
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+            border-radius: 14px;
+            background: #f6f9fc;
+            border: 1px solid #d9e2ec;
+            margin-bottom: 16px;
+        }
+
+        .quick-fill-box textarea {
+            width: 100%;
+            min-height: 132px;
+            resize: vertical;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            font-family: "Microsoft YaHei", sans-serif;
+            background: #ffffff;
+        }
+
+        .quick-fill-box textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .quick-fill-tip {
+            font-size: 12px;
+            color: #52606d;
+            line-height: 1.6;
+        }
+
+        .quick-fill-variants {
+            display: grid;
+            gap: 12px;
+            margin: 0 0 16px;
+        }
+
+        .quick-fill-variant-group {
+            border: 1px solid #d9e2ec;
+            border-radius: 14px;
+            background: #ffffff;
+            padding: 12px;
+        }
+
+        .quick-fill-variant-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-fill-variant-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #243b53;
+        }
+
+        .quick-fill-variant-subtitle {
+            font-size: 12px;
+            color: #52606d;
+        }
+
+        .quick-fill-variant-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+            gap: 10px;
+        }
+
+        .quick-fill-variant-card {
+            border: 2px solid #dbe7f3;
+            border-radius: 12px;
+            background: #f8fbff;
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .quick-fill-variant-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(63, 131, 248, 0.16);
+        }
+
+        .quick-fill-variant-card.selected {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.16);
+        }
+
+        .quick-fill-variant-card img {
+            width: 100%;
+            aspect-ratio: 1;
+            display: block;
+            object-fit: contain;
+            background: linear-gradient(180deg, #f8fbff, #eef4ff);
+            padding: 6px;
+        }
+
+        .quick-fill-variant-card .name {
+            font-size: 11px;
+            padding: 6px;
+            line-height: 1.35;
+            text-align: center;
+            min-height: 42px;
+            color: #243b53;
+            word-break: break-word;
+        }
+
+        .search-box input {
+            width: 100%;
+            border: 2px solid #d9e2ec;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #3f83f8;
+        }
+
+        .sprite-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+            gap: 12px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .sprite-card {
+            border: 2px solid transparent;
+            border-radius: 12px;
+            background: #f8fbff;
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .sprite-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(63, 131, 248, 0.16);
+        }
+
+        .sprite-card.selected {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.18);
+        }
+
+        .sprite-card img {
+            width: 100%;
+            aspect-ratio: 1;
+            display: block;
+            object-fit: contain;
+            background: linear-gradient(180deg, #f8fbff, #eef4ff);
+            padding: 6px;
+        }
+
+        .sprite-card .name {
+            font-size: 11px;
+            padding: 6px;
+            line-height: 1.35;
+            text-align: center;
+            min-height: 42px;
+            color: #243b53;
+            word-break: break-word;
+        }
+
+        .remove-btn,
+        .btn {
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .remove-btn {
+            background: #fee2e2;
+            color: #b91c1c;
+            width: 34px;
+            height: 34px;
+            font-size: 16px;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 14px 0;
+        }
+
+        .btn {
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #e5edf5;
+            color: #243b53;
+        }
+
+        .btn-secondary:hover {
+            background: #d9e2ec;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .status {
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .panel-header .status {
+            margin-top: 0;
+            padding: 6px 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .status.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .background-panel {
+            margin-bottom: 24px;
+        }
+
+        .scoreboard-panel {
+            margin-bottom: 24px;
+        }
+
+        .scoreboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 16px;
+        }
+
+        .scoreboard-card {
+            border-radius: 16px;
+            border: 1px solid #dbe4f0;
+            background: #f8fbff;
+            padding: 16px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .scoreboard-card h3 {
+            font-size: 16px;
+            color: #102a43;
+        }
+
+        .scoreboard-controls {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .form-row {
+            display: grid;
+            gap: 8px;
+        }
+
+        .form-row label {
+            font-size: 13px;
+            color: #486581;
+        }
+
+        .form-row input {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        .upload-area {
+            border: 2px dashed #94a3b8;
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            margin-bottom: 14px;
+        }
+
+        .upload-area:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #f97316;
+            background: #fff7ed;
+        }
+
+        .upload-area .icon {
+            font-size: 34px;
+            margin-bottom: 8px;
+        }
+
+        .background-input {
+            display: none;
+        }
+
+        .background-preview {
+            border-radius: 14px;
+            border: 1px solid #d9e2ec;
+            background: linear-gradient(180deg, #f8fafc, #eef2f7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 240px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .background-preview img {
+            max-width: 100%;
+            max-height: 240px;
+            object-fit: contain;
+        }
+
+        .empty-preview {
+            font-size: 14px;
+            color: #7b8794;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .portal-page {
+            display: grid;
+            gap: 18px;
+        }
+
+        .portal-card {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+        }
+
+        .portal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .portal-header h2 {
+            color: #102a43;
+            margin-bottom: 6px;
+        }
+
+        .portal-header p {
+            color: #52606d;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .portal-link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .portal-link-card {
+            border: 1px solid #d9e2ec;
+            border-radius: 16px;
+            background: #f8fbff;
+            padding: 16px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .portal-link-label {
+            font-size: 13px;
+            color: #486581;
+            font-weight: 700;
+        }
+
+        .portal-link-value {
+            display: block;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: #ffffff;
+            border: 1px solid #d9e2ec;
+            color: #102a43;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
+        .portal-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .portal-iframe {
+            width: 100%;
+            min-height: 820px;
+            border: 1px solid #d9e2ec;
+            border-radius: 18px;
+            background: #ffffff;
+        }
+
+        .preview-embed-shell {
+            width: min(100%, 960px);
+            height: 540px;
+            margin: 0;
+            overflow: hidden;
+            border: 1px solid #d9e2ec;
+            border-radius: 18px;
+            background: #ffffff;
+            box-shadow: inset 0 0 0 1px rgba(217, 226, 236, 0.5);
+        }
+
+        .portal-iframe-preview {
+            width: 1920px;
+            height: 1080px;
+            min-height: 0;
+            border: 0;
+            border-radius: 0;
+            transform: scale(0.5);
+            transform-origin: top left;
+            display: block;
+        }
+
+        /* 数值实时控制面板样式 */
+        .live-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .live-panel {
+            background: rgba(15, 23, 42, 0.86);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 18px;
+            padding: 16px;
+            box-shadow: 0 18px 40px rgba(2, 6, 23, 0.32);
+        }
+
+        .live-panel-left {
+            border-color: rgba(248, 113, 113, 0.28);
+        }
+
+        .live-panel-right {
+            border-color: rgba(96, 165, 250, 0.28);
+        }
+
+        .live-panel h3 {
+            margin-bottom: 12px;
+            color: #e2e8f0;
+        }
+
+        .live-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .live-status {
+            background: rgba(255,255,255,0.08);
+            padding: 10px 14px;
+            border-radius: 12px;
+            min-height: 40px;
+            color: #e2e8f0;
+        }
+
+        .live-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .live-hint {
+            text-align: center;
+            margin-bottom: 18px;
+            color: #cbd5e1;
+        }
+
+        /* 槽位卡片样式 */
+        .slot-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 16px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 106px minmax(0, 1fr);
+            gap: 12px;
+            align-items: start;
+        }
+
+        .slot-card-right {
+            grid-template-columns: minmax(0, 1fr) 106px;
+        }
+
+        .slot-card-right .slot-main {
+            order: 1;
+        }
+
+        .slot-card-right .slot-preview-wrap {
+            order: 2;
+        }
+
+        .slot-preview-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sprite-preview {
+            width: 106px;
+            height: 106px;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            background: rgba(15, 23, 42, 0.72);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .sprite-preview img {
+            width: 76px;
+            height: 76px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .sprite-empty {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .sprite-label {
+            width: 106px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 6px;
+            font-size: 13px;
+            line-height: 1.3;
+            text-align: center;
+        }
+
+        .slot-index {
+            color: #f8fafc;
+            font-weight: 700;
+            flex: 0 0 auto;
+        }
+
+        .slot-main {
+            display: grid;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .slot-name { color: #93c5fd; }
+
+        .form-row { display: grid; gap: 6px; }
+        .form-row label { font-size: 12px; color: #cbd5e1; }
+        .form-row input[type="range"] { width: 100%; }
+        .health-range { accent-color: #22c55e; }
+        .energy-range { accent-color: #F2CB51; }
+        .form-row input[type="number"] {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: #fff;
+            padding: 8px 10px;
+        }
+
+        .line {
+            display: grid;
+            grid-template-columns: 1fr 82px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .mini {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 1100px) {
+            .live-panels { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 720px) {
+            .slot-card {
+                grid-template-columns: 1fr;
+            }
+            .sprite-preview {
+                width: 106px;
+                height: 106px;
+            }
+        }
+
+        .muted {
+            color: #52606d;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 1280px) {
+            .admin-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+            }
+
+            .panel-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .admin-shell {
+                padding: 16px;
+            }
+
+            .sidebar-nav {
+                grid-template-columns: 1fr;
+            }
+
+            .panel-layout,
+            .panel-layout.preview-right {
+                grid-template-columns: 1fr;
+            }
+
+            .slot-preview {
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-shell">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-logo">⚔️</div>
+                <div class="sidebar-title">洛克王国 PVP</div>
+                <div class="sidebar-subtitle">后台管理控制台</div>
+            </div>
+            <div class="sidebar-nav">
+                <button class="nav-item active" type="button" data-view="roster">
+                    <div class="nav-item-icon">🎮</div>
+                    <div class="nav-item-content">
+                        <span class="nav-item-title">阵容编辑</span>
+                        <span class="nav-item-desc">编辑精灵阵容、背景和比分栏</span>
+                    </div>
+                </button>
+                <button class="nav-item" type="button" data-view="live">
+                    <div class="nav-item-icon">📊</div>
+                    <div class="nav-item-content">
+                        <span class="nav-item-title">数值控制</span>
+                        <span class="nav-item-desc">实时调整血量和能力值</span>
+                    </div>
+                </button>
+                <button class="nav-item" type="button" data-view="preview">
+                    <div class="nav-item-icon">👁️</div>
+                    <div class="nav-item-content">
+                        <span class="nav-item-title">预览页</span>
+                        <span class="nav-item-desc">查看效果并复制访问链接</span>
+                    </div>
+                </button>
+            </div>
+            <div class="sidebar-footer">
+                <div class="sidebar-note">
+                    <span class="sidebar-note-icon">💡</span>
+                    <span>各页面可独立访问：admin / live-control / index</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="content-shell">
+            <section class="content-view active" data-view="roster">
+                <div class="container">
+                    <h1>洛克王国 PVP 直播控制台</h1>
+
+                    <div class="panel-grid">
+                        <section class="panel" data-panel="left">
+                            <div class="panel-header">
+                                <h2>左侧面板</h2>
+                                <div class="panel-header-right">
+                                    <label class="auto-save-toggle">
+                                        <input type="checkbox" id="leftAutoSaveToggle">
+                                        自动保存
+                                    </label>
+                                    <div class="status" id="leftStatus"></div>
+                                    <div class="counter" id="leftCounter">已选择 0 / 6</div>
+                                </div>
+                            </div>
+                            <div class="panel-layout preview-left">
+                                <div class="slot-preview" id="leftSlotPreview"></div>
+                                <div class="panel-main">
+                                    <div class="controls2">
+                                        <div class="controls-title">当前槽位血量控制</div>
+                                        <label class="toggle-row">
+                                            <input type="checkbox" id="leftProtectionEnabled">
+                                            开启当前槽位血量效果
+                                        </label>
+                                        <div class="controls-subtitle" id="leftProtectionHint">血量 100% 时整图正常，0% 时整图进入弱化状态。</div>
+                                        <div class="protection-row">
+                                            <span>槽位血量</span>
+                                            <input type="range" id="leftProtectionRange" min="0" max="100" value="100">
+                                            <input type="number" id="leftProtectionNumber" min="0" max="100" value="100">
+                                            <span>%</span>
+                                        </div>
+                                        <div class="protection-row">
+                                            <span>槽位能力值</span>
+                                            <input type="range" id="leftEnergyRange" min="0" max="10" value="10">
+                                            <input type="number" id="leftEnergyNumber" min="0" max="10" value="10">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                    <details class="controls-collapsible">
+                                        <summary>透明度与饱和度设置</summary>
+                                        <div class="controls">
+                                            <div class="controls-title">当前正在编辑槽位 <span id="leftActiveSlotLabel">1</span></div>
+                                            <label class="toggle-row">
+                                                <input type="checkbox" id="leftOpacityEnabled">
+                                                仅对当前槽位开启透明度效果
+                                            </label>
+                                            <div class="opacity-row">
+                                                <span>当前槽位透明度</span>
+                                                <input type="range" id="leftOpacityRange" min="0" max="100" value="50">
+                                                <input type="number" id="leftOpacityNumber" min="0" max="100" value="50">
+                                                <span>%</span>
+                                            </div>
+                                            <div class="saturation-row">
+                                                <span>当前槽位饱和度</span>
+                                                <input type="range" id="leftSaturationRange" min="0" max="300" value="100">
+                                                <input type="number" id="leftSaturationNumber" min="0" max="300" value="100">
+                                                <span>%</span>
+                                            </div>
+                                        </div>
+                                    </details>
+                                    <div class="quick-fill-box">
+                                        <div class="controls-title">快速文本填充</div>
+                                        <textarea id="leftQuickFillInput" placeholder="一行一个精灵名，例如：&#10;暮星辰&#10;怖哭菇&#10;龙息帕尔"></textarea>
+                                        <div class="quick-fill-tip">点击“快速填充”后只会预填这 6 个槽位，确认无误后仍需点击“保存到左侧”才会同步到前台。</div>
+                                        <div class="btn-row">
+                                            <button class="btn btn-secondary" id="leftQuickFillBtn">快速填充左侧</button>
+                                        </div>
+                                    </div>
+                                    <div class="quick-fill-variants" id="leftQuickFillVariants"></div>
+                                    <div class="btn-row">
+                                        <button class="btn btn-primary" id="leftSaveBtn">保存到左侧</button>
+                                        <button class="btn btn-secondary" id="leftClearSlotBtn">清空当前槽位</button>
+                                        <button class="btn btn-secondary" id="leftClearBtn">清空全部选择</button>
+                                        <button class="btn btn-danger" id="leftDeleteBtn">删除左侧配置</button>
+                                    </div>
+                                    <div class="search-box">
+                                        <input type="text" id="leftSearch" placeholder="搜索左侧精灵名称，点击精灵填充当前槽位">
+                                    </div>
+                                    <div class="sprite-grid" id="leftSpriteGrid"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="panel" data-panel="right">
+                            <div class="panel-header">
+                                <h2>右侧面板</h2>
+                                <div class="panel-header-right">
+                                    <label class="auto-save-toggle">
+                                        <input type="checkbox" id="rightAutoSaveToggle">
+                                        自动保存
+                                    </label>
+                                    <div class="status" id="rightStatus"></div>
+                                    <div class="counter" id="rightCounter">已选择 0 / 6</div>
+                                </div>
+                            </div>
+                            <div class="panel-layout preview-right">
+                                <div class="panel-main">
+                                    <div class="controls2">
+                                        <div class="controls-title">当前槽位血量控制</div>
+                                        <label class="toggle-row">
+                                            <input type="checkbox" id="rightProtectionEnabled">
+                                            开启当前槽位血量效果
+                                        </label>
+                                        <div class="controls-subtitle" id="rightProtectionHint">血量 100% 时整图正常，0% 时整图进入弱化状态。</div>
+                                        <div class="protection-row">
+                                            <span>槽位血量</span>
+                                            <input type="range" id="rightProtectionRange" min="0" max="100" value="100">
+                                            <input type="number" id="rightProtectionNumber" min="0" max="100" value="100">
+                                            <span>%</span>
+                                        </div>
+                                        <div class="protection-row">
+                                            <span>槽位能力值</span>
+                                            <input type="range" id="rightEnergyRange" min="0" max="10" value="10">
+                                            <input type="number" id="rightEnergyNumber" min="0" max="10" value="10">
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                    <details class="controls-collapsible">
+                                        <summary>透明度与饱和度设置</summary>
+                                        <div class="controls">
+                                            <div class="controls-title">当前正在编辑槽位 <span id="rightActiveSlotLabel">1</span></div>
+                                            <label class="toggle-row">
+                                                <input type="checkbox" id="rightOpacityEnabled">
+                                                仅对当前槽位开启透明度效果
+                                            </label>
+                                            <div class="opacity-row">
+                                                <span>当前槽位透明度</span>
+                                                <input type="range" id="rightOpacityRange" min="0" max="100" value="50">
+                                                <input type="number" id="rightOpacityNumber" min="0" max="100" value="50">
+                                                <span>%</span>
+                                            </div>
+                                            <div class="saturation-row">
+                                                <span>当前槽位饱和度</span>
+                                                <input type="range" id="rightSaturationRange" min="0" max="300" value="100">
+                                                <input type="number" id="rightSaturationNumber" min="0" max="300" value="100">
+                                                <span>%</span>
+                                            </div>
+                                        </div>
+                                    </details>
+                                    <div class="quick-fill-box">
+                                        <div class="controls-title">快速文本填充</div>
+                                        <textarea id="rightQuickFillInput" placeholder="一行一个精灵名，例如：&#10;暮星辰&#10;怖哭菇&#10;龙息帕尔"></textarea>
+                                        <div class="quick-fill-tip">点击“快速填充”后只会预填这 6 个槽位，确认无误后仍需点击“保存到右侧”才会同步到前台。</div>
+                                        <div class="btn-row">
+                                            <button class="btn btn-secondary" id="rightQuickFillBtn">快速填充右侧</button>
+                                        </div>
+                                    </div>
+                                    <div class="quick-fill-variants" id="rightQuickFillVariants"></div>
+                                    <div class="btn-row">
+                                        <button class="btn btn-primary" id="rightSaveBtn">保存到右侧</button>
+                                        <button class="btn btn-secondary" id="rightClearSlotBtn">清空当前槽位</button>
+                                        <button class="btn btn-secondary" id="rightClearBtn">清空全部选择</button>
+                                        <button class="btn btn-danger" id="rightDeleteBtn">删除右侧配置</button>
+                                    </div>
+                                    <div class="search-box">
+                                        <input type="text" id="rightSearch" placeholder="搜索右侧精灵名称，点击精灵填充当前槽位">
+                                    </div>
+                                    <div class="sprite-grid" id="rightSpriteGrid"></div>
+                                </div>
+                                <div class="slot-preview" id="rightSlotPreview"></div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section class="panel scoreboard-panel">
+                        <div class="panel-header">
+                            <h2>顶部比分栏</h2>
+                            <div class="panel-header-right">
+                                <div class="status" id="scoreboardStatus"></div>
+                            </div>
+                        </div>
+                        <p class="muted">这里可以设置首页顶部居中的选手名字和比分，保存后前端首页会自动同步显示。</p>
+                        <div class="scoreboard-grid">
+                            <div class="scoreboard-card">
+                                <h3>左侧选手</h3>
+                                <div class="form-row">
+                                    <label for="leftPlayerNameInput">选手名字</label>
+                                    <input type="text" id="leftPlayerNameInput" maxlength="32" placeholder="输入左侧选手名字">
+                                </div>
+                                <div class="form-row">
+                                    <label for="leftPlayerScoreInput">比分</label>
+                                    <input type="text" id="leftPlayerScoreInput" maxlength="4" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="scoreboard-card">
+                                <h3>右侧选手</h3>
+                                <div class="form-row">
+                                    <label for="rightPlayerNameInput">选手名字</label>
+                                    <input type="text" id="rightPlayerNameInput" maxlength="32" placeholder="输入右侧选手名字">
+                                </div>
+                                <div class="form-row">
+                                    <label for="rightPlayerScoreInput">比分</label>
+                                    <input type="text" id="rightPlayerScoreInput" maxlength="4" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="scoreboard-controls">
+                            <div class="scoreboard-card">
+                                <h3>显示控制</h3>
+                                <div class="form-row">
+                                    <label for="scoreboardEnabledInput">顶部比分栏显示</label>
+                                    <input type="checkbox" id="scoreboardEnabledInput" checked>
+                                </div>
+                                <div class="form-row">
+                                    <label for="healthBadgeEnabledInput">血量徽标显示</label>
+                                    <input type="checkbox" id="healthBadgeEnabledInput" checked>
+                                </div>
+                                <div class="form-row">
+                                    <label for="abilityBadgeEnabledInput">能力值徽标显示</label>
+                                    <input type="checkbox" id="abilityBadgeEnabledInput" checked>
+                                </div>
+                                <div class="form-row">
+                                    <label for="centerAreaEnabledInput">Center Area 显示</label>
+                                    <input type="checkbox" id="centerAreaEnabledInput" checked>
+                                </div>
+                                <div class="form-row">
+                                    <label for="centerAreaColorInput">Center Area 背景颜色</label>
+                                    <input type="color" id="centerAreaColorInput" value="#393939">
+                                </div>
+                            </div>
+                            <div class="scoreboard-card">
+                                <h3>字体大小</h3>
+                                <div class="form-row">
+                                    <label for="nameFontSizeInput">选手名字字号</label>
+                                    <input type="number" id="nameFontSizeInput" min="12" max="160" value="64">
+                                </div>
+                                <div class="form-row">
+                                    <label for="scoreFontSizeInput">比分字号</label>
+                                    <input type="number" id="scoreFontSizeInput" min="12" max="160" value="64">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn btn-primary" id="scoreboardSaveBtn">保存比分栏</button>
+                        </div>
+                    </section>
+
+                    <section class="panel background-panel">
+                        <h2>背景图</h2>
+                        <div class="upload-area" id="bgUploadArea">
+                            <div class="icon">🎨</div>
+                            <div>点击或拖拽上传背景图，推荐 1920 × 1080</div>
+                        </div>
+                        <input type="file" accept="image/*" id="bgFileInput" class="background-input">
+                        <div class="background-preview">
+                            <img id="bgPreview" alt="背景图预览" style="display:none;">
+                            <div class="empty-preview" id="bgEmpty">当前使用默认背景</div>
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn btn-primary" id="bgUploadBtn">选择背景图</button>
+                            <button class="btn btn-danger" id="bgDeleteBtn">删除背景图</button>
+                        </div>
+                        <div class="status" id="bgStatus"></div>
+                    </section>
+
+                    <section class="info-box">
+                        <h3>使用说明</h3>
+                        <p class="muted">
+                            左右两侧都从 <code>Webui/img</code> 目录读取精灵图。每侧固定 6 个槽位，点击槽位后再点击精灵即可填充。
+                            透明度开关和数值只作用于当前选中的单个槽位，不会影响整个面板。
+                        </p>
+                    </section>
+                </div>
+            </section>
+
+            <section class="content-view" data-view="live">
+                <div class="portal-page">
+                    <div class="portal-card">
+                        <div class="portal-header">
+                            <div>
+                                <h2>数值实时控制</h2>
+                                <p>实时调整左右 6 个槽位的血量和能力值，支持自动保存。</p>
+                            </div>
+                            <div class="portal-actions">
+                                <a class="btn btn-primary" id="liveControlOpenBtn" href="/live-control.html" target="_blank" rel="noopener noreferrer">新窗口打开</a>
+                            </div>
+                        </div>
+                        <div class="live-hint">左右两侧 6 个精灵会同时展开显示，自动保存会在 800ms 无操作后触发。</div>
+                        <div class="live-topbar">
+                            <div class="live-status" id="liveStatus">加载中...</div>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                <button class="btn btn-secondary" id="liveReloadBtn">重新加载</button>
+                                <button class="btn btn-primary" id="liveSaveBtn">手动保存</button>
+                            </div>
+                        </div>
+                        <div class="live-panels">
+                            <div class="live-panel live-panel-left">
+                                <h3>左侧</h3>
+                                <div class="live-grid" id="liveLeftGrid"></div>
+                            </div>
+                            <div class="live-panel live-panel-right">
+                                <h3>右侧</h3>
+                                <div class="live-grid" id="liveRightGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-view" data-view="preview">
+                <div class="portal-page">
+                    <div class="portal-card">
+                        <div class="portal-header">
+                            <div>
+                                <h2>预览页</h2>
+                                <p>这里可以预览 `index.html`，并快速复制当前本地监听端口地址。</p>
+                            </div>
+                            <div class="portal-actions">
+                                <a class="btn btn-primary" id="previewOpenBtn" href="/" target="_blank" rel="noopener noreferrer">新窗口打开</a>
+                            </div>
+                        </div>
+                        <div class="portal-link-grid">
+                            <div class="portal-link-card">
+                                <div class="portal-link-label">本地部署显示</div>
+                                <code class="portal-link-value" id="localAddressText">127.0.0.1:9988</code>
+                                <div class="portal-actions">
+                                    <button class="btn btn-secondary" type="button" id="copyLocalAddressBtn">复制地址</button>
+                                </div>
+                            </div>
+                            <div class="portal-link-card">
+                                <div class="portal-link-label">完整预览链接</div>
+                                <a class="portal-link-value" id="previewUrlLink" href="http://localhost:9988/" target="_blank" rel="noopener noreferrer">http://localhost:9988/</a>
+                                <div class="portal-actions">
+                                    <button class="btn btn-secondary" type="button" id="copyPreviewUrlBtn">复制链接</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-embed-shell">
+                            <iframe class="portal-iframe portal-iframe-preview" id="previewFrame" src="/" title="预览页"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const MAX_SELECTION = 6;
+
+        function createEmptySlot(index) {
+            return {
+                slot: index,
+                sprite: null,
+                opacityEnabled: false,
+                opacity: 0.5,
+                effectiveOpacity: 1,
+                saturation: 1,
+                healthEnabled: true,
+                healthPercent: 100,
+                energyValue: 10
+            };
+        }
+
+        const state = {
+            currentView: 'roster',
+            sprites: [],
+            scoreboard: {
+                leftName: '',
+                leftScore: '0',
+                rightName: '',
+                rightScore: '0',
+                scoreboardEnabled: true,
+                healthBadgeEnabled: true,
+                abilityBadgeEnabled: true,
+                nameFontSize: 64,
+                scoreFontSize: 64,
+                centerAreaEnabled: true,
+                centerAreaColor: '#393939'
+            },
+            left: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: false },
+            right: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: false }
+        };
+        const autoSaveTimers = { left: null, right: null };
+        const saveRequestVersions = { left: 0, right: 0 };
+        const appliedSaveVersions = { left: 0, right: 0 };
+
+        function getPreviewOrigin() {
+            return `${window.location.protocol}//${window.location.host}`;
+        }
+
+        function getLocalAddressText() {
+            return window.location.port ? `127.0.0.1:${window.location.port}` : '127.0.0.1';
+        }
+
+        async function copyTextToClipboard(text, statusId, successMessage) {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const input = document.createElement('textarea');
+                    input.value = text;
+                    input.setAttribute('readonly', '');
+                    input.style.position = 'absolute';
+                    input.style.left = '-9999px';
+                    document.body.appendChild(input);
+                    input.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(input);
+                }
+                if (statusId) {
+                    showStatus(statusId, successMessage, true);
+                }
+            } catch (error) {
+                if (statusId) {
+                    showStatus(statusId, '复制失败，请手动复制', false);
+                }
+            }
+        }
+
+        function renderPortalLinks() {
+            const origin = getPreviewOrigin();
+            const previewUrl = `${origin}/`;
+            document.getElementById('localAddressText').textContent = getLocalAddressText();
+            const previewLink = document.getElementById('previewUrlLink');
+            previewLink.href = previewUrl;
+            previewLink.textContent = previewUrl;
+            document.getElementById('previewOpenBtn').href = previewUrl;
+            document.getElementById('previewFrame').src = previewUrl;
+            document.getElementById('liveControlOpenBtn').href = `${origin}/live-control.html`;
+        }
+
+        function renderView() {
+            document.querySelectorAll('.nav-item').forEach(button => {
+                button.classList.toggle('active', button.dataset.view === state.currentView);
+            });
+            document.querySelectorAll('.content-view').forEach(view => {
+                view.classList.toggle('active', view.dataset.view === state.currentView);
+            });
+            if (state.currentView === 'roster') {
+                loadPanels().then(() => {
+                    renderPanel('left');
+                    renderPanel('right');
+                    // 刷新两侧面板的槽位预览，确保所有槽位的血量/能力值都实时显示
+                    renderSlotPreview('left');
+                    renderSlotPreview('right');
+                });
+            }
+        }
+
+        function showStatus(id, message, isSuccess) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.className = `status ${isSuccess ? 'success' : 'error'}`;
+        }
+
+        function clearStatus(id) {
+            const el = document.getElementById(id);
+            el.textContent = '';
+            el.className = 'status';
+        }
+
+        function renderScoreboardInputs() {
+            document.getElementById('leftPlayerNameInput').value = state.scoreboard.leftName || '';
+            document.getElementById('leftPlayerScoreInput').value = state.scoreboard.leftScore || '0';
+            document.getElementById('rightPlayerNameInput').value = state.scoreboard.rightName || '';
+            document.getElementById('rightPlayerScoreInput').value = state.scoreboard.rightScore || '0';
+            document.getElementById('scoreboardEnabledInput').checked = state.scoreboard.scoreboardEnabled !== false;
+            document.getElementById('healthBadgeEnabledInput').checked = state.scoreboard.healthBadgeEnabled !== false;
+            document.getElementById('abilityBadgeEnabledInput').checked = state.scoreboard.abilityBadgeEnabled !== false;
+            document.getElementById('nameFontSizeInput').value = state.scoreboard.nameFontSize || 64;
+            document.getElementById('scoreFontSizeInput').value = state.scoreboard.scoreFontSize || 64;
+            document.getElementById('centerAreaEnabledInput').checked = state.scoreboard.centerAreaEnabled !== false;
+            document.getElementById('centerAreaColorInput').value = state.scoreboard.centerAreaColor || '#393939';
+            document.getElementById('centerAreaColorInput').disabled = state.scoreboard.centerAreaEnabled === false;
+        }
+
+        function updateScoreboardFromApi(scoreboard) {
+            state.scoreboard = {
+                leftName: scoreboard && scoreboard.leftName ? scoreboard.leftName : '',
+                leftScore: scoreboard && scoreboard.leftScore ? scoreboard.leftScore : '0',
+                rightName: scoreboard && scoreboard.rightName ? scoreboard.rightName : '',
+                rightScore: scoreboard && scoreboard.rightScore ? scoreboard.rightScore : '0',
+                scoreboardEnabled: scoreboard ? scoreboard.scoreboardEnabled !== false : true,
+                healthBadgeEnabled: scoreboard ? scoreboard.healthBadgeEnabled !== false : true,
+                abilityBadgeEnabled: scoreboard ? scoreboard.abilityBadgeEnabled !== false : true,
+                nameFontSize: scoreboard && scoreboard.nameFontSize ? scoreboard.nameFontSize : 64,
+                scoreFontSize: scoreboard && scoreboard.scoreFontSize ? scoreboard.scoreFontSize : 64,
+                centerAreaEnabled: scoreboard ? scoreboard.centerAreaEnabled !== false : true,
+                centerAreaColor: scoreboard && scoreboard.centerAreaColor ? scoreboard.centerAreaColor : '#393939'
+            };
+            renderScoreboardInputs();
+        }
+
+        function spriteById(id) {
+            return state.sprites.find(sprite => sprite.id === id);
+        }
+
+        function selectedCount(panel) {
+            return state[panel].selected.filter(slot => slot.sprite).length;
+        }
+
+        function currentSlot(panel) {
+            return state[panel].selected[state[panel].activeSlot];
+        }
+
+        function getHealthLevel(slot) {
+            if (!slot || !slot.healthEnabled || typeof slot.healthPercent !== 'number') {
+                return 100;
+            }
+            return Math.min(100, Math.max(0, slot.healthPercent));
+        }
+
+        function getEnergyLevel(slot) {
+            if (!slot || typeof slot.energyValue !== 'number') {
+                return 10;
+            }
+            return Math.min(10, Math.max(0, Math.round(slot.energyValue)));
+        }
+
+        function getHeartAsset(percent) {
+            const health = Math.min(100, Math.max(0, Number(percent ?? 100)));
+            if (health <= 0) {
+                return '/image/heart0.png';
+            }
+            if (health <= 10) {
+                return '/image/heart10.png';
+            }
+            if (health <= 50) {
+                return '/image/heart50.png';
+            }
+            return '/image/heart100.png';
+        }
+
+        function getAbilityMeta(energyValue) {
+            const energy = Math.min(10, Math.max(0, Math.round(Number(energyValue) || 0)));
+            if (energy <= 2) {
+                return { bg: '#6A1A1B', icon: '/image/start-3.png', color: '#C24846' };
+            }
+            if (energy <= 5) {
+                return { bg: '#6E6E6E', icon: '/image/start-2.png', color: '#FFFFFF' };
+            }
+            return { bg: '#6E6E6E', icon: '/image/start-1.png', color: '#FFFFFF' };
+        }
+
+        function buildProtectionMask(percent, featherPx = 12) {
+            const keepPercent = Math.min(100, Math.max(0, Number(percent ?? 100)));
+            if (keepPercent >= 100) {
+                return null;
+            }
+            if (keepPercent <= 0) {
+                return 'linear-gradient(to bottom, transparent 0%, transparent 100%)';
+            }
+
+            const weakPercent = 100 - keepPercent;
+            const start = Math.max(0, weakPercent - 6);
+            const end = Math.min(100, weakPercent + 6);
+            return `linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) ${start}%, rgba(0,0,0,1) ${end}%, rgba(0,0,0,1) 100%)`;
+        }
+
+        function getPreviewWeakSaturation(slotData) {
+            const healthPercent = Math.round(getHealthLevel(slotData));
+            if (healthPercent <= 0) {
+                return 0.1;
+            }
+            return (slotData.saturation ?? 1) * 0.1;
+        }
+
+        function buildPreviewLayers(slotData) {
+            const healthPercent = Math.round(getHealthLevel(slotData));
+            const weakOpacity = (slotData.effectiveOpacity ?? 1) * 0.5;
+            const weakSaturation = getPreviewWeakSaturation(slotData);
+            const mask = buildProtectionMask(healthPercent, 12);
+            const energyValue = getEnergyLevel(slotData);
+            const ability = getAbilityMeta(energyValue);
+            const abilityBadge = healthPercent <= 0
+                ? ''
+                : `<div style="position:absolute;left:120px;top:116px;width:28px;height:16px;border-radius:16px;background:${ability.bg};display:flex;align-items:center;justify-content:center;gap:1px;padding:0 3px;font-family:'YouSheBiaoTiHei','Microsoft YaHei',sans-serif;font-size:12px;line-height:1;color:${ability.color};pointer-events:none;z-index:3;">
+                    <img src="${ability.icon}" alt="能力值" style="position:static;width:6px;height:6px;object-fit:contain;">
+                    <span>${energyValue}</span>
+                </div>`;
+            const maskStyle = mask
+                ? `-webkit-mask-image:${mask};mask-image:${mask};-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;`
+                : '';
+
+            return `
+                <img src="${slotData.sprite.path}" alt="${slotData.sprite.displayName}" style="opacity:${weakOpacity};filter:saturate(${weakSaturation})">
+                <img src="${slotData.sprite.path}" alt="${slotData.sprite.displayName}" style="opacity:${slotData.effectiveOpacity};filter:saturate(${slotData.saturation});${maskStyle}">
+                <div style="position:absolute;top:0;right:0;width:26px;height:26px;background:url('${getHeartAsset(healthPercent)}') center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-family:'YouSheBiaoTiHei','Microsoft YaHei',sans-serif;font-size:10px;line-height:1;color:#fff;pointer-events:none;z-index:3;">${healthPercent}</div>
+                ${abilityBadge}
+            `;
+        }
+
+        function updateCounter(panel) {
+            document.getElementById(`${panel}Counter`).textContent = `已选择 ${selectedCount(panel)} / ${MAX_SELECTION}`;
+        }
+
+        function renderSlotPreview(panel) {
+            const container = document.getElementById(`${panel}SlotPreview`);
+            container.innerHTML = '';
+
+            state[panel].selected.forEach((slotData, index) => {
+                const slot = document.createElement('button');
+                slot.type = 'button';
+                slot.className = 'panel-slot';
+                if (index === state[panel].activeSlot) {
+                    slot.classList.add('active');
+                }
+                slot.addEventListener('click', () => {
+                    state[panel].activeSlot = index;
+                    renderPanel(panel);
+                });
+
+                if (slotData.sprite) {
+                    slot.innerHTML = buildPreviewLayers(slotData);
+                } else {
+                    slot.innerHTML = `<span class="slot-placeholder">${index + 1}</span>`;
+                }
+                container.appendChild(slot);
+            });
+        }
+
+        function syncAutoSaveToggle(panel) {
+            document.getElementById(`${panel}AutoSaveToggle`).checked = !!state[panel].autoSaveEnabled;
+        }
+
+        function schedulePanelAutoSave(panel, immediate = false) {
+            clearTimeout(autoSaveTimers[panel]);
+            const delay = immediate ? 0 : 600;
+            autoSaveTimers[panel] = setTimeout(() => {
+                savePanel(panel, { auto: true, preserveUi: true });
+            }, delay);
+        }
+
+        function handlePanelMutation(panel, options = {}) {
+            const { clearStatusBeforeRender = true, autoSave = true } = options;
+            if (clearStatusBeforeRender) {
+                clearStatus(`${panel}Status`);
+            }
+            renderPanel(panel);
+            if (autoSave && state[panel].autoSaveEnabled) {
+                schedulePanelAutoSave(panel);
+            }
+        }
+
+        function renderQuickFillVariants(panel) {
+            const container = document.getElementById(`${panel}QuickFillVariants`);
+            const matches = Array.isArray(state[panel].quickFillMatches) ? state[panel].quickFillMatches : [];
+            container.innerHTML = '';
+
+            const groups = matches.filter(match => match && match.matched && Array.isArray(match.candidates) && match.candidates.length > 1);
+            if (!groups.length) {
+                return;
+            }
+
+            groups.forEach(match => {
+                const group = document.createElement('div');
+                group.className = 'quick-fill-variant-group';
+
+                const header = document.createElement('div');
+                header.className = 'quick-fill-variant-header';
+                header.innerHTML = `
+                    <div class="quick-fill-variant-title">槽位 ${match.slot + 1} · ${match.input}</div>
+                    <div class="quick-fill-variant-subtitle">已先匹配 ${match.sprite ? match.sprite.displayName : '空'}，可在下方切换形态</div>
+                `;
+                group.appendChild(header);
+
+                const options = document.createElement('div');
+                options.className = 'quick-fill-variant-options';
+
+                match.candidates.forEach(candidate => {
+                    const card = document.createElement('button');
+                    card.type = 'button';
+                    card.className = 'quick-fill-variant-card';
+                    const currentSpriteId = state[panel].selected[match.slot] && state[panel].selected[match.slot].sprite
+                        ? state[panel].selected[match.slot].sprite.id
+                        : null;
+                    if (currentSpriteId === candidate.id) {
+                        card.classList.add('selected');
+                    }
+                    card.innerHTML = `
+                        <img src="${candidate.path}" alt="${candidate.displayName}">
+                        <div class="name">${candidate.displayName}</div>
+                    `;
+                    card.addEventListener('click', () => {
+                        const slot = state[panel].selected[match.slot];
+                        slot.sprite = candidate;
+                        slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
+                        match.sprite = candidate;
+                        state[panel].activeSlot = match.slot;
+                        handlePanelMutation(panel);
+                    });
+                    options.appendChild(card);
+                });
+
+                group.appendChild(options);
+                container.appendChild(group);
+            });
+        }
+
+        function renderSpriteGrid(panel) {
+            const grid = document.getElementById(`${panel}SpriteGrid`);
+            const keyword = document.getElementById(`${panel}Search`).value.trim().toLowerCase();
+            const activeSlot = currentSlot(panel);
+            const activeSpriteId = activeSlot && activeSlot.sprite ? activeSlot.sprite.id : null;
+
+            const filtered = state.sprites.filter(sprite => {
+                if (!keyword) {
+                    return true;
+                }
+                return sprite.displayName.toLowerCase().includes(keyword) || sprite.filename.toLowerCase().includes(keyword);
+            });
+
+            grid.innerHTML = '';
+            if (!filtered.length) {
+                const empty = document.createElement('div');
+                empty.className = 'empty-preview';
+                empty.textContent = '没有找到匹配的精灵';
+                grid.appendChild(empty);
+                return;
+            }
+
+            filtered.forEach(sprite => {
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'sprite-card';
+                if (activeSpriteId === sprite.id) {
+                    card.classList.add('selected');
+                }
+                card.innerHTML = `
+                    <img src="${sprite.path}" alt="${sprite.displayName}">
+                    <div class="name">${sprite.displayName}</div>
+                `;
+                card.addEventListener('click', () => {
+                    const slot = currentSlot(panel);
+                    slot.sprite = sprite;
+                    slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
+                    const nextEmpty = state[panel].selected.findIndex(item => !item.sprite);
+                    if (nextEmpty !== -1) {
+                        state[panel].activeSlot = nextEmpty;
+                    }
+                    handlePanelMutation(panel);
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        function syncOpacityInputs(panel) {
+            const slot = currentSlot(panel);
+            const opacityPercent = Math.round(slot.opacity * 100);
+            const saturationPercent = Math.round(slot.saturation * 100);
+            const healthPercent = Math.round(getHealthLevel(slot));
+            document.getElementById(`${panel}ActiveSlotLabel`).textContent = String(state[panel].activeSlot + 1);
+            document.getElementById(`${panel}OpacityEnabled`).checked = slot.opacityEnabled;
+            document.getElementById(`${panel}ProtectionEnabled`).checked = !!slot.healthEnabled;
+            document.getElementById(`${panel}OpacityRange`).value = opacityPercent;
+            document.getElementById(`${panel}OpacityNumber`).value = opacityPercent;
+            document.getElementById(`${panel}SaturationRange`).value = saturationPercent;
+            document.getElementById(`${panel}SaturationNumber`).value = saturationPercent;
+            document.getElementById(`${panel}ProtectionRange`).value = slot.healthPercent ?? 100;
+            document.getElementById(`${panel}ProtectionNumber`).value = slot.healthPercent ?? 100;
+            document.getElementById(`${panel}EnergyRange`).value = getEnergyLevel(slot);
+            document.getElementById(`${panel}EnergyNumber`).value = getEnergyLevel(slot);
+            document.getElementById(`${panel}ProtectionHint`).textContent = slot.healthEnabled
+                ? `血量 ${healthPercent}% 时，${100 - healthPercent}% 区域进入弱化状态。`
+                : '血量未开启时，整图保持正常状态。';
+            const opacityDisabled = !!slot.healthEnabled;
+            document.getElementById(`${panel}OpacityEnabled`).disabled = opacityDisabled;
+            document.getElementById(`${panel}OpacityRange`).disabled = opacityDisabled;
+            document.getElementById(`${panel}OpacityNumber`).disabled = opacityDisabled;
+            document.getElementById(`${panel}SaturationRange`).disabled = opacityDisabled;
+            document.getElementById(`${panel}SaturationNumber`).disabled = opacityDisabled;
+            const protectionDisabled = !!slot.opacityEnabled;
+            document.getElementById(`${panel}ProtectionEnabled`).disabled = protectionDisabled;
+            document.getElementById(`${panel}ProtectionRange`).disabled = !slot.healthEnabled || protectionDisabled;
+            document.getElementById(`${panel}ProtectionNumber`).disabled = !slot.healthEnabled || protectionDisabled;
+        }
+
+        function renderPanel(panel) {
+            updateCounter(panel);
+            syncAutoSaveToggle(panel);
+            syncOpacityInputs(panel);
+            renderSlotPreview(panel);
+            renderQuickFillVariants(panel);
+            renderSpriteGrid(panel);
+        }
+
+        function clearCurrentSlot(panel) {
+            const index = state[panel].activeSlot;
+            state[panel].selected[index] = createEmptySlot(index);
+            state[panel].quickFillMatches = (state[panel].quickFillMatches || []).filter(match => Number(match.slot) !== index);
+            handlePanelMutation(panel);
+        }
+
+        function clearSelection(panel) {
+            state[panel].selected = Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index));
+            state[panel].activeSlot = 0;
+            state[panel].quickFillMatches = [];
+            handlePanelMutation(panel);
+        }
+
+        function applyQuickFillMatches(panel, matches) {
+            const nextSelected = Array.from({ length: MAX_SELECTION }, (_, index) => {
+                const current = createEmptySlot(index);
+                const match = matches[index];
+
+                if (match && match.matched && match.sprite) {
+                    current.sprite = match.sprite;
+                    current.effectiveOpacity = current.opacityEnabled ? current.opacity : 1;
+                    return current;
+                }
+
+                return createEmptySlot(index);
+            });
+
+            state[panel].selected = nextSelected;
+            state[panel].activeSlot = 0;
+            state[panel].quickFillMatches = Array.isArray(matches)
+                ? matches.map(match => ({
+                    slot: Number(match.slot) || 0,
+                    input: match.input || '',
+                    matched: !!match.matched,
+                    matchType: match.matchType || null,
+                    sprite: match.sprite || null,
+                    candidates: Array.isArray(match.candidates) ? match.candidates : []
+                }))
+                : [];
+            handlePanelMutation(panel, { clearStatusBeforeRender: false });
+        }
+
+        function updatePanelFromApi(panelState, options = {}) {
+            const panel = panelState.position;
+            const preserveUi = !!options.preserveUi;
+            const selected = Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index));
+
+            (panelState.selected || []).slice(0, MAX_SELECTION).forEach((slotData, index) => {
+                selected[index] = {
+                    slot: index,
+                    sprite: slotData && slotData.sprite ? slotData.sprite : null,
+                    opacityEnabled: !!(slotData && slotData.opacityEnabled),
+                    opacity: typeof (slotData && slotData.opacity) === 'number' ? slotData.opacity : 0.5,
+                    saturation: typeof (slotData && slotData.saturation) === 'number' ? slotData.saturation : 1,
+                    healthEnabled: typeof (slotData && slotData.healthEnabled) === 'boolean'
+                        ? slotData.healthEnabled
+                        : (typeof (slotData && slotData.protectionEnabled) === 'boolean'
+                            ? slotData.protectionEnabled
+                            : !(slotData && slotData.opacityEnabled)),
+                    healthPercent: typeof (slotData && slotData.healthPercent) === 'number'
+                        ? slotData.healthPercent
+                        : (typeof (slotData && slotData.protectionPercent) === 'number'
+                            ? slotData.protectionPercent
+                            : 100),
+                    energyValue: typeof (slotData && slotData.energyValue) === 'number'
+                        ? slotData.energyValue
+                        : 10,
+                    effectiveOpacity: typeof (slotData && slotData.effectiveOpacity) === 'number'
+                        ? slotData.effectiveOpacity
+                        : (slotData && slotData.opacityEnabled ? slotData.opacity : 1)
+                };
+            });
+
+            state[panel].selected = selected;
+            state[panel].activeSlot = preserveUi
+                ? Math.min(state[panel].activeSlot, MAX_SELECTION - 1)
+                : 0;
+            state[panel].quickFillMatches = preserveUi ? state[panel].quickFillMatches : [];
+            renderPanel(panel);
+        }
+
+        function loadSprites() {
+            return fetch('/api/sprites')
+                .then(response => response.json())
+                .then(data => {
+                    state.sprites = data.sprites || [];
+                    renderPanel('left');
+                    renderPanel('right');
+                });
+        }
+
+        function loadPanels() {
+            return fetch('/api/images')
+                .then(response => response.json())
+                .then(data => {
+                    (data.images || []).forEach(updatePanelFromApi);
+                });
+        }
+
+        function loadScoreboard() {
+            return fetch('/api/scoreboard')
+                .then(response => response.json())
+                .then(data => {
+                    updateScoreboardFromApi(data);
+                });
+        }
+
+        function savePanel(panel, options = {}) {
+            const { auto = false, preserveUi = true } = options;
+            clearTimeout(autoSaveTimers[panel]);
+            if (!auto) {
+                clearStatus(`${panel}Status`);
+            }
+            const requestVersion = ++saveRequestVersions[panel];
+            fetch(`/api/panels/${panel}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    selected: state[panel].selected.map(slot => ({
+                        slot: slot.slot,
+                        sprite: slot.sprite ? slot.sprite.id : null,
+                        opacityEnabled: slot.opacityEnabled,
+                        opacity: slot.opacity,
+                        saturation: slot.saturation,
+                        healthEnabled: !slot.opacityEnabled && !!slot.healthEnabled,
+                        healthPercent: getHealthLevel(slot),
+                        energyValue: getEnergyLevel(slot)
+                    }))
+                })
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '保存失败');
+                }
+                if (requestVersion < appliedSaveVersions[panel]) {
+                    return;
+                }
+                appliedSaveVersions[panel] = requestVersion;
+                updatePanelFromApi(data.panel, { preserveUi });
+                showStatus(
+                    `${panel}Status`,
+                    auto
+                        ? `${panel === 'left' ? '左侧' : '右侧'}已自动保存`
+                        : `${panel === 'left' ? '左侧' : '右侧'}面板配置已同步`,
+                    true
+                );
+            })
+            .catch(error => {
+                showStatus(`${panel}Status`, error.message, false);
+            });
+        }
+
+        function quickFillPanel(panel) {
+            const input = document.getElementById(`${panel}QuickFillInput`).value;
+            clearStatus(`${panel}Status`);
+
+            if (!input.trim()) {
+                showStatus(`${panel}Status`, '请先输入要快速填充的精灵名称，一行一个', false);
+                return;
+            }
+
+            fetch('/api/quick-fill', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: input })
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '快速填充失败');
+                }
+
+                applyQuickFillMatches(panel, data.matches || []);
+
+                const sideLabel = panel === 'left' ? '左侧' : '右侧';
+                const unmatched = Array.isArray(data.unmatched) ? data.unmatched : [];
+                const ignoredCount = Number(data.ignoredCount) || 0;
+
+                if (unmatched.length || ignoredCount > 0) {
+                    const parts = [`${sideLabel}已预填 ${data.matchedCount || 0} / ${data.acceptedCount || 0}`];
+                    if (unmatched.length) {
+                        parts.push(`未匹配: ${unmatched.join('、')}`);
+                    }
+                    if (ignoredCount > 0) {
+                        parts.push(`超出 6 行已忽略 ${ignoredCount} 项`);
+                    }
+                    parts.push(state[panel].autoSaveEnabled ? '可继续调整形态，系统会自动保存' : '请确认后点击保存');
+                    showStatus(`${panel}Status`, parts.join('；'), false);
+                    return;
+                }
+
+                showStatus(
+                    `${panel}Status`,
+                    `${sideLabel}已预填 ${data.acceptedCount || 0} 个槽位，${state[panel].autoSaveEnabled ? '系统会自动保存' : '请确认后点击保存'}`,
+                    true
+                );
+            })
+            .catch(error => {
+                showStatus(`${panel}Status`, error.message, false);
+            });
+        }
+
+        function deletePanel(panel) {
+            fetch(`/api/panels/${panel}`, { method: 'DELETE' })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.error || '删除失败');
+                    }
+                    state[panel] = {
+                        selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)),
+                        activeSlot: 0,
+                        quickFillMatches: [],
+                        autoSaveEnabled: state[panel].autoSaveEnabled
+                    };
+                    renderPanel(panel);
+                    showStatus(`${panel}Status`, `${panel === 'left' ? '左侧' : '右侧'}配置已删除`, true);
+                })
+                .catch(error => {
+                    showStatus(`${panel}Status`, error.message, false);
+                });
+        }
+
+        function setupPanelControls(panel) {
+            document.getElementById(`${panel}Search`).addEventListener('input', () => renderSpriteGrid(panel));
+            document.getElementById(`${panel}SaveBtn`).addEventListener('click', () => savePanel(panel, { auto: false, preserveUi: true }));
+            document.getElementById(`${panel}ClearSlotBtn`).addEventListener('click', () => clearCurrentSlot(panel));
+            document.getElementById(`${panel}ClearBtn`).addEventListener('click', () => clearSelection(panel));
+            document.getElementById(`${panel}DeleteBtn`).addEventListener('click', () => deletePanel(panel));
+            document.getElementById(`${panel}QuickFillBtn`).addEventListener('click', () => quickFillPanel(panel));
+            document.getElementById(`${panel}AutoSaveToggle`).addEventListener('change', event => {
+                state[panel].autoSaveEnabled = event.target.checked;
+                if (state[panel].autoSaveEnabled) {
+                    showStatus(`${panel}Status`, `${panel === 'left' ? '左侧' : '右侧'}自动保存已开启`, true);
+                    schedulePanelAutoSave(panel, true);
+                    return;
+                }
+                clearTimeout(autoSaveTimers[panel]);
+                showStatus(`${panel}Status`, `${panel === 'left' ? '左侧' : '右侧'}自动保存已关闭，请手动保存修改`, false);
+            });
+
+            document.getElementById(`${panel}OpacityEnabled`).addEventListener('change', event => {
+                const slot = currentSlot(panel);
+                slot.opacityEnabled = event.target.checked;
+                if (slot.opacityEnabled) {
+                    slot.healthEnabled = false;
+                    slot.healthPercent = 100;
+                }
+                if (slot.opacityEnabled) {
+                    slot.opacity = 0.5;
+                    slot.saturation = 0.1;
+                } else {
+                    slot.opacity = 1;
+                    slot.saturation = 1;
+                }
+                slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
+                handlePanelMutation(panel);
+            });
+
+            document.getElementById(`${panel}ProtectionEnabled`).addEventListener('change', event => {
+                const slot = currentSlot(panel);
+                slot.healthEnabled = event.target.checked;
+                if (slot.healthEnabled) {
+                    slot.opacityEnabled = false;
+                    slot.opacity = 1;
+                    slot.saturation = 1;
+                    slot.effectiveOpacity = 1;
+                    if (typeof slot.healthPercent !== 'number') {
+                        slot.healthPercent = 100;
+                    }
+                } else {
+                    slot.healthPercent = 100;
+                }
+                handlePanelMutation(panel);
+            });
+
+            [`${panel}ProtectionRange`, `${panel}ProtectionNumber`].forEach(id => {
+                document.getElementById(id).addEventListener('input', event => {
+                    let value = Number(event.target.value);
+                    if (Number.isNaN(value)) {
+                        value = 100;
+                    }
+                    value = Math.min(100, Math.max(0, value));
+                    const slot = currentSlot(panel);
+                    if (!slot.healthEnabled || slot.opacityEnabled) {
+                        renderPanel(panel);
+                        return;
+                    }
+                    slot.healthPercent = value;
+                    handlePanelMutation(panel);
+                });
+            });
+
+            [`${panel}OpacityRange`, `${panel}OpacityNumber`].forEach(id => {
+                document.getElementById(id).addEventListener('input', event => {
+                    let value = Number(event.target.value);
+                    if (Number.isNaN(value)) {
+                        value = 50;
+                    }
+                    value = Math.min(100, Math.max(0, value));
+                    const slot = currentSlot(panel);
+                    slot.opacity = value / 100;
+                    slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
+                    handlePanelMutation(panel);
+                });
+            });
+
+            [`${panel}SaturationRange`, `${panel}SaturationNumber`].forEach(id => {
+                document.getElementById(id).addEventListener('input', event => {
+                    let value = Number(event.target.value);
+                    if (Number.isNaN(value)) {
+                        value = 100;
+                    }
+                    value = Math.min(300, Math.max(0, value));
+                    const slot = currentSlot(panel);
+                    slot.saturation = value / 100;
+                    handlePanelMutation(panel);
+                });
+            });
+
+            [`${panel}EnergyRange`, `${panel}EnergyNumber`].forEach(id => {
+                document.getElementById(id).addEventListener('input', event => {
+                    let value = Number(event.target.value);
+                    if (Number.isNaN(value)) {
+                        value = 10;
+                    }
+                    value = Math.min(10, Math.max(0, Math.round(value)));
+                    const slot = currentSlot(panel);
+                    slot.energyValue = value;
+                    handlePanelMutation(panel);
+                });
+            });
+        }
+
+        function uploadBackground(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/api/upload/background', {
+                method: 'POST',
+                body: formData
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '背景图上传失败');
+                }
+                const preview = document.getElementById('bgPreview');
+                preview.src = `${data.path}?t=${Math.floor(data.mtime * 1000)}`;
+                preview.style.display = 'block';
+                document.getElementById('bgEmpty').style.display = 'none';
+                showStatus('bgStatus', '背景图已更新', true);
+            })
+            .catch(error => {
+                showStatus('bgStatus', error.message, false);
+            });
+        }
+
+        function loadBackground() {
+            fetch('/api/background')
+                .then(response => response.json())
+                .then(data => {
+                    const preview = document.getElementById('bgPreview');
+                    const empty = document.getElementById('bgEmpty');
+                    if (data.exists) {
+                        preview.src = `${data.path}?t=${Math.floor(data.mtime * 1000)}`;
+                        preview.style.display = 'block';
+                        empty.style.display = 'none';
+                    } else {
+                        preview.removeAttribute('src');
+                        preview.style.display = 'none';
+                        empty.style.display = 'block';
+                    }
+                });
+        }
+
+        function deleteBackground() {
+            fetch('/api/delete/background', { method: 'DELETE' })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.error || '删除背景图失败');
+                    }
+                    const preview = document.getElementById('bgPreview');
+                    preview.removeAttribute('src');
+                    preview.style.display = 'none';
+                    document.getElementById('bgEmpty').style.display = 'block';
+                    showStatus('bgStatus', '背景图已删除，主页面将回退到默认背景', true);
+                })
+                .catch(error => {
+                    showStatus('bgStatus', error.message, false);
+                });
+        }
+
+        function saveScoreboard() {
+            clearStatus('scoreboardStatus');
+            const payload = {
+                leftName: document.getElementById('leftPlayerNameInput').value,
+                leftScore: document.getElementById('leftPlayerScoreInput').value,
+                rightName: document.getElementById('rightPlayerNameInput').value,
+                rightScore: document.getElementById('rightPlayerScoreInput').value,
+                scoreboardEnabled: document.getElementById('scoreboardEnabledInput').checked,
+                healthBadgeEnabled: document.getElementById('healthBadgeEnabledInput').checked,
+                abilityBadgeEnabled: document.getElementById('abilityBadgeEnabledInput').checked,
+                nameFontSize: document.getElementById('nameFontSizeInput').value,
+                scoreFontSize: document.getElementById('scoreFontSizeInput').value,
+                centerAreaEnabled: document.getElementById('centerAreaEnabledInput').checked,
+                centerAreaColor: document.getElementById('centerAreaColorInput').value
+            };
+
+            fetch('/api/scoreboard', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '比分栏保存失败');
+                }
+                updateScoreboardFromApi(data.scoreboard);
+                showStatus('scoreboardStatus', '顶部比分栏已同步', true);
+            })
+            .catch(error => {
+                showStatus('scoreboardStatus', error.message, false);
+            });
+        }
+
+        function setupBackgroundUpload() {
+            const uploadArea = document.getElementById('bgUploadArea');
+            const input = document.getElementById('bgFileInput');
+
+            uploadArea.addEventListener('click', () => input.click());
+            document.getElementById('bgUploadBtn').addEventListener('click', () => input.click());
+
+            input.addEventListener('change', event => {
+                const file = event.target.files[0];
+                if (file) {
+                    uploadBackground(file);
+                }
+            });
+
+            uploadArea.addEventListener('dragover', event => {
+                event.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', event => {
+                event.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const file = event.dataTransfer.files[0];
+                if (file) {
+                    uploadBackground(file);
+                }
+            });
+        }
+
+        function setupNavigation() {
+            document.querySelectorAll('.nav-item').forEach(button => {
+                button.addEventListener('click', () => {
+                    state.currentView = button.dataset.view || 'roster';
+                    renderView();
+                });
+            });
+
+            document.getElementById('copyLocalAddressBtn').addEventListener('click', () => {
+                copyTextToClipboard(getLocalAddressText(), 'scoreboardStatus', '本地地址已复制');
+            });
+            document.getElementById('copyPreviewUrlBtn').addEventListener('click', () => {
+                copyTextToClipboard(`${getPreviewOrigin()}/`, 'scoreboardStatus', '预览链接已复制');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPortalLinks();
+            setupNavigation();
+            renderView();
+            setupPanelControls('left');
+            setupPanelControls('right');
+            document.getElementById('bgDeleteBtn').addEventListener('click', deleteBackground);
+            document.getElementById('scoreboardSaveBtn').addEventListener('click', saveScoreboard);
+            document.getElementById('centerAreaEnabledInput').addEventListener('change', event => {
+                document.getElementById('centerAreaColorInput').disabled = !event.target.checked;
+            });
+            setupBackgroundUpload();
+            renderPanel('left');
+            renderPanel('right');
+            renderScoreboardInputs();
+
+            Promise.all([loadSprites(), loadPanels(), loadScoreboard()])
+                .then(loadBackground)
+                .catch(error => {
+                    showStatus('leftStatus', `初始化失败: ${error.message}`, false);
+                });
+        });
+    </script>
+    <script src="/live-control-core.js"></script>
+    <script>
+        // 初始化数值实时控制
+        document.addEventListener('DOMContentLoaded', function() {
+            LiveControl.init({
+                statusElementId: 'liveStatus',
+                leftGridId: 'liveLeftGrid',
+                rightGridId: 'liveRightGrid',
+                saveBtnId: 'liveSaveBtn',
+                reloadBtnId: 'liveReloadBtn',
+                autoRefresh: true,
+                autoRefreshInterval: 1500,
+                autoSaveDelay: 800
+            });
+        });
+    </script>
+</body>
+</html>

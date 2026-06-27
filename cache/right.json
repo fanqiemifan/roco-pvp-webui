@@ -1,0 +1,95 @@
+{
+  "position": "right",
+  "selected": [
+    {
+      "slot": 0,
+      "sprite": {
+        "id": "NO.063_蹦蹦种子-1.png",
+        "filename": "NO.063_蹦蹦种子-1.png",
+        "displayName": "蹦蹦种子-1",
+        "path": "/img/NO.063_蹦蹦种子-1.png"
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 40,
+      "energyValue": 3
+    },
+    {
+      "slot": 1,
+      "sprite": {
+        "id": "NO.032_毛毛.png",
+        "filename": "NO.032_毛毛.png",
+        "displayName": "毛毛",
+        "path": "/img/NO.032_毛毛.png"
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 33,
+      "energyValue": 4
+    },
+    {
+      "slot": 2,
+      "sprite": {
+        "id": "NO.002_喵喵.png",
+        "filename": "NO.002_喵喵.png",
+        "displayName": "喵喵",
+        "path": "/img/NO.002_喵喵.png"
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 37,
+      "energyValue": 3
+    },
+    {
+      "slot": 3,
+      "sprite": {
+        "id": "NO.008_水蓝蓝.png",
+        "filename": "NO.008_水蓝蓝.png",
+        "displayName": "水蓝蓝",
+        "path": "/img/NO.008_水蓝蓝.png"
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 46,
+      "energyValue": 4
+    },
+    {
+      "slot": 4,
+      "sprite": {
+        "id": "NO.150_里奥.png",
+        "filename": "NO.150_里奥.png",
+        "displayName": "里奥",
+        "path": "/img/NO.150_里奥.png"
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 49,
+      "energyValue": 5
+    },
+    {
+      "slot": 5,
+      "sprite": {
+        "id": "NO.012_板板壳-1.png",
+        "filename": "NO.012_板板壳-1.png",
+        "displayName": "板板壳-1",
+        "path": "/img/NO.012_板板壳-1.png"
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 0,
+      "energyValue": 3
+    }
+  ]
+}

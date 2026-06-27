@@ -1,0 +1,12 @@
+name: rocom-pvp-battle-array--v2
+
+services:
+  rocom-pvp-battle-array-v2:
+    build: .
+    container_name: rocom-pvp-battle-array--v2
+    ports:
+      - "9988:9988"
+    volumes:
+      - ./cache:/app/cache
+      - ./img:/app/img
+    restart: unless-stopped

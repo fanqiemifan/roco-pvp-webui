@@ -1,0 +1,348 @@
+@property --protect-start {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 0%;
+}
+
+@property --protect-end {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 0%;
+}
+
+@font-face {
+    font-family: "YouSheBiaoTiHei";
+    src: url("font/YouSheBiaoTiHei-2.ttf") format("truetype");
+    font-display: swap;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Microsoft YaHei', sans-serif;
+}
+
+.frame83 {
+    display: flex;
+    align-items: flex-start;
+    background: #000000;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    position: relative;
+}
+
+.frame3 {
+    display: flex;
+    flex-grow: 1;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+    background-image: url('image/back.png');
+    background-position: center top;
+    background-size: 1920px 1080px;
+    background-repeat: no-repeat;
+    padding: 132px 0 0 0;
+}
+
+.scoreboard {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1614px;
+    height: 132px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.scoreboard.is-hidden {
+    display: none;
+}
+
+.scoreboard-side {
+    width: calc(50% - 24px);
+    display: flex;
+    align-items: center;
+}
+
+.scoreboard-left {
+    justify-content: flex-start;
+}
+
+.scoreboard-right {
+    justify-content: flex-end;
+}
+
+.scoreboard .player-name,
+.scoreboard .player-score {
+    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-size: 64px;
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow:
+        -2px 0 0 #ffffff,
+        2px 0 0 #ffffff,
+        0 -2px 0 #ffffff,
+        0 2px 0 #ffffff,
+        -2px -2px 0 #ffffff,
+        -2px 2px 0 #ffffff,
+        2px -2px 0 #ffffff,
+        2px 2px 0 #ffffff;
+}
+
+.scoreboard-left .player-name,
+.scoreboard-left .player-score {
+    text-align: left;
+}
+
+.scoreboard-right .player-name,
+.scoreboard-right .player-score {
+    text-align: right;
+}
+
+.scoreboard-left .player-name,
+.scoreboard-left .player-score {
+    color: #1a3db9;
+}
+
+.scoreboard-right .player-name,
+.scoreboard-right .player-score {
+    color: #ff0000;
+}
+
+.scoreboard-left .player-score {
+    margin-left: 20px;
+}
+
+.scoreboard-right .player-score {
+    margin-right: 20px;
+}
+
+.side-panel {
+    width: 158px;
+    height: 948px;
+    position: relative;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: transparent;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px;
+    gap: 0;
+}
+
+.side-panel:hover {
+    background: transparent;
+}
+
+.side-panel.dragover {
+    background: transparent;
+}
+
+.center-area {
+    width: 1604px;
+    height: 948px;
+    position: relative;
+    background-color: #393939;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    overflow: hidden;
+}
+
+.center-area.is-hidden {
+    background-color: transparent !important;
+}
+
+.file-input {
+    display: none;
+}
+
+.upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    z-index: 10;
+    position: relative;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.upload-icon {
+    font-size: 36px;
+    margin-bottom: 10px;
+    opacity: 0.6;
+}
+
+.sprite-slot {
+    width: 148px;
+    height: 148px;
+    flex: 0 0 148px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.sprite-layer {
+    position: absolute;
+    inset: 0;
+    width: 148px;
+    height: 148px;
+    display: block;
+    object-fit: contain;
+    transform: scale(1);
+    transition: opacity 800ms ease, transform 240ms ease, filter 800ms ease, --protect-start 800ms ease, --protect-end 800ms ease;
+    pointer-events: none;
+}
+
+.sprite-layer.base-layer {
+    z-index: 1;
+}
+
+.sprite-layer.protect-layer {
+    z-index: 2;
+    --protect-start: 0%;
+    --protect-end: 0%;
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0) var(--protect-start),
+        rgba(0, 0, 0, 1) var(--protect-end),
+        rgba(0, 0, 0, 1) 100%
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0) var(--protect-start),
+        rgba(0, 0, 0, 1) var(--protect-end),
+        rgba(0, 0, 0, 1) 100%
+    );
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    will-change: opacity, filter, --protect-start, --protect-end;
+}
+
+.sprite-layer.protect-layer.mask-disabled {
+    -webkit-mask-image: none;
+    mask-image: none;
+}
+
+.sprite-layer.is-entering {
+    opacity: 0;
+    transform: scale(0.96);
+}
+
+.sprite-layer.is-exiting {
+    opacity: 0;
+    transform: scale(1.04);
+}
+
+.sprite-layer.feather-top,
+.sprite-layer.feather-bottom,
+.sprite-layer.feather-left,
+.sprite-layer.feather-right {
+    z-index: 3;
+}
+
+.slot-hp-badge,
+.slot-ability-badge {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 180ms ease;
+}
+
+.slot-hp-badge.is-visible,
+.slot-ability-badge.is-visible {
+    opacity: 1;
+}
+
+.slot-hp-badge {
+    top: 0;
+    right: 0;
+    width: 26px;
+    height: 26px;
+    z-index: 4;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.slot-hp-value {
+    font-size: 10px;
+    line-height: 1;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.slot-ability-badge {
+    left: 120px;
+    top: 116px;
+    width: 28px;
+    height: 16px;
+    z-index: 4;
+    gap: 1px;
+    border-radius: 16px;
+    background: #6e6e6e;
+    padding: 0 3px;
+}
+
+.slot-ability-badge.high,
+.slot-ability-badge.mid {
+    background: #6e6e6e;
+}
+
+.slot-ability-badge.danger {
+    background: #6a1a1b;
+}
+
+.slot-ability-icon {
+    width: 10px;
+    height: 10px;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
+.slot-ability-value {
+    font-size: 12px;
+    line-height: 1;
+    color: #ffffff;
+    transform: translateY(0.4px);
+}
+
+.slot-ability-badge.danger .slot-ability-value {
+    color: #c24846;
+}
+
+.side-panel.has-image .sprite-slot:empty {
+    display: flex;
+}
