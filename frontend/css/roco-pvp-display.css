@@ -15,7 +15,7 @@ body {
     display: grid;
     place-items: center;
     overflow: hidden;
-    background: #000;
+    background: #595959;
     color: #fff;
     font-family: "Microsoft YaHei", sans-serif;
 }
