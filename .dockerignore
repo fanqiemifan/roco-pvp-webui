@@ -1,0 +1,8 @@
+.git
+.pycache
+node_modules
+LuokePVPWebui/__pycache__
+*.pyc
+*.pyo
+*.pyd
+.DS_Store

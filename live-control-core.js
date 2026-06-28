@@ -13,9 +13,9 @@
     const _state = { left: [], right: [] };
     const _dirty = { left: false, right: false };
     let _saveTimer = null;
-    let _refreshTimer = null;
     let _isLoading = false;
     let _lastPanelMtime = { left: null, right: null };
+    let _socket = null;
 
     // 配置（初始化时设置）
     let _config = {
@@ -138,6 +138,10 @@
         renderGrid('right');
     }
 
+    function renderPanel(panel) {
+        renderGrid(panel);
+    }
+
     // ==================== 业务逻辑 ====================
 
     function updateSlot(panel, index, field, value) {
@@ -194,13 +198,8 @@
         }
     }
 
-    function shouldRefreshFromServer(nextLeft, nextRight) {
-        if (_dirty.left || _dirty.right) return false;
-        return nextLeft !== _lastPanelMtime.left || nextRight !== _lastPanelMtime.right;
-    }
-
     async function loadData(options = {}) {
-        const { silent = false, force = false } = options;
+        const { silent = false, force = false, panel = null } = options;
         if (_isLoading) return;
         _isLoading = true;
 
@@ -209,23 +208,25 @@
 
             const res = await fetch('/api/images');
             const data = await res.json();
-            const left = data.images.find(item => item.position === 'left') || { selected: [] };
-            const right = data.images.find(item => item.position === 'right') || { selected: [] };
-            const nextLeftMtime = left.mtime ?? null;
-            const nextRightMtime = right.mtime ?? null;
+            const images = Array.isArray(data.images) ? data.images : [];
 
-            if (force || shouldRefreshFromServer(nextLeftMtime, nextRightMtime)) {
-                _state.left = Array.from({ length: MAX_SELECTION }, (_, index) => normalizeSlot(left.selected[index], index));
-                _state.right = Array.from({ length: MAX_SELECTION }, (_, index) => normalizeSlot(right.selected[index], index));
-                _dirty.left = false;
-                _dirty.right = false;
-                _lastPanelMtime.left = nextLeftMtime;
-                _lastPanelMtime.right = nextRightMtime;
-                renderAll();
-                if (!silent) setStatus('已加载');
-            } else if (!silent) {
-                _lastPanelMtime.left = nextLeftMtime;
-                _lastPanelMtime.right = nextRightMtime;
+            images.forEach(item => {
+                if (!item || (panel && item.position !== panel)) {
+                    return;
+                }
+                if (!force && _dirty[item.position]) {
+                    return;
+                }
+                _state[item.position] = Array.from(
+                    { length: MAX_SELECTION },
+                    (_, index) => normalizeSlot(item.selected[index], index)
+                );
+                _dirty[item.position] = false;
+                _lastPanelMtime[item.position] = item.mtime ?? null;
+                renderPanel(item.position);
+            });
+
+            if (!silent) {
                 setStatus('已加载');
             }
         } finally {
@@ -233,16 +234,49 @@
         }
     }
 
-    function startAutoRefresh() {
-        if (!_config.autoRefresh) return;
-        clearInterval(_refreshTimer);
-        _refreshTimer = setInterval(() => {
-            loadData({ silent: true }).catch(error => setStatus(error.message));
-        }, _config.autoRefreshInterval);
+    function applyRemotePanel(panelState) {
+        const panel = panelState && panelState.position;
+        if (!panel || !Array.isArray(panelState.selected)) return;
+        if (_dirty[panel]) return;
+
+        const nextMtime = panelState.mtime ?? null;
+        if (_lastPanelMtime[panel] === nextMtime && _state[panel].length) {
+            return;
+        }
+
+        _state[panel] = Array.from(
+            { length: MAX_SELECTION },
+            (_, index) => normalizeSlot(panelState.selected[index], index)
+        );
+        _dirty[panel] = false;
+        _lastPanelMtime[panel] = nextMtime;
+        renderPanel(panel);
     }
 
-    function stopAutoRefresh() {
-        clearInterval(_refreshTimer);
+    function connectSocket() {
+        if (typeof global.io !== 'function') {
+            return;
+        }
+
+        _socket = global.io({
+            transports: ['websocket', 'polling']
+        });
+
+        _socket.on('snapshot', payload => {
+            const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
+            panels.forEach(applyRemotePanel);
+            setStatus('已连接实时同步');
+        });
+
+        _socket.on('panel:update', payload => {
+            if (payload && payload.panel) {
+                applyRemotePanel(payload.panel);
+            }
+        });
+
+        _socket.on('connect_error', () => {
+            setStatus('实时同步连接失败');
+        });
     }
 
     // ==================== 事件处理 ====================
@@ -287,18 +321,21 @@
         window.addEventListener('focus', handleFocus);
 
         // 启动
-        startAutoRefresh();
         loadData({ force: true }).catch(error => setStatus(error.message));
+        connectSocket();
     }
 
     /**
      * 销毁，清理事件和定时器
      */
     function destroyLiveControl() {
-        stopAutoRefresh();
         clearTimeout(_saveTimer);
         document.removeEventListener('input', handleInput);
         window.removeEventListener('focus', handleFocus);
+        if (_socket) {
+            _socket.disconnect();
+            _socket = null;
+        }
     }
 
     // 导出

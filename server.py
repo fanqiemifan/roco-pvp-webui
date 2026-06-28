@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import argparse
-import http.server
 import json
 import os
 import re
-import socketserver
 import sys
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs
+
+import eventlet
+import socketio
+from flask import Flask, abort, jsonify, request, send_file, send_from_directory
 
 DEFAULT_PORT = 9988
 APP_DATA_DIRNAME = "LuokePVPWebui"
@@ -55,20 +57,6 @@ DATA_DIR = get_data_dir()
 CACHE_DIR = DATA_DIR / "cache"
 BACKGROUND_FILE = CACHE_DIR / "background.png"
 
-# 确保必要的目录存在（静默处理，允许后续延迟创建）
-try:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-except Exception:
-    pass
-try:
-    CACHE_DIR.mkdir(exist_ok=True)
-except Exception:
-    pass
-try:
-    IMG_DIR.mkdir(exist_ok=True)
-except Exception:
-    pass
-
 
 def ensure_dirs():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -98,6 +86,8 @@ def build_sprite_entry(path: Path):
 
 def list_sprites():
     sprites = []
+    if not IMG_DIR.exists():
+        return sprites
     for path in sorted(IMG_DIR.iterdir(), key=lambda item: item.name.lower()):
         if path.is_file() and path.suffix.lower() in SUPPORTED_IMAGE_EXTENSIONS:
             sprites.append(build_sprite_entry(path))
@@ -181,11 +171,6 @@ def collect_sprite_matches(query: str, sprites=None):
 
     matches.sort(key=lambda item: item["rank"])
     return matches
-
-
-def match_sprite_query(query: str, sprites=None):
-    matches = collect_sprite_matches(query, sprites=sprites)
-    return matches[0] if matches else None
 
 
 def build_quick_fill_candidates(query: str, best_match, sprites=None, ranked_matches=None):
@@ -428,12 +413,6 @@ def hydrate_selected(raw_selected):
             slot["energyValue"] = normalize_energy_value(item.get("energyValue", DEFAULT_ENERGY_VALUE))
         else:
             sprite_id = item.get("id") if isinstance(item, dict) else item
-            slot["opacityEnabled"] = False
-            slot["opacity"] = DEFAULT_OPACITY
-            slot["saturation"] = DEFAULT_SATURATION
-            slot["healthEnabled"] = True
-            slot["healthPercent"] = DEFAULT_HEALTH_PERCENT
-            slot["energyValue"] = DEFAULT_ENERGY_VALUE
 
         if isinstance(sprite_id, str):
             sprite_id = Path(sprite_id).name
@@ -501,6 +480,18 @@ def get_scoreboard_state():
         }
     )
     return state
+
+
+def background_state():
+    if BACKGROUND_FILE.exists():
+        stat = BACKGROUND_FILE.stat()
+        return {
+            "exists": True,
+            "path": "/cache/background.png",
+            "size": stat.st_size,
+            "mtime": stat.st_mtime,
+        }
+    return {"exists": False}
 
 
 def save_scoreboard_state(payload):
@@ -610,198 +601,208 @@ def clear_panel_state(position: str):
         legacy_png.unlink()
 
 
-class AppRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=str(BASE_DIR), **kwargs)
-
-    def _send_json(self, data, status=200):
-        payload = json.dumps(data, ensure_ascii=False).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(payload)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(payload)
-
-    def _read_json_body(self):
-        content_length = int(self.headers.get("Content-Length", "0"))
-        body = self.rfile.read(content_length) if content_length else b"{}"
-        if not body:
-            return {}
-        return json.loads(body.decode("utf-8"))
-
-    def do_GET(self):
-        parsed_path = urlparse(self.path)
-        path = parsed_path.path
-
-        if path == "/cache/background.png":
-            self.serve_file(BACKGROUND_FILE)
-            return
-
-        if path == "/api/images":
-            self._send_json({"images": [get_panel_state("left"), get_panel_state("right")]})
-            return
-
-        if path == "/api/background":
-            if BACKGROUND_FILE.exists():
-                stat = BACKGROUND_FILE.stat()
-                response = {
-                    "exists": True,
-                    "path": "/cache/background.png",
-                    "size": stat.st_size,
-                    "mtime": stat.st_mtime,
-                }
-            else:
-                response = {"exists": False}
-            self._send_json(response)
-            return
-
-        if path == "/api/scoreboard":
-            self._send_json(get_scoreboard_state())
-            return
-
-        if path == "/api/sprites":
-            query = parse_qs(parsed_path.query)
-            keyword = query.get("q", [""])[0].strip().lower()
-            sprites = list_sprites()
-            if keyword:
-                sprites = [
-                    sprite
-                    for sprite in sprites
-                    if keyword in sprite["displayName"].lower()
-                    or keyword in sprite["filename"].lower()
-                ]
-            self._send_json({"sprites": sprites, "count": len(sprites)})
-            return
-
-        super().do_GET()
-
-    def serve_file(self, file_path: Path):
-        if not file_path.exists() or not file_path.is_file():
-            self.send_error(404, "Not found")
-            return
-        self.send_response(200)
-        self.send_header("Content-Type", self.guess_type(str(file_path)))
-        self.send_header("Content-Length", str(file_path.stat().st_size))
-        self.end_headers()
-        with file_path.open("rb") as fh:
-            self.copyfile(fh, self.wfile)
-
-    def do_POST(self):
-        parsed_path = urlparse(self.path)
-        path = parsed_path.path
-
-        if path in {"/api/panels/left", "/api/panels/right"}:
-            position = path.rsplit("/", 1)[-1]
-            try:
-                payload = self._read_json_body()
-                state = save_panel_state(position, payload.get("selected", []))
-                self._send_json({"success": True, "panel": state})
-            except FileNotFoundError as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=404)
-            except (ValueError, json.JSONDecodeError) as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=400)
-            except Exception as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=500)
-            return
-
-        if path == "/api/upload/background":
-            content_type = self.headers.get("Content-Type", "")
-            if "boundary=" not in content_type:
-                self._send_json({"success": False, "error": "Missing multipart boundary"}, status=400)
-                return
-            boundary = content_type.split("boundary=", 1)[1]
-            content_length = int(self.headers.get("Content-Length", "0"))
-            try:
-                body = self.rfile.read(content_length)
-                parts = body.split(b"--" + boundary.encode())
-                file_data = None
-                for part in parts:
-                    if b"Content-Disposition" not in part:
-                        continue
-                    idx = part.find(b"\r\n\r\n")
-                    if idx == -1:
-                        continue
-                    file_data = part[idx + 4 : -4]
-                    break
-                if not file_data:
-                    raise ValueError("No file data")
-                BACKGROUND_FILE.write_bytes(file_data)
-                stat = BACKGROUND_FILE.stat()
-                self._send_json(
-                    {
-                        "success": True,
-                        "path": "/cache/background.png",
-                        "size": stat.st_size,
-                        "mtime": stat.st_mtime,
-                    }
-                )
-            except ValueError as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=400)
-            except Exception as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=500)
-            return
-
-        if path == "/api/scoreboard":
-            try:
-                payload = self._read_json_body()
-                state = save_scoreboard_state(payload)
-                self._send_json({"success": True, "scoreboard": state})
-            except (ValueError, json.JSONDecodeError) as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=400)
-            except Exception as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=500)
-            return
-
-        if path == "/api/quick-fill":
-            try:
-                payload = self._read_json_body()
-                preview = build_quick_fill_preview(payload.get("text", ""))
-                self._send_json({"success": True, **preview})
-            except (ValueError, json.JSONDecodeError) as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=400)
-            except Exception as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=500)
-            return
-
-        self.send_error(404, "Not found")
-
-    def do_DELETE(self):
-        parsed_path = urlparse(self.path)
-        path = parsed_path.path
-
-        if path in {"/api/panels/left", "/api/panels/right"}:
-            position = path.rsplit("/", 1)[-1]
-            try:
-                clear_panel_state(position)
-                self._send_json({"success": True, "position": position})
-            except Exception as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=500)
-            return
-
-        if path == "/api/delete/background":
-            try:
-                if BACKGROUND_FILE.exists():
-                    BACKGROUND_FILE.unlink()
-                self._send_json({"success": True, "position": "background"})
-            except Exception as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=500)
-            return
-
-        self.send_error(404, "Not found")
-
-    def log_message(self, format, *args):
-        pass
+def safe_send_from_base(path: str):
+    normalized = Path(path)
+    file_path = (BASE_DIR / normalized).resolve()
+    try:
+        file_path.relative_to(BASE_DIR.resolve())
+    except ValueError:
+        abort(404)
+    if not file_path.exists() or not file_path.is_file():
+        abort(404)
+    return send_from_directory(BASE_DIR, str(normalized))
 
 
-class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+def emit_panel_update(position: str):
+    sio.emit("panel:update", {"panel": get_panel_state(position)})
+
+
+def emit_scoreboard_update():
+    sio.emit("scoreboard:update", {"scoreboard": get_scoreboard_state()})
+
+
+def emit_background_update():
+    sio.emit("background:update", {"background": background_state()})
+
+
+def snapshot_payload():
+    return {
+        "panels": [get_panel_state("left"), get_panel_state("right")],
+        "scoreboard": get_scoreboard_state(),
+        "background": background_state(),
+    }
+
+
+app = Flask(__name__)
+sio = socketio.Server(async_mode="eventlet", cors_allowed_origins="*")
+application = socketio.WSGIApp(sio, app)
+
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,DELETE,OPTIONS"
+    return response
+
+
+@app.route("/", methods=["GET"])
+def index():
+    return send_from_directory(BASE_DIR, "index.html")
+
+
+@app.route("/cache/background.png", methods=["GET"])
+def background_image():
+    if not BACKGROUND_FILE.exists():
+        abort(404)
+    return send_file(BACKGROUND_FILE)
+
+
+@app.route("/api/images", methods=["GET"])
+def api_images():
+    return jsonify({"images": [get_panel_state("left"), get_panel_state("right")]})
+
+
+@app.route("/api/background", methods=["GET"])
+def api_background():
+    return jsonify(background_state())
+
+
+@app.route("/api/scoreboard", methods=["GET"])
+def api_scoreboard():
+    return jsonify(get_scoreboard_state())
+
+
+@app.route("/api/sprites", methods=["GET"])
+def api_sprites():
+    keyword = parse_qs(request.query_string.decode("utf-8")).get("q", [""])[0].strip().lower()
+    sprites = list_sprites()
+    if keyword:
+        sprites = [
+            sprite
+            for sprite in sprites
+            if keyword in sprite["displayName"].lower()
+            or keyword in sprite["filename"].lower()
+        ]
+    return jsonify({"sprites": sprites, "count": len(sprites)})
+
+
+@app.route("/api/panels/<position>", methods=["POST", "DELETE"])
+def api_panel(position):
+    if position not in {"left", "right"}:
+        return jsonify({"success": False, "error": "Invalid position"}), 404
+
+    if request.method == "DELETE":
+        try:
+            clear_panel_state(position)
+            state = get_panel_state(position)
+            emit_panel_update(position)
+            return jsonify({"success": True, "position": position, "panel": state})
+        except Exception as exc:
+            return jsonify({"success": False, "error": str(exc)}), 500
+
+    try:
+        payload = request.get_json(silent=False) or {}
+        state = save_panel_state(position, payload.get("selected", []))
+        emit_panel_update(position)
+        return jsonify({"success": True, "panel": state})
+    except FileNotFoundError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 404
+    except (ValueError, TypeError) as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route("/api/upload/background", methods=["POST"])
+def api_upload_background():
+    try:
+        upload = request.files.get("file")
+        if upload is None or not upload.filename:
+            raise ValueError("No file data")
+        upload.save(BACKGROUND_FILE)
+        payload = background_state()
+        emit_background_update()
+        return jsonify({"success": True, **payload})
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route("/api/scoreboard", methods=["POST"])
+def api_save_scoreboard():
+    try:
+        payload = request.get_json(silent=False) or {}
+        state = save_scoreboard_state(payload)
+        emit_scoreboard_update()
+        return jsonify({"success": True, "scoreboard": state})
+    except (ValueError, TypeError) as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route("/api/quick-fill", methods=["POST"])
+def api_quick_fill():
+    try:
+        payload = request.get_json(silent=False) or {}
+        preview = build_quick_fill_preview(payload.get("text", ""))
+        return jsonify({"success": True, **preview})
+    except (ValueError, TypeError) as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route("/api/delete/background", methods=["DELETE"])
+def api_delete_background():
+    try:
+        if BACKGROUND_FILE.exists():
+            BACKGROUND_FILE.unlink()
+        emit_background_update()
+        return jsonify({"success": True, "position": "background", "background": background_state()})
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route("/<path:filename>", methods=["GET"])
+def static_files(filename):
+    return safe_send_from_base(filename)
+
+
+@sio.event
+def connect(sid, environ, auth):
+    sio.emit("snapshot", snapshot_payload(), to=sid)
+
+
+class SocketIOServer:
     allow_reuse_address = True
     daemon_threads = True
 
+    def __init__(self, host: str, port: int):
+        ensure_dirs()
+        self.host = host
+        self.port = port
+        self._listener = eventlet.listen((host, port))
+
+    def serve_forever(self):
+        eventlet.wsgi.server(self._listener, application, log_output=False)
+
+    def shutdown(self):
+        if self._listener is not None:
+            try:
+                self._listener.close()
+            except Exception:
+                pass
+            self._listener = None
+
+    def server_close(self):
+        self.shutdown()
+
 
 def create_server(port: int = DEFAULT_PORT, host: str = "127.0.0.1"):
-    ensure_dirs()
-    return ThreadingTCPServer((host, port), AppRequestHandler)
+    return SocketIOServer(host=host, port=port)
 
 
 def print_startup_info(host: str, port: int):
@@ -819,9 +820,9 @@ def print_startup_info(host: str, port: int):
 def serve(port: int = DEFAULT_PORT, host: str = "127.0.0.1"):
     os.chdir(BASE_DIR)
     try:
-        with create_server(port=port, host=host) as httpd:
-            print_startup_info(host=host, port=port)
-            httpd.serve_forever()
+        httpd = create_server(port=port, host=host)
+        print_startup_info(host=host, port=port)
+        httpd.serve_forever()
     except KeyboardInterrupt:
         print("\n服务器已停止")
         return 0
@@ -831,6 +832,7 @@ def serve(port: int = DEFAULT_PORT, host: str = "127.0.0.1"):
         else:
             print(f"启动服务器时发生错误: {exc}")
         return 1
+    return 0
 
 
 def parse_args(argv=None):

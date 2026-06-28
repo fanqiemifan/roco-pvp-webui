@@ -1551,6 +1551,7 @@
         </main>
     </div>
 
+    <script src="/vendor/socket.io.min.js"></script>
     <script>
         const MAX_SELECTION = 6;
 
@@ -1590,6 +1591,7 @@
         const autoSaveTimers = { left: null, right: null };
         const saveRequestVersions = { left: 0, right: 0 };
         const appliedSaveVersions = { left: 0, right: 0 };
+        let socket = null;
 
         function getPreviewOrigin() {
             return `${window.location.protocol}//${window.location.host}`;
@@ -1644,13 +1646,10 @@
                 view.classList.toggle('active', view.dataset.view === state.currentView);
             });
             if (state.currentView === 'roster') {
-                loadPanels().then(() => {
-                    renderPanel('left');
-                    renderPanel('right');
-                    // 刷新两侧面板的槽位预览，确保所有槽位的血量/能力值都实时显示
-                    renderSlotPreview('left');
-                    renderSlotPreview('right');
-                });
+                renderPanel('left');
+                renderPanel('right');
+                renderSlotPreview('left');
+                renderSlotPreview('right');
             }
         }
 
@@ -2352,7 +2351,7 @@
         }
 
         function loadBackground() {
-            fetch('/api/background')
+            return fetch('/api/background')
                 .then(response => response.json())
                 .then(data => {
                     const preview = document.getElementById('bgPreview');
@@ -2367,6 +2366,58 @@
                         empty.style.display = 'block';
                     }
                 });
+        }
+
+        function applySnapshot(payload) {
+            const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
+            panels.forEach(panelState => updatePanelFromApi(panelState, { preserveUi: true }));
+            if (payload && payload.scoreboard) {
+                updateScoreboardFromApi(payload.scoreboard);
+            }
+            if (payload && payload.background) {
+                const preview = document.getElementById('bgPreview');
+                const empty = document.getElementById('bgEmpty');
+                const background = payload.background;
+                if (background.exists) {
+                    preview.src = `${background.path}?t=${Math.floor(background.mtime * 1000)}`;
+                    preview.style.display = 'block';
+                    empty.style.display = 'none';
+                } else {
+                    preview.removeAttribute('src');
+                    preview.style.display = 'none';
+                    empty.style.display = 'block';
+                }
+            }
+        }
+
+        function connectSocket() {
+            if (typeof io !== 'function') {
+                return;
+            }
+
+            socket = io({
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('snapshot', payload => {
+                applySnapshot(payload || {});
+            });
+
+            socket.on('panel:update', payload => {
+                if (payload && payload.panel) {
+                    updatePanelFromApi(payload.panel, { preserveUi: true });
+                }
+            });
+
+            socket.on('scoreboard:update', payload => {
+                if (payload && payload.scoreboard) {
+                    updateScoreboardFromApi(payload.scoreboard);
+                }
+            });
+
+            socket.on('background:update', payload => {
+                applySnapshot({ background: payload ? payload.background : null });
+            });
         }
 
         function deleteBackground() {
@@ -2488,6 +2539,9 @@
 
             Promise.all([loadSprites(), loadPanels(), loadScoreboard()])
                 .then(loadBackground)
+                .then(() => {
+                    connectSocket();
+                })
                 .catch(error => {
                     showStatus('leftStatus', `初始化失败: ${error.message}`, false);
                 });

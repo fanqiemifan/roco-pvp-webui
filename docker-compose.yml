@@ -7,6 +7,6 @@ services:
     ports:
       - "9988:9988"
     volumes:
-      - ./cache:/app/cache
+      - ./LuokePVPWebui/cache:/app/LuokePVPWebui/cache
       - ./img:/app/img
     restart: unless-stopped

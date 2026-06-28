@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let currentBgSignature = null;
     let currentScoreboardSignature = null;
+    let socket = null;
 
     function clampPercent(value) {
         const number = Number(value);
@@ -361,49 +362,80 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.dataset.abilityBadgeEnabled = abilityBadgeEnabled ? '1' : '0';
     }
 
-    function loadImages() {
-        fetch('/api/images')
-            .then(response => response.json())
-            .then(data => {
-                const leftData = data.images.find(img => img.position === 'left');
-                const rightData = data.images.find(img => img.position === 'right');
+    function renderBackground(data) {
+        const newSignature = data && data.exists && data.path && data.mtime ? `${data.path}:${data.mtime}` : 'default';
+        if (currentBgSignature === newSignature) {
+            return;
+        }
 
-                renderPanel('left', leftData);
-                renderPanel('right', rightData);
-            })
-            .catch(error => {
-                console.error('加载图片失败:', error);
-            });
-
-        fetch('/api/background')
-            .then(response => response.json())
-            .then(data => {
-                const newSignature = data.exists && data.path && data.mtime ? `${data.path}:${data.mtime}` : 'default';
-                if (currentBgSignature === newSignature) {
-                    return;
-                }
-
-                currentBgSignature = newSignature;
-                if (data.exists) {
-                    frame3.style.backgroundImage = `url('${data.path}?t=${Math.floor(data.mtime * 1000)}')`;
-                } else {
-                    frame3.style.backgroundImage = "url('image/back.png')";
-                }
-            })
-            .catch(error => {
-                console.error('加载背景图失败:', error);
-            });
-
-        fetch('/api/scoreboard')
-            .then(response => response.json())
-            .then(data => {
-                renderScoreboard(data);
-            })
-            .catch(error => {
-                console.error('加载比分栏失败:', error);
-            });
+        currentBgSignature = newSignature;
+        if (data && data.exists) {
+            frame3.style.backgroundImage = `url('${data.path}?t=${Math.floor(data.mtime * 1000)}')`;
+        } else {
+            frame3.style.backgroundImage = "url('image/back.png')";
+        }
     }
 
-    loadImages();
-    setInterval(loadImages, 5000);
+    function applySnapshot(payload) {
+        const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
+        const leftData = panels.find(img => img.position === 'left');
+        const rightData = panels.find(img => img.position === 'right');
+
+        renderPanel('left', leftData);
+        renderPanel('right', rightData);
+        renderBackground(payload ? payload.background : null);
+        renderScoreboard(payload ? payload.scoreboard : null);
+    }
+
+    function loadInitialState() {
+        return Promise.all([
+            fetch('/api/images').then(response => response.json()),
+            fetch('/api/background').then(response => response.json()),
+            fetch('/api/scoreboard').then(response => response.json())
+        ]).then(([imagesData, backgroundData, scoreboardData]) => {
+            applySnapshot({
+                panels: imagesData.images || [],
+                background: backgroundData,
+                scoreboard: scoreboardData
+            });
+        });
+    }
+
+    function connectSocket() {
+        if (typeof io !== 'function') {
+            console.error('Socket.IO 客户端未加载');
+            return;
+        }
+
+        socket = io({
+            transports: ['websocket', 'polling']
+        });
+
+        socket.on('snapshot', payload => {
+            applySnapshot(payload || {});
+        });
+
+        socket.on('panel:update', payload => {
+            if (payload && payload.panel && payload.panel.position) {
+                renderPanel(payload.panel.position, payload.panel);
+            }
+        });
+
+        socket.on('background:update', payload => {
+            renderBackground(payload ? payload.background : null);
+        });
+
+        socket.on('scoreboard:update', payload => {
+            renderScoreboard(payload ? payload.scoreboard : null);
+        });
+
+        socket.on('connect_error', error => {
+            console.error('Socket.IO 连接失败:', error);
+        });
+    }
+
+    loadInitialState().catch(error => {
+        console.error('初始化展示数据失败:', error);
+    });
+    connectSocket();
 });
