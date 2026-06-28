@@ -240,19 +240,35 @@
 
         const fill = document.createElement('div');
         fill.className = 'stat-fill';
-        fill.style.width = `${fillPercent}%`;
 
         const text = document.createElement('div');
         text.className = 'stat-label';
-        text.textContent = label;
 
         row.append(fill, text);
+        updateStatRow(row, type, fillPercent, label, emptyBar);
         return row;
+    }
+
+    function updateStatRow(row, type, fillPercent, label, emptyBar) {
+        if (!row) return;
+
+        row.className = `stat-row stat-row-${type}${emptyBar ? ' is-empty-bar' : ''}`;
+
+        const fill = row.querySelector('.stat-fill');
+        if (fill) {
+            fill.style.width = `${fillPercent}%`;
+        }
+
+        const text = row.querySelector('.stat-label');
+        if (text) {
+            text.textContent = label;
+        }
     }
 
     function renderEmptySlot(slotEl) {
         slotEl.className = 'spirit-slot is-empty';
         slotEl.innerHTML = '';
+        delete slotEl.dataset.spriteKey;
     }
 
     function renderSlot(slotEl, slotData) {
@@ -272,29 +288,54 @@
             (displaySpirit && displaySpirit.displayName) || getSpriteDisplayName(sourceSprite)
         );
         const spiritPath = displaySpirit ? displaySpirit.path : sourceSprite.path;
+        const spriteKey = JSON.stringify({ spiritPath, spiritName });
+        const shouldRebuild = slotEl.dataset.spriteKey !== spriteKey
+            || !slotEl.querySelector('.spirit-name')
+            || !slotEl.querySelector('.stat-row-hp')
+            || !slotEl.querySelector('.stat-row-energy');
 
         slotEl.className = `spirit-slot${isDone ? ' is-done' : ''}`;
-        slotEl.innerHTML = '';
-
-        if (spiritPath) {
-            const thumb = document.createElement('img');
-            thumb.className = 'spirit-thumb';
-            thumb.src = spiritPath;
-            thumb.alt = spiritName;
-            slotEl.append(thumb);
-        }
-
-        const name = document.createElement('div');
-        name.className = 'spirit-name';
-        name.textContent = spiritName;
 
         const hpLabel = isDone ? '/' : healthMeta.label;
-        const hpRow = createStatRow('hp', isDone ? 100 : healthPercent, hpLabel, isDone);
         const energyFill = isDone ? 100 : Math.round((energyValue / 10) * 100);
         const energyLabel = isDone ? '/' : String(energyValue);
-        const energyRow = createStatRow('energy', energyFill, energyLabel, isDone);
 
-        slotEl.append(hpRow, energyRow, name);
+        if (shouldRebuild) {
+            slotEl.innerHTML = '';
+            slotEl.dataset.spriteKey = spriteKey;
+
+            if (spiritPath) {
+                const thumb = document.createElement('img');
+                thumb.className = 'spirit-thumb';
+                thumb.src = spiritPath;
+                thumb.alt = spiritName;
+                slotEl.append(thumb);
+            }
+
+            const hpRow = createStatRow('hp', isDone ? 100 : healthPercent, hpLabel, isDone);
+            const energyRow = createStatRow('energy', energyFill, energyLabel, isDone);
+
+            const name = document.createElement('div');
+            name.className = 'spirit-name';
+            name.textContent = spiritName;
+
+            slotEl.append(hpRow, energyRow, name);
+            return;
+        }
+
+        const thumb = slotEl.querySelector('.spirit-thumb');
+        if (thumb && spiritPath && thumb.src !== spiritPath) {
+            thumb.src = spiritPath;
+            thumb.alt = spiritName;
+        }
+
+        const name = slotEl.querySelector('.spirit-name');
+        if (name) {
+            name.textContent = spiritName;
+        }
+
+        updateStatRow(slotEl.querySelector('.stat-row-hp'), 'hp', isDone ? 100 : healthPercent, hpLabel, isDone);
+        updateStatRow(slotEl.querySelector('.stat-row-energy'), 'energy', energyFill, energyLabel, isDone);
     }
 
     function renderPanel(position, panelData) {
