@@ -20,6 +20,8 @@ DEFAULT_OPACITY = 0.5
 DEFAULT_SATURATION = 1.0
 DEFAULT_HEALTH_PERCENT = 100
 DEFAULT_ENERGY_VALUE = 10
+DEFAULT_BEST_OF = 7
+SUPPORTED_BEST_OF = {1, 3, 5, 7}
 
 
 def get_base_dir() -> Path:
@@ -466,6 +468,7 @@ def default_scoreboard_state():
         "leftScore": "0",
         "rightName": "",
         "rightScore": "0",
+        "bestOf": DEFAULT_BEST_OF,
         "scoreboardEnabled": True,
         "healthBadgeEnabled": True,
         "abilityBadgeEnabled": True,
@@ -491,6 +494,14 @@ def normalize_scoreboard_score(value, max_length=4):
     if not text:
         return "0"
     return text[:max_length]
+
+
+def normalize_best_of(value):
+    try:
+        best_of = int(value)
+    except (TypeError, ValueError):
+        best_of = DEFAULT_BEST_OF
+    return best_of if best_of in SUPPORTED_BEST_OF else DEFAULT_BEST_OF
 
 
 def normalize_font_size(value, default=64, minimum=12, maximum=160):
@@ -611,6 +622,7 @@ def get_scoreboard_state():
             "leftScore": normalize_scoreboard_score(metadata.get("leftScore", "0")),
             "rightName": normalize_scoreboard_text(metadata.get("rightName", "")),
             "rightScore": normalize_scoreboard_score(metadata.get("rightScore", "0")),
+            "bestOf": normalize_best_of(metadata.get("bestOf", DEFAULT_BEST_OF)),
             "scoreboardEnabled": normalize_bool(metadata.get("scoreboardEnabled", True), default=True),
             "healthBadgeEnabled": normalize_bool(metadata.get("healthBadgeEnabled", True), default=True),
             "abilityBadgeEnabled": normalize_bool(metadata.get("abilityBadgeEnabled", True), default=True),
@@ -645,6 +657,7 @@ def save_scoreboard_state(payload):
         "leftScore": normalize_scoreboard_score(payload.get("leftScore", "0")),
         "rightName": normalize_scoreboard_text(payload.get("rightName", "")),
         "rightScore": normalize_scoreboard_score(payload.get("rightScore", "0")),
+        "bestOf": normalize_best_of(payload.get("bestOf", DEFAULT_BEST_OF)),
         "scoreboardEnabled": normalize_bool(payload.get("scoreboardEnabled", True), default=True),
         "healthBadgeEnabled": normalize_bool(payload.get("healthBadgeEnabled", True), default=True),
         "abilityBadgeEnabled": normalize_bool(payload.get("abilityBadgeEnabled", True), default=True),
@@ -659,6 +672,14 @@ def save_scoreboard_state(payload):
         encoding="utf-8",
     )
     return get_scoreboard_state()
+
+
+def save_scoreboard_best_of(payload):
+    if not isinstance(payload, dict):
+        raise ValueError("best-of payload must be an object")
+    state = get_scoreboard_state()
+    state["bestOf"] = normalize_best_of(payload.get("bestOf", DEFAULT_BEST_OF))
+    return save_scoreboard_state(state)
 
 
 def save_panel_state(position: str, selected_slots):
@@ -872,6 +893,19 @@ def api_save_scoreboard():
     try:
         payload = request.get_json(silent=False) or {}
         state = save_scoreboard_state(payload)
+        emit_scoreboard_update()
+        return jsonify({"success": True, "scoreboard": state})
+    except (ValueError, TypeError) as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route("/api/scoreboard/best-of", methods=["POST"])
+def api_save_scoreboard_best_of():
+    try:
+        payload = request.get_json(silent=False) or {}
+        state = save_scoreboard_best_of(payload)
         emit_scoreboard_update()
         return jsonify({"success": True, "scoreboard": state})
     except (ValueError, TypeError) as exc:

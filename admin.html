@@ -793,12 +793,14 @@
             color: #486581;
         }
 
-        .form-row input {
+        .form-row input,
+        .form-row select {
             width: 100%;
             border: 1px solid #cbd5e1;
             border-radius: 10px;
             padding: 10px 12px;
             font-size: 14px;
+            background: #fff;
         }
 
         .upload-area {
@@ -1438,6 +1440,15 @@
                             <div class="scoreboard-card">
                                 <h3>字体大小</h3>
                                 <div class="form-row">
+                                    <label for="bestOfInput">比赛赛制</label>
+                                    <select id="bestOfInput">
+                                        <option value="1">BO1</option>
+                                        <option value="3">BO3</option>
+                                        <option value="5">BO5</option>
+                                        <option value="7" selected>BO7</option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
                                     <label for="nameFontSizeInput">选手名字字号</label>
                                     <input type="number" id="nameFontSizeInput" min="12" max="160" value="64">
                                 </div>
@@ -1577,6 +1588,7 @@
                 leftScore: '0',
                 rightName: '',
                 rightScore: '0',
+                bestOf: 7,
                 scoreboardEnabled: true,
                 healthBadgeEnabled: true,
                 abilityBadgeEnabled: true,
@@ -1670,6 +1682,7 @@
             document.getElementById('leftPlayerScoreInput').value = state.scoreboard.leftScore || '0';
             document.getElementById('rightPlayerNameInput').value = state.scoreboard.rightName || '';
             document.getElementById('rightPlayerScoreInput').value = state.scoreboard.rightScore || '0';
+            document.getElementById('bestOfInput').value = state.scoreboard.bestOf || 7;
             document.getElementById('scoreboardEnabledInput').checked = state.scoreboard.scoreboardEnabled !== false;
             document.getElementById('healthBadgeEnabledInput').checked = state.scoreboard.healthBadgeEnabled !== false;
             document.getElementById('abilityBadgeEnabledInput').checked = state.scoreboard.abilityBadgeEnabled !== false;
@@ -1686,6 +1699,7 @@
                 leftScore: scoreboard && scoreboard.leftScore ? scoreboard.leftScore : '0',
                 rightName: scoreboard && scoreboard.rightName ? scoreboard.rightName : '',
                 rightScore: scoreboard && scoreboard.rightScore ? scoreboard.rightScore : '0',
+                bestOf: scoreboard && scoreboard.bestOf ? scoreboard.bestOf : 7,
                 scoreboardEnabled: scoreboard ? scoreboard.scoreboardEnabled !== false : true,
                 healthBadgeEnabled: scoreboard ? scoreboard.healthBadgeEnabled !== false : true,
                 abilityBadgeEnabled: scoreboard ? scoreboard.abilityBadgeEnabled !== false : true,
@@ -2468,6 +2482,7 @@
                 leftScore: document.getElementById('leftPlayerScoreInput').value,
                 rightName: document.getElementById('rightPlayerNameInput').value,
                 rightScore: document.getElementById('rightPlayerScoreInput').value,
+                bestOf: document.getElementById('bestOfInput').value,
                 scoreboardEnabled: document.getElementById('scoreboardEnabledInput').checked,
                 healthBadgeEnabled: document.getElementById('healthBadgeEnabledInput').checked,
                 abilityBadgeEnabled: document.getElementById('abilityBadgeEnabledInput').checked,

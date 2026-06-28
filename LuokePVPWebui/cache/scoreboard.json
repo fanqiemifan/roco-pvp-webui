@@ -1,0 +1,14 @@
+{
+  "leftName": "A 选手",
+  "leftScore": "1",
+  "rightName": "B 选手",
+  "rightScore": "2",
+  "bestOf": 5,
+  "scoreboardEnabled": true,
+  "healthBadgeEnabled": false,
+  "abilityBadgeEnabled": false,
+  "nameFontSize": 64,
+  "scoreFontSize": 64,
+  "centerAreaEnabled": false,
+  "centerAreaColor": "#393939"
+}

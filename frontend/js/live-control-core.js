@@ -59,6 +59,11 @@
         if (_config.onStatusChange) _config.onStatusChange(message);
     }
 
+    function toPercent(value, max) {
+        if (!max) return '0%';
+        return `${(clamp(Number(value) || 0, 0, max) / max) * 100}%`;
+    }
+
     // ==================== 渲染 ====================
 
     function renderGrid(panel) {
@@ -81,25 +86,25 @@
                 : `<div class="sprite-preview"><div class="sprite-empty">空槽位</div></div>`;
             card.innerHTML = `
                 <div class="slot-preview-wrap">
+                    <span class="slot-index">${index + 1}</span>
                     ${spriteHtml}
-                    <div class="sprite-label">
-                        <span class="slot-index">${index + 1}</span>
-                        <span class="slot-name">${spriteName}</span>
-                    </div>
+                    <span class="slot-name">${spriteName}</span>
                 </div>
                 <div class="slot-main">
                     <div class="form-row">
-                        <label>血量：<span class="mini" id="${panel}-${index}-hp-text">${slot.healthPercent}%</span></label>
-                        <div class="line">
-                            <input class="health-range" type="range" min="0" max="100" value="${slot.healthPercent}" data-panel="${panel}" data-index="${index}" data-field="healthPercent">
-                            <input type="number" min="0" max="100" value="${slot.healthPercent}" data-panel="${panel}" data-index="${index}" data-field="healthPercent">
+                        <div class="range-line">
+                            <div class="range-shell range-shell-health" style="--percent:${toPercent(slot.healthPercent, 100)};">
+                                <input class="health-range" type="range" min="0" max="100" value="${slot.healthPercent}" data-panel="${panel}" data-index="${index}" data-field="healthPercent">
+                            </div>
+                            <input class="value-input" id="${panel}-${index}-hp-text" type="number" min="0" max="100" value="${slot.healthPercent}" data-panel="${panel}" data-index="${index}" data-field="healthPercent">
                         </div>
                     </div>
                     <div class="form-row">
-                        <label>能力值：<span class="mini" id="${panel}-${index}-energy-text">${slot.energyValue}</span></label>
-                        <div class="line">
-                            <input class="energy-range" type="range" min="0" max="10" value="${slot.energyValue}" data-panel="${panel}" data-index="${index}" data-field="energyValue">
-                            <input type="number" min="0" max="10" value="${slot.energyValue}" data-panel="${panel}" data-index="${index}" data-field="energyValue">
+                        <div class="range-line">
+                            <div class="range-shell range-shell-energy" style="--percent:${toPercent(slot.energyValue, 10)};">
+                                <input class="energy-range" type="range" min="0" max="10" value="${slot.energyValue}" data-panel="${panel}" data-index="${index}" data-field="energyValue">
+                            </div>
+                            <input class="value-input" id="${panel}-${index}-energy-text" type="number" min="0" max="10" value="${slot.energyValue}" data-panel="${panel}" data-index="${index}" data-field="energyValue">
                         </div>
                     </div>
                 </div>
@@ -116,20 +121,20 @@
         const hpText = card.querySelector(`#${panel}-${index}-hp-text`);
         const energyText = card.querySelector(`#${panel}-${index}-energy-text`);
         const hpRange = card.querySelector('input[type="range"][data-field="healthPercent"]');
-        const hpNumber = card.querySelector('input[type="number"][data-field="healthPercent"]');
         const energyRange = card.querySelector('input[type="range"][data-field="energyValue"]');
-        const energyNumber = card.querySelector('input[type="number"][data-field="energyValue"]');
+        const hpShell = hpRange ? hpRange.closest('.range-shell') : null;
+        const energyShell = energyRange ? energyRange.closest('.range-shell') : null;
 
         if (field === 'healthPercent' || field === 'all') {
-            if (hpText) hpText.textContent = `${slot.healthPercent}%`;
+            if (hpText && hpText.value !== String(slot.healthPercent)) hpText.value = String(slot.healthPercent);
             if (hpRange && hpRange.value !== String(slot.healthPercent)) hpRange.value = String(slot.healthPercent);
-            if (hpNumber && hpNumber.value !== String(slot.healthPercent)) hpNumber.value = String(slot.healthPercent);
+            if (hpShell) hpShell.style.setProperty('--percent', toPercent(slot.healthPercent, 100));
         }
 
         if (field === 'energyValue' || field === 'all') {
-            if (energyText) energyText.textContent = String(slot.energyValue);
+            if (energyText && energyText.value !== String(slot.energyValue)) energyText.value = String(slot.energyValue);
             if (energyRange && energyRange.value !== String(slot.energyValue)) energyRange.value = String(slot.energyValue);
-            if (energyNumber && energyNumber.value !== String(slot.energyValue)) energyNumber.value = String(slot.energyValue);
+            if (energyShell) energyShell.style.setProperty('--percent', toPercent(slot.energyValue, 10));
         }
     }
 

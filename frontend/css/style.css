@@ -286,6 +286,11 @@ body {
     opacity: 1;
 }
 
+body[data-health-badge-enabled="0"] .slot-hp-badge,
+body[data-ability-badge-enabled="0"] .slot-ability-badge {
+    display: none;
+}
+
 .slot-hp-badge {
     top: 0;
     right: 0;

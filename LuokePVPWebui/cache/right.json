@@ -4,147 +4,147 @@
     {
       "slot": 0,
       "sprite": {
-        "id": "NO.002_miaomiao.png",
-        "filename": "NO.002_miaomiao.png",
-        "displayName": "喵喵",
-        "name": "喵喵",
-        "chineseName": "喵喵",
-        "path": "img/NO.002_miaomiao.png",
+        "id": "NO.087_shuoyeyifu.png",
+        "filename": "NO.087_shuoyeyifu.png",
+        "displayName": "朔夜伊芙",
+        "name": "朔夜伊芙",
+        "chineseName": "朔夜伊芙",
+        "path": "img/NO.087_shuoyeyifu.png",
         "aliases": [
-          "NO.002_喵喵.png",
-          "喵喵",
-          "NO.002_miaomiao.png",
-          "NO.002_miaomiao",
-          "2",
-          "002",
-          "NO.002",
-          "NO.002_喵喵"
+          "NO.087_朔夜伊芙.png",
+          "朔夜伊芙",
+          "NO.087_shuoyeyifu.png",
+          "NO.087_shuoyeyifu",
+          "87",
+          "087",
+          "NO.087",
+          "NO.087_朔夜伊芙"
         ],
-        "number": 2,
+        "number": 87,
         "variant": 0
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
-      "energyValue": 10
+      "healthPercent": 51,
+      "energyValue": 3
     },
     {
       "slot": 1,
       "sprite": {
-        "id": "NO.002_miaomiao.png",
-        "filename": "NO.002_miaomiao.png",
-        "displayName": "喵喵",
-        "name": "喵喵",
-        "chineseName": "喵喵",
-        "path": "img/NO.002_miaomiao.png",
+        "id": "NO.084_nvwangfeng.png",
+        "filename": "NO.084_nvwangfeng.png",
+        "displayName": "女王蜂",
+        "name": "女王蜂",
+        "chineseName": "女王蜂",
+        "path": "img/NO.084_nvwangfeng.png",
         "aliases": [
-          "NO.002_喵喵.png",
-          "喵喵",
-          "NO.002_miaomiao.png",
-          "NO.002_miaomiao",
-          "2",
-          "002",
-          "NO.002",
-          "NO.002_喵喵"
+          "NO.084_女王蜂.png",
+          "女王蜂",
+          "NO.084_nvwangfeng.png",
+          "NO.084_nvwangfeng",
+          "84",
+          "084",
+          "NO.084",
+          "NO.084_女王蜂"
         ],
-        "number": 2,
+        "number": 84,
         "variant": 0
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
-      "energyValue": 10
+      "healthPercent": 20,
+      "energyValue": 4
     },
     {
       "slot": 2,
       "sprite": {
-        "id": "NO.005_huohua.png",
-        "filename": "NO.005_huohua.png",
-        "displayName": "火花",
-        "name": "火花",
-        "chineseName": "火花",
-        "path": "img/NO.005_huohua.png",
+        "id": "NO.043_qilihua.png",
+        "filename": "NO.043_qilihua.png",
+        "displayName": "奇丽花",
+        "name": "奇丽花",
+        "chineseName": "奇丽花",
+        "path": "img/NO.043_qilihua.png",
         "aliases": [
-          "NO.005_火花.png",
-          "火花",
-          "NO.005_huohua.png",
-          "NO.005_huohua",
-          "5",
-          "005",
-          "NO.005",
-          "NO.005_火花"
+          "NO.043_奇丽花.png",
+          "奇丽花",
+          "NO.043_qilihua.png",
+          "NO.043_qilihua",
+          "43",
+          "043",
+          "NO.043",
+          "NO.043_奇丽花"
         ],
-        "number": 5,
+        "number": 43,
         "variant": 0
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
-      "energyValue": 10
+      "healthPercent": 74,
+      "energyValue": 7
     },
     {
       "slot": 3,
       "sprite": {
-        "id": "NO.004_yemianmolimao.png",
-        "filename": "NO.004_yemianmolimao.png",
-        "displayName": "叶冕魔力猫",
-        "name": "叶冕魔力猫",
-        "chineseName": "叶冕魔力猫",
-        "path": "img/NO.004_yemianmolimao.png",
+        "id": "NO.026_shiguanwangxi-1.png",
+        "filename": "NO.026_shiguanwangxi-1.png",
+        "displayName": "石冠王蜥-1",
+        "name": "石冠王蜥-1",
+        "chineseName": "石冠王蜥-1",
+        "path": "img/NO.026_shiguanwangxi-1.png",
         "aliases": [
-          "NO.004_叶冕魔力猫.png",
-          "叶冕魔力猫",
-          "NO.004_yemianmolimao.png",
-          "NO.004_yemianmolimao",
-          "4",
-          "004",
-          "NO.004",
-          "NO.004_叶冕魔力猫"
+          "NO.026_石冠王蜥-1.png",
+          "石冠王蜥-1",
+          "NO.026_shiguanwangxi-1.png",
+          "NO.026_shiguanwangxi-1",
+          "26",
+          "026",
+          "NO.026",
+          "NO.026_石冠王蜥-1"
         ],
-        "number": 4,
-        "variant": 0
+        "number": 26,
+        "variant": 1
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
-      "energyValue": 10
+      "healthPercent": 16,
+      "energyValue": 6
     },
     {
       "slot": 4,
       "sprite": {
-        "id": "NO.001_dimo.png",
-        "filename": "NO.001_dimo.png",
-        "displayName": "迪莫",
-        "name": "迪莫",
-        "chineseName": "迪莫",
-        "path": "img/NO.001_dimo.png",
+        "id": "NO.062_jushizhenyan.png",
+        "filename": "NO.062_jushizhenyan.png",
+        "displayName": "巨噬针鼹",
+        "name": "巨噬针鼹",
+        "chineseName": "巨噬针鼹",
+        "path": "img/NO.062_jushizhenyan.png",
         "aliases": [
-          "NO.001_迪莫.png",
-          "迪莫",
-          "NO.001_dimo.png",
-          "NO.001_dimo",
-          "1",
-          "001",
-          "NO.001",
-          "NO.001_迪莫"
+          "NO.062_巨噬针鼹.png",
+          "巨噬针鼹",
+          "NO.062_jushizhenyan.png",
+          "NO.062_jushizhenyan",
+          "62",
+          "062",
+          "NO.062",
+          "NO.062_巨噬针鼹"
         ],
-        "number": 1,
+        "number": 62,
         "variant": 0
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
-      "energyValue": 10
+      "healthPercent": 75,
+      "energyValue": 5
     },
     {
       "slot": 5,
@@ -172,8 +172,8 @@
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
-      "energyValue": 10
+      "healthPercent": 26,
+      "energyValue": 4
     }
   ]
 }
