@@ -78,15 +78,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function getHeartAsset(healthPercent) {
         const health = clampPercent(healthPercent);
         if (health <= 0) {
-            return '/image/heart0.png';
+            return 'image/heart0.png';
         }
         if (health <= 10) {
-            return '/image/heart10.png';
+            return 'image/heart10.png';
         }
         if (health <= 50) {
-            return '/image/heart50.png';
+            return 'image/heart50.png';
         }
-        return '/image/heart100.png';
+        return 'image/heart100.png';
     }
 
     function getAbilityMeta(energyValue) {
@@ -94,18 +94,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (energy <= 2) {
             return {
                 className: 'danger',
-                icon: '/image/start-3.png'
+                icon: 'image/start-3.png'
             };
         }
         if (energy <= 5) {
             return {
                 className: 'mid',
-                icon: '/image/start-2.png'
+                icon: 'image/start-2.png'
             };
         }
         return {
             className: 'high',
-            icon: '/image/start-1.png'
+            icon: 'image/start-1.png'
         };
     }
 
@@ -389,9 +389,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadInitialState() {
         return Promise.all([
-            fetch('/api/images').then(response => response.json()),
-            fetch('/api/background').then(response => response.json()),
-            fetch('/api/scoreboard').then(response => response.json())
+            fetch('api/images').then(response => response.json()),
+            fetch('api/background').then(response => response.json()),
+            fetch('api/scoreboard').then(response => response.json())
         ]).then(([imagesData, backgroundData, scoreboardData]) => {
             applySnapshot({
                 panels: imagesData.images || [],

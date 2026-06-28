@@ -1,0 +1,179 @@
+{
+  "position": "right",
+  "selected": [
+    {
+      "slot": 0,
+      "sprite": {
+        "id": "NO.002_miaomiao.png",
+        "filename": "NO.002_miaomiao.png",
+        "displayName": "喵喵",
+        "name": "喵喵",
+        "chineseName": "喵喵",
+        "path": "img/NO.002_miaomiao.png",
+        "aliases": [
+          "NO.002_喵喵.png",
+          "喵喵",
+          "NO.002_miaomiao.png",
+          "NO.002_miaomiao",
+          "2",
+          "002",
+          "NO.002",
+          "NO.002_喵喵"
+        ],
+        "number": 2,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 100,
+      "energyValue": 10
+    },
+    {
+      "slot": 1,
+      "sprite": {
+        "id": "NO.002_miaomiao.png",
+        "filename": "NO.002_miaomiao.png",
+        "displayName": "喵喵",
+        "name": "喵喵",
+        "chineseName": "喵喵",
+        "path": "img/NO.002_miaomiao.png",
+        "aliases": [
+          "NO.002_喵喵.png",
+          "喵喵",
+          "NO.002_miaomiao.png",
+          "NO.002_miaomiao",
+          "2",
+          "002",
+          "NO.002",
+          "NO.002_喵喵"
+        ],
+        "number": 2,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 100,
+      "energyValue": 10
+    },
+    {
+      "slot": 2,
+      "sprite": {
+        "id": "NO.005_huohua.png",
+        "filename": "NO.005_huohua.png",
+        "displayName": "火花",
+        "name": "火花",
+        "chineseName": "火花",
+        "path": "img/NO.005_huohua.png",
+        "aliases": [
+          "NO.005_火花.png",
+          "火花",
+          "NO.005_huohua.png",
+          "NO.005_huohua",
+          "5",
+          "005",
+          "NO.005",
+          "NO.005_火花"
+        ],
+        "number": 5,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 100,
+      "energyValue": 10
+    },
+    {
+      "slot": 3,
+      "sprite": {
+        "id": "NO.004_yemianmolimao.png",
+        "filename": "NO.004_yemianmolimao.png",
+        "displayName": "叶冕魔力猫",
+        "name": "叶冕魔力猫",
+        "chineseName": "叶冕魔力猫",
+        "path": "img/NO.004_yemianmolimao.png",
+        "aliases": [
+          "NO.004_叶冕魔力猫.png",
+          "叶冕魔力猫",
+          "NO.004_yemianmolimao.png",
+          "NO.004_yemianmolimao",
+          "4",
+          "004",
+          "NO.004",
+          "NO.004_叶冕魔力猫"
+        ],
+        "number": 4,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 100,
+      "energyValue": 10
+    },
+    {
+      "slot": 4,
+      "sprite": {
+        "id": "NO.001_dimo.png",
+        "filename": "NO.001_dimo.png",
+        "displayName": "迪莫",
+        "name": "迪莫",
+        "chineseName": "迪莫",
+        "path": "img/NO.001_dimo.png",
+        "aliases": [
+          "NO.001_迪莫.png",
+          "迪莫",
+          "NO.001_dimo.png",
+          "NO.001_dimo",
+          "1",
+          "001",
+          "NO.001",
+          "NO.001_迪莫"
+        ],
+        "number": 1,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 100,
+      "energyValue": 10
+    },
+    {
+      "slot": 5,
+      "sprite": {
+        "id": "NO.001_dimo.png",
+        "filename": "NO.001_dimo.png",
+        "displayName": "迪莫",
+        "name": "迪莫",
+        "chineseName": "迪莫",
+        "path": "img/NO.001_dimo.png",
+        "aliases": [
+          "NO.001_迪莫.png",
+          "迪莫",
+          "NO.001_dimo.png",
+          "NO.001_dimo",
+          "1",
+          "001",
+          "NO.001",
+          "NO.001_迪莫"
+        ],
+        "number": 1,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 100,
+      "energyValue": 10
+    }
+  ]
+}

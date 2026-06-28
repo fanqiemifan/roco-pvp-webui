@@ -4,10 +4,24 @@
     {
       "slot": 0,
       "sprite": {
-        "id": "NO.220_海枝枝-3.png",
-        "filename": "NO.220_海枝枝-3.png",
-        "displayName": "海枝枝-3",
-        "path": "/img/NO.220_海枝枝-3.png"
+        "id": "NO.014_shuipaoke-1.png",
+        "filename": "NO.014_shuipaoke-1.png",
+        "displayName": "水泡壳-1",
+        "name": "水泡壳-1",
+        "chineseName": "水泡壳-1",
+        "path": "img/NO.014_shuipaoke-1.png",
+        "aliases": [
+          "NO.014_水泡壳-1.png",
+          "水泡壳-1",
+          "NO.014_shuipaoke-1.png",
+          "NO.014_shuipaoke-1",
+          "14",
+          "014",
+          "NO.014",
+          "NO.014_水泡壳-1"
+        ],
+        "number": 14,
+        "variant": 1
       },
       "opacityEnabled": false,
       "opacity": 0.5,
@@ -18,7 +32,26 @@
     },
     {
       "slot": 1,
-      "sprite": null,
+      "sprite": {
+        "id": "NO.014_shuipaoke-1.png",
+        "filename": "NO.014_shuipaoke-1.png",
+        "displayName": "水泡壳-1",
+        "name": "水泡壳-1",
+        "chineseName": "水泡壳-1",
+        "path": "img/NO.014_shuipaoke-1.png",
+        "aliases": [
+          "NO.014_水泡壳-1.png",
+          "水泡壳-1",
+          "NO.014_shuipaoke-1.png",
+          "NO.014_shuipaoke-1",
+          "14",
+          "014",
+          "NO.014",
+          "NO.014_水泡壳-1"
+        ],
+        "number": 14,
+        "variant": 1
+      },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
@@ -28,7 +61,26 @@
     },
     {
       "slot": 2,
-      "sprite": null,
+      "sprite": {
+        "id": "NO.009_bobola.png",
+        "filename": "NO.009_bobola.png",
+        "displayName": "波波拉",
+        "name": "波波拉",
+        "chineseName": "波波拉",
+        "path": "img/NO.009_bobola.png",
+        "aliases": [
+          "NO.009_波波拉.png",
+          "波波拉",
+          "NO.009_bobola.png",
+          "NO.009_bobola",
+          "9",
+          "009",
+          "NO.009",
+          "NO.009_波波拉"
+        ],
+        "number": 9,
+        "variant": 0
+      },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
@@ -38,7 +90,26 @@
     },
     {
       "slot": 3,
-      "sprite": null,
+      "sprite": {
+        "id": "NO.007_huoshen.png",
+        "filename": "NO.007_huoshen.png",
+        "displayName": "火神",
+        "name": "火神",
+        "chineseName": "火神",
+        "path": "img/NO.007_huoshen.png",
+        "aliases": [
+          "NO.007_火神.png",
+          "火神",
+          "NO.007_huoshen.png",
+          "NO.007_huoshen",
+          "7",
+          "007",
+          "NO.007",
+          "NO.007_火神"
+        ],
+        "number": 7,
+        "variant": 0
+      },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
@@ -48,7 +119,26 @@
     },
     {
       "slot": 4,
-      "sprite": null,
+      "sprite": {
+        "id": "NO.005_huohua.png",
+        "filename": "NO.005_huohua.png",
+        "displayName": "火花",
+        "name": "火花",
+        "chineseName": "火花",
+        "path": "img/NO.005_huohua.png",
+        "aliases": [
+          "NO.005_火花.png",
+          "火花",
+          "NO.005_huohua.png",
+          "NO.005_huohua",
+          "5",
+          "005",
+          "NO.005",
+          "NO.005_火花"
+        ],
+        "number": 5,
+        "variant": 0
+      },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
@@ -58,7 +148,26 @@
     },
     {
       "slot": 5,
-      "sprite": null,
+      "sprite": {
+        "id": "NO.004_yemianmolimao.png",
+        "filename": "NO.004_yemianmolimao.png",
+        "displayName": "叶冕魔力猫",
+        "name": "叶冕魔力猫",
+        "chineseName": "叶冕魔力猫",
+        "path": "img/NO.004_yemianmolimao.png",
+        "aliases": [
+          "NO.004_叶冕魔力猫.png",
+          "叶冕魔力猫",
+          "NO.004_yemianmolimao.png",
+          "NO.004_yemianmolimao",
+          "4",
+          "004",
+          "NO.004",
+          "NO.004_叶冕魔力猫"
+        ],
+        "number": 4,
+        "variant": 0
+      },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,

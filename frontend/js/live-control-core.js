@@ -163,7 +163,7 @@
     }
 
     async function savePanel(panel) {
-        const res = await fetch(`/api/panels/${panel}`, {
+        const res = await fetch(`api/panels/${panel}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -206,7 +206,7 @@
         try {
             if (!silent) setStatus('加载中...');
 
-            const res = await fetch('/api/images');
+            const res = await fetch('api/images');
             const data = await res.json();
             const images = Array.isArray(data.images) ? data.images : [];
 

@@ -5,6 +5,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from typing import Optional
 from urllib.parse import parse_qs
 
 import eventlet
@@ -27,7 +28,10 @@ def get_base_dir() -> Path:
     if getattr(sys, "frozen", None) is not None:
         return Path(sys.executable).resolve().parent
     try:
-        return Path(__file__).resolve().parent
+        script_dir = Path(__file__).resolve().parent
+        if script_dir.name == "backend":
+            return script_dir.parent
+        return script_dir
     except Exception:
         return Path.cwd()
 
@@ -53,6 +57,8 @@ def get_data_dir() -> Path:
 
 BASE_DIR = get_base_dir()
 IMG_DIR = BASE_DIR / "img"
+JSON_DIR = BASE_DIR / "json"
+SPRITES_INDEX_FILE = JSON_DIR / "sprites.json"
 DATA_DIR = get_data_dir()
 CACHE_DIR = DATA_DIR / "cache"
 BACKGROUND_FILE = CACHE_DIR / "background.png"
@@ -62,6 +68,7 @@ def ensure_dirs():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     CACHE_DIR.mkdir(exist_ok=True)
     IMG_DIR.mkdir(exist_ok=True)
+    JSON_DIR.mkdir(exist_ok=True)
 
 
 def panel_state_path(position: str):
@@ -72,6 +79,63 @@ def scoreboard_state_path():
     return CACHE_DIR / "scoreboard.json"
 
 
+def sprite_number_from_filename(filename: str):
+    match = re.match(r"^NO\.(\d+)_", filename or "")
+    return int(match.group(1)) if match else None
+
+
+def sprite_variant_from_filename(filename: str):
+    match = re.search(r"-(\d+)$", Path(filename).stem if filename else "")
+    return int(match.group(1)) if match else 0
+
+
+def normalize_sprite_record(record, fallback_path: Optional[Path] = None):
+    if not isinstance(record, dict):
+        return None
+
+    path_value = record.get("path") if isinstance(record.get("path"), str) else ""
+    filename = Path(path_value).name if path_value else record.get("filename") or record.get("id")
+    if (not isinstance(filename, str) or not filename) and path_value:
+        filename = Path(path_value).name
+    if not isinstance(filename, str) or not filename:
+        return None
+
+    filename = Path(filename).name
+    display_name = (
+        record.get("displayName")
+        or record.get("chineseName")
+        or record.get("name")
+        or Path(filename).stem
+    )
+    path_value = f"img/{filename}"
+    number = record.get("number") if isinstance(record.get("number"), int) else sprite_number_from_filename(filename)
+    aliases = [
+        str(alias).strip()
+        for alias in (record.get("aliases") or [])
+        if isinstance(alias, str) and alias.strip()
+    ]
+    for alias in [display_name, record.get("chineseName"), record.get("name"), filename, Path(filename).stem]:
+        if isinstance(alias, str) and alias.strip() and alias.strip() not in aliases:
+            aliases.append(alias.strip())
+    if number is not None:
+        for alias in [str(number), f"{number:03d}", f"NO.{number:03d}", f"NO.{number:03d}_{display_name}"]:
+            if alias not in aliases:
+                aliases.append(alias)
+
+    normalized = {
+        "id": filename,
+        "filename": filename,
+        "displayName": str(display_name),
+        "name": str(display_name),
+        "chineseName": str(display_name),
+        "path": str(path_value),
+        "aliases": aliases,
+        "number": number,
+        "variant": record.get("variant") if isinstance(record.get("variant"), int) else sprite_variant_from_filename(filename),
+    }
+    return normalized
+
+
 def build_sprite_entry(path: Path):
     name = path.name
     stem = path.stem
@@ -80,22 +144,81 @@ def build_sprite_entry(path: Path):
         "id": name,
         "filename": name,
         "displayName": display_name,
-        "path": f"/img/{name}",
+        "name": display_name,
+        "chineseName": display_name,
+        "path": f"img/{name}",
+        "aliases": [name, stem],
+        "number": sprite_number_from_filename(name),
+        "variant": sprite_variant_from_filename(name),
     }
 
 
+def load_sprite_index():
+    if not SPRITES_INDEX_FILE.exists():
+        return []
+
+    try:
+        payload = json.loads(SPRITES_INDEX_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    sprites = payload.get("sprites") if isinstance(payload, dict) else payload
+    if not isinstance(sprites, list):
+        return []
+
+    normalized = []
+    for item in sprites:
+        entry = normalize_sprite_record(item)
+        if not entry:
+            continue
+        file_path = (BASE_DIR / entry["path"].lstrip("/")).resolve()
+        try:
+            file_path.relative_to(BASE_DIR.resolve())
+        except ValueError:
+            continue
+        if file_path.exists() and file_path.is_file():
+            normalized.append(entry)
+    normalized.sort(key=lambda item: (
+        item.get("number") if item.get("number") is not None else 10 ** 9,
+        item.get("variant") or 0,
+        item.get("filename") or "",
+    ))
+    return normalized
+
+
 def list_sprites():
+    indexed = load_sprite_index()
+    if indexed:
+        return indexed
+
     sprites = []
     if not IMG_DIR.exists():
         return sprites
+
     for path in sorted(IMG_DIR.iterdir(), key=lambda item: item.name.lower()):
         if path.is_file() and path.suffix.lower() in SUPPORTED_IMAGE_EXTENSIONS:
             sprites.append(build_sprite_entry(path))
+
+    sprites.sort(key=lambda item: (
+        item.get("number") if item.get("number") is not None else 10 ** 9,
+        item.get("variant") or 0,
+        item.get("filename") or "",
+    ))
     return sprites
 
 
 def sprite_lookup():
-    return {entry["filename"]: entry for entry in list_sprites()}
+    lookup = {}
+    for entry in list_sprites():
+        for key in [
+            entry.get("id"),
+            entry.get("filename"),
+            Path(entry.get("path", "")).name if entry.get("path") else None,
+            *(entry.get("aliases") or []),
+        ]:
+            if isinstance(key, str) and key:
+                lookup[Path(key).name] = entry
+    return lookup
 
 
 def normalize_search_name(value):
@@ -103,6 +226,13 @@ def normalize_search_name(value):
         return ""
     text = str(value).strip().lower()
     return "".join(ch for ch in text if not ch.isspace())
+
+
+def sprite_number_aliases(sprite):
+    number = sprite.get("number") if isinstance(sprite.get("number"), int) else None
+    if number is None:
+        return []
+    return [str(number), f"{number:03d}", f"no.{number:03d}", f"no{number:03d}"]
 
 
 def strip_variant_suffix(value):
@@ -133,36 +263,41 @@ def collect_sprite_matches(query: str, sprites=None):
     matches = []
 
     for sprite in sprites:
-        display_name = normalize_search_name(sprite["displayName"])
-        stem_name = normalize_search_name(Path(sprite["filename"]).stem)
-        file_name = normalize_search_name(sprite["filename"])
+        display_name = normalize_search_name(sprite.get("displayName"))
+        chinese_name = normalize_search_name(sprite.get("chineseName"))
+        raw_name = normalize_search_name(sprite.get("name"))
+        filename = normalize_search_name(sprite.get("filename"))
+        path_name = normalize_search_name(Path(sprite["path"]).name)
+        stem_name = normalize_search_name(Path(sprite["path"]).stem)
+        number_names = [normalize_search_name(alias) for alias in sprite_number_aliases(sprite)]
+        alias_names = [normalize_search_name(alias) for alias in (sprite.get("aliases") or [])]
+        exact_names = [display_name, chinese_name, raw_name, filename, path_name, stem_name]
         rank = None
         match_type = None
 
-        if normalized_query == display_name:
-            rank = (0, len(display_name), sprite["filename"])
-            match_type = "exact-display-name"
-        elif normalized_query == stem_name:
-            rank = (1, len(stem_name), sprite["filename"])
-            match_type = "exact-stem"
-        elif normalized_query == file_name:
-            rank = (2, len(file_name), sprite["filename"])
-            match_type = "exact-filename"
+        if normalized_query in [name for name in exact_names if name]:
+            rank = (0, len(display_name), sprite["path"])
+            match_type = "exact-name"
+        elif normalized_query in number_names:
+            rank = (1, sprite.get("variant") or 0, sprite["path"])
+            match_type = "exact-number"
+        elif normalized_query in alias_names:
+            rank = (2, len(normalized_query), sprite["path"])
+            match_type = "exact-alias"
+        elif normalized_query in path_name:
+            rank = (3, len(path_name), sprite["path"])
+            match_type = "contains-path"
         elif display_name.startswith(normalized_query):
-            rank = (3, len(display_name), sprite["filename"])
+            rank = (4, len(display_name), sprite["path"])
             match_type = "prefix-display-name"
-        elif stem_name.startswith(normalized_query):
-            rank = (4, len(stem_name), sprite["filename"])
-            match_type = "prefix-stem"
         elif normalized_query in display_name:
-            rank = (5, display_name.index(normalized_query), len(display_name), sprite["filename"])
+            rank = (5, display_name.index(normalized_query), len(display_name), sprite["path"])
             match_type = "contains-display-name"
-        elif normalized_query in stem_name:
-            rank = (6, stem_name.index(normalized_query), len(stem_name), sprite["filename"])
-            match_type = "contains-stem"
-        elif normalized_query in file_name:
-            rank = (7, file_name.index(normalized_query), len(file_name), sprite["filename"])
-            match_type = "contains-filename"
+        else:
+            alias_hit = next((alias for alias in alias_names if normalized_query in alias), None)
+            if alias_hit:
+                rank = (6, alias_hit.index(normalized_query), len(alias_hit), sprite["path"])
+                match_type = "contains-alias"
 
         if rank is None:
             continue
@@ -171,6 +306,13 @@ def collect_sprite_matches(query: str, sprites=None):
 
     matches.sort(key=lambda item: item["rank"])
     return matches
+
+
+def sprite_matches_keyword(sprite, keyword):
+    normalized_keyword = normalize_search_name(keyword)
+    if not normalized_keyword:
+        return True
+    return bool(collect_sprite_matches(normalized_keyword, sprites=[sprite]))
 
 
 def build_quick_fill_candidates(query: str, best_match, sprites=None, ranked_matches=None):
@@ -190,25 +332,25 @@ def build_quick_fill_candidates(query: str, best_match, sprites=None, ranked_mat
     if len(family) <= 1:
         return [best_match["sprite"]]
 
-    ranked_lookup = {item["sprite"]["id"]: item["rank"] for item in ranked_matches}
-    best_id = best_match["sprite"]["id"]
+    ranked_lookup = {item["sprite"]["path"]: item["rank"] for item in ranked_matches}
+    best_id = best_match["sprite"]["path"]
     normalized_query = normalize_search_name(query)
 
     def family_sort_key(sprite):
-        sprite_id = sprite["id"]
+        sprite_id = sprite["path"]
         if sprite_id == best_id:
-            return (0, ranked_lookup.get(sprite_id, (0,)), sprite["filename"])
+            return (0, ranked_lookup.get(sprite_id, (0,)), sprite["path"])
         if sprite_id in ranked_lookup:
-            return (1, ranked_lookup[sprite_id], sprite["filename"])
+            return (1, ranked_lookup[sprite_id], sprite["path"])
 
         display_name = normalize_search_name(sprite["displayName"])
-        stem_name = normalize_search_name(Path(sprite["filename"]).stem)
+        stem_name = normalize_search_name(Path(sprite["path"]).stem)
         query_related = normalized_query and (
             normalized_query in display_name
             or normalized_query in stem_name
             or normalized_query in variant_group
         )
-        return (2 if query_related else 3, sprite["filename"])
+        return (2 if query_related else 3, sprite["path"])
 
     return sorted(family, key=family_sort_key)
 
@@ -487,7 +629,7 @@ def background_state():
         stat = BACKGROUND_FILE.stat()
         return {
             "exists": True,
-            "path": "/cache/background.png",
+            "path": "cache/background.png",
             "size": stat.st_size,
             "mtime": stat.st_mtime,
         }
@@ -675,15 +817,10 @@ def api_scoreboard():
 
 @app.route("/api/sprites", methods=["GET"])
 def api_sprites():
-    keyword = parse_qs(request.query_string.decode("utf-8")).get("q", [""])[0].strip().lower()
+    keyword = parse_qs(request.query_string.decode("utf-8")).get("q", [""])[0].strip()
     sprites = list_sprites()
     if keyword:
-        sprites = [
-            sprite
-            for sprite in sprites
-            if keyword in sprite["displayName"].lower()
-            or keyword in sprite["filename"].lower()
-        ]
+        sprites = [sprite for sprite in sprites if sprite_matches_keyword(sprite, keyword)]
     return jsonify({"sprites": sprites, "count": len(sprites)})
 
 
@@ -812,6 +949,7 @@ def print_startup_info(host: str, port: int):
     print(f"管理后台: http://{display_host}:{port}/admin.html")
     print(f"服务目录: {BASE_DIR}")
     print(f"精灵目录: {IMG_DIR}")
+    print(f"精灵索引: {SPRITES_INDEX_FILE}")
     print(f"缓存目录: {CACHE_DIR}")
     print(f"数据目录: {DATA_DIR}")
     print("按 Ctrl+C 停止服务器")

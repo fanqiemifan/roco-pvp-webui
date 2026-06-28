@@ -1473,7 +1473,7 @@
                     <section class="info-box">
                         <h3>使用说明</h3>
                         <p class="muted">
-                            左右两侧都从 <code>Webui/img</code> 目录读取精灵图。每侧固定 6 个槽位，点击槽位后再点击精灵即可填充。
+                            左右两侧从 <code>img</code> 目录读取精灵图，名称和编号索引从 <code>json/sprites.json</code> 读取。每侧固定 6 个槽位，点击槽位后再点击精灵即可填充。
                             透明度开关和数值只作用于当前选中的单个槽位，不会影响整个面板。
                         </p>
                     </section>
@@ -1551,7 +1551,7 @@
         </main>
     </div>
 
-    <script src="/vendor/socket.io.min.js"></script>
+    <script src="vendor/socket.io.min.js"></script>
     <script>
         const MAX_SELECTION = 6;
 
@@ -1701,6 +1701,28 @@
             return state.sprites.find(sprite => sprite.id === id);
         }
 
+        function getSpriteDisplayName(sprite) {
+            if (!sprite) {
+                return '';
+            }
+            return sprite.displayName || sprite.chineseName || sprite.name || sprite.filename || '';
+        }
+
+        function getSpriteSearchValues(sprite) {
+            const number = Number.isInteger(sprite.number) ? sprite.number : null;
+            return [
+                getSpriteDisplayName(sprite),
+                sprite.chineseName,
+                sprite.name,
+                sprite.filename,
+                sprite.path,
+                number === null ? '' : String(number),
+                number === null ? '' : String(number).padStart(3, '0'),
+                number === null ? '' : `NO.${String(number).padStart(3, '0')}`,
+                ...(Array.isArray(sprite.aliases) ? sprite.aliases : [])
+            ];
+        }
+
         function selectedCount(panel) {
             return state[panel].selected.filter(slot => slot.sprite).length;
         }
@@ -1726,26 +1748,26 @@
         function getHeartAsset(percent) {
             const health = Math.min(100, Math.max(0, Number(percent ?? 100)));
             if (health <= 0) {
-                return '/image/heart0.png';
+                return 'image/heart0.png';
             }
             if (health <= 10) {
-                return '/image/heart10.png';
+                return 'image/heart10.png';
             }
             if (health <= 50) {
-                return '/image/heart50.png';
+                return 'image/heart50.png';
             }
-            return '/image/heart100.png';
+            return 'image/heart100.png';
         }
 
         function getAbilityMeta(energyValue) {
             const energy = Math.min(10, Math.max(0, Math.round(Number(energyValue) || 0)));
             if (energy <= 2) {
-                return { bg: '#6A1A1B', icon: '/image/start-3.png', color: '#C24846' };
+                return { bg: '#6A1A1B', icon: 'image/start-3.png', color: '#C24846' };
             }
             if (energy <= 5) {
-                return { bg: '#6E6E6E', icon: '/image/start-2.png', color: '#FFFFFF' };
+                return { bg: '#6E6E6E', icon: 'image/start-2.png', color: '#FFFFFF' };
             }
-            return { bg: '#6E6E6E', icon: '/image/start-1.png', color: '#FFFFFF' };
+            return { bg: '#6E6E6E', icon: 'image/start-1.png', color: '#FFFFFF' };
         }
 
         function buildProtectionMask(percent, featherPx = 12) {
@@ -1789,8 +1811,8 @@
                 : '';
 
             return `
-                <img src="${slotData.sprite.path}" alt="${slotData.sprite.displayName}" style="opacity:${weakOpacity};filter:saturate(${weakSaturation})">
-                <img src="${slotData.sprite.path}" alt="${slotData.sprite.displayName}" style="opacity:${slotData.effectiveOpacity};filter:saturate(${slotData.saturation});${maskStyle}">
+                <img src="${slotData.sprite.path}" alt="${getSpriteDisplayName(slotData.sprite)}" style="opacity:${weakOpacity};filter:saturate(${weakSaturation})">
+                <img src="${slotData.sprite.path}" alt="${getSpriteDisplayName(slotData.sprite)}" style="opacity:${slotData.effectiveOpacity};filter:saturate(${slotData.saturation});${maskStyle}">
                 <div style="position:absolute;top:0;right:0;width:26px;height:26px;background:url('${getHeartAsset(healthPercent)}') center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-family:'YouSheBiaoTiHei','Microsoft YaHei',sans-serif;font-size:10px;line-height:1;color:#fff;pointer-events:none;z-index:3;">${healthPercent}</div>
                 ${abilityBadge}
             `;
@@ -1866,7 +1888,7 @@
                 header.className = 'quick-fill-variant-header';
                 header.innerHTML = `
                     <div class="quick-fill-variant-title">槽位 ${match.slot + 1} · ${match.input}</div>
-                    <div class="quick-fill-variant-subtitle">已先匹配 ${match.sprite ? match.sprite.displayName : '空'}，可在下方切换形态</div>
+                    <div class="quick-fill-variant-subtitle">已先匹配 ${match.sprite ? getSpriteDisplayName(match.sprite) : '空'}，可在下方切换形态</div>
                 `;
                 group.appendChild(header);
 
@@ -1884,8 +1906,8 @@
                         card.classList.add('selected');
                     }
                     card.innerHTML = `
-                        <img src="${candidate.path}" alt="${candidate.displayName}">
-                        <div class="name">${candidate.displayName}</div>
+                        <img src="${candidate.path}" alt="${getSpriteDisplayName(candidate)}">
+                        <div class="name">${getSpriteDisplayName(candidate)}</div>
                     `;
                     card.addEventListener('click', () => {
                         const slot = state[panel].selected[match.slot];
@@ -1913,7 +1935,8 @@
                 if (!keyword) {
                     return true;
                 }
-                return sprite.displayName.toLowerCase().includes(keyword) || sprite.filename.toLowerCase().includes(keyword);
+                return getSpriteSearchValues(sprite)
+                    .some(value => String(value || '').toLowerCase().includes(keyword));
             });
 
             grid.innerHTML = '';
@@ -1933,8 +1956,8 @@
                     card.classList.add('selected');
                 }
                 card.innerHTML = `
-                    <img src="${sprite.path}" alt="${sprite.displayName}">
-                    <div class="name">${sprite.displayName}</div>
+                    <img src="${sprite.path}" alt="${getSpriteDisplayName(sprite)}">
+                    <div class="name">${getSpriteDisplayName(sprite)}</div>
                 `;
                 card.addEventListener('click', () => {
                     const slot = currentSlot(panel);
@@ -2073,7 +2096,7 @@
         }
 
         function loadSprites() {
-            return fetch('/api/sprites')
+            return fetch('api/sprites')
                 .then(response => response.json())
                 .then(data => {
                     state.sprites = data.sprites || [];
@@ -2083,7 +2106,7 @@
         }
 
         function loadPanels() {
-            return fetch('/api/images')
+            return fetch('api/images')
                 .then(response => response.json())
                 .then(data => {
                     (data.images || []).forEach(updatePanelFromApi);
@@ -2091,7 +2114,7 @@
         }
 
         function loadScoreboard() {
-            return fetch('/api/scoreboard')
+            return fetch('api/scoreboard')
                 .then(response => response.json())
                 .then(data => {
                     updateScoreboardFromApi(data);
@@ -2105,7 +2128,7 @@
                 clearStatus(`${panel}Status`);
             }
             const requestVersion = ++saveRequestVersions[panel];
-            fetch(`/api/panels/${panel}`, {
+            fetch(`api/panels/${panel}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2153,7 +2176,7 @@
                 return;
             }
 
-            fetch('/api/quick-fill', {
+            fetch('api/quick-fill', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: input })
@@ -2195,7 +2218,7 @@
         }
 
         function deletePanel(panel) {
-            fetch(`/api/panels/${panel}`, { method: 'DELETE' })
+            fetch(`api/panels/${panel}`, { method: 'DELETE' })
                 .then(async response => {
                     const data = await response.json();
                     if (!response.ok || !data.success) {
@@ -2330,7 +2353,7 @@
             const formData = new FormData();
             formData.append('file', file);
 
-            fetch('/api/upload/background', {
+            fetch('api/upload/background', {
                 method: 'POST',
                 body: formData
             })
@@ -2351,7 +2374,7 @@
         }
 
         function loadBackground() {
-            return fetch('/api/background')
+            return fetch('api/background')
                 .then(response => response.json())
                 .then(data => {
                     const preview = document.getElementById('bgPreview');
@@ -2421,7 +2444,7 @@
         }
 
         function deleteBackground() {
-            fetch('/api/delete/background', { method: 'DELETE' })
+            fetch('api/delete/background', { method: 'DELETE' })
                 .then(async response => {
                     const data = await response.json();
                     if (!response.ok || !data.success) {
@@ -2454,7 +2477,7 @@
                 centerAreaColor: document.getElementById('centerAreaColorInput').value
             };
 
-            fetch('/api/scoreboard', {
+            fetch('api/scoreboard', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -2547,7 +2570,7 @@
                 });
         });
     </script>
-    <script src="/live-control-core.js"></script>
+    <script src="frontend/js/live-control-core.js"></script>
     <script>
         // 初始化数值实时控制
         document.addEventListener('DOMContentLoaded', function() {
