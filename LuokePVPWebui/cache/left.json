@@ -4,17 +4,17 @@
     {
       "slot": 0,
       "sprite": {
-        "id": "NO.220_海枝枝.png",
-        "filename": "NO.220_海枝枝.png",
-        "displayName": "海枝枝",
-        "path": "/img/NO.220_海枝枝.png"
+        "id": "NO.220_海枝枝-3.png",
+        "filename": "NO.220_海枝枝-3.png",
+        "displayName": "海枝枝-3",
+        "path": "/img/NO.220_海枝枝-3.png"
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
       "healthPercent": 100,
-      "energyValue": 4
+      "energyValue": 10
     },
     {
       "slot": 1,
