@@ -4,52 +4,51 @@
     {
       "slot": 0,
       "sprite": {
-        "id": "NO.087_shuoyeyifu.png",
-        "filename": "NO.087_shuoyeyifu.png",
-        "displayName": "朔夜伊芙",
-        "name": "朔夜伊芙",
-        "chineseName": "朔夜伊芙",
-        "path": "img/NO.087_shuoyeyifu.png",
+        "id": "NO.370_pilididi.png",
+        "filename": "NO.370_pilididi.png",
+        "displayName": "霹雳迪迪",
+        "name": "霹雳迪迪",
+        "chineseName": "霹雳迪迪",
+        "path": "img/NO.370_pilididi.png",
         "aliases": [
-          "NO.087_朔夜伊芙.png",
-          "朔夜伊芙",
-          "NO.087_shuoyeyifu.png",
-          "NO.087_shuoyeyifu",
-          "87",
-          "087",
-          "NO.087",
-          "NO.087_朔夜伊芙"
+          "NO.370_霹雳迪迪.png",
+          "霹雳迪迪",
+          "NO.370_pilididi.png",
+          "NO.370_pilididi",
+          "370",
+          "NO.370",
+          "NO.370_霹雳迪迪"
         ],
-        "number": 87,
+        "number": 370,
         "variant": 0
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 30,
-      "energyValue": 3
+      "healthPercent": 100,
+      "energyValue": 10
     },
     {
       "slot": 1,
       "sprite": {
-        "id": "NO.084_nvwangfeng.png",
-        "filename": "NO.084_nvwangfeng.png",
-        "displayName": "女王蜂",
-        "name": "女王蜂",
-        "chineseName": "女王蜂",
-        "path": "img/NO.084_nvwangfeng.png",
+        "id": "NO.090_cuidingfuren.png",
+        "filename": "NO.090_cuidingfuren.png",
+        "displayName": "翠顶夫人",
+        "name": "翠顶夫人",
+        "chineseName": "翠顶夫人",
+        "path": "img/NO.090_cuidingfuren.png",
         "aliases": [
-          "NO.084_女王蜂.png",
-          "女王蜂",
-          "NO.084_nvwangfeng.png",
-          "NO.084_nvwangfeng",
-          "84",
-          "084",
-          "NO.084",
-          "NO.084_女王蜂"
+          "NO.090_翠顶夫人.png",
+          "翠顶夫人",
+          "NO.090_cuidingfuren.png",
+          "NO.090_cuidingfuren",
+          "90",
+          "090",
+          "NO.090",
+          "NO.090_翠顶夫人"
         ],
-        "number": 84,
+        "number": 90,
         "variant": 0
       },
       "opacityEnabled": false,
@@ -62,118 +61,115 @@
     {
       "slot": 2,
       "sprite": {
-        "id": "NO.043_qilihua.png",
-        "filename": "NO.043_qilihua.png",
-        "displayName": "奇丽花",
-        "name": "奇丽花",
-        "chineseName": "奇丽花",
-        "path": "img/NO.043_qilihua.png",
+        "id": "NO.184_yuanhaoyu.png",
+        "filename": "NO.184_yuanhaoyu.png",
+        "displayName": "圆号鱼",
+        "name": "圆号鱼",
+        "chineseName": "圆号鱼",
+        "path": "img/NO.184_yuanhaoyu.png",
         "aliases": [
-          "NO.043_奇丽花.png",
-          "奇丽花",
-          "NO.043_qilihua.png",
-          "NO.043_qilihua",
-          "43",
-          "043",
-          "NO.043",
-          "NO.043_奇丽花"
+          "NO.184_圆号鱼.png",
+          "圆号鱼",
+          "NO.184_yuanhaoyu.png",
+          "NO.184_yuanhaoyu",
+          "184",
+          "NO.184",
+          "NO.184_圆号鱼"
         ],
-        "number": 43,
+        "number": 184,
         "variant": 0
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 15,
-      "energyValue": 2
+      "healthPercent": 100,
+      "energyValue": 10
     },
     {
       "slot": 3,
       "sprite": {
-        "id": "NO.026_shiguanwangxi-1.png",
-        "filename": "NO.026_shiguanwangxi-1.png",
-        "displayName": "石冠王蜥-1",
-        "name": "石冠王蜥-1",
-        "chineseName": "石冠王蜥-1",
-        "path": "img/NO.026_shiguanwangxi-1.png",
+        "id": "NO.334_beigusi.png",
+        "filename": "NO.334_beigusi.png",
+        "displayName": "贝古斯",
+        "name": "贝古斯",
+        "chineseName": "贝古斯",
+        "path": "img/NO.334_beigusi.png",
         "aliases": [
-          "NO.026_石冠王蜥-1.png",
-          "石冠王蜥-1",
-          "NO.026_shiguanwangxi-1.png",
-          "NO.026_shiguanwangxi-1",
-          "26",
-          "026",
-          "NO.026",
-          "NO.026_石冠王蜥-1"
+          "NO.334_贝古斯.png",
+          "贝古斯",
+          "NO.334_beigusi.png",
+          "NO.334_beigusi",
+          "334",
+          "NO.334",
+          "NO.334_贝古斯"
         ],
-        "number": 26,
+        "number": 334,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 100,
+      "energyValue": 10
+    },
+    {
+      "slot": 4,
+      "sprite": {
+        "id": "NO.034_huadie-1.png",
+        "filename": "NO.034_huadie-1.png",
+        "displayName": "化蝶-1",
+        "name": "化蝶-1",
+        "chineseName": "化蝶-1",
+        "path": "img/NO.034_huadie-1.png",
+        "aliases": [
+          "NO.034_化蝶-1.png",
+          "化蝶-1",
+          "NO.034_huadie-1.png",
+          "NO.034_huadie-1",
+          "34",
+          "034",
+          "NO.034",
+          "NO.034_化蝶-1"
+        ],
+        "number": 34,
         "variant": 1
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 0,
-      "energyValue": 3
-    },
-    {
-      "slot": 4,
-      "sprite": {
-        "id": "NO.062_jushizhenyan.png",
-        "filename": "NO.062_jushizhenyan.png",
-        "displayName": "巨噬针鼹",
-        "name": "巨噬针鼹",
-        "chineseName": "巨噬针鼹",
-        "path": "img/NO.062_jushizhenyan.png",
-        "aliases": [
-          "NO.062_巨噬针鼹.png",
-          "巨噬针鼹",
-          "NO.062_jushizhenyan.png",
-          "NO.062_jushizhenyan",
-          "62",
-          "062",
-          "NO.062",
-          "NO.062_巨噬针鼹"
-        ],
-        "number": 62,
-        "variant": 0
-      },
-      "opacityEnabled": false,
-      "opacity": 0.5,
-      "saturation": 1.0,
-      "healthEnabled": true,
-      "healthPercent": 75,
-      "energyValue": 5
+      "healthPercent": 100,
+      "energyValue": 10
     },
     {
       "slot": 5,
       "sprite": {
-        "id": "NO.001_dimo.png",
-        "filename": "NO.001_dimo.png",
-        "displayName": "迪莫",
-        "name": "迪莫",
-        "chineseName": "迪莫",
-        "path": "img/NO.001_dimo.png",
+        "id": "NO.173_shiboluo-1.png",
+        "filename": "NO.173_shiboluo-1.png",
+        "displayName": "嗜波螺-1",
+        "name": "嗜波螺-1",
+        "chineseName": "嗜波螺-1",
+        "path": "img/NO.173_shiboluo-1.png",
         "aliases": [
-          "NO.001_迪莫.png",
-          "迪莫",
-          "NO.001_dimo.png",
-          "NO.001_dimo",
-          "1",
-          "001",
-          "NO.001",
-          "NO.001_迪莫"
+          "NO.173_嗜波螺-1.png",
+          "嗜波螺-1",
+          "NO.173_shiboluo-1.png",
+          "NO.173_shiboluo-1",
+          "173",
+          "NO.173",
+          "NO.173_嗜波螺-1"
         ],
-        "number": 1,
-        "variant": 0
+        "number": 173,
+        "variant": 1
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 26,
-      "energyValue": 4
+      "healthPercent": 100,
+      "energyValue": 10
     }
   ]
 }

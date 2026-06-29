@@ -69,7 +69,7 @@
             backdrop-filter: blur(24px);
             box-shadow: var(--shadow);
             display: grid;
-            grid-template-columns: 430px minmax(0, 1fr);
+            grid-template-columns: 300px minmax(0, 1fr);
             position: relative;
         }
 
@@ -1283,7 +1283,7 @@
 
         @media (max-width: 1560px) {
             .admin-shell {
-                grid-template-columns: 390px minmax(0, 1fr);
+                grid-template-columns: 255px minmax(0, 1fr);
             }
 
             .panel-grid {
@@ -1400,7 +1400,7 @@
                             <div class="nav-item-icon">🎮</div>
                             <div>
                                 <strong>阵容编辑</strong>
-                                <span>左右面板、槽位、透明度和快速填充</span>
+                                <span>双方阵容选择</span>
                             </div>
                         </div>
                         <span class="nav-badge">Main</span>
@@ -1410,7 +1410,7 @@
                             <div class="nav-item-icon">🏆</div>
                             <div>
                                 <strong>顶部比分栏</strong>
-                                <span>选手名称、比分、Center Area 与显示控制</span>
+                                <span>选手名称、比分显示控制</span>
                             </div>
                         </div>
                         <span class="nav-badge">Edit</span>
@@ -1440,7 +1440,7 @@
                             <div class="nav-item-icon">👁️</div>
                             <div>
                                 <strong>前台预览</strong>
-                                <span>查看 index 页面并复制访问地址</span>
+                                <span>查看推流页面</span>
                             </div>
                         </div>
                         <span class="nav-badge">View</span>
@@ -1642,6 +1642,10 @@
                         <p class="muted">
                             左右两侧从 <code>img</code> 目录读取精灵图，名称和编号索引从 <code>json/sprites.json</code> 读取。每侧固定 6 个槽位，点击槽位后再点击精灵即可填充。
                             透明度开关和数值只作用于当前选中的单个槽位，不会影响整个面板。
+                        </p>
+                        <h3>图片来源</h3>
+                        <p class="muted">
+                            所有精灵图均来自洛克王国世界WIKI，版权归洛克王国世界所有，图片来源地址：<a href="https://wiki.biligame.com/rocom/" target="_blank">https://wiki.biligame.com/rocom/</a>其他声明：<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">规范转载需注明来源链接，感谢您的理解与配合。自动授权协议：CC BY-NC-SA 4.0（署名-非商业性使用-相同方式共享）</a>
                         </p>
                     </section>
                 </div>

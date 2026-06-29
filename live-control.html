@@ -5,82 +5,314 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>洛克王国PVP - 实时控制</title>
     <style>
+        :root {
+            --bg: #f4efe6;
+            --panel: rgba(255, 250, 243, 0.82);
+            --panel-strong: #fff9f0;
+            --panel-soft: rgba(255, 247, 237, 0.92);
+            --line: rgba(91, 67, 43, 0.12);
+            --line-strong: rgba(91, 67, 43, 0.18);
+            --text: #2f2418;
+            --muted: #776554;
+            --muted-strong: #5d4a39;
+            --accent: #c7632f;
+            --accent-deep: #8f4323;
+            --accent-soft: rgba(199, 99, 47, 0.12);
+            --success: #2d7a58;
+            --danger: #c24635;
+            --info: #b8894c;
+            --shadow: 0 24px 60px rgba(76, 47, 22, 0.12);
+            --radius-xl: 28px;
+            --radius-lg: 20px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+            --font-display: "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
+            --font-body: "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html,
         body {
-            font-family: "Microsoft YaHei", sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #334155 100%);
-            color: #e2e8f0;
             min-height: 100vh;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(233, 171, 109, 0.35), transparent 32%),
+                radial-gradient(circle at bottom right, rgba(150, 109, 67, 0.18), transparent 28%),
+                linear-gradient(135deg, #efe4d4 0%, #f7f3ec 45%, #ebe0ce 100%);
             padding: 16px;
+            overflow-x: hidden;
         }
-        .wrap { max-width: 1560px; margin: 0 auto; }
-        h1 {
-            text-align: center;
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        .control-shell {
+            width: min(1440px, 100%);
+            min-height: calc(100vh - 32px);
+            margin: 0 auto;
+            border-radius: 34px;
+            overflow: hidden;
+            border: 1px solid rgba(121, 86, 54, 0.15);
+            background: rgba(255, 249, 240, 0.58);
+            backdrop-filter: blur(24px);
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-columns: 300px minmax(0, 1fr);
+            position: relative;
+        }
+
+        .control-shell::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 20%);
+            pointer-events: none;
+        }
+
+        .window-rail {
+            position: relative;
+            z-index: 1;
+            padding: 22px;
+            border-right: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(255, 248, 238, 0.94), rgba(247, 240, 230, 0.84));
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            -webkit-app-region: drag;
+        }
+
+        .window-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .window-dots span:nth-child(1) { background: #ff5f57; }
+        .window-dots span:nth-child(2) { background: #febc2e; }
+        .window-dots span:nth-child(3) { background: #28c840; }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-mark {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #d56a37, #8f4323);
+            color: #fff8ef;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            box-shadow: 0 18px 24px rgba(170, 89, 44, 0.24);
+        }
+
+        .brand-copy h1 {
+            margin: 0;
+            font: 700 20px/1.1 var(--font-display);
+        }
+
+        .brand-copy p,
+        .hint,
+        .control-note p,
+        .metric-card span {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .control-note,
+        .status-card,
+        .metric-card {
+            background: var(--panel-strong);
+            border: 1px solid rgba(109, 79, 54, 0.1);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+        }
+
+        .control-note small,
+        .status-card small,
+        .topbar-copy small,
+        .panel-eyebrow {
+            display: block;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-size: 11px;
             margin-bottom: 10px;
-            font-size: 28px;
-            line-height: 1.15;
         }
-        .hint {
-            text-align: center;
-            margin-bottom: 14px;
-            color: #cbd5e1;
-            font-size: 14px;
+
+        .status-card {
+            -webkit-app-region: no-drag;
         }
+
+        .status {
+            color: var(--muted-strong);
+            font-weight: 700;
+            min-height: 24px;
+        }
+
+        .file-status {
+            color: var(--info);
+            font-size: 12px;
+            min-height: 18px;
+            line-height: 1.45;
+            margin-top: 8px;
+            word-break: break-word;
+        }
+
+        .metric-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .metric-card strong {
+            display: block;
+            color: var(--text);
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .main-stage {
+            position: relative;
+            z-index: 1;
+            padding: 22px;
+            min-width: 0;
+        }
+
         .topbar {
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(109, 79, 54, 0.1);
+            border-radius: var(--radius-xl);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+            padding: 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
+            gap: 16px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
         }
-        .status {
-            background: rgba(255,255,255,0.08);
-            padding: 9px 12px;
-            border-radius: 12px;
-            min-height: 38px;
+
+        .topbar-copy h2 {
+            margin: 0 0 6px;
+            font: 700 24px/1.15 var(--font-display);
+            color: var(--text);
         }
+
+        .topbar-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            -webkit-app-region: no-drag;
+        }
+
         .btn {
-            border: none;
-            border-radius: 10px;
-            padding: 9px 14px;
+            border: 0;
+            border-radius: 14px;
+            padding: 10px 14px;
             cursor: pointer;
             font-weight: 700;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.72);
+            box-shadow: inset 0 0 0 1px rgba(109, 79, 54, 0.08);
+            transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+            -webkit-app-region: no-drag;
         }
-        .btn-primary { background: #3b82f6; color: #fff; }
-        .btn-secondary { background: #334155; color: #e2e8f0; }
-        .btn-accent { background: #10b981; color: #052e1b; }
-        .btn-warning { background: #f59e0b; color: #451a03; }
-        .btn-danger { background: #ef4444; color: #fff; }
-        .file-status {
-            flex-basis: 100%;
-            color: #93c5fd;
-            font-size: 12px;
-            min-height: 16px;
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: inset 0 0 0 1px rgba(109, 79, 54, 0.12), 0 12px 22px rgba(117, 77, 42, 0.12);
         }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+            color: #fff8ef;
+        }
+
+        .btn-secondary { background: rgba(255, 255, 255, 0.72); }
+
+        .btn-accent {
+            background: linear-gradient(135deg, #f0b06a, #c7632f);
+            color: #fff8ef;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f4cf7d, #d68a2e);
+            color: #4a2a10;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #d85b4a, #a9362b);
+            color: #fff8ef;
+        }
+
         .panels {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 14px;
         }
+
         .panel {
-            background: rgba(15, 23, 42, 0.86);
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            border-radius: 18px;
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(109, 79, 54, 0.1);
+            border-radius: var(--radius-xl);
             padding: 14px;
-            box-shadow: 0 18px 40px rgba(2, 6, 23, 0.32);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+            min-width: 0;
         }
+
         .panel-left {
-            border-color: rgba(248, 113, 113, 0.28);
+            border-color: rgba(199, 70, 53, 0.18);
         }
+
         .panel-right {
-            border-color: rgba(96, 165, 250, 0.28);
+            border-color: rgba(45, 122, 88, 0.18);
         }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
         .panel h2 {
-            margin-bottom: 10px;
-            color: #e2e8f0;
-            font-size: 18px;
+            margin: 0;
+            color: var(--text);
+            font: 700 18px/1.1 var(--font-display);
         }
+
+        .side-badge {
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent-deep);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 10px;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -89,9 +321,9 @@
         .slot-card {
             position: relative;
             background:
-                linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)),
-                linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.88));
-            border: 1px solid rgba(148, 163, 184, 0.18);
+                linear-gradient(180deg, rgba(255,255,255,0.62), rgba(255,255,255,0.22)),
+                linear-gradient(135deg, rgba(63, 44, 29, 0.92), rgba(111, 74, 45, 0.88));
+            border: 1px solid rgba(91, 67, 43, 0.16);
             border-radius: 14px;
             padding: 6px 8px;
             display: grid;
@@ -100,6 +332,7 @@
             align-items: center;
             height: 78px;
             overflow: hidden;
+            box-shadow: 0 12px 24px rgba(76, 47, 22, 0.1);
         }
 
         .slot-card-right .slot-main {
@@ -109,8 +342,8 @@
             width: 52px;
             height: 52px;
             border-radius: 10px;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            background: rgba(15, 23, 42, 0.72);
+            border: 1px solid rgba(255, 248, 238, 0.28);
+            background: rgba(47, 36, 24, 0.46);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -124,7 +357,7 @@
             display: block;
         }
         .sprite-empty {
-            color: #64748b;
+            color: rgba(255, 248, 238, 0.68);
             font-size: 10px;
             text-align: center;
             line-height: 1.2;
@@ -143,9 +376,9 @@
             width: 16px;
             height: 16px;
             border-radius: 999px;
-            background: rgba(15, 23, 42, 0.88);
-            border: 1px solid rgba(248, 250, 252, 0.18);
-            color: #f8fafc;
+            background: rgba(255, 249, 240, 0.9);
+            border: 1px solid rgba(91, 67, 43, 0.16);
+            color: var(--accent-deep);
             font-weight: 700;
             font-size: 10px;
             display: inline-flex;
@@ -168,7 +401,7 @@
             display: none;
         }
         .slot-name {
-            color: #f8fafc;
+            color: #fff8ef;
             width: 100%;
             font-size: 10px;
             font-weight: 700;
@@ -192,7 +425,7 @@
         }
         .range-shell {
             --percent: 100%;
-            --accent: #22c55e;
+            --accent: #2d7a58;
             position: relative;
             display: flex;
             align-items: center;
@@ -200,7 +433,7 @@
             min-height: 14px;
         }
         .range-shell-energy {
-            --accent: #f2cb51;
+            --accent: #e0aa3e;
         }
         .range-shell input[type="range"] {
             position: relative;
@@ -212,9 +445,9 @@
             margin: 0 auto;
             height: 10px;
             border-radius: 999px;
-            border: 1px solid rgba(148, 163, 184, 0.26);
+            border: 1px solid rgba(255, 248, 238, 0.24);
             background:
-                linear-gradient(90deg, var(--accent) 0%, var(--accent) var(--percent), rgba(15, 23, 42, 0.94) var(--percent), rgba(15, 23, 42, 0.94) 100%);
+                linear-gradient(90deg, var(--accent) 0%, var(--accent) var(--percent), rgba(47, 36, 24, 0.78) var(--percent), rgba(47, 36, 24, 0.78) 100%);
             outline: none;
             cursor: pointer;
             box-shadow: inset 0 1px 3px rgba(2, 6, 23, 0.35);
@@ -225,31 +458,31 @@
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            border: 1px solid rgba(248, 250, 252, 0.95);
-            background: #fff;
-            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.28);
+            border: 1px solid rgba(255, 248, 238, 0.95);
+            background: #fff9f0;
+            box-shadow: 0 0 0 1px rgba(91, 67, 43, 0.28);
         }
         .range-shell input[type="range"]::-moz-range-thumb {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            border: 1px solid rgba(248, 250, 252, 0.95);
-            background: #fff;
-            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.28);
+            border: 1px solid rgba(255, 248, 238, 0.95);
+            background: #fff9f0;
+            box-shadow: 0 0 0 1px rgba(91, 67, 43, 0.28);
         }
         .range-shell input[type="range"]::-moz-range-track {
             height: 10px;
             border-radius: 999px;
-            border: 1px solid rgba(148, 163, 184, 0.26);
+            border: 1px solid rgba(255, 248, 238, 0.24);
             background: transparent;
         }
         .value-input {
             width: 34px;
             height: 16px;
             border-radius: 5px;
-            border: 1px solid rgba(148, 163, 184, 0.28);
-            background: rgba(15, 23, 42, 0.96);
-            color: #f8fafc;
+            border: 1px solid rgba(255, 248, 238, 0.28);
+            background: rgba(255, 249, 240, 0.94);
+            color: var(--text);
             font-size: 9px;
             font-weight: 700;
             line-height: 1;
@@ -258,7 +491,7 @@
         }
         .value-input:focus {
             outline: none;
-            border-color: rgba(148, 197, 253, 0.65);
+            border-color: rgba(199, 99, 47, 0.62);
         }
         .value-input::-webkit-outer-spin-button,
         .value-input::-webkit-inner-spin-button {
@@ -268,13 +501,49 @@
         .value-input[type="number"] {
             appearance: textfield;
         }
-        @media (max-width: 1500px) {
+        @media (max-width: 1280px) {
             .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
-        @media (max-width: 1100px) {
+        @media (max-width: 1040px) {
+            .control-shell {
+                grid-template-columns: 1fr;
+            }
+            .window-rail {
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                align-items: start;
+            }
+            .window-dots {
+                grid-column: 1 / -1;
+            }
+            .metric-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
             .panels { grid-template-columns: 1fr; }
         }
         @media (max-width: 720px) {
+            body { padding: 10px; }
+            .control-shell {
+                min-height: calc(100vh - 20px);
+                border-radius: 24px;
+            }
+            .window-rail,
+            .main-stage {
+                padding: 16px;
+            }
+            .window-rail,
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+            .topbar {
+                border-radius: 22px;
+            }
+            .topbar-actions,
+            .btn {
+                width: 100%;
+            }
             .grid { grid-template-columns: 1fr; }
             .slot-card {
                 grid-template-columns: 1fr;
@@ -288,29 +557,79 @@
     </style>
 </head>
 <body>
-    <div class="wrap">
-        <h1>实时控制页</h1>
-        <div class="hint">自动保存血量和能力值，左右两侧均为两行三列紧凑布局，滑动条上直接显示当前数值。</div>
-        <div class="topbar">
-            <div class="status" id="status">加载中...</div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <button class="btn btn-secondary" id="reloadBtn">重新加载</button>
-                <button class="btn btn-accent" id="exportConfigBtn">配置导出</button>
-                <button class="btn btn-warning" id="liveListenBtn">实时监听</button>
-                <button class="btn btn-primary" id="saveBtn">手动保存</button>
+    <div class="control-shell">
+        <aside class="window-rail">
+            <div class="window-dots" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="brand">
+                <div class="brand-mark">PVP</div>
+                <div class="brand-copy">
+                    <h1>实时控制台</h1>
+                    <p>Electron 独立窗口</p>
+                </div>
+            </div>
+            <section class="status-card">
+                <small>Live Status</small>
+                <div class="status" id="status">加载中...</div>
                 <div class="file-status" id="liveFileStatus"></div>
+            </section>
+            <section class="control-note">
+                <small>Workflow</small>
+                <p>自动保存血量和能力值。实时监听开启后，会与选中的 JSON 文件保持双向同步。</p>
+            </section>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <strong>2 阵营</strong>
+                    <span>左侧与右侧独立同步</span>
+                </div>
+                <div class="metric-card">
+                    <strong>6 槽位</strong>
+                    <span>保持默认紧凑尺寸</span>
+                </div>
             </div>
-        </div>
-        <div class="panels">
-            <div class="panel panel-left">
-                <h2>左侧</h2>
-                <div class="grid" id="leftGrid"></div>
+        </aside>
+
+        <main class="main-stage">
+            <header class="topbar">
+                <div class="topbar-copy">
+                    <small>Battle Control</small>
+                    <h2>血量与能力值面板</h2>
+                    <p class="hint">适合独立窗口、OBS 辅助控制和 OCR 数据同步，操作尺寸与原实时页保持一致。</p>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-secondary" id="reloadBtn">重新加载</button>
+                    <button class="btn btn-accent" id="exportConfigBtn">配置导出</button>
+                    <button class="btn btn-warning" id="liveListenBtn">实时监听</button>
+                    <button class="btn btn-primary" id="saveBtn">手动保存</button>
+                </div>
+            </header>
+
+            <div class="panels">
+                <section class="panel panel-left">
+                    <div class="panel-header">
+                        <div>
+                            <span class="panel-eyebrow">Red Side</span>
+                            <h2>左侧</h2>
+                        </div>
+                        <span class="side-badge">Left Team</span>
+                    </div>
+                    <div class="grid" id="leftGrid"></div>
+                </section>
+                <section class="panel panel-right">
+                    <div class="panel-header">
+                        <div>
+                            <span class="panel-eyebrow">Blue Side</span>
+                            <h2>右侧</h2>
+                        </div>
+                        <span class="side-badge">Right Team</span>
+                    </div>
+                    <div class="grid" id="rightGrid"></div>
+                </section>
             </div>
-            <div class="panel panel-right">
-                <h2>右侧</h2>
-                <div class="grid" id="rightGrid"></div>
-            </div>
-        </div>
+        </main>
     </div>
 
     <script src="vendor/socket.io.min.js"></script>
