@@ -4,176 +4,116 @@
     {
       "slot": 0,
       "sprite": {
-        "id": "NO.002_miaomiao.png",
-        "filename": "NO.002_miaomiao.png",
-        "displayName": "喵喵",
-        "name": "喵喵",
-        "chineseName": "喵喵",
-        "path": "img/NO.002_miaomiao.png",
+        "id": "NO.220_haizhizhi-2.png",
+        "filename": "NO.220_haizhizhi-2.png",
+        "displayName": "海枝枝-2",
+        "name": "海枝枝-2",
+        "chineseName": "海枝枝-2",
+        "path": "img/NO.220_haizhizhi-2.png",
         "aliases": [
-          "NO.002_喵喵.png",
-          "喵喵",
-          "NO.002_miaomiao.png",
-          "NO.002_miaomiao",
-          "2",
-          "002",
-          "NO.002",
-          "NO.002_喵喵"
+          "NO.220_海枝枝-2.png",
+          "海枝枝-2",
+          "NO.220_haizhizhi-2.png",
+          "NO.220_haizhizhi-2",
+          "220",
+          "NO.220",
+          "NO.220_海枝枝-2"
         ],
-        "number": 2,
-        "variant": 0
+        "number": 220,
+        "variant": 2
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 73,
-      "energyValue": 7
+      "healthPercent": 100,
+      "energyValue": 10
     },
     {
       "slot": 1,
       "sprite": {
-        "id": "NO.005_huohua.png",
-        "filename": "NO.005_huohua.png",
-        "displayName": "火花",
-        "name": "火花",
-        "chineseName": "火花",
-        "path": "img/NO.005_huohua.png",
+        "id": "NO.360_jiayouhaikui.png",
+        "filename": "NO.360_jiayouhaikui.png",
+        "displayName": "加油海葵",
+        "name": "加油海葵",
+        "chineseName": "加油海葵",
+        "path": "img/NO.360_jiayouhaikui.png",
         "aliases": [
-          "NO.005_火花.png",
-          "火花",
-          "NO.005_huohua.png",
-          "NO.005_huohua",
-          "5",
-          "005",
-          "NO.005",
-          "NO.005_火花"
+          "NO.360_加油海葵.png",
+          "加油海葵",
+          "NO.360_jiayouhaikui.png",
+          "NO.360_jiayouhaikui",
+          "360",
+          "NO.360",
+          "NO.360_加油海葵"
         ],
-        "number": 5,
+        "number": 360,
         "variant": 0
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 33,
-      "energyValue": 3
+      "healthPercent": 100,
+      "energyValue": 10
     },
     {
       "slot": 2,
       "sprite": {
-        "id": "NO.008_shuilanlan.png",
-        "filename": "NO.008_shuilanlan.png",
-        "displayName": "水蓝蓝",
-        "name": "水蓝蓝",
-        "chineseName": "水蓝蓝",
-        "path": "img/NO.008_shuilanlan.png",
+        "id": "NO.294_paersasi.png",
+        "filename": "NO.294_paersasi.png",
+        "displayName": "帕尔萨斯",
+        "name": "帕尔萨斯",
+        "chineseName": "帕尔萨斯",
+        "path": "img/NO.294_paersasi.png",
         "aliases": [
-          "NO.008_水蓝蓝.png",
-          "水蓝蓝",
-          "NO.008_shuilanlan.png",
-          "NO.008_shuilanlan",
-          "8",
-          "008",
-          "NO.008",
-          "NO.008_水蓝蓝"
+          "NO.294_帕尔萨斯.png",
+          "帕尔萨斯",
+          "NO.294_paersasi.png",
+          "NO.294_paersasi",
+          "294",
+          "NO.294",
+          "NO.294_帕尔萨斯"
         ],
-        "number": 8,
+        "number": 294,
         "variant": 0
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 34,
-      "energyValue": 9
+      "healthPercent": 100,
+      "energyValue": 10
     },
     {
       "slot": 3,
-      "sprite": {
-        "id": "NO.015_zhuiweiyang.png",
-        "filename": "NO.015_zhuiweiyang.png",
-        "displayName": "锥尾羊",
-        "name": "锥尾羊",
-        "chineseName": "锥尾羊",
-        "path": "img/NO.015_zhuiweiyang.png",
-        "aliases": [
-          "NO.015_锥尾羊.png",
-          "锥尾羊",
-          "NO.015_zhuiweiyang.png",
-          "NO.015_zhuiweiyang",
-          "15",
-          "015",
-          "NO.015",
-          "NO.015_锥尾羊"
-        ],
-        "number": 15,
-        "variant": 0
-      },
+      "sprite": null,
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 0,
-      "energyValue": 8
+      "healthPercent": 100,
+      "energyValue": 10
     },
     {
       "slot": 4,
-      "sprite": {
-        "id": "NO.018_xuerongniao-1.png",
-        "filename": "NO.018_xuerongniao-1.png",
-        "displayName": "雪绒鸟-1",
-        "name": "雪绒鸟-1",
-        "chineseName": "雪绒鸟-1",
-        "path": "img/NO.018_xuerongniao-1.png",
-        "aliases": [
-          "NO.018_雪绒鸟-1.png",
-          "雪绒鸟-1",
-          "NO.018_xuerongniao-1.png",
-          "NO.018_xuerongniao-1",
-          "18",
-          "018",
-          "NO.018",
-          "NO.018_雪绒鸟-1"
-        ],
-        "number": 18,
-        "variant": 1
-      },
+      "sprite": null,
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 46,
-      "energyValue": 3
+      "healthPercent": 100,
+      "energyValue": 10
     },
     {
       "slot": 5,
-      "sprite": {
-        "id": "NO.018_xuerongniao-3.png",
-        "filename": "NO.018_xuerongniao-3.png",
-        "displayName": "雪绒鸟-3",
-        "name": "雪绒鸟-3",
-        "chineseName": "雪绒鸟-3",
-        "path": "img/NO.018_xuerongniao-3.png",
-        "aliases": [
-          "NO.018_雪绒鸟-3.png",
-          "雪绒鸟-3",
-          "NO.018_xuerongniao-3.png",
-          "NO.018_xuerongniao-3",
-          "18",
-          "018",
-          "NO.018",
-          "NO.018_雪绒鸟-3"
-        ],
-        "number": 18,
-        "variant": 3
-      },
+      "sprite": null,
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 53,
-      "energyValue": 5
+      "healthPercent": 100,
+      "energyValue": 10
     }
   ]
 }

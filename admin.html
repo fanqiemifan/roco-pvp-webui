@@ -5,287 +5,328 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>洛克王国PVP - 后台管理</title>
     <style>
+        :root {
+            --bg: #f4efe6;
+            --panel: rgba(255, 250, 243, 0.82);
+            --panel-strong: #fff9f0;
+            --panel-soft: rgba(255, 247, 237, 0.92);
+            --line: rgba(91, 67, 43, 0.12);
+            --line-strong: rgba(91, 67, 43, 0.18);
+            --text: #2f2418;
+            --muted: #776554;
+            --muted-strong: #5d4a39;
+            --accent: #c7632f;
+            --accent-deep: #8f4323;
+            --accent-soft: rgba(199, 99, 47, 0.12);
+            --success: #2d7a58;
+            --danger: #c24635;
+            --info: #b8894c;
+            --shadow: 0 24px 60px rgba(76, 47, 22, 0.12);
+            --radius-xl: 28px;
+            --radius-lg: 20px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+            --font-display: "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
+            --font-body: "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
+        html,
         body {
-            font-family: 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #152238 0%, #243b55 45%, #f08a5d 100%);
-            min-height: 100vh;
-            padding: 0;
-            color: #1f2937;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(233, 171, 109, 0.35), transparent 32%),
+                radial-gradient(circle at bottom right, rgba(150, 109, 67, 0.18), transparent 28%),
+                linear-gradient(135deg, #efe4d4 0%, #f7f3ec 45%, #ebe0ce 100%);
+            padding: 16px;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
         }
 
         .admin-shell {
-            max-width: 1900px;
+            width: min(1880px, 100%);
+            min-height: calc(100vh - 32px);
             margin: 0 auto;
-            padding: 24px;
-            display: grid;
-            grid-template-columns: 260px minmax(0, 1fr);
-            gap: 24px;
-            align-items: start;
-        }
-
-        .sidebar {
-            position: sticky;
-            top: 24px;
-            align-self: start;
-            border-radius: 24px;
-            padding: 0;
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
-            border: 1px solid rgba(148, 163, 184, 0.12);
-            box-shadow:
-                0 4px 6px rgba(0, 0, 0, 0.05),
-                0 20px 50px rgba(15, 23, 42, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            color: #e2e8f0;
+            border-radius: 34px;
             overflow: hidden;
-            backdrop-filter: blur(20px);
-        }
-
-        .sidebar-brand {
-            padding: 28px 20px 24px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(249, 115, 22, 0.1) 100%);
-            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(121, 86, 54, 0.15);
+            background: rgba(255, 249, 240, 0.58);
+            backdrop-filter: blur(24px);
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-columns: 430px minmax(0, 1fr);
             position: relative;
         }
 
-        .sidebar-brand::before {
-            content: '';
+        .admin-shell::before {
+            content: "";
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #3b82f6, #f97316, #3b82f6);
-            background-size: 200% 100%;
-            animation: gradient-shift 3s ease infinite;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 20%);
+            pointer-events: none;
         }
 
-        @keyframes gradient-shift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+        .sidebar {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 26px 22px;
+            border-right: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(255, 248, 238, 0.94), rgba(247, 240, 230, 0.84));
+            min-height: 0;
         }
 
-        .sidebar-logo {
+        .window-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .window-dots span:nth-child(1) { background: #ff5f57; }
+        .window-dots span:nth-child(2) { background: #febc2e; }
+        .window-dots span:nth-child(3) { background: #28c840; }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-mark {
             width: 48px;
             height: 48px;
             border-radius: 14px;
-            background: linear-gradient(135deg, #3b82f6 0%, #f97316 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-bottom: 14px;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .sidebar-title {
-            font-size: 20px;
+            background: linear-gradient(145deg, #d56a37, #8f4323);
+            color: #fff8ef;
+            display: grid;
+            place-items: center;
             font-weight: 700;
-            line-height: 1.3;
-            margin-bottom: 6px;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            box-shadow: 0 18px 24px rgba(170, 89, 44, 0.24);
         }
 
-        .sidebar-subtitle {
-            font-size: 12px;
-            line-height: 1.5;
-            color: #94a3b8;
-            font-weight: 400;
+        .brand-copy h1 {
+            margin: 0;
+            font: 700 20px/1.1 var(--font-display);
         }
 
-        .sidebar-nav {
-            padding: 16px 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+        .brand-copy p {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .workspace-card,
+        .sidebar-panel,
+        .topbar,
+        .panel,
+        .info-box,
+        .portal-card,
+        .portal-link-card {
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(109, 79, 54, 0.1);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+        }
+
+        .workspace-card,
+        .sidebar-panel {
+            border-radius: var(--radius-lg);
+            background: var(--panel-strong);
+        }
+
+        .workspace-card {
+            padding: 18px;
+        }
+
+        .workspace-card small,
+        .nav-group h2,
+        .sidebar-section-label,
+        .portal-header small,
+        .topbar-copy small {
+            display: block;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+
+        .workspace-card strong {
+            display: block;
+            font-size: 17px;
+            margin-bottom: 8px;
+        }
+
+        .workspace-card p,
+        .sidebar-panel-intro,
+        .muted,
+        .portal-header p,
+        .topbar-copy p,
+        .sidebar-footer p,
+        .quick-fill-tip {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .nav-group h2 {
+            margin: 0 0 12px;
+        }
+
+        .nav-list,
+        .utility-links,
+        .sidebar-stack,
+        .page-stack {
+            display: grid;
+            gap: 12px;
         }
 
         .nav-item {
             width: 100%;
-            border: none;
-            border-radius: 14px;
+            border: 0;
+            border-radius: 16px;
             background: transparent;
-            color: #94a3b8;
+            color: var(--text);
             text-align: left;
             padding: 14px 16px;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
             display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-item::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(249, 115, 22, 0.05) 100%);
-            opacity: 0;
-            transition: opacity 0.25s ease;
-            border-radius: 14px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
         }
 
         .nav-item:hover {
-            color: #f8fafc;
-            transform: translateX(4px);
-        }
-
-        .nav-item:hover::before {
-            opacity: 1;
-        }
-
-        .nav-item:active {
-            transform: translateX(2px) scale(0.99);
+            background: rgba(255, 255, 255, 0.46);
+            transform: translateX(2px);
         }
 
         .nav-item.active {
-            color: #f8fafc;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(249, 115, 22, 0.15) 100%);
-            box-shadow:
-                0 0 0 1px rgba(96, 165, 250, 0.3),
-                0 4px 12px rgba(59, 130, 246, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(199, 99, 47, 0.16), rgba(199, 99, 47, 0.06));
+            box-shadow: inset 0 0 0 1px rgba(199, 99, 47, 0.14);
         }
 
-        .nav-item.active::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 3px;
-            height: 24px;
-            background: linear-gradient(180deg, #3b82f6, #f97316);
-            border-radius: 0 3px 3px 0;
+        .nav-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
         }
 
         .nav-item-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: rgba(148, 163, 184, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-            transition: all 0.25s ease;
-            position: relative;
-            z-index: 1;
-        }
-
-        .nav-item:hover .nav-item-icon {
-            background: rgba(59, 130, 246, 0.2);
-            transform: scale(1.05);
-        }
-
-        .nav-item.active .nav-item-icon {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%);
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
-        }
-
-        .nav-item-content {
-            flex: 1;
-            min-width: 0;
-            position: relative;
-            z-index: 1;
-        }
-
-        .nav-item-title {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 3px;
-            letter-spacing: -0.01em;
-        }
-
-        .nav-item-desc {
-            display: block;
-            font-size: 11px;
-            line-height: 1.4;
-            color: #64748b;
-            transition: color 0.25s ease;
-        }
-
-        .nav-item:hover .nav-item-desc,
-        .nav-item.active .nav-item-desc {
-            color: #94a3b8;
-        }
-
-        .sidebar-footer {
-            padding: 16px 20px 20px;
-            border-top: 1px solid rgba(148, 163, 184, 0.08);
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar-note {
-            font-size: 11px;
-            line-height: 1.6;
-            color: #64748b;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .sidebar-note-icon {
-            font-size: 14px;
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-
-        .content-shell {
-            min-width: 0;
-        }
-
-        .content-view {
-            display: none;
-        }
-
-        .content-view.active {
-            display: block;
-        }
-
-        .container {
-            max-width: none;
-            margin: 0;
-        }
-
-        h1 {
-            color: #fff;
-            text-align: center;
-            margin-bottom: 24px;
-            letter-spacing: 1px;
-        }
-
-        .panel-grid {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 24px;
-            margin-bottom: 24px;
+            place-items: center;
+            background: rgba(255, 255, 255, 0.64);
+            font-size: 16px;
+            flex-shrink: 0;
         }
 
-        .panel,
-        .info-box {
-            background: rgba(255, 255, 255, 0.96);
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+        .nav-item strong {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 3px;
         }
 
-        .panel h2,
-        .info-box h3 {
-            color: #102a43;
+        .nav-item span,
+        .nav-item em,
+        .profile-chip,
+        .topbar-meta,
+        .live-hint,
+        .live-status,
+        .portal-link-label,
+        .controls-title,
+        .controls-subtitle,
+        .counter,
+        .auto-save-toggle,
+        .form-row label {
+            color: var(--muted);
+            font-size: 12px;
+            font-style: normal;
+        }
+
+        .nav-badge {
+            min-width: 30px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(45, 122, 88, 0.12);
+            color: var(--success);
+            font-size: 12px;
+            text-align: center;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .utility-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.56);
+            border: 1px solid rgba(109, 79, 54, 0.1);
+            color: var(--text);
+            text-decoration: none;
+            transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        }
+
+        .utility-link:hover {
+            transform: translateX(2px);
+            border-color: rgba(199, 99, 47, 0.22);
+            background: rgba(255, 255, 255, 0.82);
+        }
+
+        .sidebar-scroll {
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 6px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .sidebar-panel {
+            padding: 18px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .sidebar-panel .panel-header,
+        .portal-header,
+        .topbar,
+        .task-header,
+        .settings-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            flex-wrap: wrap;
         }
 
         .panel-header {
@@ -294,6 +335,7 @@
             justify-content: space-between;
             gap: 12px;
             margin-bottom: 16px;
+            flex-wrap: wrap;
         }
 
         .panel-header-right {
@@ -304,29 +346,125 @@
             flex-wrap: wrap;
         }
 
-        .auto-save-toggle {
-            display: inline-flex;
+        .sidebar-panel h2,
+        .panel h2,
+        .portal-header h2,
+        .info-box h3,
+        .topbar-copy h3 {
+            margin: 0;
+            color: var(--text);
+            font-family: var(--font-display);
+        }
+
+        .sidebar-panel h2,
+        .portal-header h2,
+        .info-box h3,
+        .topbar-copy h3 {
+            font-size: 20px;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            background: linear-gradient(145deg, #38261a, #543726);
+            color: #fdf3e6;
+        }
+
+        .sidebar-footer p {
+            color: rgba(253, 243, 230, 0.72);
+        }
+
+        .content-shell {
+            position: relative;
+            z-index: 1;
+            min-width: 0;
+            min-height: 0;
+            padding: 24px;
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            gap: 20px;
+        }
+
+        .topbar {
+            border-radius: 22px;
+            padding: 18px 22px;
             align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 999px;
-            background: #f8fafc;
-            border: 1px solid #d9e2ec;
-            color: #243b53;
-            font-size: 13px;
-            white-space: nowrap;
         }
 
-        .auto-save-toggle input {
-            accent-color: #2563eb;
+        .topbar-copy h3 {
+            font-size: 24px;
+            margin-bottom: 4px;
         }
 
-        .counter {
-            font-size: 13px;
-            color: #486581;
-            background: #e9f2ff;
-            border-radius: 999px;
-            padding: 6px 12px;
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .profile-chip {
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #df8656, #8f4f2d);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+        }
+
+        .content-view {
+            display: none;
+            min-height: 0;
+        }
+
+        .content-view.active {
+            display: block;
+        }
+
+        .container,
+        .portal-page {
+            min-height: 100%;
+        }
+
+        .page-stack,
+        .portal-page {
+            gap: 20px;
+        }
+
+        .panel,
+        .info-box,
+        .portal-card,
+        .portal-link-card {
+            border-radius: 26px;
+            padding: 22px;
+        }
+
+        .sidebar-panel .btn,
+        .portal-actions .btn,
+        .topbar button {
+            border: 0;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 252, 248, 0.86);
         }
 
         .panel-layout {
@@ -351,15 +489,16 @@
             gap: 0;
             width: 240px;
             padding: 12px;
-            border-radius: 16px;
-            background: linear-gradient(180deg, #111827, #243b53);
+            border-radius: 18px;
+            background: linear-gradient(180deg, #5c3827, #2f241b);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
         }
 
         .panel-slot {
             width: 148px;
             height: 148px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -368,7 +507,7 @@
         }
 
         .panel-slot.active {
-            outline: 3px solid #f97316;
+            outline: 3px solid #f1bb73;
             z-index: 2;
         }
 
@@ -383,43 +522,42 @@
         }
 
         .slot-placeholder {
-            color: rgba(255, 255, 255, 0.62);
+            color: rgba(255, 245, 235, 0.68);
             font-size: 12px;
         }
 
-        .controls {
+        .controls,
+        .controls2,
+        .quick-fill-box,
+        .scoreboard-card,
+        .portal-link-card {
             display: grid;
             gap: 12px;
-            padding: 14px;
-            border-radius: 14px;
-            background: #f8fafc;
-            border: 1px solid #e5edf5;
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .controls {
+            background: #fffdf8;
+            border: 1px solid rgba(109, 79, 54, 0.12);
         }
 
         .controls2 {
-            display: grid;
-            gap: 12px;
-            padding: 14px;
-            border-radius: 14px;
-            background: #fff7ed;
-            border: 1px solid #fed7aa;
+            background: linear-gradient(180deg, #fff3e4, #fff8f0);
+            border: 1px solid rgba(199, 99, 47, 0.18);
             margin-bottom: 16px;
         }
 
         .controls-title {
             font-size: 13px;
-            color: #52606d;
-        }
-
-        .controls2 .controls-title {
-            color: #9a3412;
+            color: var(--muted-strong);
         }
 
         .controls-collapsible {
             margin-bottom: 16px;
-            border-radius: 14px;
-            border: 1px solid #d9e2ec;
-            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            background: rgba(255, 255, 255, 0.9);
             overflow: hidden;
         }
 
@@ -429,8 +567,8 @@
             padding: 14px 16px;
             font-size: 14px;
             font-weight: 600;
-            color: #243b53;
-            background: #eef4fb;
+            color: var(--text);
+            background: rgba(239, 228, 214, 0.82);
         }
 
         .controls-collapsible summary::-webkit-details-marker {
@@ -441,7 +579,7 @@
             content: "展开";
             float: right;
             font-size: 12px;
-            color: #486581;
+            color: var(--muted);
         }
 
         .controls-collapsible[open] summary::after {
@@ -450,7 +588,13 @@
 
         .controls-collapsible .controls {
             margin-bottom: 0;
-            border: none;
+            border: 0;
+            border-radius: 0;
+        }
+
+        .controls-collapsible .controls2 {
+            margin-bottom: 0;
+            border: 0;
             border-radius: 0;
         }
 
@@ -463,7 +607,7 @@
             gap: 10px;
             flex-wrap: wrap;
             font-size: 14px;
-            color: #243b53;
+            color: var(--text);
         }
 
         .opacity-row input[type="range"],
@@ -475,56 +619,58 @@
 
         .opacity-row input[type="number"],
         .saturation-row input[type="number"],
+        .protection-row input[type="number"],
+        .form-row input,
+        .form-row select,
+        .quick-fill-box textarea,
+        .search-box input {
+            width: 100%;
+            border: 1px solid rgba(109, 79, 54, 0.18);
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--text);
+        }
+
+        .opacity-row input[type="number"],
+        .saturation-row input[type="number"],
         .protection-row input[type="number"] {
             width: 82px;
-            padding: 8px;
-            border-radius: 10px;
-            border: 1px solid #cbd5e1;
         }
 
         .controls-subtitle {
             font-size: 12px;
-            color: #52606d;
+            color: var(--muted);
             line-height: 1.5;
-            background: #eff6ff;
-            border: 1px solid #dbeafe;
+            background: #fff9ef;
+            border: 1px solid rgba(199, 99, 47, 0.14);
             border-radius: 10px;
             padding: 8px 10px;
         }
 
         .quick-fill-box {
-            display: grid;
-            gap: 10px;
-            padding: 14px;
-            border-radius: 14px;
-            background: #f6f9fc;
-            border: 1px solid #d9e2ec;
+            background: rgba(252, 247, 240, 0.92);
+            border: 1px solid rgba(109, 79, 54, 0.12);
             margin-bottom: 16px;
         }
 
         .quick-fill-box textarea {
-            width: 100%;
             min-height: 132px;
             resize: vertical;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 12px;
-            font-size: 14px;
             line-height: 1.6;
             font-family: "Microsoft YaHei", sans-serif;
-            background: #ffffff;
         }
 
-        .quick-fill-box textarea:focus {
+        .quick-fill-box textarea:focus,
+        .search-box input:focus,
+        .form-row input:focus,
+        .form-row select:focus,
+        .opacity-row input:focus,
+        .saturation-row input:focus,
+        .protection-row input:focus {
             outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        }
-
-        .quick-fill-tip {
-            font-size: 12px;
-            color: #52606d;
-            line-height: 1.6;
+            border-color: rgba(199, 99, 47, 0.42);
+            box-shadow: 0 0 0 4px rgba(199, 99, 47, 0.08);
         }
 
         .quick-fill-variants {
@@ -534,9 +680,9 @@
         }
 
         .quick-fill-variant-group {
-            border: 1px solid #d9e2ec;
+            border: 1px solid rgba(109, 79, 54, 0.12);
             border-radius: 14px;
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.9);
             padding: 12px;
         }
 
@@ -552,123 +698,74 @@
         .quick-fill-variant-title {
             font-size: 13px;
             font-weight: 700;
-            color: #243b53;
+            color: var(--text);
         }
 
         .quick-fill-variant-subtitle {
             font-size: 12px;
-            color: #52606d;
+            color: var(--muted);
         }
 
-        .quick-fill-variant-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
-            gap: 10px;
-        }
-
-        .quick-fill-variant-card {
-            border: 2px solid #dbe7f3;
-            border-radius: 12px;
-            background: #f8fbff;
-            cursor: pointer;
-            overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-        }
-
-        .quick-fill-variant-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 22px rgba(63, 131, 248, 0.16);
-        }
-
-        .quick-fill-variant-card.selected {
-            border-color: #f97316;
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.16);
-        }
-
-        .quick-fill-variant-card img {
-            width: 100%;
-            aspect-ratio: 1;
-            display: block;
-            object-fit: contain;
-            background: linear-gradient(180deg, #f8fbff, #eef4ff);
-            padding: 6px;
-        }
-
-        .quick-fill-variant-card .name {
-            font-size: 11px;
-            padding: 6px;
-            line-height: 1.35;
-            text-align: center;
-            min-height: 42px;
-            color: #243b53;
-            word-break: break-word;
-        }
-
-        .search-box input {
-            width: 100%;
-            border: 2px solid #d9e2ec;
-            border-radius: 12px;
-            padding: 12px 14px;
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-
-        .search-box input:focus {
-            outline: none;
-            border-color: #3f83f8;
-        }
-
+        .quick-fill-variant-options,
         .sprite-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
             gap: 12px;
+        }
+
+        .sprite-grid {
             max-height: 520px;
             overflow-y: auto;
             padding-right: 6px;
         }
 
+        .quick-fill-variant-card,
         .sprite-card {
             border: 2px solid transparent;
             border-radius: 12px;
-            background: #f8fbff;
+            background: #fffaf3;
             cursor: pointer;
             overflow: hidden;
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
+        .quick-fill-variant-card:hover,
         .sprite-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 22px rgba(63, 131, 248, 0.16);
+            box-shadow: 0 10px 22px rgba(170, 89, 44, 0.14);
         }
 
+        .quick-fill-variant-card.selected,
         .sprite-card.selected {
-            border-color: #f97316;
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.18);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(199, 99, 47, 0.14);
         }
 
+        .quick-fill-variant-card img,
         .sprite-card img {
             width: 100%;
             aspect-ratio: 1;
             display: block;
             object-fit: contain;
-            background: linear-gradient(180deg, #f8fbff, #eef4ff);
+            background: linear-gradient(180deg, #fffdf8, #f5eadc);
             padding: 6px;
         }
 
+        .quick-fill-variant-card .name,
         .sprite-card .name {
             font-size: 11px;
             padding: 6px;
             line-height: 1.35;
             text-align: center;
             min-height: 42px;
-            color: #243b53;
+            color: var(--text);
             word-break: break-word;
         }
 
         .remove-btn,
         .btn {
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -681,50 +778,54 @@
             font-size: 16px;
         }
 
-        .btn-row {
+        .btn-row,
+        .portal-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            margin: 14px 0;
         }
 
         .btn {
             padding: 12px 18px;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-primary {
-            background: #2563eb;
-            color: #fff;
+            background: linear-gradient(145deg, #d56a37, #8f4323);
+            color: #fffaf4;
         }
 
         .btn-primary:hover {
-            background: #1d4ed8;
+            filter: brightness(1.03);
         }
 
         .btn-secondary {
-            background: #e5edf5;
-            color: #243b53;
+            background: rgba(233, 225, 214, 0.92);
+            color: var(--text);
         }
 
         .btn-secondary:hover {
-            background: #d9e2ec;
+            background: rgba(222, 212, 198, 0.96);
         }
 
         .btn-danger {
-            background: #ef4444;
+            background: #d9644f;
             color: #fff;
         }
 
         .btn-danger:hover {
-            background: #dc2626;
+            background: #c24635;
         }
 
         .status {
-            padding: 12px 14px;
+            padding: 10px 12px;
             border-radius: 12px;
-            font-size: 14px;
+            font-size: 13px;
             display: none;
         }
 
@@ -737,50 +838,32 @@
 
         .status.success {
             display: block;
-            background: #dcfce7;
-            color: #166534;
+            background: rgba(45, 122, 88, 0.14);
+            color: #1b5a3e;
         }
 
         .status.error {
             display: block;
-            background: #fee2e2;
-            color: #991b1b;
+            background: rgba(194, 70, 53, 0.14);
+            color: #8d3023;
         }
 
-        .background-panel {
-            margin-bottom: 24px;
-        }
-
-        .scoreboard-panel {
-            margin-bottom: 24px;
-        }
-
-        .scoreboard-grid {
+        .scoreboard-grid,
+        .scoreboard-controls,
+        .portal-link-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
-            margin-top: 16px;
+            gap: 14px;
         }
 
         .scoreboard-card {
-            border-radius: 16px;
-            border: 1px solid #dbe4f0;
-            background: #f8fbff;
-            padding: 16px;
-            display: grid;
-            gap: 12px;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            background: rgba(255, 255, 255, 0.86);
         }
 
         .scoreboard-card h3 {
-            font-size: 16px;
-            color: #102a43;
-        }
-
-        .scoreboard-controls {
-            margin-top: 18px;
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
+            font-size: 15px;
+            color: var(--text);
         }
 
         .form-row {
@@ -788,39 +871,55 @@
             gap: 8px;
         }
 
-        .form-row label {
-            font-size: 13px;
-            color: #486581;
+        .form-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            justify-self: start;
+            box-shadow: none;
+            padding: 0;
         }
 
-        .form-row input,
-        .form-row select {
-            width: 100%;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            padding: 10px 12px;
-            font-size: 14px;
-            background: #fff;
+        .auto-save-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(255, 251, 246, 0.92);
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            color: var(--muted-strong);
+            white-space: nowrap;
+        }
+
+        .auto-save-toggle input {
+            accent-color: var(--accent);
+        }
+
+        .counter {
+            background: rgba(199, 99, 47, 0.1);
+            color: var(--muted-strong);
+            border-radius: 999px;
+            padding: 7px 12px;
         }
 
         .upload-area {
-            border: 2px dashed #94a3b8;
-            border-radius: 14px;
+            border: 2px dashed rgba(145, 112, 81, 0.46);
+            border-radius: 16px;
             padding: 18px;
             text-align: center;
-            background: #f8fafc;
+            background: rgba(255, 255, 255, 0.68);
             cursor: pointer;
-            margin-bottom: 14px;
         }
 
         .upload-area:hover {
-            border-color: #2563eb;
-            background: #eff6ff;
+            border-color: rgba(199, 99, 47, 0.52);
+            background: rgba(255, 249, 240, 0.96);
         }
 
         .upload-area.dragover {
-            border-color: #f97316;
-            background: #fff7ed;
+            border-color: var(--accent);
+            background: rgba(255, 242, 226, 0.98);
         }
 
         .upload-area .icon {
@@ -833,82 +932,38 @@
         }
 
         .background-preview {
-            border-radius: 14px;
-            border: 1px solid #d9e2ec;
-            background: linear-gradient(180deg, #f8fafc, #eef2f7);
+            border-radius: 16px;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            background: linear-gradient(180deg, #faf4ec, #efe4d4);
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 240px;
+            min-height: 220px;
             overflow: hidden;
-            margin-bottom: 14px;
         }
 
         .background-preview img {
             max-width: 100%;
-            max-height: 240px;
+            max-height: 220px;
             object-fit: contain;
         }
 
         .empty-preview {
             font-size: 14px;
-            color: #7b8794;
+            color: var(--muted);
             padding: 24px;
             text-align: center;
         }
 
-        .portal-page {
+        .portal-card {
             display: grid;
             gap: 18px;
-        }
-
-        .portal-card {
-            background: rgba(255, 255, 255, 0.96);
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
-        }
-
-        .portal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 14px;
-            flex-wrap: wrap;
-            margin-bottom: 14px;
-        }
-
-        .portal-header h2 {
-            color: #102a43;
-            margin-bottom: 6px;
-        }
-
-        .portal-header p {
-            color: #52606d;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .portal-link-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 16px;
-            margin-bottom: 18px;
+            background: rgba(255, 252, 248, 0.86);
         }
 
         .portal-link-card {
-            border: 1px solid #d9e2ec;
-            border-radius: 16px;
-            background: #f8fbff;
-            padding: 16px;
-            display: grid;
-            gap: 10px;
-        }
-
-        .portal-link-label {
-            font-size: 13px;
-            color: #486581;
-            font-weight: 700;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            background: rgba(255, 255, 255, 0.86);
         }
 
         .portal-link-value {
@@ -916,35 +971,29 @@
             padding: 10px 12px;
             border-radius: 12px;
             background: #ffffff;
-            border: 1px solid #d9e2ec;
-            color: #102a43;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            color: var(--text);
             font-size: 13px;
             word-break: break-all;
-        }
-
-        .portal-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .portal-iframe {
-            width: 100%;
-            min-height: 820px;
-            border: 1px solid #d9e2ec;
-            border-radius: 18px;
-            background: #ffffff;
+            text-decoration: none;
         }
 
         .preview-embed-shell {
             width: min(100%, 960px);
             height: 540px;
-            margin: 0;
             overflow: hidden;
-            border: 1px solid #d9e2ec;
+            border: 1px solid rgba(109, 79, 54, 0.12);
             border-radius: 18px;
             background: #ffffff;
             box-shadow: inset 0 0 0 1px rgba(217, 226, 236, 0.5);
+        }
+
+        .portal-iframe {
+            width: 100%;
+            min-height: 820px;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            border-radius: 18px;
+            background: #ffffff;
         }
 
         .portal-iframe-preview {
@@ -958,32 +1007,14 @@
             display: block;
         }
 
-        /* 数值实时控制面板样式 */
-        .live-panels {
+        .live-module {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
+            gap: 14px;
         }
 
-        .live-panel {
-            background: rgba(15, 23, 42, 0.86);
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            border-radius: 18px;
-            padding: 16px;
-            box-shadow: 0 18px 40px rgba(2, 6, 23, 0.32);
-        }
-
-        .live-panel-left {
-            border-color: rgba(248, 113, 113, 0.28);
-        }
-
-        .live-panel-right {
-            border-color: rgba(96, 165, 250, 0.28);
-        }
-
-        .live-panel h3 {
-            margin-bottom: 12px;
-            color: #e2e8f0;
+        .live-hint {
+            color: var(--muted);
+            line-height: 1.55;
         }
 
         .live-topbar {
@@ -991,163 +1022,268 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
-            margin-bottom: 18px;
             flex-wrap: wrap;
         }
 
         .live-status {
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.62);
             padding: 10px 14px;
             border-radius: 12px;
             min-height: 40px;
-            color: #e2e8f0;
+            color: var(--muted-strong);
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .live-panels {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .live-panel {
+            background: linear-gradient(180deg, rgba(74, 52, 37, 0.96), rgba(46, 33, 24, 0.98));
+            border: 1px solid rgba(255, 232, 209, 0.12);
+            border-radius: 18px;
+            padding: 14px;
+            box-shadow: 0 18px 40px rgba(60, 35, 17, 0.24);
+        }
+
+        .live-panel-left {
+            border-color: rgba(240, 146, 124, 0.26);
+        }
+
+        .live-panel-right {
+            border-color: rgba(244, 202, 121, 0.26);
+        }
+
+        .live-panel h3 {
+            margin-bottom: 10px;
+            color: #fff3e4;
+            font-size: 17px;
+            font-family: var(--font-display);
         }
 
         .live-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 12px;
+            gap: 8px;
         }
 
-        .live-hint {
-            text-align: center;
-            margin-bottom: 18px;
-            color: #cbd5e1;
-        }
-
-        /* 槽位卡片样式 */
-        .slot-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(148, 163, 184, 0.14);
-            border-radius: 16px;
-            padding: 12px;
-            display: grid;
-            grid-template-columns: 106px minmax(0, 1fr);
-            gap: 12px;
-            align-items: start;
-        }
-
-        .slot-card-right {
-            grid-template-columns: minmax(0, 1fr) 106px;
-        }
-
-        .slot-card-right .slot-main {
-            order: 1;
-        }
-
-        .slot-card-right .slot-preview-wrap {
-            order: 2;
-        }
-
-        .slot-preview-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .sprite-preview {
-            width: 106px;
-            height: 106px;
+        .live-panel .slot-card {
+            position: relative;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)),
+                linear-gradient(135deg, rgba(55, 38, 28, 0.96), rgba(79, 57, 42, 0.88));
+            border: 1px solid rgba(255, 232, 209, 0.16);
             border-radius: 14px;
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            background: rgba(15, 23, 42, 0.72);
+            padding: 6px 8px;
+            display: grid;
+            grid-template-columns: 56px minmax(0, 1fr);
+            gap: 8px;
+            align-items: center;
+            height: 78px;
+            overflow: hidden;
+        }
+
+        .live-panel .slot-card-right .slot-main {
+            text-align: left;
+        }
+
+        .live-panel .sprite-preview {
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 232, 209, 0.18);
+            background: rgba(31, 19, 13, 0.72);
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            position: relative;
         }
 
-        .sprite-preview img {
-            width: 76px;
-            height: 76px;
+        .live-panel .sprite-preview img {
+            width: 52px;
+            height: 52px;
             object-fit: contain;
             display: block;
         }
 
-        .sprite-empty {
-            color: #64748b;
-            font-size: 12px;
+        .live-panel .sprite-empty {
+            color: rgba(255, 220, 190, 0.46);
+            font-size: 10px;
+            text-align: center;
+            line-height: 1.2;
         }
 
-        .sprite-label {
-            width: 106px;
-            display: flex;
+        .live-panel .slot-preview-wrap {
+            display: grid;
+            justify-items: center;
+            align-content: start;
+            gap: 3px;
+            position: relative;
+        }
+
+        .live-panel .slot-index {
+            position: absolute;
+            left: -2px;
+            top: -2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            background: rgba(40, 24, 15, 0.9);
+            border: 1px solid rgba(255, 244, 232, 0.22);
+            color: #fff9f1;
+            font-weight: 700;
+            font-size: 10px;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin-top: 6px;
-            font-size: 13px;
-            line-height: 1.3;
+            box-shadow: 0 6px 12px rgba(2, 6, 23, 0.3);
+        }
+
+        .live-panel .slot-main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+            min-width: 0;
+            align-self: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        .live-panel .slot-name {
+            color: #fff3e4;
+            width: 100%;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.1;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
             text-align: center;
         }
 
-        .slot-index {
-            color: #f8fafc;
-            font-weight: 700;
-            flex: 0 0 auto;
-        }
-
-        .slot-main {
-            display: grid;
-            gap: 10px;
-            min-width: 0;
-        }
-
-        .slot-name { color: #93c5fd; }
-
-        .form-row { display: grid; gap: 6px; }
-        .form-row label { font-size: 12px; color: #cbd5e1; }
-        .form-row input[type="range"] { width: 100%; }
-        .health-range { accent-color: #22c55e; }
-        .energy-range { accent-color: #F2CB51; }
-        .form-row input[type="number"] {
+        .live-panel .form-row {
+            display: flex;
+            justify-content: center;
             width: 100%;
-            border-radius: 10px;
-            border: 1px solid #475569;
-            background: #0f172a;
-            color: #fff;
-            padding: 8px 10px;
         }
 
-        .line {
+        .live-panel .range-line {
             display: grid;
-            grid-template-columns: 1fr 82px;
-            gap: 10px;
+            grid-template-columns: minmax(0, 1fr) 34px;
             align-items: center;
+            gap: 4px;
+            width: 100%;
         }
 
-        .mini {
-            font-size: 12px;
-            color: #94a3b8;
+        .live-panel .range-shell {
+            --percent: 100%;
+            --accent: #f2c46c;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 14px;
         }
 
-        @media (max-width: 1100px) {
-            .live-panels { grid-template-columns: 1fr; }
+        .live-panel .range-shell-health {
+            --accent: #d98d69;
         }
 
-        @media (max-width: 720px) {
-            .slot-card {
-                grid-template-columns: 1fr;
-            }
-            .sprite-preview {
-                width: 106px;
-                height: 106px;
-            }
+        .live-panel .range-shell-energy {
+            --accent: #f2cb51;
         }
 
-        .muted {
-            color: #52606d;
-            font-size: 14px;
-            line-height: 1.8;
+        .live-panel .range-shell input[type="range"] {
+            position: relative;
+            z-index: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            display: block;
+            width: 100%;
+            margin: 0 auto;
+            height: 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 232, 209, 0.18);
+            background:
+                linear-gradient(90deg, var(--accent) 0%, var(--accent) var(--percent), rgba(32, 18, 10, 0.95) var(--percent), rgba(32, 18, 10, 0.95) 100%);
+            outline: none;
+            cursor: pointer;
+            box-shadow: inset 0 1px 3px rgba(2, 6, 23, 0.35);
         }
 
-        @media (max-width: 1280px) {
+        .live-panel .range-shell input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid rgba(248, 250, 252, 0.95);
+            background: #fff;
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.28);
+        }
+
+        .live-panel .range-shell input[type="range"]::-moz-range-thumb {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid rgba(248, 250, 252, 0.95);
+            background: #fff;
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.28);
+        }
+
+        .live-panel .range-shell input[type="range"]::-moz-range-track {
+            height: 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 232, 209, 0.18);
+            background: transparent;
+        }
+
+        .live-panel .value-input {
+            width: 34px;
+            height: 16px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 232, 209, 0.22);
+            background: rgba(33, 19, 11, 0.96);
+            color: #fff8ef;
+            font-size: 9px;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            padding: 0 2px;
+        }
+
+        .live-panel .value-input:focus {
+            outline: none;
+            border-color: rgba(244, 202, 121, 0.68);
+            box-shadow: none;
+        }
+
+        .live-panel .value-input::-webkit-outer-spin-button,
+        .live-panel .value-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .live-panel .value-input[type="number"] {
+            appearance: textfield;
+        }
+
+        .info-box code,
+        .workspace-card code,
+        .portal-header code {
+            background: rgba(199, 99, 47, 0.08);
+            border-radius: 8px;
+            padding: 2px 6px;
+        }
+
+        @media (max-width: 1560px) {
             .admin-shell {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar {
-                position: static;
+                grid-template-columns: 390px minmax(0, 1fr);
             }
 
             .panel-grid {
@@ -1155,15 +1291,45 @@
             }
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1240px) {
             .admin-shell {
-                padding: 16px;
-            }
-
-            .sidebar-nav {
                 grid-template-columns: 1fr;
             }
 
+            .sidebar {
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+            }
+
+            .content-shell {
+                padding-top: 18px;
+            }
+
+            .sidebar-scroll {
+                max-height: none;
+                overflow: visible;
+            }
+        }
+
+        @media (max-width: 960px) {
+            body {
+                padding: 0;
+            }
+
+            .admin-shell {
+                min-height: 100vh;
+                border-radius: 0;
+                width: 100%;
+            }
+
+            .content-shell,
+            .sidebar {
+                padding: 18px 16px;
+            }
+
+            .scoreboard-grid,
+            .scoreboard-controls,
+            .portal-link-grid,
             .panel-layout,
             .panel-layout.preview-right {
                 grid-template-columns: 1fr;
@@ -1172,55 +1338,139 @@
             .slot-preview {
                 margin: 0 auto;
             }
+
+            .topbar {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .nav-item,
+            .utility-link,
+            .btn-row,
+            .portal-actions,
+            .live-topbar,
+            .topbar-right {
+                width: 100%;
+            }
+
+            .topbar-right,
+            .btn-row,
+            .portal-actions,
+            .live-topbar {
+                justify-content: stretch;
+            }
+
+            .btn,
+            .portal-actions a,
+            .portal-actions button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="admin-shell">
         <aside class="sidebar">
-            <div class="sidebar-brand">
-                <div class="sidebar-logo">⚔️</div>
-                <div class="sidebar-title">洛克王国 PVP</div>
-                <div class="sidebar-subtitle">后台管理控制台</div>
+            <div class="window-dots" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
-            <div class="sidebar-nav">
-                <button class="nav-item active" type="button" data-view="roster">
-                    <div class="nav-item-icon">🎮</div>
-                    <div class="nav-item-content">
-                        <span class="nav-item-title">阵容编辑</span>
-                        <span class="nav-item-desc">编辑精灵阵容、背景和比分栏</span>
-                    </div>
-                </button>
-                <button class="nav-item" type="button" data-view="live">
-                    <div class="nav-item-icon">📊</div>
-                    <div class="nav-item-content">
-                        <span class="nav-item-title">数值控制</span>
-                        <span class="nav-item-desc">实时调整血量和能力值</span>
-                    </div>
-                </button>
-                <button class="nav-item" type="button" data-view="preview">
-                    <div class="nav-item-icon">👁️</div>
-                    <div class="nav-item-content">
-                        <span class="nav-item-title">预览页</span>
-                        <span class="nav-item-desc">查看效果并复制访问链接</span>
-                    </div>
-                </button>
-            </div>
-            <div class="sidebar-footer">
-                <div class="sidebar-note">
-                    <span class="sidebar-note-icon">💡</span>
-                    <span>各页面可独立访问：admin / live-control / index</span>
+
+            <div class="brand">
+                <div class="brand-mark">⚔️</div>
+                <div class="brand-copy">
+                    <h1>洛克王国 PVP</h1>
+                    <p>Electron 风格后台工作台</p>
                 </div>
+            </div>
+
+            <div class="workspace-card">
+                <small>Workspace</small>
+                <strong>桌面直播控制台</strong>
+                <p>左侧 Navigation 只负责切换模块，右侧 content-shell 统一承载所有管理内容和预览页面。</p>
+            </div>
+
+            <div class="nav-group">
+                <h2>Navigation</h2>
+                <div class="nav-list">
+                    <button class="nav-item active" type="button" data-view="roster">
+                        <div class="nav-meta">
+                            <div class="nav-item-icon">🎮</div>
+                            <div>
+                                <strong>阵容编辑</strong>
+                                <span>左右面板、槽位、透明度和快速填充</span>
+                            </div>
+                        </div>
+                        <span class="nav-badge">Main</span>
+                    </button>
+                    <button class="nav-item" type="button" data-view="scoreboard">
+                        <div class="nav-meta">
+                            <div class="nav-item-icon">🏆</div>
+                            <div>
+                                <strong>顶部比分栏</strong>
+                                <span>选手名称、比分、Center Area 与显示控制</span>
+                            </div>
+                        </div>
+                        <span class="nav-badge">Edit</span>
+                    </button>
+                    <button class="nav-item" type="button" data-view="background">
+                        <div class="nav-meta">
+                            <div class="nav-item-icon">🎨</div>
+                            <div>
+                                <strong>背景图管理</strong>
+                                <span>上传、预览和删除直播背景图</span>
+                            </div>
+                        </div>
+                        <span class="nav-badge">Asset</span>
+                    </button>
+                    <button class="nav-item" type="button" data-view="live">
+                        <div class="nav-meta">
+                            <div class="nav-item-icon">📊</div>
+                            <div>
+                                <strong>实时数值控制</strong>
+                                <span>血量与能力值实时调整</span>
+                            </div>
+                        </div>
+                        <span class="nav-badge">Live</span>
+                    </button>
+                    <button class="nav-item" type="button" data-view="preview">
+                        <div class="nav-meta">
+                            <div class="nav-item-icon">👁️</div>
+                            <div>
+                                <strong>前台预览</strong>
+                                <span>查看 index 页面并复制访问地址</span>
+                            </div>
+                        </div>
+                        <span class="nav-badge">View</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <p>保留独立访问路径：`/admin.html`、`/live-control.html`、`/index.html`。本次改动只调整后台界面结构，不触碰前台展示页。</p>
             </div>
         </aside>
 
         <main class="content-shell">
-            <section class="content-view active" data-view="roster">
-                <div class="container">
-                    <h1>洛克王国 PVP 直播控制台</h1>
+            <header class="topbar">
+                <div class="topbar-copy">
+                    <small>Control Room</small>
+                    <h3>直播场景工作区</h3>
+                    <p>所有管理模块都通过左侧 Navigation 切换，并在右侧 content-shell 中独立显示。</p>
+                </div>
+                <div class="topbar-right">
+                    <div class="profile-chip">本地地址 <span id="localAddressText">127.0.0.1:9988</span></div>
+                    <div class="profile-chip topbar-meta">当前端口会自动同步到预览链接</div>
+                    <div class="avatar">PVP</div>
+                </div>
+            </header>
 
+            <section class="content-view active" data-view="roster">
+                <div class="container page-stack">
                     <div class="panel-grid">
-                        <section class="panel" data-panel="left">
+                        <section class="panel" data-panel="left" id="leftPanelCard">
                             <div class="panel-header">
                                 <h2>左侧面板</h2>
                                 <div class="panel-header-right">
@@ -1235,26 +1485,29 @@
                             <div class="panel-layout preview-left">
                                 <div class="slot-preview" id="leftSlotPreview"></div>
                                 <div class="panel-main">
-                                    <div class="controls2">
-                                        <div class="controls-title">当前槽位血量控制</div>
-                                        <label class="toggle-row">
-                                            <input type="checkbox" id="leftProtectionEnabled">
-                                            开启当前槽位血量效果
-                                        </label>
-                                        <div class="controls-subtitle" id="leftProtectionHint">血量 100% 时整图正常，0% 时整图进入弱化状态。</div>
-                                        <div class="protection-row">
-                                            <span>槽位血量</span>
-                                            <input type="range" id="leftProtectionRange" min="0" max="100" value="100">
-                                            <input type="number" id="leftProtectionNumber" min="0" max="100" value="100">
-                                            <span>%</span>
+                                    <details class="controls-collapsible">
+                                        <summary>当前槽位血量控制</summary>
+                                        <div class="controls2">
+                                            <div class="controls-title">默认折叠，按需展开调整当前槽位血量与能力值。</div>
+                                            <label class="toggle-row">
+                                                <input type="checkbox" id="leftProtectionEnabled">
+                                                开启当前槽位血量效果
+                                            </label>
+                                            <div class="controls-subtitle" id="leftProtectionHint">血量 100% 时整图正常，0% 时整图进入弱化状态。</div>
+                                            <div class="protection-row">
+                                                <span>槽位血量</span>
+                                                <input type="range" id="leftProtectionRange" min="0" max="100" value="100">
+                                                <input type="number" id="leftProtectionNumber" min="0" max="100" value="100">
+                                                <span>%</span>
+                                            </div>
+                                            <div class="protection-row">
+                                                <span>槽位能力值</span>
+                                                <input type="range" id="leftEnergyRange" min="0" max="10" value="10">
+                                                <input type="number" id="leftEnergyNumber" min="0" max="10" value="10">
+                                                <span></span>
+                                            </div>
                                         </div>
-                                        <div class="protection-row">
-                                            <span>槽位能力值</span>
-                                            <input type="range" id="leftEnergyRange" min="0" max="10" value="10">
-                                            <input type="number" id="leftEnergyNumber" min="0" max="10" value="10">
-                                            <span></span>
-                                        </div>
-                                    </div>
+                                    </details>
                                     <details class="controls-collapsible">
                                         <summary>透明度与饱和度设置</summary>
                                         <div class="controls">
@@ -1300,7 +1553,7 @@
                             </div>
                         </section>
 
-                        <section class="panel" data-panel="right">
+                        <section class="panel" data-panel="right" id="rightPanelCard">
                             <div class="panel-header">
                                 <h2>右侧面板</h2>
                                 <div class="panel-header-right">
@@ -1314,26 +1567,29 @@
                             </div>
                             <div class="panel-layout preview-right">
                                 <div class="panel-main">
-                                    <div class="controls2">
-                                        <div class="controls-title">当前槽位血量控制</div>
-                                        <label class="toggle-row">
-                                            <input type="checkbox" id="rightProtectionEnabled">
-                                            开启当前槽位血量效果
-                                        </label>
-                                        <div class="controls-subtitle" id="rightProtectionHint">血量 100% 时整图正常，0% 时整图进入弱化状态。</div>
-                                        <div class="protection-row">
-                                            <span>槽位血量</span>
-                                            <input type="range" id="rightProtectionRange" min="0" max="100" value="100">
-                                            <input type="number" id="rightProtectionNumber" min="0" max="100" value="100">
-                                            <span>%</span>
+                                    <details class="controls-collapsible">
+                                        <summary>当前槽位血量控制</summary>
+                                        <div class="controls2">
+                                            <div class="controls-title">默认折叠，按需展开调整当前槽位血量与能力值。</div>
+                                            <label class="toggle-row">
+                                                <input type="checkbox" id="rightProtectionEnabled">
+                                                开启当前槽位血量效果
+                                            </label>
+                                            <div class="controls-subtitle" id="rightProtectionHint">血量 100% 时整图正常，0% 时整图进入弱化状态。</div>
+                                            <div class="protection-row">
+                                                <span>槽位血量</span>
+                                                <input type="range" id="rightProtectionRange" min="0" max="100" value="100">
+                                                <input type="number" id="rightProtectionNumber" min="0" max="100" value="100">
+                                                <span>%</span>
+                                            </div>
+                                            <div class="protection-row">
+                                                <span>槽位能力值</span>
+                                                <input type="range" id="rightEnergyRange" min="0" max="10" value="10">
+                                                <input type="number" id="rightEnergyNumber" min="0" max="10" value="10">
+                                                <span></span>
+                                            </div>
                                         </div>
-                                        <div class="protection-row">
-                                            <span>槽位能力值</span>
-                                            <input type="range" id="rightEnergyRange" min="0" max="10" value="10">
-                                            <input type="number" id="rightEnergyNumber" min="0" max="10" value="10">
-                                            <span></span>
-                                        </div>
-                                    </div>
+                                    </details>
                                     <details class="controls-collapsible">
                                         <summary>透明度与饱和度设置</summary>
                                         <div class="controls">
@@ -1381,14 +1637,29 @@
                         </section>
                     </div>
 
-                    <section class="panel scoreboard-panel">
+                    <section class="info-box">
+                        <h3>使用说明</h3>
+                        <p class="muted">
+                            左右两侧从 <code>img</code> 目录读取精灵图，名称和编号索引从 <code>json/sprites.json</code> 读取。每侧固定 6 个槽位，点击槽位后再点击精灵即可填充。
+                            透明度开关和数值只作用于当前选中的单个槽位，不会影响整个面板。
+                        </p>
+                    </section>
+                </div>
+            </section>
+
+            <section class="content-view" data-view="scoreboard">
+                <div class="portal-page">
+                    <section class="portal-card scoreboard-panel">
                         <div class="panel-header">
-                            <h2>顶部比分栏</h2>
+                            <div>
+                                <small>Navigation Module</small>
+                                <h2>顶部比分栏</h2>
+                                <p>这里可以设置首页顶部居中的选手名字、比分和 Center Area 的展示方式。</p>
+                            </div>
                             <div class="panel-header-right">
                                 <div class="status" id="scoreboardStatus"></div>
                             </div>
                         </div>
-                        <p class="muted">这里可以设置首页顶部居中的选手名字和比分，保存后前端首页会自动同步显示。</p>
                         <div class="scoreboard-grid">
                             <div class="scoreboard-card">
                                 <h3>左侧选手</h3>
@@ -1462,12 +1733,22 @@
                             <button class="btn btn-primary" id="scoreboardSaveBtn">保存比分栏</button>
                         </div>
                     </section>
+                </div>
+            </section>
 
-                    <section class="panel background-panel">
-                        <h2>背景图</h2>
+            <section class="content-view" data-view="background">
+                <div class="portal-page">
+                    <section class="portal-card background-panel">
+                        <div class="portal-header">
+                            <div>
+                                <small>Navigation Module</small>
+                                <h2>背景图管理</h2>
+                                <p>支持点击或拖拽上传，建议保持 1920 × 1080 的直播背景尺寸。</p>
+                            </div>
+                        </div>
                         <div class="upload-area" id="bgUploadArea">
                             <div class="icon">🎨</div>
-                            <div>点击或拖拽上传背景图，推荐 1920 × 1080</div>
+                            <div>点击或拖拽上传背景图</div>
                         </div>
                         <input type="file" accept="image/*" id="bgFileInput" class="background-input">
                         <div class="background-preview">
@@ -1480,48 +1761,42 @@
                         </div>
                         <div class="status" id="bgStatus"></div>
                     </section>
-
-                    <section class="info-box">
-                        <h3>使用说明</h3>
-                        <p class="muted">
-                            左右两侧从 <code>img</code> 目录读取精灵图，名称和编号索引从 <code>json/sprites.json</code> 读取。每侧固定 6 个槽位，点击槽位后再点击精灵即可填充。
-                            透明度开关和数值只作用于当前选中的单个槽位，不会影响整个面板。
-                        </p>
-                    </section>
                 </div>
             </section>
 
             <section class="content-view" data-view="live">
                 <div class="portal-page">
-                    <div class="portal-card">
-                        <div class="portal-header">
+                    <section class="portal-card">
+                        <div class="panel-header">
                             <div>
-                                <h2>数值实时控制</h2>
-                                <p>实时调整左右 6 个槽位的血量和能力值，支持自动保存。</p>
+                                <small>Navigation Module</small>
+                                <h2>实时数值控制</h2>
+                                <p>颜色适配当前桌面工作台，卡片和控制尺寸继续保持与 `live-control.html` 一致。</p>
                             </div>
                             <div class="portal-actions">
-                                <a class="btn btn-primary" id="liveControlOpenBtn" href="/live-control.html" target="_blank" rel="noopener noreferrer">新窗口打开</a>
+                                <a class="btn btn-secondary" id="liveControlOpenBtn" href="/live-control.html" target="_blank" rel="noopener noreferrer">新窗口打开</a>
                             </div>
                         </div>
-                        <div class="live-hint">左右两侧 6 个精灵会同时展开显示，自动保存会在 800ms 无操作后触发。</div>
-                        <div class="live-topbar">
-                            <div class="live-status" id="liveStatus">加载中...</div>
-                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                                <button class="btn btn-secondary" id="liveReloadBtn">重新加载</button>
-                                <button class="btn btn-primary" id="liveSaveBtn">手动保存</button>
+                        <div class="live-module">
+                            <div class="live-topbar">
+                                <div class="live-status" id="liveStatus">加载中...</div>
+                                <div class="portal-actions">
+                                    <button class="btn btn-secondary" id="liveReloadBtn">重新加载</button>
+                                    <button class="btn btn-primary" id="liveSaveBtn">手动保存</button>
+                                </div>
+                            </div>
+                            <div class="live-panels">
+                                <div class="live-panel live-panel-left">
+                                    <h3>左侧</h3>
+                                    <div class="live-grid" id="liveLeftGrid"></div>
+                                </div>
+                                <div class="live-panel live-panel-right">
+                                    <h3>右侧</h3>
+                                    <div class="live-grid" id="liveRightGrid"></div>
+                                </div>
                             </div>
                         </div>
-                        <div class="live-panels">
-                            <div class="live-panel live-panel-left">
-                                <h3>左侧</h3>
-                                <div class="live-grid" id="liveLeftGrid"></div>
-                            </div>
-                            <div class="live-panel live-panel-right">
-                                <h3>右侧</h3>
-                                <div class="live-grid" id="liveRightGrid"></div>
-                            </div>
-                        </div>
-                    </div>
+                    </section>
                 </div>
             </section>
 
@@ -1530,8 +1805,9 @@
                     <div class="portal-card">
                         <div class="portal-header">
                             <div>
-                                <h2>预览页</h2>
-                                <p>这里可以预览 `index.html`，并快速复制当前本地监听端口地址。</p>
+                                <small>Preview Workspace</small>
+                                <h2>前台预览页</h2>
+                                <p>这里可以预览 <code>index.html</code>，并快速复制当前本地监听端口地址。</p>
                             </div>
                             <div class="portal-actions">
                                 <a class="btn btn-primary" id="previewOpenBtn" href="/" target="_blank" rel="noopener noreferrer">新窗口打开</a>
@@ -1540,7 +1816,7 @@
                         <div class="portal-link-grid">
                             <div class="portal-link-card">
                                 <div class="portal-link-label">本地部署显示</div>
-                                <code class="portal-link-value" id="localAddressText">127.0.0.1:9988</code>
+                                <code class="portal-link-value" id="localAddressTextMirror">127.0.0.1:9988</code>
                                 <div class="portal-actions">
                                     <button class="btn btn-secondary" type="button" id="copyLocalAddressBtn">复制地址</button>
                                 </div>
@@ -1641,7 +1917,12 @@
         function renderPortalLinks() {
             const origin = getPreviewOrigin();
             const previewUrl = `${origin}/`;
-            document.getElementById('localAddressText').textContent = getLocalAddressText();
+            const localAddress = getLocalAddressText();
+            document.getElementById('localAddressText').textContent = localAddress;
+            const localAddressMirror = document.getElementById('localAddressTextMirror');
+            if (localAddressMirror) {
+                localAddressMirror.textContent = localAddress;
+            }
             const previewLink = document.getElementById('previewUrlLink');
             previewLink.href = previewUrl;
             previewLink.textContent = previewUrl;
@@ -2004,18 +2285,22 @@
             document.getElementById(`${panel}EnergyRange`).value = getEnergyLevel(slot);
             document.getElementById(`${panel}EnergyNumber`).value = getEnergyLevel(slot);
             document.getElementById(`${panel}ProtectionHint`).textContent = slot.healthEnabled
-                ? `血量 ${healthPercent}% 时，${100 - healthPercent}% 区域进入弱化状态。`
-                : '血量未开启时，整图保持正常状态。';
-            const opacityDisabled = !!slot.healthEnabled;
-            document.getElementById(`${panel}OpacityEnabled`).disabled = opacityDisabled;
-            document.getElementById(`${panel}OpacityRange`).disabled = opacityDisabled;
-            document.getElementById(`${panel}OpacityNumber`).disabled = opacityDisabled;
-            document.getElementById(`${panel}SaturationRange`).disabled = opacityDisabled;
-            document.getElementById(`${panel}SaturationNumber`).disabled = opacityDisabled;
-            const protectionDisabled = !!slot.opacityEnabled;
-            document.getElementById(`${panel}ProtectionEnabled`).disabled = protectionDisabled;
-            document.getElementById(`${panel}ProtectionRange`).disabled = !slot.healthEnabled || protectionDisabled;
-            document.getElementById(`${panel}ProtectionNumber`).disabled = !slot.healthEnabled || protectionDisabled;
+                ? `血量 ${healthPercent}% 会保留当前槽位的正常显示，其余部分会使用弱化层表现。`
+                : '关闭后会按透明度模式展示当前槽位。';
+
+            const opacityDisabled = !slot.sprite || slot.healthEnabled;
+            document.getElementById(`${panel}OpacityEnabled`).disabled = !slot.sprite;
+            document.getElementById(`${panel}OpacityRange`).disabled = opacityDisabled || !slot.opacityEnabled;
+            document.getElementById(`${panel}OpacityNumber`).disabled = opacityDisabled || !slot.opacityEnabled;
+            document.getElementById(`${panel}SaturationRange`).disabled = opacityDisabled || !slot.opacityEnabled;
+            document.getElementById(`${panel}SaturationNumber`).disabled = opacityDisabled || !slot.opacityEnabled;
+
+            const protectionDisabled = !slot.sprite || slot.opacityEnabled;
+            document.getElementById(`${panel}ProtectionEnabled`).disabled = !slot.sprite;
+            document.getElementById(`${panel}ProtectionRange`).disabled = protectionDisabled || !slot.healthEnabled;
+            document.getElementById(`${panel}ProtectionNumber`).disabled = protectionDisabled || !slot.healthEnabled;
+            document.getElementById(`${panel}EnergyRange`).disabled = protectionDisabled || !slot.healthEnabled;
+            document.getElementById(`${panel}EnergyNumber`).disabled = protectionDisabled || !slot.healthEnabled;
         }
 
         function renderPanel(panel) {
@@ -2042,29 +2327,38 @@
         }
 
         function applyQuickFillMatches(panel, matches) {
-            const nextSelected = Array.from({ length: MAX_SELECTION }, (_, index) => {
-                const current = createEmptySlot(index);
-                const match = matches[index];
+            const nextSelected = Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index));
 
-                if (match && match.matched && match.sprite) {
-                    current.sprite = match.sprite;
-                    current.effectiveOpacity = current.opacityEnabled ? current.opacity : 1;
-                    return current;
+            matches.slice(0, MAX_SELECTION).forEach((match, index) => {
+                if (!match || !match.matched || !match.sprite) {
+                    return;
                 }
-
-                return createEmptySlot(index);
+                const sprite = spriteById(match.sprite.id) || match.sprite;
+                nextSelected[index] = {
+                    slot: index,
+                    sprite,
+                    opacityEnabled: false,
+                    opacity: 0.5,
+                    effectiveOpacity: 1,
+                    saturation: 1,
+                    healthEnabled: true,
+                    healthPercent: 100,
+                    energyValue: 10
+                };
             });
 
             state[panel].selected = nextSelected;
             state[panel].activeSlot = 0;
             state[panel].quickFillMatches = Array.isArray(matches)
-                ? matches.map(match => ({
-                    slot: Number(match.slot) || 0,
+                ? matches.map((match, index) => ({
+                    slot: index,
                     input: match.input || '',
                     matched: !!match.matched,
                     matchType: match.matchType || null,
-                    sprite: match.sprite || null,
-                    candidates: Array.isArray(match.candidates) ? match.candidates : []
+                    sprite: match.sprite ? (spriteById(match.sprite.id) || match.sprite) : null,
+                    candidates: Array.isArray(match.candidates)
+                        ? match.candidates.map(candidate => spriteById(candidate.id) || candidate)
+                        : []
                 }))
                 : [];
             handlePanelMutation(panel, { clearStatusBeforeRender: false });
@@ -2587,7 +2881,6 @@
     </script>
     <script src="frontend/js/live-control-core.js"></script>
     <script>
-        // 初始化数值实时控制
         document.addEventListener('DOMContentLoaded', function() {
             LiveControl.init({
                 statusElementId: 'liveStatus',
