@@ -27,7 +27,7 @@
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 26,
+      "healthPercent": 30,
       "energyValue": 3
     },
     {
@@ -56,8 +56,8 @@
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 0,
-      "energyValue": 3
+      "healthPercent": 100,
+      "energyValue": 10
     },
     {
       "slot": 2,

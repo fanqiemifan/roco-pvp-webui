@@ -4,30 +4,30 @@
     {
       "slot": 0,
       "sprite": {
-        "id": "NO.220_haizhizhi-2.png",
-        "filename": "NO.220_haizhizhi-2.png",
-        "displayName": "海枝枝-2",
-        "name": "海枝枝-2",
-        "chineseName": "海枝枝-2",
-        "path": "img/NO.220_haizhizhi-2.png",
+        "id": "NO.254_bingzuanbulusi.png",
+        "filename": "NO.254_bingzuanbulusi.png",
+        "displayName": "冰钻布鲁斯",
+        "name": "冰钻布鲁斯",
+        "chineseName": "冰钻布鲁斯",
+        "path": "img/NO.254_bingzuanbulusi.png",
         "aliases": [
-          "NO.220_海枝枝-2.png",
-          "海枝枝-2",
-          "NO.220_haizhizhi-2.png",
-          "NO.220_haizhizhi-2",
-          "220",
-          "NO.220",
-          "NO.220_海枝枝-2"
+          "NO.254_冰钻布鲁斯.png",
+          "冰钻布鲁斯",
+          "NO.254_bingzuanbulusi.png",
+          "NO.254_bingzuanbulusi",
+          "254",
+          "NO.254",
+          "NO.254_冰钻布鲁斯"
         ],
-        "number": 220,
-        "variant": 2
+        "number": 254,
+        "variant": 0
       },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
-      "energyValue": 10
+      "healthPercent": 65,
+      "energyValue": 8
     },
     {
       "slot": 1,
@@ -82,32 +82,86 @@
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
+      "healthPercent": 75,
       "energyValue": 10
     },
     {
       "slot": 3,
-      "sprite": null,
+      "sprite": {
+        "id": "NO.140_bingfengyuanling.png",
+        "filename": "NO.140_bingfengyuanling.png",
+        "displayName": "冰封怨灵",
+        "name": "冰封怨灵",
+        "chineseName": "冰封怨灵",
+        "path": "img/NO.140_bingfengyuanling.png",
+        "aliases": [
+          "NO.140_冰封怨灵.png",
+          "冰封怨灵",
+          "NO.140_bingfengyuanling.png",
+          "NO.140_bingfengyuanling",
+          "140",
+          "NO.140",
+          "NO.140_冰封怨灵"
+        ],
+        "number": 140,
+        "variant": 0
+      },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
+      "healthPercent": 10,
       "energyValue": 10
     },
     {
       "slot": 4,
-      "sprite": null,
+      "sprite": {
+        "id": "NO.254_bingzuanbulusi.png",
+        "filename": "NO.254_bingzuanbulusi.png",
+        "displayName": "冰钻布鲁斯",
+        "name": "冰钻布鲁斯",
+        "chineseName": "冰钻布鲁斯",
+        "path": "img/NO.254_bingzuanbulusi.png",
+        "aliases": [
+          "NO.254_冰钻布鲁斯.png",
+          "冰钻布鲁斯",
+          "NO.254_bingzuanbulusi.png",
+          "NO.254_bingzuanbulusi",
+          "254",
+          "NO.254",
+          "NO.254_冰钻布鲁斯"
+        ],
+        "number": 254,
+        "variant": 0
+      },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
-      "energyValue": 10
+      "healthPercent": 70,
+      "energyValue": 4
     },
     {
       "slot": 5,
-      "sprite": null,
+      "sprite": {
+        "id": "NO.173_shiboluo-2.png",
+        "filename": "NO.173_shiboluo-2.png",
+        "displayName": "嗜波螺-2",
+        "name": "嗜波螺-2",
+        "chineseName": "嗜波螺-2",
+        "path": "img/NO.173_shiboluo-2.png",
+        "aliases": [
+          "NO.173_嗜波螺-2.png",
+          "嗜波螺-2",
+          "NO.173_shiboluo-2.png",
+          "NO.173_shiboluo-2",
+          "173",
+          "NO.173",
+          "NO.173_嗜波螺-2"
+        ],
+        "number": 173,
+        "variant": 2
+      },
       "opacityEnabled": false,
       "opacity": 0.5,
       "saturation": 1.0,

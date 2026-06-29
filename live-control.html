@@ -49,6 +49,15 @@
         }
         .btn-primary { background: #3b82f6; color: #fff; }
         .btn-secondary { background: #334155; color: #e2e8f0; }
+        .btn-accent { background: #10b981; color: #052e1b; }
+        .btn-warning { background: #f59e0b; color: #451a03; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .file-status {
+            flex-basis: 100%;
+            color: #93c5fd;
+            font-size: 12px;
+            min-height: 16px;
+        }
         .panels {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -286,7 +295,10 @@
             <div class="status" id="status">加载中...</div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
                 <button class="btn btn-secondary" id="reloadBtn">重新加载</button>
+                <button class="btn btn-accent" id="exportConfigBtn">配置导出</button>
+                <button class="btn btn-warning" id="liveListenBtn">实时监听</button>
                 <button class="btn btn-primary" id="saveBtn">手动保存</button>
+                <div class="file-status" id="liveFileStatus"></div>
             </div>
         </div>
         <div class="panels">
@@ -310,6 +322,9 @@
             rightGridId: 'rightGrid',
             saveBtnId: 'saveBtn',
             reloadBtnId: 'reloadBtn',
+            exportConfigBtnId: 'exportConfigBtn',
+            liveListenBtnId: 'liveListenBtn',
+            liveFileStatusId: 'liveFileStatus',
             autoRefresh: true,
             autoRefreshInterval: 1500,
             autoSaveDelay: 800
