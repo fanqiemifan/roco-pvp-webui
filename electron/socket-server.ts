@@ -8,13 +8,28 @@ import { Server as SocketIOServer } from 'socket.io';
 
 import { SOCKET_EVENTS } from '../shared/events.js';
 import type { SnapshotPayload } from '../shared/types.js';
-import { buildQuickFillPreview } from './services/sprite-service.js';
+import { buildQuickFillPreview, listSprites, spriteMatchesKeyword } from './services/sprite-service.js';
 import { getBackgroundState, saveBackground, deleteBackground, ensureRuntimeDirs } from './services/image-service.js';
 import { loadRuntimeConfig, saveRuntimeConfig } from './services/config-service.js';
+import {
+  clearPanelState,
+  getPanelState,
+  getScoreboardState,
+  savePanelState,
+  saveScoreboardBestOf,
+  saveScoreboardState,
+} from './services/state-service.js';
 import type { AppPaths } from './services/path-service.js';
-import { createRuntimeStore } from './services/runtime-store.js';
 
 const upload = multer({ storage: multer.memoryStorage() });
+
+function snapshotPayload(paths: AppPaths): SnapshotPayload {
+  return {
+    panels: [getPanelState(paths, 'left'), getPanelState(paths, 'right')],
+    scoreboard: getScoreboardState(paths),
+    background: getBackgroundState(paths),
+  };
+}
 
 function sendPage(paths: AppPaths, response: Response, pageFile: string): void {
   response.sendFile(path.join(paths.pagesDir, pageFile));
@@ -33,7 +48,6 @@ export async function createLocalServer(
   host = '127.0.0.1',
 ): Promise<LocalServer> {
   ensureRuntimeDirs(paths);
-  const store = createRuntimeStore(paths);
 
   const app = express();
   const server = http.createServer(app);
@@ -64,20 +78,20 @@ export async function createLocalServer(
   app.get('/roco-pvp.html', (_request, response) => sendPage(paths, response, 'roco-pvp.html'));
 
   app.get('/api/images', (_request, response) => {
-    response.json({ images: [store.getPanel('left'), store.getPanel('right')] });
+    response.json({ images: [getPanelState(paths, 'left'), getPanelState(paths, 'right')] });
   });
 
   app.get('/api/background', (_request, response) => {
-    response.json(store.getBackground());
+    response.json(getBackgroundState(paths));
   });
 
   app.get('/api/scoreboard', (_request, response) => {
-    response.json(store.getScoreboard());
+    response.json(getScoreboardState(paths));
   });
 
   app.post('/api/scoreboard', (request, response) => {
     try {
-      const scoreboard = store.setScoreboard(request.body ?? {});
+      const scoreboard = saveScoreboardState(paths, request.body ?? {});
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       response.json({ success: true, scoreboard });
     } catch (error) {
@@ -87,7 +101,7 @@ export async function createLocalServer(
 
   app.post('/api/scoreboard/best-of', (request, response) => {
     try {
-      const scoreboard = store.setScoreboardBestOf(request.body ?? {});
+      const scoreboard = saveScoreboardBestOf(paths, request.body ?? {});
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       response.json({ success: true, scoreboard });
     } catch (error) {
@@ -97,7 +111,7 @@ export async function createLocalServer(
 
   app.get('/api/sprites', (request, response) => {
     const keyword = typeof request.query.q === 'string' ? request.query.q.trim() : '';
-    const sprites = store.listSprites(keyword);
+    const sprites = listSprites(paths).filter((sprite) => !keyword || spriteMatchesKeyword(sprite, keyword));
     response.json({ sprites, count: sprites.length });
   });
 
@@ -109,7 +123,7 @@ export async function createLocalServer(
     }
 
     try {
-      const panel = store.setPanel(position, request.body?.selected ?? []);
+      const panel = savePanelState(paths, position, request.body?.selected ?? []);
       io.emit(SOCKET_EVENTS.panelUpdate, { panel });
       response.json({ success: true, panel });
     } catch (error) {
@@ -125,28 +139,10 @@ export async function createLocalServer(
       return;
     }
 
-    const panel = store.clearPanel(position);
+    clearPanelState(paths, position);
+    const panel = getPanelState(paths, position);
     io.emit(SOCKET_EVENTS.panelUpdate, { panel });
     response.json({ success: true, position, panel });
-  });
-
-  app.patch('/api/panels/:position/slots/:slot', (request, response) => {
-    const position = request.params.position;
-    if (position !== 'left' && position !== 'right') {
-      response.status(404).json({ success: false, error: 'Invalid position' });
-      return;
-    }
-
-    const slotIndex = Number.parseInt(request.params.slot, 10);
-    try {
-      const slot = store.patchPanelSlot(position, slotIndex, request.body ?? {});
-      const panel = store.getPanel(position);
-      io.emit(SOCKET_EVENTS.panelSlotUpdate, { position, slotIndex, slot, panel });
-      response.json({ success: true, panel, slot });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      response.status(400).json({ success: false, error: message });
-    }
   });
 
   app.post('/api/quick-fill', (request, response) => {
@@ -164,13 +160,13 @@ export async function createLocalServer(
       return;
     }
 
-    const background = store.saveBackground(request.file.buffer);
+    const background = saveBackground(paths, request.file.buffer);
     io.emit(SOCKET_EVENTS.backgroundUpdate, { background });
     response.json({ success: true, ...background });
   });
 
   app.delete('/api/delete/background', (_request, response) => {
-    const background = store.deleteBackground();
+    const background = deleteBackground(paths);
     io.emit(SOCKET_EVENTS.backgroundUpdate, { background });
     response.json({ success: true, position: 'background', background });
   });
@@ -195,7 +191,7 @@ export async function createLocalServer(
   });
 
   io.on('connection', (socket) => {
-    socket.emit(SOCKET_EVENTS.snapshot, store.snapshot());
+    socket.emit(SOCKET_EVENTS.snapshot, snapshotPayload(paths));
   });
 
   await new Promise<void>((resolve, reject) => {
@@ -211,7 +207,6 @@ export async function createLocalServer(
     server,
     io,
     async close() {
-      await store.close();
       await new Promise<void>((resolve, reject) => {
         io.close(() => {
           server.close((error) => {

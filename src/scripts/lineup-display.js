@@ -492,12 +492,6 @@
             }
         });
 
-        socket.on('panel-slot:update', payload => {
-            if (payload && payload.panel && payload.panel.position) {
-                renderPanel(payload.panel.position, payload.panel);
-            }
-        });
-
         socket.on('scoreboard:update', payload => {
             renderScoreboard(payload ? payload.scoreboard : null);
         });

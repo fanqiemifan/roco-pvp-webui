@@ -2625,12 +2625,6 @@
                 }
             });
 
-            socket.on('panel-slot:update', payload => {
-                if (payload && payload.panel) {
-                    updatePanelFromApi(payload.panel, { preserveUi: true });
-                }
-            });
-
             socket.on('scoreboard:update', payload => {
                 if (payload && payload.scoreboard) {
                     updateScoreboardFromApi(payload.scoreboard);
