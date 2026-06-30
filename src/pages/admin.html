@@ -1018,293 +1018,6 @@
             display: block;
         }
 
-        .live-module {
-            display: grid;
-            gap: 14px;
-        }
-
-        .live-hint {
-            color: var(--muted);
-            line-height: 1.55;
-        }
-
-        .live-topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .live-status {
-            background: rgba(255,255,255,0.62);
-            padding: 10px 14px;
-            border-radius: 12px;
-            min-height: 40px;
-            color: var(--muted-strong);
-            flex: 1;
-            min-width: 180px;
-        }
-
-        .live-panels {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
-        }
-
-        .live-panel {
-            background: linear-gradient(180deg, rgba(74, 52, 37, 0.96), rgba(46, 33, 24, 0.98));
-            border: 1px solid rgba(255, 232, 209, 0.12);
-            border-radius: 18px;
-            padding: 14px;
-            box-shadow: 0 18px 40px rgba(60, 35, 17, 0.24);
-        }
-
-        .live-panel-merged {
-            display: grid;
-            gap: 14px;
-        }
-
-        .live-panel-sections {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-        }
-
-        .live-panel-section {
-            border-radius: 16px;
-            padding: 12px;
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
-                linear-gradient(135deg, rgba(55, 38, 28, 0.9), rgba(79, 57, 42, 0.84));
-            border: 1px solid rgba(255, 232, 209, 0.12);
-            min-width: 0;
-        }
-
-        .live-panel-left {
-            border-color: rgba(240, 146, 124, 0.26);
-        }
-
-        .live-panel-right {
-            border-color: rgba(244, 202, 121, 0.26);
-        }
-
-        .live-panel h3 {
-            margin-bottom: 10px;
-            color: #fff3e4;
-            font-size: 17px;
-            font-family: var(--font-display);
-        }
-
-        .live-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-        }
-
-        .live-panel .slot-card {
-            position: relative;
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)),
-                linear-gradient(135deg, rgba(55, 38, 28, 0.96), rgba(79, 57, 42, 0.88));
-            border: 1px solid rgba(255, 232, 209, 0.16);
-            border-radius: 14px;
-            padding: 6px 8px;
-            display: grid;
-            grid-template-columns: 56px minmax(0, 1fr);
-            gap: 8px;
-            align-items: center;
-            height: 78px;
-            overflow: hidden;
-        }
-
-        .live-panel .slot-card-right .slot-main {
-            text-align: left;
-        }
-
-        .live-panel .sprite-preview {
-            width: 52px;
-            height: 52px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 232, 209, 0.18);
-            background: rgba(31, 19, 13, 0.72);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .live-panel .sprite-preview img {
-            width: 52px;
-            height: 52px;
-            object-fit: contain;
-            display: block;
-        }
-
-        .live-panel .sprite-empty {
-            color: rgba(255, 220, 190, 0.46);
-            font-size: 10px;
-            text-align: center;
-            line-height: 1.2;
-        }
-
-        .live-panel .slot-preview-wrap {
-            display: grid;
-            justify-items: center;
-            align-content: start;
-            gap: 3px;
-            position: relative;
-        }
-
-        .live-panel .slot-index {
-            position: absolute;
-            left: -2px;
-            top: -2px;
-            width: 16px;
-            height: 16px;
-            border-radius: 999px;
-            background: rgba(40, 24, 15, 0.9);
-            border: 1px solid rgba(255, 244, 232, 0.22);
-            color: #fff9f1;
-            font-weight: 700;
-            font-size: 10px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 12px rgba(2, 6, 23, 0.3);
-        }
-
-        .live-panel .slot-main {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 2px;
-            min-width: 0;
-            align-self: center;
-            height: 100%;
-            width: 100%;
-        }
-
-        .live-panel .slot-name {
-            color: #fff3e4;
-            width: 100%;
-            font-size: 10px;
-            font-weight: 700;
-            line-height: 1.1;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            text-align: center;
-        }
-
-        .live-panel .form-row {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-        }
-
-        .live-panel .range-line {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 34px;
-            align-items: center;
-            gap: 4px;
-            width: 100%;
-        }
-
-        .live-panel .range-shell {
-            --percent: 100%;
-            --accent: #f2c46c;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 14px;
-        }
-
-        .live-panel .range-shell-health {
-            --accent: #d98d69;
-        }
-
-        .live-panel .range-shell-energy {
-            --accent: #f2cb51;
-        }
-
-        .live-panel .range-shell input[type="range"] {
-            position: relative;
-            z-index: 1;
-            -webkit-appearance: none;
-            appearance: none;
-            display: block;
-            width: 100%;
-            margin: 0 auto;
-            height: 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 232, 209, 0.18);
-            background:
-                linear-gradient(90deg, var(--accent) 0%, var(--accent) var(--percent), rgba(32, 18, 10, 0.95) var(--percent), rgba(32, 18, 10, 0.95) 100%);
-            outline: none;
-            cursor: pointer;
-            box-shadow: inset 0 1px 3px rgba(2, 6, 23, 0.35);
-        }
-
-        .live-panel .range-shell input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 1px solid rgba(248, 250, 252, 0.95);
-            background: #fff;
-            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.28);
-        }
-
-        .live-panel .range-shell input[type="range"]::-moz-range-thumb {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 1px solid rgba(248, 250, 252, 0.95);
-            background: #fff;
-            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.28);
-        }
-
-        .live-panel .range-shell input[type="range"]::-moz-range-track {
-            height: 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 232, 209, 0.18);
-            background: transparent;
-        }
-
-        .live-panel .value-input {
-            width: 34px;
-            height: 16px;
-            border-radius: 5px;
-            border: 1px solid rgba(255, 232, 209, 0.22);
-            background: rgba(33, 19, 11, 0.96);
-            color: #fff8ef;
-            font-size: 9px;
-            font-weight: 700;
-            line-height: 1;
-            text-align: center;
-            padding: 0 2px;
-        }
-
-        .live-panel .value-input:focus {
-            outline: none;
-            border-color: rgba(244, 202, 121, 0.68);
-            box-shadow: none;
-        }
-
-        .live-panel .value-input::-webkit-outer-spin-button,
-        .live-panel .value-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        .live-panel .value-input[type="number"] {
-            appearance: textfield;
-        }
-
         .info-box code,
         .workspace-card code,
         .portal-header code {
@@ -1466,7 +1179,7 @@
                             <div class="nav-item-icon">📊</div>
                             <div>
                                 <strong>实时数值控制</strong>
-                                <span>血量与能力值实时调整</span>
+                                <span>跳转到前台页面进行数值控制</span>
                             </div>
                         </div>
                         <span class="nav-badge">Live</span>
@@ -1812,46 +1525,6 @@
                 </div>
             </section>
 
-            <section class="content-view" data-view="live">
-                <div class="portal-page">
-                    <section class="portal-card">
-                        <div class="panel-header">
-                            <div>
-                                <small>Navigation Module</small>
-                                <h2>数值控制</h2>
-                                <p>可以在这里手动控制数值，如需自动请点击新窗口打开</p>
-                            </div>
-                            <div class="portal-actions">
-                                <a class="btn btn-secondary" id="liveControlOpenBtn" href="/live-control.html" target="_blank" rel="noopener noreferrer">新窗口打开</a>
-                            </div>
-                        </div>
-                        <div class="live-module">
-                            <div class="live-topbar">
-                                <div class="live-status" id="liveStatus">加载中...</div>
-                                <div class="portal-actions">
-                                    <button class="btn btn-secondary" id="liveReloadBtn">重新加载</button>
-                                    <button class="btn btn-primary" id="liveSaveBtn">手动保存</button>
-                                </div>
-                            </div>
-                            <div class="live-panels">
-                                <div class="live-panel live-panel-merged">
-                                    <div class="live-panel-sections">
-                                        <section class="live-panel-section live-panel-left">
-                                            <h3>左侧</h3>
-                                            <div class="live-grid" id="liveLeftGrid"></div>
-                                        </section>
-                                        <section class="live-panel-section live-panel-right">
-                                            <h3>右侧</h3>
-                                            <div class="live-grid" id="liveRightGrid"></div>
-                                        </section>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </section>
-
             <section class="content-view" data-view="preview">
                 <div class="portal-page">
                     <div class="portal-card">
@@ -2019,7 +1692,6 @@
             previewLink.textContent = previewUrl;
             document.getElementById('previewOpenBtn').href = previewUrl;
             document.getElementById('previewFrame').src = previewUrl;
-            document.getElementById('liveControlOpenBtn').href = `${getPreviewOrigin()}/live-control.html`;
             renderPreviewSlotButtons();
         }
 
@@ -3061,6 +2733,10 @@
         function setupNavigation() {
             document.querySelectorAll('.nav-item').forEach(button => {
                 button.addEventListener('click', () => {
+                    if (button.dataset.view === 'live') {
+                        window.open('/live-control.html', '_blank', 'noopener,noreferrer');
+                        return;
+                    }
                     state.currentView = button.dataset.view || 'roster';
                     renderView();
                 });
@@ -3113,21 +2789,6 @@
                 .catch(error => {
                     showStatus('leftStatus', `初始化失败: ${error.message}`, false);
                 });
-        });
-    </script>
-    <script src="/scripts/live-control-core.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            LiveControl.init({
-                statusElementId: 'liveStatus',
-                leftGridId: 'liveLeftGrid',
-                rightGridId: 'liveRightGrid',
-                saveBtnId: 'liveSaveBtn',
-                reloadBtnId: 'liveReloadBtn',
-                autoRefresh: true,
-                autoRefreshInterval: 1500,
-                autoSaveDelay: 800
-            });
         });
     </script>
 </body>
