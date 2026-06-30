@@ -107,6 +107,20 @@
         return cleanSpriteName(sprite.displayName || sprite.chineseName || sprite.name || sprite.filename || sprite.id);
     }
 
+    function getHealthLevel(slot) {
+        if (!slot || !slot.healthEnabled || typeof slot.healthPercent !== 'number') {
+            return 100;
+        }
+        return clamp(slot.healthPercent, 0, 100);
+    }
+
+    function getEnergyLevel(slot) {
+        if (!slot || typeof slot.energyValue !== 'number') {
+            return 10;
+        }
+        return clamp(Math.round(slot.energyValue), 0, 10);
+    }
+
     function liveConfigPayload() {
         const mapSlot = slot => ({
             name: getSlotName(slot),
