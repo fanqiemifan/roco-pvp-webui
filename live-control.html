@@ -523,11 +523,37 @@
             }
             .panels { grid-template-columns: 1fr; }
         }
+        @media (max-width: 900px) {
+            body {
+                padding: 8px;
+            }
+            .control-shell {
+                min-height: calc(100vh - 16px);
+                border-radius: 20px;
+            }
+            .window-rail,
+            .topbar {
+                display: none;
+            }
+            .main-stage {
+                padding: 12px;
+            }
+            .panels {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }
+            .panel {
+                padding: 12px;
+            }
+        }
         @media (max-width: 720px) {
             body { padding: 10px; }
             .control-shell {
                 min-height: calc(100vh - 20px);
                 border-radius: 24px;
+            }
+            .panels {
+                grid-template-columns: 1fr;
             }
             .window-rail,
             .main-stage {

@@ -7,6 +7,8 @@
   "scoreboardEnabled": true,
   "healthBadgeEnabled": true,
   "abilityBadgeEnabled": true,
+  "eventTitle": "洛克王国",
+  "eventTitleEnabled": true,
   "nameFontSize": 64,
   "scoreFontSize": 64,
   "centerAreaEnabled": false,

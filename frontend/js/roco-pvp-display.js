@@ -404,7 +404,9 @@
             rightName: data.rightName || '',
             rightScore: data.rightScore || '0',
             bestOf: normalizeBestOf(data.bestOf),
-            scoreboardEnabled: data.scoreboardEnabled !== false
+            scoreboardEnabled: data.scoreboardEnabled !== false,
+            eventTitle: data.eventTitle || DEFAULT_EVENT_TITLE,
+            eventTitleEnabled: data.eventTitleEnabled !== false
         });
 
         if (scoreboardSignature === nextSignature) {
@@ -416,7 +418,10 @@
         document.getElementById('leftPlayerName').textContent = data.leftName || '';
         document.getElementById('rightPlayerName').textContent = data.rightName || '';
         document.getElementById('matchScore').textContent = buildScoreValue(data);
-        document.getElementById('eventTitle').textContent = DEFAULT_EVENT_TITLE;
+        const eventTitleEl = document.getElementById('eventTitle');
+        const eventTitleEnabled = data.eventTitleEnabled !== false;
+        eventTitleEl.textContent = data.eventTitle || DEFAULT_EVENT_TITLE;
+        eventTitleEl.style.display = eventTitleEnabled ? '' : 'none';
 
         updateRoundBoxes(
             document.querySelector('.player-summary-left .player-rounds'),

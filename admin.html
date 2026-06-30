@@ -978,6 +978,17 @@
             text-decoration: none;
         }
 
+        .preview-slot-switch {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .preview-slot-btn {
+            border-radius: 999px;
+            min-width: 156px;
+        }
+
         .preview-embed-shell {
             width: min(100%, 960px);
             height: 540px;
@@ -1047,6 +1058,27 @@
             border-radius: 18px;
             padding: 14px;
             box-shadow: 0 18px 40px rgba(60, 35, 17, 0.24);
+        }
+
+        .live-panel-merged {
+            display: grid;
+            gap: 14px;
+        }
+
+        .live-panel-sections {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .live-panel-section {
+            border-radius: 16px;
+            padding: 12px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+                linear-gradient(135deg, rgba(55, 38, 28, 0.9), rgba(79, 57, 42, 0.84));
+            border: 1px solid rgba(255, 232, 209, 0.12);
+            min-width: 0;
         }
 
         .live-panel-left {
@@ -1366,6 +1398,10 @@
             .portal-actions button {
                 width: 100%;
             }
+
+            .live-panel-sections {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -1449,7 +1485,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <p>保留独立访问路径：`/admin.html`、`/live-control.html`、`/index.html`。本次改动只调整后台界面结构，不触碰前台展示页。</p>
+                <p>可自行选择推流页面1或页面2</p>
             </div>
         </aside>
 
@@ -1458,7 +1494,7 @@
                 <div class="topbar-copy">
                     <small>Control Room</small>
                     <h3>直播场景工作区</h3>
-                    <p>所有管理模块都通过左侧 Navigation 切换，并在右侧 content-shell 中独立显示。</p>
+                    <!---所有管理模块都通过左侧 Navigation 切换，并在右侧 content-shell 中独立显示。-->
                 </div>
                 <div class="topbar-right">
                     <div class="profile-chip">本地地址 <span id="localAddressText">127.0.0.1:9988</span></div>
@@ -1472,7 +1508,7 @@
                     <div class="panel-grid">
                         <section class="panel" data-panel="left" id="leftPanelCard">
                             <div class="panel-header">
-                                <h2>左侧面板</h2>
+                                <h2>左侧阵容</h2>
                                 <div class="panel-header-right">
                                     <label class="auto-save-toggle">
                                         <input type="checkbox" id="leftAutoSaveToggle">
@@ -1555,7 +1591,7 @@
 
                         <section class="panel" data-panel="right" id="rightPanelCard">
                             <div class="panel-header">
-                                <h2>右侧面板</h2>
+                                <h2>右侧阵容</h2>
                                 <div class="panel-header-right">
                                     <label class="auto-save-toggle">
                                         <input type="checkbox" id="rightAutoSaveToggle">
@@ -1657,7 +1693,7 @@
                         <div class="panel-header">
                             <div>
                                 <small>Navigation Module</small>
-                                <h2>顶部比分栏</h2>
+                                <h2>比分管理</h2>
                                 <p>这里可以设置首页顶部居中的选手名字、比分和 Center Area 的展示方式。</p>
                             </div>
                             <div class="panel-header-right">
@@ -1710,6 +1746,14 @@
                                 <div class="form-row">
                                     <label for="centerAreaColorInput">Center Area 背景颜色</label>
                                     <input type="color" id="centerAreaColorInput" value="#393939">
+                                </div>
+                                <div class="form-row">
+                                    <label for="eventTitleEnabledInput">页面2赛事标题显示</label>
+                                    <input type="checkbox" id="eventTitleEnabledInput" checked>
+                                </div>
+                                <div class="form-row">
+                                    <label for="eventTitleInput">页面2赛事标题</label>
+                                    <input type="text" id="eventTitleInput" maxlength="40" placeholder="例如：S2洛克联赛">
                                 </div>
                             </div>
                             <div class="scoreboard-card">
@@ -1774,8 +1818,8 @@
                         <div class="panel-header">
                             <div>
                                 <small>Navigation Module</small>
-                                <h2>实时数值控制</h2>
-                                <p>颜色适配当前桌面工作台，卡片和控制尺寸继续保持与 `live-control.html` 一致。</p>
+                                <h2>数值控制</h2>
+                                <p>可以在这里手动控制数值，如需自动请点击新窗口打开</p>
                             </div>
                             <div class="portal-actions">
                                 <a class="btn btn-secondary" id="liveControlOpenBtn" href="/live-control.html" target="_blank" rel="noopener noreferrer">新窗口打开</a>
@@ -1790,13 +1834,17 @@
                                 </div>
                             </div>
                             <div class="live-panels">
-                                <div class="live-panel live-panel-left">
-                                    <h3>左侧</h3>
-                                    <div class="live-grid" id="liveLeftGrid"></div>
-                                </div>
-                                <div class="live-panel live-panel-right">
-                                    <h3>右侧</h3>
-                                    <div class="live-grid" id="liveRightGrid"></div>
+                                <div class="live-panel live-panel-merged">
+                                    <div class="live-panel-sections">
+                                        <section class="live-panel-section live-panel-left">
+                                            <h3>左侧</h3>
+                                            <div class="live-grid" id="liveLeftGrid"></div>
+                                        </section>
+                                        <section class="live-panel-section live-panel-right">
+                                            <h3>右侧</h3>
+                                            <div class="live-grid" id="liveRightGrid"></div>
+                                        </section>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1810,12 +1858,17 @@
                         <div class="portal-header">
                             <div>
                                 <small>Preview Workspace</small>
-                                <h2>前台预览页</h2>
-                                <p>这里可以预览 <code>index.html</code>，并快速复制当前本地监听端口地址。</p>
+                                <h2 id="previewPanelTitle">推流页面1</h2>
+                                <p>这里可以预览 <code id="previewPanelFile">index.html</code>，并通过 slot 快速切换推流页面 1 或 2。</p>
                             </div>
-                            <div class="portal-actions">
+                            <div class="panel-header-right">
+                                <div class="status" id="previewStatus"></div>
                                 <a class="btn btn-primary" id="previewOpenBtn" href="/" target="_blank" rel="noopener noreferrer">新窗口打开</a>
                             </div>
+                        </div>
+                        <div class="preview-slot-switch" aria-label="推流页面切换">
+                            <button class="btn btn-primary preview-slot-btn active" type="button" data-preview-slot="page1">Slot 1 · 推流页面1</button>
+                            <button class="btn btn-secondary preview-slot-btn" type="button" data-preview-slot="page2">Slot 2 · 推流页面2</button>
                         </div>
                         <div class="portal-link-grid">
                             <div class="portal-link-card">
@@ -1845,6 +1898,18 @@
     <script src="vendor/socket.io.min.js"></script>
     <script>
         const MAX_SELECTION = 6;
+        const PREVIEW_PAGES = {
+            page1: {
+                title: '推流页面1',
+                fileName: 'index.html',
+                path: '/'
+            },
+            page2: {
+                title: '推流页面2',
+                fileName: 'roco-pvp.html',
+                path: '/roco-pvp.html'
+            }
+        };
 
         function createEmptySlot(index) {
             return {
@@ -1862,6 +1927,7 @@
 
         const state = {
             currentView: 'roster',
+            previewSlot: 'page1',
             sprites: [],
             scoreboard: {
                 leftName: '',
@@ -1872,6 +1938,8 @@
                 scoreboardEnabled: true,
                 healthBadgeEnabled: true,
                 abilityBadgeEnabled: true,
+                eventTitle: 'S2洛克联赛',
+                eventTitleEnabled: true,
                 nameFontSize: 64,
                 scoreFontSize: 64,
                 centerAreaEnabled: true,
@@ -1891,6 +1959,20 @@
 
         function getLocalAddressText() {
             return window.location.port ? `127.0.0.1:${window.location.port}` : '127.0.0.1';
+        }
+
+        function getPreviewPage(slot = state.previewSlot) {
+            return PREVIEW_PAGES[slot] || PREVIEW_PAGES.page1;
+        }
+
+        function buildPreviewUrl(pathname) {
+            return `${getPreviewOrigin()}${pathname}`;
+        }
+
+        function getActiveLocalPreviewAddress() {
+            const activePage = getPreviewPage();
+            const baseAddress = getLocalAddressText();
+            return activePage.path === '/' ? baseAddress : `${baseAddress}${activePage.path}`;
         }
 
         async function copyTextToClipboard(text, statusId, successMessage) {
@@ -1919,20 +2001,34 @@
         }
 
         function renderPortalLinks() {
-            const origin = getPreviewOrigin();
-            const previewUrl = `${origin}/`;
+            const activePage = getPreviewPage();
+            const previewUrl = buildPreviewUrl(activePage.path);
             const localAddress = getLocalAddressText();
+            const activeLocalPreviewAddress = getActiveLocalPreviewAddress();
             document.getElementById('localAddressText').textContent = localAddress;
             const localAddressMirror = document.getElementById('localAddressTextMirror');
             if (localAddressMirror) {
-                localAddressMirror.textContent = localAddress;
+                localAddressMirror.textContent = activeLocalPreviewAddress;
             }
+            document.getElementById('previewPanelTitle').textContent = activePage.title;
+            document.getElementById('previewPanelFile').textContent = activePage.fileName;
             const previewLink = document.getElementById('previewUrlLink');
             previewLink.href = previewUrl;
             previewLink.textContent = previewUrl;
             document.getElementById('previewOpenBtn').href = previewUrl;
             document.getElementById('previewFrame').src = previewUrl;
-            document.getElementById('liveControlOpenBtn').href = `${origin}/live-control.html`;
+            document.getElementById('liveControlOpenBtn').href = `${getPreviewOrigin()}/live-control.html`;
+            renderPreviewSlotButtons();
+        }
+
+        function renderPreviewSlotButtons() {
+            document.querySelectorAll('[data-preview-slot]').forEach(button => {
+                const isActive = button.dataset.previewSlot === state.previewSlot;
+                button.classList.toggle('active', isActive);
+                button.classList.toggle('btn-primary', isActive);
+                button.classList.toggle('btn-secondary', !isActive);
+                button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
         }
 
         function renderView() {
@@ -1971,11 +2067,14 @@
             document.getElementById('scoreboardEnabledInput').checked = state.scoreboard.scoreboardEnabled !== false;
             document.getElementById('healthBadgeEnabledInput').checked = state.scoreboard.healthBadgeEnabled !== false;
             document.getElementById('abilityBadgeEnabledInput').checked = state.scoreboard.abilityBadgeEnabled !== false;
+            document.getElementById('eventTitleInput').value = state.scoreboard.eventTitle || 'S2洛克联赛';
+            document.getElementById('eventTitleEnabledInput').checked = state.scoreboard.eventTitleEnabled !== false;
             document.getElementById('nameFontSizeInput').value = state.scoreboard.nameFontSize || 64;
             document.getElementById('scoreFontSizeInput').value = state.scoreboard.scoreFontSize || 64;
             document.getElementById('centerAreaEnabledInput').checked = state.scoreboard.centerAreaEnabled !== false;
             document.getElementById('centerAreaColorInput').value = state.scoreboard.centerAreaColor || '#393939';
             document.getElementById('centerAreaColorInput').disabled = state.scoreboard.centerAreaEnabled === false;
+            document.getElementById('eventTitleInput').disabled = state.scoreboard.eventTitleEnabled === false;
         }
 
         function updateScoreboardFromApi(scoreboard) {
@@ -1988,6 +2087,8 @@
                 scoreboardEnabled: scoreboard ? scoreboard.scoreboardEnabled !== false : true,
                 healthBadgeEnabled: scoreboard ? scoreboard.healthBadgeEnabled !== false : true,
                 abilityBadgeEnabled: scoreboard ? scoreboard.abilityBadgeEnabled !== false : true,
+                eventTitle: scoreboard && scoreboard.eventTitle ? scoreboard.eventTitle : 'S2洛克联赛',
+                eventTitleEnabled: scoreboard ? scoreboard.eventTitleEnabled !== false : true,
                 nameFontSize: scoreboard && scoreboard.nameFontSize ? scoreboard.nameFontSize : 64,
                 scoreFontSize: scoreboard && scoreboard.scoreFontSize ? scoreboard.scoreFontSize : 64,
                 centerAreaEnabled: scoreboard ? scoreboard.centerAreaEnabled !== false : true,
@@ -2784,6 +2885,8 @@
                 scoreboardEnabled: document.getElementById('scoreboardEnabledInput').checked,
                 healthBadgeEnabled: document.getElementById('healthBadgeEnabledInput').checked,
                 abilityBadgeEnabled: document.getElementById('abilityBadgeEnabledInput').checked,
+                eventTitle: document.getElementById('eventTitleInput').value,
+                eventTitleEnabled: document.getElementById('eventTitleEnabledInput').checked,
                 nameFontSize: document.getElementById('nameFontSizeInput').value,
                 scoreFontSize: document.getElementById('scoreFontSizeInput').value,
                 centerAreaEnabled: document.getElementById('centerAreaEnabledInput').checked,
@@ -2849,11 +2952,23 @@
                 });
             });
 
+            document.querySelectorAll('[data-preview-slot]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const nextSlot = button.dataset.previewSlot;
+                    if (!PREVIEW_PAGES[nextSlot]) {
+                        return;
+                    }
+                    state.previewSlot = nextSlot;
+                    clearStatus('previewStatus');
+                    renderPortalLinks();
+                });
+            });
+
             document.getElementById('copyLocalAddressBtn').addEventListener('click', () => {
-                copyTextToClipboard(getLocalAddressText(), 'scoreboardStatus', '本地地址已复制');
+                copyTextToClipboard(getActiveLocalPreviewAddress(), 'previewStatus', '本地地址已复制');
             });
             document.getElementById('copyPreviewUrlBtn').addEventListener('click', () => {
-                copyTextToClipboard(`${getPreviewOrigin()}/`, 'scoreboardStatus', '预览链接已复制');
+                copyTextToClipboard(buildPreviewUrl(getPreviewPage().path), 'previewStatus', '当前预览链接已复制');
             });
         }
 
@@ -2867,6 +2982,9 @@
             document.getElementById('scoreboardSaveBtn').addEventListener('click', saveScoreboard);
             document.getElementById('centerAreaEnabledInput').addEventListener('change', event => {
                 document.getElementById('centerAreaColorInput').disabled = !event.target.checked;
+            });
+            document.getElementById('eventTitleEnabledInput').addEventListener('change', event => {
+                document.getElementById('eventTitleInput').disabled = !event.target.checked;
             });
             setupBackgroundUpload();
             renderPanel('left');

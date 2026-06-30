@@ -26,7 +26,7 @@
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
+      "healthPercent": 18,
       "energyValue": 10
     },
     {
@@ -54,8 +54,8 @@
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
-      "energyValue": 10
+      "healthPercent": 62,
+      "energyValue": 5
     },
     {
       "slot": 2,
@@ -82,7 +82,7 @@
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
+      "healthPercent": 36,
       "energyValue": 10
     },
     {
@@ -111,8 +111,8 @@
       "opacity": 0.5,
       "saturation": 1.0,
       "healthEnabled": true,
-      "healthPercent": 100,
-      "energyValue": 10
+      "healthPercent": 30,
+      "energyValue": 3
     },
     {
       "slot": 4,

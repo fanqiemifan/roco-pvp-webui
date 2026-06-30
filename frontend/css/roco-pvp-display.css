@@ -31,10 +31,8 @@ body {
 .pvp-background {
     position: absolute;
     inset: 0;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.08)),
-        radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.18), transparent 32%),
-        linear-gradient(180deg, #8ad3ff 0%, #b8e2ff 27%, #c49d72 27%, #9c7550 63%, #7f6a5e 63%, #776a62 100%);
+    background: url('/image/back2.png') no-repeat;
+    background-size: 1920px 1080px;
 }
 
 .pvp-background::before {
