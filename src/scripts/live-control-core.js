@@ -17,6 +17,7 @@
     let _lastPanelMtime = { left: null, right: null };
     let _socket = null;
     let _liveConfigWriteTimer = null;
+    const _slotPatchTimers = { left: new Map(), right: new Map() };
     const _liveConfig = {
         enabled: false,
         fileHandle: null,
@@ -268,8 +269,8 @@
                 const next = [..._state[panel]];
                 const usedIndexes = new Set();
                 let panelChanged = false;
-                panelItems.slice(0, MAX_SELECTION).forEach((item, fallbackIndex) => {
-                    if (!item || typeof item !== 'object') return;
+	                panelItems.slice(0, MAX_SELECTION).forEach((item, fallbackIndex) => {
+	                    if (!item || typeof item !== 'object') return;
 
                     const targetIndex = findConfigTargetIndex(panel, item, fallbackIndex, usedIndexes);
                     if (targetIndex < 0 || targetIndex >= MAX_SELECTION || !next[targetIndex]) return;
@@ -284,28 +285,28 @@
                         panelChanged = true;
                         changed = true;
                     }
-                    if (value !== null && slot.energyValue !== value) {
-                        slot.energyValue = value;
-                        panelChanged = true;
-                        changed = true;
-                    }
+	                    if (value !== null && slot.energyValue !== value) {
+	                        slot.energyValue = value;
+	                        panelChanged = true;
+	                        changed = true;
+	                    }
 
-                    next[targetIndex] = slot;
-                });
+	                    next[targetIndex] = slot;
+	                    scheduleSlotPatch(panel, targetIndex);
+	                });
 
                 if (panelChanged) {
                     _state[panel] = next;
                     _dirty[panel] = true;
                     renderPanel(panel);
                 }
-            });
+	            });
 
-            if (changed) {
-                await saveAll(true);
-                setStatus(`已根据${source}更新`);
-            } else {
-                setStatus(`${source}无变化`);
-            }
+	            if (changed) {
+	                setStatus(`已根据${source}更新`);
+	            } else {
+	                setStatus(`${source}无变化`);
+	            }
         } finally {
             _liveConfig.isApplying = false;
         }
@@ -546,20 +547,60 @@
     function updateSlot(panel, index, field, value) {
         const next = [..._state[panel]];
         const current = { ...next[index] };
-        current[field] = field === 'healthPercent'
+        const normalized = field === 'healthPercent'
             ? clamp(Math.round(Number(value) || 0), 0, 100)
             : clamp(Math.round(Number(value) || 0), 0, 10);
+        current[field] = normalized;
         next[index] = current;
         _state[panel] = next;
         _dirty[panel] = true;
         syncSlotView(panel, index, field);
-        scheduleAutoSave();
+        if (field === 'healthPercent' || field === 'energyValue') {
+            scheduleSlotPatch(panel, index);
+        } else {
+            scheduleAutoSave();
+        }
         scheduleLiveConfigWrite();
     }
 
     function scheduleAutoSave() {
         clearTimeout(_saveTimer);
         _saveTimer = setTimeout(() => saveAll(true), _config.autoSaveDelay);
+    }
+
+    async function saveSlotPatch(panel, index) {
+        const slot = _state[panel] && _state[panel][index];
+        if (!slot) return;
+
+        const res = await fetch(`api/panels/${panel}/slots/${index}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                healthPercent: getHealthLevel(slot),
+                energyValue: getEnergyLevel(slot)
+            })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            throw new Error(data.error || '保存失败');
+        }
+
+        if (data.slot) {
+            _state[panel][index] = normalizeSlot({ ...data.slot, slot: index }, index);
+            syncSlotView(panel, index, 'all');
+        }
+        if (data.panel && typeof data.panel.mtime === 'number') {
+            _lastPanelMtime[panel] = data.panel.mtime;
+        }
+        _dirty[panel] = false;
+    }
+
+    function scheduleSlotPatch(panel, index) {
+        clearTimeout(_slotPatchTimers[panel].get(index));
+        const timer = setTimeout(() => {
+            saveSlotPatch(panel, index).catch(error => setStatus(error.message));
+        }, 120);
+        _slotPatchTimers[panel].set(index, timer);
     }
 
     async function savePanel(panel) {
@@ -590,8 +631,14 @@
 
     async function saveAll(auto = false) {
         try {
-            await savePanel('left');
-            await savePanel('right');
+            const panelsToSave = ['left', 'right'].filter(panel => _dirty[panel]);
+            if (!panelsToSave.length) {
+                if (!auto) setStatus('没有需要保存的更改');
+                return;
+            }
+            for (const panel of panelsToSave) {
+                await savePanel(panel);
+            }
             setStatus(auto ? '自动保存成功' : '手动保存成功');
         } catch (error) {
             setStatus(error.message);
@@ -743,6 +790,10 @@
         clearTimeout(_saveTimer);
         clearTimeout(_liveConfigWriteTimer);
         clearInterval(_liveConfig.pollTimer);
+        _slotPatchTimers.left.forEach(timer => clearTimeout(timer));
+        _slotPatchTimers.right.forEach(timer => clearTimeout(timer));
+        _slotPatchTimers.left.clear();
+        _slotPatchTimers.right.clear();
         document.removeEventListener('input', handleInput);
         window.removeEventListener('focus', handleFocus);
         const exportConfigBtn = _config.exportConfigBtnId ? document.getElementById(_config.exportConfigBtnId) : null;
