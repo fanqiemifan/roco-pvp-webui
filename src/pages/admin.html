@@ -1895,7 +1895,7 @@
         </main>
     </div>
 
-    <script src="vendor/socket.io.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         const MAX_SELECTION = 6;
         const PREVIEW_PAGES = {
@@ -1979,6 +1979,8 @@
             try {
                 if (navigator.clipboard && window.isSecureContext) {
                     await navigator.clipboard.writeText(text);
+                } else if (window.rocoDesktop && typeof window.rocoDesktop.copyText === 'function') {
+                    await window.rocoDesktop.copyText(text);
                 } else {
                     const input = document.createElement('textarea');
                     input.value = text;
@@ -2123,6 +2125,83 @@
             ];
         }
 
+        function normalizeSpriteAssetPath(rawPath, filename) {
+            const normalizedFilename = String(filename || '').split('/').pop() || '';
+            const normalizedPath = String(rawPath || '').trim();
+
+            if (normalizedPath.startsWith('/resources/sprites/')) {
+                return normalizedPath;
+            }
+
+            if (normalizedPath.startsWith('/img/')) {
+                return `/resources/sprites/${normalizedFilename || normalizedPath.split('/').pop() || ''}`;
+            }
+
+            if (normalizedPath && /\.(png|jpe?g|webp)$/i.test(normalizedPath)) {
+                return normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+            }
+
+            return normalizedFilename ? `/resources/sprites/${normalizedFilename}` : '';
+        }
+
+        function normalizeSpriteRecord(sprite) {
+            if (!sprite || typeof sprite !== 'object') {
+                return null;
+            }
+
+            const rawPath = typeof sprite.path === 'string' ? sprite.path : '';
+            const filename = String(
+                sprite.filename
+                || sprite.id
+                || (rawPath ? rawPath.split('/').pop() : '')
+                || ''
+            ).trim();
+
+            if (!filename) {
+                return null;
+            }
+
+            const displayName = String(
+                sprite.displayName
+                || sprite.chineseName
+                || sprite.name
+                || filename.replace(/\.[^.]+$/, '')
+            ).trim();
+
+            const aliases = Array.isArray(sprite.aliases)
+                ? sprite.aliases.filter(alias => typeof alias === 'string' && alias.trim())
+                : [];
+
+            return {
+                ...sprite,
+                id: String(sprite.id || filename),
+                filename,
+                displayName,
+                name: String(sprite.name || displayName),
+                chineseName: String(sprite.chineseName || displayName),
+                path: normalizeSpriteAssetPath(rawPath, filename),
+                aliases
+            };
+        }
+
+        function loadSpritesFromStaticIndex() {
+            return fetch('/resources/data/sprites.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`静态精灵索引加载失败: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const sprites = Array.isArray(data)
+                        ? data
+                        : (Array.isArray(data && data.sprites) ? data.sprites : []);
+                    return sprites
+                        .map(normalizeSpriteRecord)
+                        .filter(Boolean);
+                });
+        }
+
         function selectedCount(panel) {
             return state[panel].selected.filter(slot => slot.sprite).length;
         }
@@ -2148,26 +2227,26 @@
         function getHeartAsset(percent) {
             const health = Math.min(100, Math.max(0, Number(percent ?? 100)));
             if (health <= 0) {
-                return 'image/heart0.png';
+                return '/assets/ui/heart0.png';
             }
             if (health <= 10) {
-                return 'image/heart10.png';
+                return '/assets/ui/heart10.png';
             }
             if (health <= 50) {
-                return 'image/heart50.png';
+                return '/assets/ui/heart50.png';
             }
-            return 'image/heart100.png';
+            return '/assets/ui/heart100.png';
         }
 
         function getAbilityMeta(energyValue) {
             const energy = Math.min(10, Math.max(0, Math.round(Number(energyValue) || 0)));
             if (energy <= 2) {
-                return { bg: '#6A1A1B', icon: 'image/start-3.png', color: '#C24846' };
+                return { bg: '#6A1A1B', icon: '/assets/ui/start-3.png', color: '#C24846' };
             }
             if (energy <= 5) {
-                return { bg: '#6E6E6E', icon: 'image/start-2.png', color: '#FFFFFF' };
+                return { bg: '#6E6E6E', icon: '/assets/ui/start-2.png', color: '#FFFFFF' };
             }
-            return { bg: '#6E6E6E', icon: 'image/start-1.png', color: '#FFFFFF' };
+            return { bg: '#6E6E6E', icon: '/assets/ui/start-1.png', color: '#FFFFFF' };
         }
 
         function buildProtectionMask(percent, featherPx = 12) {
@@ -2509,12 +2588,41 @@
         }
 
         function loadSprites() {
-            return fetch('api/sprites')
-                .then(response => response.json())
+            return fetch('/api/sprites')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`精灵接口加载失败: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    state.sprites = data.sprites || [];
-                    renderPanel('left');
-                    renderPanel('right');
+                    const sprites = Array.isArray(data.sprites)
+                        ? data.sprites.map(normalizeSpriteRecord).filter(Boolean)
+                        : [];
+
+                    if (sprites.length > 0) {
+                        state.sprites = sprites;
+                        renderPanel('left');
+                        renderPanel('right');
+                        return;
+                    }
+
+                    return loadSpritesFromStaticIndex().then(fallbackSprites => {
+                        state.sprites = fallbackSprites;
+                        renderPanel('left');
+                        renderPanel('right');
+                    });
+                })
+                .catch(error => {
+                    return loadSpritesFromStaticIndex()
+                        .then(fallbackSprites => {
+                            state.sprites = fallbackSprites;
+                            renderPanel('left');
+                            renderPanel('right');
+                            if (!fallbackSprites.length) {
+                                throw error;
+                            }
+                        });
                 });
         }
 
@@ -3001,7 +3109,7 @@
                 });
         });
     </script>
-    <script src="frontend/js/live-control-core.js"></script>
+    <script src="/scripts/live-control-core.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             LiveControl.init({

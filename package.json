@@ -1,5 +1,31 @@
 {
+  "name": "pvp-webui-for-roco",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist-electron/electron/main.js",
+  "scripts": {
+    "build:electron": "tsc -p tsconfig.json",
+    "dev": "npm run build:electron && electron .",
+    "start": "npm run build:electron && electron .",
+    "serve:node": "npm run build:electron && node dist-electron/electron/server-entry.js --host 0.0.0.0 --port 9988",
+    "build": "npm run build:electron",
+    "package": "npm run build && electron-builder"
+  },
   "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.0.13",
+    "electron": "^36.4.0",
+    "electron-builder": "^26.0.12",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.0"
   }
 }

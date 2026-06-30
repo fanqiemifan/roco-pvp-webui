@@ -1,0 +1,13 @@
+appId: com.roco.pvp.webui
+productName: Roco PVP WebUI
+directories:
+  output: release
+files:
+  - dist-electron/**
+  - src/**
+  - resources/**
+  - package.json
+extraMetadata:
+  main: dist-electron/electron/main.js
+mac:
+  category: public.app-category.games

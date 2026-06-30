@@ -20,6 +20,7 @@
     const _liveConfig = {
         enabled: false,
         fileHandle: null,
+        filePath: null,
         pollTimer: null,
         lastModified: null,
         lastContent: '',
@@ -149,21 +150,56 @@
         URL.revokeObjectURL(url);
     }
 
-    async function writeLiveConfigToHandle(text, reason = '') {
-        if (!_liveConfig.enabled || !_liveConfig.fileHandle || _liveConfig.isApplying) {
-            return;
+    function getLiveConfigFileName(filePath) {
+        return String(filePath || '').split(/[\\/]/).pop() || 'roco-live-config.json';
+    }
+
+    async function readLiveConfigSource() {
+        if (_liveConfig.fileHandle) {
+            const file = await _liveConfig.fileHandle.getFile();
+            return {
+                name: file.name,
+                text: await file.text(),
+                lastModified: file.lastModified
+            };
         }
-        if (!(await verifyFilePermission(_liveConfig.fileHandle, 'readwrite'))) {
-            throw new Error('没有监听文件的写入权限');
+
+        if (_liveConfig.filePath && window.rocoDesktop) {
+            const [text, stat] = await Promise.all([
+                window.rocoDesktop.readTextFile(_liveConfig.filePath),
+                window.rocoDesktop.statFile(_liveConfig.filePath)
+            ]);
+            return {
+                name: getLiveConfigFileName(_liveConfig.filePath),
+                text,
+                lastModified: stat.mtimeMs
+            };
+        }
+
+        throw new Error('没有可用的监听文件来源');
+    }
+
+    async function writeLiveConfigToHandle(text, reason = '') {
+        if (!_liveConfig.enabled || (!_liveConfig.fileHandle && !_liveConfig.filePath) || _liveConfig.isApplying) {
+            return;
         }
 
         _liveConfig.isWriting = true;
         try {
-            const writable = await _liveConfig.fileHandle.createWritable();
-            await writable.write(text);
-            await writable.close();
-            const file = await _liveConfig.fileHandle.getFile();
-            _liveConfig.lastModified = file.lastModified;
+            if (_liveConfig.fileHandle) {
+                if (!(await verifyFilePermission(_liveConfig.fileHandle, 'readwrite'))) {
+                    throw new Error('没有监听文件的写入权限');
+                }
+                const writable = await _liveConfig.fileHandle.createWritable();
+                await writable.write(text);
+                await writable.close();
+                const file = await _liveConfig.fileHandle.getFile();
+                _liveConfig.lastModified = file.lastModified;
+            } else if (_liveConfig.filePath && window.rocoDesktop) {
+                await window.rocoDesktop.writeTextFile(_liveConfig.filePath, text);
+                const stat = await window.rocoDesktop.statFile(_liveConfig.filePath);
+                _liveConfig.lastModified = stat.mtimeMs;
+            }
             _liveConfig.lastContent = text;
             if (reason) setLiveFileStatus(reason);
         } finally {
@@ -305,18 +341,29 @@
             }
         }
 
+        if (window.rocoDesktop && typeof window.rocoDesktop.showSaveDialog === 'function') {
+            const filePath = await window.rocoDesktop.showSaveDialog();
+            if (!filePath) {
+                setStatus('已取消配置导出');
+                return;
+            }
+            await window.rocoDesktop.writeTextFile(filePath, text);
+            setStatus('配置导出成功');
+            return;
+        }
+
         downloadLiveConfig(text);
         setStatus('配置已下载');
     }
 
     async function pollLiveConfigFile() {
-        if (!_liveConfig.enabled || !_liveConfig.fileHandle || _liveConfig.isWriting) {
+        if (!_liveConfig.enabled || (!_liveConfig.fileHandle && !_liveConfig.filePath) || _liveConfig.isWriting) {
             return;
         }
 
         try {
-            const file = await _liveConfig.fileHandle.getFile();
-            const text = await file.text();
+            const file = await readLiveConfigSource();
+            const text = file.text;
             _liveConfig.lastModified = file.lastModified;
             if (text === _liveConfig.lastContent) {
                 return;
@@ -330,38 +377,43 @@
     }
 
     async function startLiveConfigWatch() {
-        if (typeof window.showOpenFilePicker !== 'function') {
-            setStatus('当前浏览器不支持实时监听，请使用 Chrome 或 Edge 打开本地页面');
-            return;
-        }
-
         try {
-            const [fileHandle] = await window.showOpenFilePicker({
-                multiple: false,
-                types: [
-                    {
-                        description: 'JSON 文件',
-                        accept: { 'application/json': ['.json'] }
-                    }
-                ]
-            });
+            let fileHandle = null;
+            let filePath = null;
 
-            if (!fileHandle) return;
-            if (!(await verifyFilePermission(fileHandle, 'readwrite'))) {
+            if (typeof window.showOpenFilePicker === 'function') {
+                [fileHandle] = await window.showOpenFilePicker({
+                    multiple: false,
+                    types: [
+                        {
+                            description: 'JSON 文件',
+                            accept: { 'application/json': ['.json'] }
+                        }
+                    ]
+                });
+            } else if (window.rocoDesktop && typeof window.rocoDesktop.showOpenDialog === 'function') {
+                filePath = await window.rocoDesktop.showOpenDialog();
+            } else {
+                setStatus('当前环境不支持实时监听，请使用桌面应用或 Chromium 内核浏览器');
+                return;
+            }
+
+            if (!fileHandle && !filePath) return;
+            if (fileHandle && !(await verifyFilePermission(fileHandle, 'readwrite'))) {
                 throw new Error('没有监听文件的读写权限');
             }
 
-            const file = await fileHandle.getFile();
-            const text = await file.text();
-            _liveConfig.enabled = true;
             _liveConfig.fileHandle = fileHandle;
+            _liveConfig.filePath = filePath;
+            const file = await readLiveConfigSource();
+            _liveConfig.enabled = true;
             _liveConfig.lastModified = file.lastModified;
-            _liveConfig.lastContent = text;
+            _liveConfig.lastContent = file.text;
             setLiveListenButton(true);
             setLiveFileStatus(`监听中：${file.name}`);
 
-            if (text.trim()) {
-                await applyLiveConfigText(text, '监听文件');
+            if (file.text.trim()) {
+                await applyLiveConfigText(file.text, '监听文件');
             } else {
                 await writeLiveConfigToHandle(stringifyLiveConfig(), `监听中：${file.name}`);
             }
@@ -384,6 +436,7 @@
         clearTimeout(_liveConfigWriteTimer);
         _liveConfig.enabled = false;
         _liveConfig.fileHandle = null;
+        _liveConfig.filePath = null;
         _liveConfig.pollTimer = null;
         _liveConfig.lastModified = null;
         _liveConfig.lastContent = '';

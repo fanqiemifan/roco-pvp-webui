@@ -1,6 +1,6 @@
 @font-face {
     font-family: "YouSheBiaoTiHei";
-    src: url("../../font/YouSheBiaoTiHei-2.ttf") format("truetype");
+    src: url("/assets/fonts/YouSheBiaoTiHei-2.ttf") format("truetype");
     font-display: swap;
 }
 
@@ -31,7 +31,7 @@ body {
 .pvp-background {
     position: absolute;
     inset: 0;
-    background: url('/image/back2.png') no-repeat;
+    background: url('/assets/ui/back2.png') no-repeat;
     background-size: 1920px 1080px;
 }
 

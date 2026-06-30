@@ -78,15 +78,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function getHeartAsset(healthPercent) {
         const health = clampPercent(healthPercent);
         if (health <= 0) {
-            return 'image/heart0.png';
+            return '/assets/ui/heart0.png';
         }
         if (health <= 10) {
-            return 'image/heart10.png';
+            return '/assets/ui/heart10.png';
         }
         if (health <= 50) {
-            return 'image/heart50.png';
+            return '/assets/ui/heart50.png';
         }
-        return 'image/heart100.png';
+        return '/assets/ui/heart100.png';
     }
 
     function getAbilityMeta(energyValue) {
@@ -94,18 +94,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (energy <= 2) {
             return {
                 className: 'danger',
-                icon: 'image/start-3.png'
+                icon: '/assets/ui/start-3.png'
             };
         }
         if (energy <= 5) {
             return {
                 className: 'mid',
-                icon: 'image/start-2.png'
+                icon: '/assets/ui/start-2.png'
             };
         }
         return {
             className: 'high',
-            icon: 'image/start-1.png'
+            icon: '/assets/ui/start-1.png'
         };
     }
 
@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data && data.exists) {
             frame3.style.backgroundImage = `url('${data.path}?t=${Math.floor(data.mtime * 1000)}')`;
         } else {
-            frame3.style.backgroundImage = "url('image/back.png')";
+            frame3.style.backgroundImage = "url('/assets/ui/back.png')";
         }
     }
 

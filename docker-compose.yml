@@ -2,11 +2,14 @@ name: rocom-pvp-battle-array--v2
 
 services:
   rocom-pvp-battle-array-v2:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: rocom-pvp-battle-array--v2
     ports:
       - "9988:9988"
     volumes:
-      - ./LuokePVPWebui/cache:/app/LuokePVPWebui/cache
-      - ./img:/app/img
+      - ./LuokePVPWebui:/app/LuokePVPWebui
+    environment:
+      NODE_ENV: production
     restart: unless-stopped
