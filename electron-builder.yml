@@ -11,3 +11,8 @@ extraMetadata:
   main: dist-electron/electron/main.js
 mac:
   category: public.app-category.games
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
