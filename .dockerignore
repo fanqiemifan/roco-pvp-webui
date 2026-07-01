@@ -11,3 +11,4 @@ cache
 docker-compose.yml
 代码参考
 docs
+__pycache__/
