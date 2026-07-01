@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洛克王国PVP - 全局阵容展示</title>
+    <link rel="stylesheet" href="/styles/roco-pvp-display.css">
+</head>
+<body>
+    <main class="pvp-screen" aria-label="洛克王国PVP全局阵容展示">
+        <div class="pvp-background"></div>
+
+        <section class="lineup-bar">
+            <div class="lineup-panel lineup-panel-left" data-panel="left" aria-label="左侧阵容">
+                <article class="spirit-slot" data-slot="0"></article>
+                <article class="spirit-slot" data-slot="1"></article>
+                <article class="spirit-slot" data-slot="2"></article>
+                <article class="spirit-slot" data-slot="3"></article>
+                <article class="spirit-slot" data-slot="4"></article>
+                <article class="spirit-slot" data-slot="5"></article>
+            </div>
+
+            <section class="context-panel" aria-label="比分信息">
+                <div class="score-value" id="matchScore">0:0</div>
+                <div class="event-title" id="eventTitle">S2洛克联赛</div>
+            </section>
+
+            <div class="lineup-panel lineup-panel-right" data-panel="right" aria-label="右侧阵容">
+                <article class="spirit-slot" data-slot="0"></article>
+                <article class="spirit-slot" data-slot="1"></article>
+                <article class="spirit-slot" data-slot="2"></article>
+                <article class="spirit-slot" data-slot="3"></article>
+                <article class="spirit-slot" data-slot="4"></article>
+                <article class="spirit-slot" data-slot="5"></article>
+            </div>
+
+            <section class="player-summary player-summary-left" aria-label="左侧选手信息">
+                <div class="player-summary-name" id="leftPlayerName"></div>
+                <div class="player-rounds player-rounds-left" data-side="left">
+                    <span class="round-box"></span>
+                    <span class="round-box"></span>
+                    <span class="round-box"></span>
+                    <span class="round-box"></span>
+                </div>
+                <div class="player-summary-line"></div>
+            </section>
+
+            <section class="player-summary player-summary-right" aria-label="右侧选手信息">
+                <div class="player-summary-name" id="rightPlayerName"></div>
+                <div class="player-rounds player-rounds-right" data-side="right">
+                    <span class="round-box"></span>
+                    <span class="round-box"></span>
+                    <span class="round-box"></span>
+                    <span class="round-box"></span>
+                </div>
+                <div class="player-summary-line"></div>
+            </section>
+        </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/lineup-display.js"></script>
+</body>
+</html>

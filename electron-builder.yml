@@ -1,0 +1,34 @@
+appId: com.roco.pvp.controlpanel
+productName: Roco PVP Control Panel
+compression: store
+directories:
+  output: release
+files:
+  - dist-electron/**
+  - src/**
+  - resources/**
+  - package.json
+extraMetadata:
+  main: dist-electron/electron/main.js
+mac:
+  category: public.app-category.games
+win:
+  executableName: RocoPVPControlPanel
+  artifactName: ${productName}-Setup-${version}-${arch}.${ext}
+  target:
+    - target: nsis
+      arch:
+        - x64
+        - arm64
+nsis:
+  guid: 5cf62ae6-1d1f-4a52-8ef7-6d2f0f0df2d1
+  allowElevation: true
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Roco PVP Control Panel
+  uninstallDisplayName: Roco PVP Control Panel
+  runAfterFinish: false
+  warningsAsErrors: false
+  deleteAppDataOnUninstall: true

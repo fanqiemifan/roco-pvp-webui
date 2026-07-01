@@ -4,10 +4,17 @@
     {
       "slot": 0,
       "sprite": {
-        "id": "NO.005_火花.png",
-        "filename": "NO.005_火花.png",
+        "id": "NO.005_huohua.png",
+        "filename": "NO.005_huohua.png",
         "displayName": "火花",
-        "path": "/img/NO.005_火花.png"
+        "chineseName": "火花",
+        "path": "/img/NO.005_huohua.png",
+        "group": "000-099",
+        "number": 5,
+        "variant": 0,
+        "aliases": [
+          "NO.005_火花.png"
+        ]
       },
       "opacityEnabled": false,
       "opacity": 0.5,
@@ -19,10 +26,17 @@
     {
       "slot": 1,
       "sprite": {
-        "id": "NO.032_毛毛.png",
-        "filename": "NO.032_毛毛.png",
+        "id": "NO.032_maomao.png",
+        "filename": "NO.032_maomao.png",
         "displayName": "毛毛",
-        "path": "/img/NO.032_毛毛.png"
+        "chineseName": "毛毛",
+        "path": "/img/NO.032_maomao.png",
+        "group": "000-099",
+        "number": 32,
+        "variant": 0,
+        "aliases": [
+          "NO.032_毛毛.png"
+        ]
       },
       "opacityEnabled": false,
       "opacity": 0.5,
@@ -34,10 +48,17 @@
     {
       "slot": 2,
       "sprite": {
-        "id": "NO.002_喵喵.png",
-        "filename": "NO.002_喵喵.png",
+        "id": "NO.002_miaomiao.png",
+        "filename": "NO.002_miaomiao.png",
         "displayName": "喵喵",
-        "path": "/img/NO.002_喵喵.png"
+        "chineseName": "喵喵",
+        "path": "/img/NO.002_miaomiao.png",
+        "group": "000-099",
+        "number": 2,
+        "variant": 0,
+        "aliases": [
+          "NO.002_喵喵.png"
+        ]
       },
       "opacityEnabled": false,
       "opacity": 0.5,
@@ -49,10 +70,17 @@
     {
       "slot": 3,
       "sprite": {
-        "id": "NO.008_水蓝蓝.png",
-        "filename": "NO.008_水蓝蓝.png",
+        "id": "NO.008_shuilanlan.png",
+        "filename": "NO.008_shuilanlan.png",
         "displayName": "水蓝蓝",
-        "path": "/img/NO.008_水蓝蓝.png"
+        "chineseName": "水蓝蓝",
+        "path": "/img/NO.008_shuilanlan.png",
+        "group": "000-099",
+        "number": 8,
+        "variant": 0,
+        "aliases": [
+          "NO.008_水蓝蓝.png"
+        ]
       },
       "opacityEnabled": false,
       "opacity": 0.5,
@@ -64,10 +92,17 @@
     {
       "slot": 4,
       "sprite": {
-        "id": "NO.150_里奥.png",
-        "filename": "NO.150_里奥.png",
+        "id": "NO.150_liao.png",
+        "filename": "NO.150_liao.png",
         "displayName": "里奥",
-        "path": "/img/NO.150_里奥.png"
+        "chineseName": "里奥",
+        "path": "/img/NO.150_liao.png",
+        "group": "100-199",
+        "number": 150,
+        "variant": 0,
+        "aliases": [
+          "NO.150_里奥.png"
+        ]
       },
       "opacityEnabled": false,
       "opacity": 0.5,

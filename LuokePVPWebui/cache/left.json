@@ -1,0 +1,175 @@
+{
+  "position": "left",
+  "selected": [
+    {
+      "slot": 0,
+      "sprite": {
+        "id": "NO.286_shengjianx.png",
+        "filename": "NO.286_shengjianx.png",
+        "displayName": "圣剑-X",
+        "name": "圣剑-X",
+        "chineseName": "圣剑-X",
+        "path": "img/NO.286_shengjianx.png",
+        "aliases": [
+          "NO.286_圣剑-X.png",
+          "圣剑-X",
+          "NO.286_shengjianx.png",
+          "NO.286_shengjianx",
+          "286",
+          "NO.286",
+          "NO.286_圣剑-X"
+        ],
+        "number": 286,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 18,
+      "energyValue": 10
+    },
+    {
+      "slot": 1,
+      "sprite": {
+        "id": "NO.290_jimiegulong.png",
+        "filename": "NO.290_jimiegulong.png",
+        "displayName": "寂灭骨龙",
+        "name": "寂灭骨龙",
+        "chineseName": "寂灭骨龙",
+        "path": "img/NO.290_jimiegulong.png",
+        "aliases": [
+          "NO.290_寂灭骨龙.png",
+          "寂灭骨龙",
+          "NO.290_jimiegulong.png",
+          "NO.290_jimiegulong",
+          "290",
+          "NO.290",
+          "NO.290_寂灭骨龙"
+        ],
+        "number": 290,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 62,
+      "energyValue": 5
+    },
+    {
+      "slot": 2,
+      "sprite": {
+        "id": "NO.254_bingzuanbulusi.png",
+        "filename": "NO.254_bingzuanbulusi.png",
+        "displayName": "冰钻布鲁斯",
+        "name": "冰钻布鲁斯",
+        "chineseName": "冰钻布鲁斯",
+        "path": "img/NO.254_bingzuanbulusi.png",
+        "aliases": [
+          "NO.254_冰钻布鲁斯.png",
+          "冰钻布鲁斯",
+          "NO.254_bingzuanbulusi.png",
+          "NO.254_bingzuanbulusi",
+          "254",
+          "NO.254",
+          "NO.254_冰钻布鲁斯"
+        ],
+        "number": 254,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 36,
+      "energyValue": 10
+    },
+    {
+      "slot": 3,
+      "sprite": {
+        "id": "NO.004_molimao.png",
+        "filename": "NO.004_molimao.png",
+        "displayName": "魔力猫",
+        "name": "魔力猫",
+        "chineseName": "魔力猫",
+        "path": "img/NO.004_molimao.png",
+        "aliases": [
+          "NO.004_魔力猫.png",
+          "魔力猫",
+          "NO.004_molimao.png",
+          "NO.004_molimao",
+          "4",
+          "004",
+          "NO.004",
+          "NO.004_魔力猫"
+        ],
+        "number": 4,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 30,
+      "energyValue": 3
+    },
+    {
+      "slot": 4,
+      "sprite": {
+        "id": "NO.321_lidengyu.png",
+        "filename": "NO.321_lidengyu.png",
+        "displayName": "利灯鱼",
+        "name": "利灯鱼",
+        "chineseName": "利灯鱼",
+        "path": "img/NO.321_lidengyu.png",
+        "aliases": [
+          "NO.321_利灯鱼.png",
+          "利灯鱼",
+          "NO.321_lidengyu.png",
+          "NO.321_lidengyu",
+          "321",
+          "NO.321",
+          "NO.321_利灯鱼"
+        ],
+        "number": 321,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 100,
+      "energyValue": 10
+    },
+    {
+      "slot": 5,
+      "sprite": {
+        "id": "NO.048_yinsuquan.png",
+        "filename": "NO.048_yinsuquan.png",
+        "displayName": "音速犬",
+        "name": "音速犬",
+        "chineseName": "音速犬",
+        "path": "img/NO.048_yinsuquan.png",
+        "aliases": [
+          "NO.048_音速犬.png",
+          "音速犬",
+          "NO.048_yinsuquan.png",
+          "NO.048_yinsuquan",
+          "48",
+          "048",
+          "NO.048",
+          "NO.048_音速犬"
+        ],
+        "number": 48,
+        "variant": 0
+      },
+      "opacityEnabled": false,
+      "opacity": 0.5,
+      "saturation": 1.0,
+      "healthEnabled": true,
+      "healthPercent": 100,
+      "energyValue": 10
+    }
+  ]
+}
