@@ -421,12 +421,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        socket.on('panel-slot:update', payload => {
-            if (payload && payload.panel && payload.panel.position) {
-                renderPanel(payload.panel.position, payload.panel);
-            }
-        });
-
         socket.on('background:update', payload => {
             renderBackground(payload ? payload.background : null);
         });
