@@ -20,6 +20,11 @@ let localServer: Awaited<ReturnType<typeof createLocalServer>> | null = null;
 let appTray: Tray | null = null;
 let isQuitting = false;
 let closePromptPending = false;
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+
+if (!hasSingleInstanceLock) {
+  app.quit();
+}
 
 function resolveTrayIconPath(): string {
   const candidates = [
@@ -181,6 +186,10 @@ app.whenReady().then(() => {
       });
     }
   });
+});
+
+app.on('second-instance', () => {
+  showMainWindow();
 });
 
 app.on('window-all-closed', () => {
