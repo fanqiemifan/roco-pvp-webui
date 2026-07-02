@@ -1,6 +1,6 @@
 {
   "name": "pvp-webui-for-roco",
-  "version": "1.2.5",
+  "version": "1.2.9",
   "private": true,
   "type": "module",
   "main": "dist-electron/electron/main.js",

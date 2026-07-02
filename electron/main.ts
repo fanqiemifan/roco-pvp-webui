@@ -29,6 +29,7 @@ type WindowPreset = {
   minHeight?: number;
   autoHideMenuBar?: boolean;
   title?: string;
+  zoomFactor?: number;
 };
 
 if (!hasSingleInstanceLock) {
@@ -66,10 +67,11 @@ function showMainWindow(): void {
 function getWindowPreset(targetUrl: string): WindowPreset {
   if (targetUrl.endsWith('/live-control.html')) {
     return {
-      width: 1440,
-      height: 960,
-      minWidth: 1100,
-      minHeight: 760,
+      width: 880,
+      height: 400,
+      minWidth: 480,
+      minHeight: 300,
+      zoomFactor: 1,
       autoHideMenuBar: true,
       title: '洛克王国 PVP WebUI - 实时控制',
     };
@@ -79,8 +81,9 @@ function getWindowPreset(targetUrl: string): WindowPreset {
     return {
       width: 1920,
       height: 1080,
-      minWidth: 1280,
-      minHeight: 720,
+      minWidth: 960,
+      minHeight: 540,
+      zoomFactor: 1,
       autoHideMenuBar: true,
       title: '洛克王国 PVP WebUI - 预览',
     };
@@ -91,6 +94,7 @@ function getWindowPreset(targetUrl: string): WindowPreset {
     height: 900,
     minWidth: 960,
     minHeight: 640,
+    zoomFactor: 1,
     autoHideMenuBar: true,
   };
 }
@@ -116,6 +120,11 @@ function configureWindowOpenHandler(window: BrowserWindow): void {
 
     childWindow.removeMenu();
     registerWindowIpc();
+    childWindow.webContents.on('did-finish-load', () => {
+      if (preset.zoomFactor) {
+        childWindow.webContents.setZoomFactor(preset.zoomFactor);
+      }
+    });
     void childWindow.loadURL(url).catch((error) => {
       console.error(`Failed to open child window for ${url}:`, error);
       childWindow.close();
