@@ -22,6 +22,15 @@ let isQuitting = false;
 let closePromptPending = false;
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 
+type WindowPreset = {
+  width: number;
+  height: number;
+  minWidth?: number;
+  minHeight?: number;
+  autoHideMenuBar?: boolean;
+  title?: string;
+};
+
 if (!hasSingleInstanceLock) {
   app.quit();
 }
@@ -52,6 +61,68 @@ function showMainWindow(): void {
 
   mainWindow.show();
   mainWindow.focus();
+}
+
+function getWindowPreset(targetUrl: string): WindowPreset {
+  if (targetUrl.endsWith('/live-control.html')) {
+    return {
+      width: 1440,
+      height: 960,
+      minWidth: 1100,
+      minHeight: 760,
+      autoHideMenuBar: true,
+      title: '洛克王国 PVP WebUI - 实时控制',
+    };
+  }
+
+  if (targetUrl.endsWith('/roco-pvp.html') || targetUrl.endsWith('/')) {
+    return {
+      width: 1920,
+      height: 1080,
+      minWidth: 1280,
+      minHeight: 720,
+      autoHideMenuBar: true,
+      title: '洛克王国 PVP WebUI - 预览',
+    };
+  }
+
+  return {
+    width: 1280,
+    height: 900,
+    minWidth: 960,
+    minHeight: 640,
+    autoHideMenuBar: true,
+  };
+}
+
+function configureWindowOpenHandler(window: BrowserWindow): void {
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    const preset = getWindowPreset(url);
+    const childWindow = new BrowserWindow({
+      useContentSize: true,
+      width: preset.width,
+      height: preset.height,
+      minWidth: preset.minWidth,
+      minHeight: preset.minHeight,
+      autoHideMenuBar: preset.autoHideMenuBar ?? true,
+      backgroundColor: '#f4efe6',
+      title: preset.title,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
+
+    childWindow.removeMenu();
+    registerWindowIpc();
+    void childWindow.loadURL(url).catch((error) => {
+      console.error(`Failed to open child window for ${url}:`, error);
+      childWindow.close();
+    });
+
+    return { action: 'deny' };
+  });
 }
 
 function createTray(): void {
@@ -116,7 +187,8 @@ async function createMainWindow(): Promise<void> {
   });
 
   createTray();
-  registerWindowIpc(mainWindow);
+  registerWindowIpc();
+  configureWindowOpenHandler(mainWindow);
   await mainWindow.loadURL(`http://127.0.0.1:${localServer.port}/admin.html`);
 
   mainWindow.on('close', (event) => {

@@ -61,13 +61,14 @@
             width: min(1880px, 100%);
             min-height: calc(100vh - 32px);
             margin: 0 auto;
-            overflow: hidden;
+            overflow: visible;
             border: 1px solid rgba(121, 86, 54, 0.15);
             background: rgba(255, 249, 240, 0.58);
             backdrop-filter: blur(24px);
             box-shadow: var(--shadow);
             display: grid;
             grid-template-columns: 300px minmax(0, 1fr);
+            align-items: start;
             position: relative;
         }
 
@@ -80,7 +81,8 @@
         }
 
         .sidebar {
-            position: relative;
+            position: sticky;
+            top: 16px;
             z-index: 1;
             display: flex;
             flex-direction: column;
@@ -88,7 +90,10 @@
             padding: 26px 22px;
             border-right: 1px solid var(--line);
             background: linear-gradient(180deg, rgba(255, 248, 238, 0.94), rgba(247, 240, 230, 0.84));
-            min-height: 0;
+            align-self: start;
+            min-height: calc(100vh - 32px);
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
         }
 
         .window-dots {
@@ -1040,8 +1045,13 @@
             }
 
             .sidebar {
+                position: relative;
+                top: auto;
                 border-right: 0;
                 border-bottom: 1px solid var(--line);
+                min-height: auto;
+                max-height: none;
+                overflow: visible;
             }
 
             .content-shell {
