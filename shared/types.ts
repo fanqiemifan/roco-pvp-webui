@@ -40,6 +40,7 @@ export interface ScoreboardState {
   abilityBadgeEnabled: boolean;
   eventTitle: string;
   eventTitleEnabled: boolean;
+  page2LineupDisplayMode: 'default' | 'avatar-only';
   nameFontSize: number;
   scoreFontSize: number;
   centerAreaEnabled: boolean;
