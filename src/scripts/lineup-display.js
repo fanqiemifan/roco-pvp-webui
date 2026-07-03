@@ -7,18 +7,20 @@
     const DEFAULT_BEST_OF = 7;
     const ROUND_BOX_WIDTH = 32;
     const ROUND_BOX_GAP = 4;
+    const DEFAULT_LINEUP_DISPLAY_MODE = 'default';
     const PANEL_SLOT_POSITIONS = {
         left: ['0', '1', '2', '3', '4', '5'],
         right: ['0', '1', '2', '3', '4', '5']
     };
 
     const panelStates = {
-        left: { signature: new Array(MAX_SLOTS).fill(null) },
-        right: { signature: new Array(MAX_SLOTS).fill(null) }
+        left: { signature: new Array(MAX_SLOTS).fill(null), selected: new Array(MAX_SLOTS).fill(null) },
+        right: { signature: new Array(MAX_SLOTS).fill(null), selected: new Array(MAX_SLOTS).fill(null) }
     };
 
     let lookup = null;
     let scoreboardSignature = null;
+    let currentLineupDisplayMode = DEFAULT_LINEUP_DISPLAY_MODE;
 
     function normalizeText(value) {
         return String(value ?? '')
@@ -62,6 +64,10 @@
     function normalizeBestOf(value) {
         const number = Number(value);
         return [1, 3, 5, 7].includes(number) ? number : DEFAULT_BEST_OF;
+    }
+
+    function normalizeLineupDisplayMode(value) {
+        return value === 'avatar-only' ? 'avatar-only' : DEFAULT_LINEUP_DISPLAY_MODE;
     }
 
     function getRoundBoxCount(bestOf) {
@@ -173,6 +179,7 @@
         const healthMeta = getHealthMeta(slotData);
 
         return JSON.stringify({
+            mode: currentLineupDisplayMode,
             spritePath: displaySpirit ? displaySpirit.path : '',
             name: displaySpirit ? displaySpiritName(displaySpirit.displayName) : '',
             sourceName: getSpriteDisplayName(sprite),
@@ -269,6 +276,7 @@
         slotEl.className = 'spirit-slot is-empty';
         slotEl.innerHTML = '';
         delete slotEl.dataset.spriteKey;
+        slotEl.dataset.renderMode = currentLineupDisplayMode;
     }
 
     function renderSlot(slotEl, slotData) {
@@ -289,12 +297,40 @@
         );
         const spiritPath = displaySpirit ? displaySpirit.path : sourceSprite.path;
         const spriteKey = JSON.stringify({ spiritPath, spiritName });
+        const isAvatarOnlyMode = currentLineupDisplayMode === 'avatar-only';
         const shouldRebuild = slotEl.dataset.spriteKey !== spriteKey
-            || !slotEl.querySelector('.spirit-name')
-            || !slotEl.querySelector('.stat-row-hp')
-            || !slotEl.querySelector('.stat-row-energy');
+            || slotEl.dataset.renderMode !== currentLineupDisplayMode
+            || (isAvatarOnlyMode
+                ? !slotEl.querySelector('.spirit-thumb')
+                : !slotEl.querySelector('.spirit-name')
+                    || !slotEl.querySelector('.stat-row-hp')
+                    || !slotEl.querySelector('.stat-row-energy'));
 
         slotEl.className = `spirit-slot${isDone ? ' is-done' : ''}`;
+        slotEl.dataset.renderMode = currentLineupDisplayMode;
+
+        if (isAvatarOnlyMode) {
+            if (shouldRebuild) {
+                slotEl.innerHTML = '';
+                slotEl.dataset.spriteKey = spriteKey;
+
+                if (spiritPath) {
+                    const thumb = document.createElement('img');
+                    thumb.className = 'spirit-thumb';
+                    thumb.src = spiritPath;
+                    thumb.alt = spiritName;
+                    slotEl.append(thumb);
+                }
+                return;
+            }
+
+            const thumb = slotEl.querySelector('.spirit-thumb');
+            if (thumb && spiritPath && thumb.src !== spiritPath) {
+                thumb.src = spiritPath;
+                thumb.alt = spiritName;
+            }
+            return;
+        }
 
         const hpLabel = isDone ? '/' : healthMeta.label;
         const energyFill = isDone ? 100 : Math.round((energyValue / 10) * 100);
@@ -351,6 +387,7 @@
             }
 
             const slotData = selected[index] || null;
+            state.selected[index] = slotData;
             const nextSignature = getSlotSignature(slotData);
             if (state.signature[index] === nextSignature) {
                 return;
@@ -398,6 +435,7 @@
 
     function renderScoreboard(scoreboard) {
         const data = scoreboard || {};
+        const nextLineupDisplayMode = normalizeLineupDisplayMode(data.page2LineupDisplayMode);
         const nextSignature = JSON.stringify({
             leftName: data.leftName || '',
             leftScore: data.leftScore || '0',
@@ -406,14 +444,18 @@
             bestOf: normalizeBestOf(data.bestOf),
             scoreboardEnabled: data.scoreboardEnabled !== false,
             eventTitle: data.eventTitle || DEFAULT_EVENT_TITLE,
-            eventTitleEnabled: data.eventTitleEnabled !== false
+            eventTitleEnabled: data.eventTitleEnabled !== false,
+            page2LineupDisplayMode: nextLineupDisplayMode
         });
 
         if (scoreboardSignature === nextSignature) {
             return;
         }
 
+        const lineupDisplayModeChanged = currentLineupDisplayMode !== nextLineupDisplayMode;
+        currentLineupDisplayMode = nextLineupDisplayMode;
         scoreboardSignature = nextSignature;
+        document.body.dataset.page2LineupDisplayMode = currentLineupDisplayMode;
 
         document.getElementById('leftPlayerName').textContent = data.leftName || '';
         document.getElementById('rightPlayerName').textContent = data.rightName || '';
@@ -435,13 +477,18 @@
         );
 
         document.body.classList.toggle('scoreboard-disabled', data.scoreboardEnabled === false);
+
+        if (lineupDisplayModeChanged) {
+            renderPanel('left', { selected: panelStates.left.selected });
+            renderPanel('right', { selected: panelStates.right.selected });
+        }
     }
 
     function applySnapshot(payload) {
         const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
+        renderScoreboard(payload ? payload.scoreboard : null);
         renderPanel('left', panels.find(panel => panel && panel.position === 'left'));
         renderPanel('right', panels.find(panel => panel && panel.position === 'right'));
-        renderScoreboard(payload ? payload.scoreboard : null);
     }
 
     async function loadSpiritIndex() {

@@ -197,6 +197,38 @@ body {
         linear-gradient(135deg, transparent 0 47%, rgba(255, 255, 255, 0.04) 47% 53%, transparent 53% 100%);
 }
 
+body[data-page2-lineup-display-mode="avatar-only"] .lineup-panel {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+
+body[data-page2-lineup-display-mode="avatar-only"] .spirit-slot {
+    position: relative;
+    left: auto !important;
+    top: auto !important;
+    width: 98px;
+    height: 156px;
+}
+
+body[data-page2-lineup-display-mode="avatar-only"] .spirit-slot::before {
+    background:
+        linear-gradient(90deg, rgb(134 134 134 / 80%) 0%, rgb(134 134 134 / 0%) 100%) top left / 100% 1px no-repeat,
+        linear-gradient(90deg, rgb(134 134 134 / 80%) 0%, rgb(134 134 134 / 0%) 100%) bottom left / 100% 1px no-repeat,
+        linear-gradient(180deg, rgb(134 134 134 / 80%) 0%, rgb(134 134 134 / 0%) 100%) top left / 1px 100% no-repeat,
+        linear-gradient(180deg, rgb(134 134 134 / 80%) 0%, rgb(134 134 134 / 0%) 100%) top right / 1px 100% no-repeat;
+    -webkit-mask:
+        repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 16px) top left / 100% 1px no-repeat,
+        repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 16px) bottom left / 100% 1px no-repeat,
+        repeating-linear-gradient(180deg, #000 0 8px, transparent 8px 16px) top left / 1px 100% no-repeat,
+        repeating-linear-gradient(180deg, #000 0 8px, transparent 8px 16px) top right / 1px 100% no-repeat;
+    mask:
+        repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 16px) top left / 100% 1px no-repeat,
+        repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 16px) bottom left / 100% 1px no-repeat,
+        repeating-linear-gradient(180deg, #000 0 8px, transparent 8px 16px) top left / 1px 100% no-repeat,
+        repeating-linear-gradient(180deg, #000 0 8px, transparent 8px 16px) top right / 1px 100% no-repeat;
+}
+
 .spirit-thumb {
     position: absolute;
     left: -1px;
@@ -204,6 +236,15 @@ body {
     width: 78px;
     height: 78px;
     object-fit: cover;
+}
+
+body[data-page2-lineup-display-mode="avatar-only"] .spirit-thumb {
+    left: 50%;
+    top: 50%;
+    width: 98px;
+    height: 98px;
+    object-fit: contain;
+    transform: translate(-50%, -50%);
 }
 
 .spirit-slot.is-done .spirit-thumb {

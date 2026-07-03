@@ -61,6 +61,10 @@ function normalizeFontSize(value: unknown, defaultValue = 64, minimum = 12, maxi
   return Math.min(maximum, Math.max(minimum, size));
 }
 
+function normalizePage2LineupDisplayMode(value: unknown): 'default' | 'avatar-only' {
+  return value === 'avatar-only' ? 'avatar-only' : 'default';
+}
+
 function normalizeBool(value: unknown, defaultValue = true): boolean {
   if (typeof value === 'boolean') {
     return value;
@@ -117,6 +121,7 @@ function defaultScoreboardState(): ScoreboardState {
     abilityBadgeEnabled: true,
     eventTitle: DEFAULT_EVENT_TITLE,
     eventTitleEnabled: true,
+    page2LineupDisplayMode: 'default',
     nameFontSize: 64,
     scoreFontSize: 64,
     centerAreaEnabled: true,
@@ -217,6 +222,7 @@ export function getScoreboardState(paths: AppPaths): ScoreboardState {
       abilityBadgeEnabled: normalizeBool(metadata.abilityBadgeEnabled, true),
       eventTitle: normalizeScoreboardText(metadata.eventTitle ?? DEFAULT_EVENT_TITLE, 40),
       eventTitleEnabled: normalizeBool(metadata.eventTitleEnabled, true),
+      page2LineupDisplayMode: normalizePage2LineupDisplayMode(metadata.page2LineupDisplayMode),
       nameFontSize: normalizeFontSize(metadata.nameFontSize, 64),
       scoreFontSize: normalizeFontSize(metadata.scoreFontSize, 64),
       centerAreaEnabled: normalizeBool(metadata.centerAreaEnabled, true),
@@ -247,6 +253,7 @@ export function saveScoreboardState(paths: AppPaths, payload: unknown): Scoreboa
     abilityBadgeEnabled: normalizeBool(raw.abilityBadgeEnabled, true),
     eventTitle: normalizeScoreboardText(raw.eventTitle ?? DEFAULT_EVENT_TITLE, 40),
     eventTitleEnabled: normalizeBool(raw.eventTitleEnabled, true),
+    page2LineupDisplayMode: normalizePage2LineupDisplayMode(raw.page2LineupDisplayMode),
     nameFontSize: normalizeFontSize(raw.nameFontSize, 64),
     scoreFontSize: normalizeFontSize(raw.scoreFontSize, 64),
     centerAreaEnabled: normalizeBool(raw.centerAreaEnabled, true),
