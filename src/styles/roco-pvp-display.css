@@ -10,12 +10,12 @@
     padding: 0;
 }
 
-body {
+html, body {
     min-height: 100vh;
     display: grid;
     place-items: center;
     overflow: hidden;
-    background: #595959;
+    background: transparent !important;
     color: #fff;
     font-family: "Microsoft YaHei", sans-serif;
 }
@@ -25,25 +25,14 @@ body {
     width: 1920px;
     height: 1080px;
     overflow: hidden;
-    background: #fff;
+     background: transparent !important;
 }
 
 .pvp-background {
     position: absolute;
     inset: 0;
-    background: url('/assets/ui/back2.png') no-repeat;
+    background: transparent !important;
     background-size: 1920px 1080px;
-}
-
-.pvp-background::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(circle at 50% 58%, rgba(255, 212, 94, 0.28), transparent 13%),
-        radial-gradient(circle at 18% 56%, rgba(67, 41, 28, 0.34), transparent 16%),
-        radial-gradient(circle at 80% 51%, rgba(62, 38, 22, 0.24), transparent 14%),
-        linear-gradient(180deg, transparent 0 74%, rgba(0, 0, 0, 0.08) 74% 100%);
 }
 
 .lineup-bar {
