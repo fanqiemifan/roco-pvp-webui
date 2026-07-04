@@ -15,3 +15,6 @@ docs/同步部署docker命令.md
 docs/新的设计.md
 docs/
 代码参考/
+src/pages/match-result.html
+/图片清洗
+.DS_Store
