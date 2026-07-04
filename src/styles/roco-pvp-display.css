@@ -10,12 +10,12 @@
     padding: 0;
 }
 
-body {
+html, body {
     min-height: 100vh;
     display: grid;
     place-items: center;
     overflow: hidden;
-    background: #595959;
+    background: transparent !important;
     color: #fff;
     font-family: "Microsoft YaHei", sans-serif;
 }
@@ -25,25 +25,14 @@ body {
     width: 1920px;
     height: 1080px;
     overflow: hidden;
-    background: #fff;
+    background: transparent !important;
 }
 
 .pvp-background {
     position: absolute;
     inset: 0;
-    background: url('/assets/ui/back2.png') no-repeat;
+    background: transparent !important;
     background-size: 1920px 1080px;
-}
-
-.pvp-background::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(circle at 50% 58%, rgba(255, 212, 94, 0.28), transparent 13%),
-        radial-gradient(circle at 18% 56%, rgba(67, 41, 28, 0.34), transparent 16%),
-        radial-gradient(circle at 80% 51%, rgba(62, 38, 22, 0.24), transparent 14%),
-        linear-gradient(180deg, transparent 0 74%, rgba(0, 0, 0, 0.08) 74% 100%);
 }
 
 .lineup-bar {
@@ -197,6 +186,38 @@ body {
         linear-gradient(135deg, transparent 0 47%, rgba(255, 255, 255, 0.04) 47% 53%, transparent 53% 100%);
 }
 
+body[data-page2-lineup-display-mode="avatar-only"] .lineup-panel {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+
+body[data-page2-lineup-display-mode="avatar-only"] .spirit-slot {
+    position: relative;
+    left: auto !important;
+    top: auto !important;
+    width: 98px;
+    height: 156px;
+}
+
+body[data-page2-lineup-display-mode="avatar-only"] .spirit-slot::before {
+    background:
+        linear-gradient(90deg, rgb(134 134 134 / 80%) 0%, rgb(134 134 134 / 0%) 100%) top left / 100% 1px no-repeat,
+        linear-gradient(90deg, rgb(134 134 134 / 80%) 0%, rgb(134 134 134 / 0%) 100%) bottom left / 100% 1px no-repeat,
+        linear-gradient(180deg, rgb(134 134 134 / 80%) 0%, rgb(134 134 134 / 0%) 100%) top left / 1px 100% no-repeat,
+        linear-gradient(180deg, rgb(134 134 134 / 80%) 0%, rgb(134 134 134 / 0%) 100%) top right / 1px 100% no-repeat;
+    -webkit-mask:
+        repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 16px) top left / 100% 1px no-repeat,
+        repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 16px) bottom left / 100% 1px no-repeat,
+        repeating-linear-gradient(180deg, #000 0 8px, transparent 8px 16px) top left / 1px 100% no-repeat,
+        repeating-linear-gradient(180deg, #000 0 8px, transparent 8px 16px) top right / 1px 100% no-repeat;
+    mask:
+        repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 16px) top left / 100% 1px no-repeat,
+        repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 16px) bottom left / 100% 1px no-repeat,
+        repeating-linear-gradient(180deg, #000 0 8px, transparent 8px 16px) top left / 1px 100% no-repeat,
+        repeating-linear-gradient(180deg, #000 0 8px, transparent 8px 16px) top right / 1px 100% no-repeat;
+}
+
 .spirit-thumb {
     position: absolute;
     left: -1px;
@@ -204,6 +225,15 @@ body {
     width: 78px;
     height: 78px;
     object-fit: cover;
+}
+
+body[data-page2-lineup-display-mode="avatar-only"] .spirit-thumb {
+    left: 50%;
+    top: 50%;
+    width: 98px;
+    height: 98px;
+    object-fit: contain;
+    transform: translate(-50%, -50%);
 }
 
 .spirit-slot.is-done .spirit-thumb {

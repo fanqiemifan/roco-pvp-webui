@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 
-import { clipboard, dialog, ipcMain, shell, type BrowserWindow } from 'electron';
+import { BrowserWindow, clipboard, dialog, ipcMain, shell, type OpenDialogOptions, type SaveDialogOptions } from 'electron';
 
-export function registerWindowIpc(window: BrowserWindow): void {
+export function registerWindowIpc(): void {
   ipcMain.removeHandler('roco:copy-text');
   ipcMain.handle('roco:copy-text', async (_event, text: string) => {
     clipboard.writeText(String(text ?? ''));
@@ -10,20 +10,28 @@ export function registerWindowIpc(window: BrowserWindow): void {
   });
 
   ipcMain.removeHandler('roco:show-open-dialog');
-  ipcMain.handle('roco:show-open-dialog', async () => {
-    const result = await dialog.showOpenDialog(window, {
+  ipcMain.handle('roco:show-open-dialog', async (event) => {
+    const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+    const dialogOptions: OpenDialogOptions = {
       properties: ['openFile'],
       filters: [{ name: 'JSON Files', extensions: ['json'] }],
-    });
+    };
+    const result = ownerWindow
+      ? await dialog.showOpenDialog(ownerWindow, dialogOptions)
+      : await dialog.showOpenDialog(dialogOptions);
     return result.canceled ? null : result.filePaths[0] ?? null;
   });
 
   ipcMain.removeHandler('roco:show-save-dialog');
-  ipcMain.handle('roco:show-save-dialog', async () => {
-    const result = await dialog.showSaveDialog(window, {
+  ipcMain.handle('roco:show-save-dialog', async (event) => {
+    const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+    const dialogOptions: SaveDialogOptions = {
       defaultPath: 'roco-live-config.json',
       filters: [{ name: 'JSON Files', extensions: ['json'] }],
-    });
+    };
+    const result = ownerWindow
+      ? await dialog.showSaveDialog(ownerWindow, dialogOptions)
+      : await dialog.showSaveDialog(dialogOptions);
     return result.canceled ? null : result.filePath ?? null;
   });
 

@@ -61,13 +61,14 @@
             width: min(1880px, 100%);
             min-height: calc(100vh - 32px);
             margin: 0 auto;
-            overflow: hidden;
+            overflow: visible;
             border: 1px solid rgba(121, 86, 54, 0.15);
             background: rgba(255, 249, 240, 0.58);
             backdrop-filter: blur(24px);
             box-shadow: var(--shadow);
             display: grid;
             grid-template-columns: 300px minmax(0, 1fr);
+            align-items: start;
             position: relative;
         }
 
@@ -80,7 +81,8 @@
         }
 
         .sidebar {
-            position: relative;
+            position: sticky;
+            top: 0px;
             z-index: 1;
             display: flex;
             flex-direction: column;
@@ -88,7 +90,10 @@
             padding: 26px 22px;
             border-right: 1px solid var(--line);
             background: linear-gradient(180deg, rgba(255, 248, 238, 0.94), rgba(247, 240, 230, 0.84));
-            min-height: 0;
+            align-self: start;
+            min-height: calc(100vh - 32px);
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
         }
 
         .window-dots {
@@ -1040,8 +1045,13 @@
             }
 
             .sidebar {
+                position: relative;
+                top: auto;
                 border-right: 0;
                 border-bottom: 1px solid var(--line);
+                min-height: auto;
+                max-height: none;
+                overflow: visible;
             }
 
             .content-shell {
@@ -1466,6 +1476,13 @@
                                     <label for="eventTitleInput">页面2赛事标题</label>
                                     <input type="text" id="eventTitleInput" maxlength="40" placeholder="例如：S2洛克联赛">
                                 </div>
+                                <div class="form-row">
+                                    <label for="page2LineupDisplayModeInput">推流页面2阵容展示</label>
+                                    <select id="page2LineupDisplayModeInput">
+                                        <option value="default">默认血量展示</option>
+                                        <option value="avatar-only">仅头像展示</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="scoreboard-card">
                                 <h3>字体大小</h3>
@@ -1611,6 +1628,7 @@
                 abilityBadgeEnabled: true,
                 eventTitle: 'S2洛克联赛',
                 eventTitleEnabled: true,
+                page2LineupDisplayMode: 'default',
                 nameFontSize: 64,
                 scoreFontSize: 64,
                 centerAreaEnabled: true,
@@ -1741,6 +1759,7 @@
             document.getElementById('abilityBadgeEnabledInput').checked = state.scoreboard.abilityBadgeEnabled !== false;
             document.getElementById('eventTitleInput').value = state.scoreboard.eventTitle || 'S2洛克联赛';
             document.getElementById('eventTitleEnabledInput').checked = state.scoreboard.eventTitleEnabled !== false;
+            document.getElementById('page2LineupDisplayModeInput').value = state.scoreboard.page2LineupDisplayMode || 'default';
             document.getElementById('nameFontSizeInput').value = state.scoreboard.nameFontSize || 64;
             document.getElementById('scoreFontSizeInput').value = state.scoreboard.scoreFontSize || 64;
             document.getElementById('centerAreaEnabledInput').checked = state.scoreboard.centerAreaEnabled !== false;
@@ -1761,6 +1780,7 @@
                 abilityBadgeEnabled: scoreboard ? scoreboard.abilityBadgeEnabled !== false : true,
                 eventTitle: scoreboard && scoreboard.eventTitle ? scoreboard.eventTitle : 'S2洛克联赛',
                 eventTitleEnabled: scoreboard ? scoreboard.eventTitleEnabled !== false : true,
+                page2LineupDisplayMode: scoreboard && scoreboard.page2LineupDisplayMode === 'avatar-only' ? 'avatar-only' : 'default',
                 nameFontSize: scoreboard && scoreboard.nameFontSize ? scoreboard.nameFontSize : 64,
                 scoreFontSize: scoreboard && scoreboard.scoreFontSize ? scoreboard.scoreFontSize : 64,
                 centerAreaEnabled: scoreboard ? scoreboard.centerAreaEnabled !== false : true,
@@ -2665,6 +2685,7 @@
                 abilityBadgeEnabled: document.getElementById('abilityBadgeEnabledInput').checked,
                 eventTitle: document.getElementById('eventTitleInput').value,
                 eventTitleEnabled: document.getElementById('eventTitleEnabledInput').checked,
+                page2LineupDisplayMode: document.getElementById('page2LineupDisplayModeInput').value,
                 nameFontSize: document.getElementById('nameFontSizeInput').value,
                 scoreFontSize: document.getElementById('scoreFontSizeInput').value,
                 centerAreaEnabled: document.getElementById('centerAreaEnabledInput').checked,
