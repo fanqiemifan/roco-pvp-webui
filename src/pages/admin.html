@@ -1640,10 +1640,24 @@
         const autoSaveTimers = { left: null, right: null };
         const saveRequestVersions = { left: 0, right: 0 };
         const appliedSaveVersions = { left: 0, right: 0 };
+        const LIVE_CONTROL_WINDOW_NAME = 'roco-live-control-window';
         let socket = null;
+        let liveControlWindow = null;
 
         function getPreviewOrigin() {
             return `${window.location.protocol}//${window.location.host}`;
+        }
+
+        function openLiveControlWindow() {
+            if (liveControlWindow && !liveControlWindow.closed) {
+                liveControlWindow.focus();
+                return;
+            }
+
+            liveControlWindow = window.open('/live-control.html', LIVE_CONTROL_WINDOW_NAME, 'popup=yes,width=880,height=400');
+            if (liveControlWindow) {
+                liveControlWindow.focus();
+            }
         }
 
         function getLocalAddressText() {
@@ -2747,7 +2761,7 @@
             document.querySelectorAll('.nav-item').forEach(button => {
                 button.addEventListener('click', () => {
                     if (button.dataset.view === 'live') {
-                        window.open('/live-control.html', '_blank', 'noopener,noreferrer');
+                        openLiveControlWindow();
                         return;
                     }
                     state.currentView = button.dataset.view || 'roster';
