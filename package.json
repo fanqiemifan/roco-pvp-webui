@@ -13,13 +13,19 @@
     "package": "npm run build && electron-builder"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "express": "^4.21.2",
+    "express-session": "^1.19.0",
     "multer": "^1.4.5-lts.1",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.3",
+    "@types/express-session": "^1.19.0",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.0.13",
     "electron": "^36.4.0",
