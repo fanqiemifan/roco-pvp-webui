@@ -14,6 +14,7 @@ import { loadRuntimeConfig, saveRuntimeConfig } from './services/config-service.
 import {
   createMatch,
   deleteMatch,
+  deleteMatches,
   getMatchStore,
   recordMatchWinner,
   redoMatchAction,
@@ -21,6 +22,7 @@ import {
   setActiveMatch,
   startCurrentGame,
   syncActiveMatchLineupsFromPanels,
+  undoDeletedMatches,
   undoMatchAction,
   updateMatch,
 } from './services/match-service.js';
@@ -147,6 +149,34 @@ export async function createLocalServer(
     }
   });
 
+  app.post('/api/matches/history/delete', (request, response) => {
+    try {
+      const matches = deleteMatches(paths, request.body?.matchIds ?? []);
+      const scoreboard = getScoreboardState(paths);
+      const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
+      panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
+      response.json({ success: true, matches, scoreboard, panels });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/matches/history/undo-delete', (_request, response) => {
+    try {
+      const matches = undoDeletedMatches(paths);
+      const scoreboard = getScoreboardState(paths);
+      const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
+      panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
+      response.json({ success: true, matches, scoreboard, panels });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
   app.post('/api/matches/:matchId/select', (request, response) => {
     try {
       const matches = setActiveMatch(paths, request.params.matchId);
@@ -195,7 +225,7 @@ export async function createLocalServer(
 
   app.post('/api/matches/:matchId/undo', (_request, response) => {
     try {
-      const matches = undoMatchAction(paths);
+      const matches = undoMatchAction(paths, _request.params.matchId);
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
@@ -209,7 +239,7 @@ export async function createLocalServer(
 
   app.post('/api/matches/:matchId/redo', (_request, response) => {
     try {
-      const matches = redoMatchAction(paths);
+      const matches = redoMatchAction(paths, _request.params.matchId);
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });

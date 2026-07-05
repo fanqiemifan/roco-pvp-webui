@@ -13,22 +13,46 @@ import {
   clearPanelState,
   getPanelState,
   getScoreboardState,
-  savePanelState,
   saveScoreboardState,
 } from './state-service.js';
 
 const PLAYER_NAME_MAX_LENGTH = 32;
 const MAX_GAME_SLOTS = 6;
-const HISTORY_LIMIT = 50;
+const FLOW_HISTORY_LIMIT = 50;
+const DELETE_HISTORY_LIMIT = 3;
 
-interface MatchStoreSnapshot {
-  activeMatchId: string | null;
-  matches: MatchRecord[];
+interface MatchFlowSnapshot {
+  matchId: string;
+  bestOf: number;
+  games: GameRecord[];
+  status: MatchRecord['status'];
+  leftScore: number;
+  rightScore: number;
+  winner: MatchRecord['winner'];
+  completedAt: string | null;
 }
 
-interface MatchStoreFile extends MatchStoreSnapshot {
-  undoStack: MatchStoreSnapshot[];
-  redoStack: MatchStoreSnapshot[];
+interface MatchFlowHistory {
+  undoStack: MatchFlowSnapshot[];
+  redoStack: MatchFlowSnapshot[];
+}
+
+interface DeletedMatchEntry {
+  match: MatchRecord;
+  index: number;
+  flowHistory: MatchFlowHistory;
+}
+
+interface DeletedMatchBatch {
+  entries: DeletedMatchEntry[];
+  previousActiveMatchId: string | null;
+}
+
+interface MatchStoreFile {
+  activeMatchId: string | null;
+  matches: MatchRecord[];
+  flowHistory: Record<string, MatchFlowHistory>;
+  deletedHistory: DeletedMatchBatch[];
 }
 
 function cloneValue<T>(value: T): T {
@@ -214,25 +238,191 @@ function defaultStoreFile(): MatchStoreFile {
   return {
     activeMatchId: null,
     matches: [],
-    undoStack: [],
-    redoStack: [],
+    flowHistory: {},
+    deletedHistory: [],
   };
 }
 
-function snapshotOfStore(store: MatchStoreFile): MatchStoreSnapshot {
+function flowSnapshotFromMatch(match: MatchRecord): MatchFlowSnapshot {
   return {
-    activeMatchId: store.activeMatchId,
-    matches: cloneValue(store.matches),
+    matchId: match.id,
+    bestOf: match.bestOf,
+    games: cloneValue(match.games),
+    status: match.status,
+    leftScore: match.leftScore,
+    rightScore: match.rightScore,
+    winner: match.winner,
+    completedAt: match.completedAt,
+  };
+}
+
+function normalizeFlowSnapshot(snapshot: unknown, fallbackMatchId: string): MatchFlowSnapshot | null {
+  if (!snapshot || typeof snapshot !== 'object') {
+    return null;
+  }
+
+  const raw = snapshot as Record<string, unknown>;
+  const matchId = typeof raw.matchId === 'string' && raw.matchId.trim()
+    ? raw.matchId.trim()
+    : fallbackMatchId;
+  if (!matchId) {
+    return null;
+  }
+
+  const bestOf = normalizeBestOf(raw.bestOf);
+  const games = Array.isArray(raw.games) ? raw.games.map(normalizeGameRecord) : [];
+  const normalizedGames = games.length ? games : [createEmptyGameRecord(1)];
+  const normalized = computeMatchProgress({
+    id: matchId,
+    createdAt: '',
+    updatedAt: '',
+    status: raw.status === 'completed' || raw.status === 'in_progress' ? raw.status : 'pending',
+    leftPlayer: '',
+    rightPlayer: '',
+    bestOf,
+    games: normalizedGames,
+    leftScore: Number(raw.leftScore) || 0,
+    rightScore: Number(raw.rightScore) || 0,
+    winner: raw.winner === 'left' || raw.winner === 'right' ? raw.winner : null,
+    completedAt: raw.completedAt ? String(raw.completedAt) : null,
+  });
+
+  return {
+    matchId,
+    bestOf: normalized.bestOf,
+    games: cloneValue(normalized.games),
+    status: normalized.status,
+    leftScore: normalized.leftScore,
+    rightScore: normalized.rightScore,
+    winner: normalized.winner,
+    completedAt: normalized.completedAt,
+  };
+}
+
+function normalizeFlowHistoryEntry(value: unknown, matchId: string): MatchFlowHistory {
+  if (!value || typeof value !== 'object') {
+    return { undoStack: [], redoStack: [] };
+  }
+
+  const raw = value as Record<string, unknown>;
+  const normalizeStack = (stack: unknown): MatchFlowSnapshot[] => {
+    if (!Array.isArray(stack)) {
+      return [];
+    }
+
+    return stack
+      .map((item) => normalizeFlowSnapshot(item, matchId))
+      .filter((item): item is MatchFlowSnapshot => Boolean(item));
+  };
+
+  return {
+    undoStack: normalizeStack(raw.undoStack),
+    redoStack: normalizeStack(raw.redoStack),
+  };
+}
+
+function normalizeFlowHistoryMap(value: unknown): Record<string, MatchFlowHistory> {
+  if (!value || typeof value !== 'object') {
+    return {};
+  }
+
+  const raw = value as Record<string, unknown>;
+  const normalizedEntries = Object.entries(raw)
+    .map(([matchId, history]) => [matchId, normalizeFlowHistoryEntry(history, matchId)] as const)
+    .filter(([matchId]) => Boolean(matchId.trim()));
+
+  return Object.fromEntries(normalizedEntries);
+}
+
+function normalizeDeletedHistory(value: unknown): DeletedMatchBatch[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+
+      const raw = item as Record<string, unknown>;
+      const entries = Array.isArray(raw.entries)
+        ? raw.entries.map((entry) => {
+          if (!entry || typeof entry !== 'object') {
+            return null;
+          }
+
+          const source = entry as Record<string, unknown>;
+          const match = normalizeMatchRecord(source.match);
+          if (!match) {
+            return null;
+          }
+
+          return {
+            match,
+            index: Number.isFinite(Number(source.index)) ? Math.max(0, Number(source.index)) : 0,
+            flowHistory: normalizeFlowHistoryEntry(source.flowHistory, match.id),
+          } satisfies DeletedMatchEntry;
+        }).filter((entry): entry is DeletedMatchEntry => Boolean(entry))
+        : [];
+
+      if (!entries.length) {
+        return null;
+      }
+
+      return {
+        entries,
+        previousActiveMatchId: typeof raw.previousActiveMatchId === 'string' ? raw.previousActiveMatchId : null,
+      } satisfies DeletedMatchBatch;
+    })
+    .filter((item): item is DeletedMatchBatch => Boolean(item))
+    .slice(-DELETE_HISTORY_LIMIT);
+}
+
+function ensureFlowHistory(store: MatchStoreFile, matchId: string): MatchFlowHistory {
+  if (!store.flowHistory[matchId]) {
+    store.flowHistory[matchId] = {
+      undoStack: [],
+      redoStack: [],
+    };
+  }
+
+  return store.flowHistory[matchId];
+}
+
+function pushMatchFlowUndo(store: MatchStoreFile, match: MatchRecord): void {
+  const history = ensureFlowHistory(store, match.id);
+  history.undoStack.push(flowSnapshotFromMatch(match));
+  if (history.undoStack.length > FLOW_HISTORY_LIMIT) {
+    history.undoStack = history.undoStack.slice(history.undoStack.length - FLOW_HISTORY_LIMIT);
+  }
+  history.redoStack = [];
+}
+
+function applyFlowSnapshot(match: MatchRecord, snapshot: MatchFlowSnapshot): MatchRecord {
+  return {
+    ...match,
+    bestOf: snapshot.bestOf,
+    games: cloneValue(snapshot.games),
+    status: snapshot.status,
+    leftScore: snapshot.leftScore,
+    rightScore: snapshot.rightScore,
+    winner: snapshot.winner,
+    completedAt: snapshot.completedAt,
+    updatedAt: new Date().toISOString(),
   };
 }
 
 function toPublicStore(store: MatchStoreFile, mtime: number | null): MatchStoreState {
+  const activeHistory = store.activeMatchId ? store.flowHistory[store.activeMatchId] : null;
   return {
     activeMatchId: store.activeMatchId,
     matches: store.matches,
     history: {
-      canUndo: store.undoStack.length > 0,
-      canRedo: store.redoStack.length > 0,
+      canUndo: Boolean(activeHistory && activeHistory.undoStack.length > 0),
+      canRedo: Boolean(activeHistory && activeHistory.redoStack.length > 0),
+      canUndoDelete: store.deletedHistory.length > 0,
+      deleteUndoCount: store.deletedHistory.length,
     },
     mtime,
   };
@@ -252,31 +442,14 @@ function readStoreFile(paths: AppPaths): { store: MatchStoreFile; mtime: number 
     const activeMatchId = typeof raw.activeMatchId === 'string' && raw.activeMatchId.trim()
       ? raw.activeMatchId.trim()
       : null;
-    const normalizeSnapshotArray = (value: unknown): MatchStoreSnapshot[] => {
-      if (!Array.isArray(value)) {
-        return [];
-      }
-      return value.map((snapshot) => {
-        const source = snapshot && typeof snapshot === 'object'
-          ? (snapshot as Record<string, unknown>)
-          : {};
-        const snapshotMatches = Array.isArray(source.matches)
-          ? source.matches.map(normalizeMatchRecord).filter((match): match is MatchRecord => Boolean(match && match.id))
-          : [];
-        return {
-          activeMatchId: typeof source.activeMatchId === 'string' ? source.activeMatchId : null,
-          matches: snapshotMatches,
-        };
-      });
-    };
 
     return {
       mtime: stat.mtimeMs,
       store: {
         activeMatchId: activeMatchId && matches.some((match) => match.id === activeMatchId) ? activeMatchId : null,
         matches,
-        undoStack: normalizeSnapshotArray(raw.undoStack),
-        redoStack: normalizeSnapshotArray(raw.redoStack),
+        flowHistory: normalizeFlowHistoryMap(raw.flowHistory),
+        deletedHistory: normalizeDeletedHistory(raw.deletedHistory),
       },
     };
   } catch {
@@ -288,14 +461,6 @@ function writeStoreFile(paths: AppPaths, store: MatchStoreFile): MatchStoreState
   ensureRuntimeDirs(paths);
   fs.writeFileSync(paths.matchesFile, JSON.stringify(store, null, 2), 'utf-8');
   return getMatchStore(paths);
-}
-
-function pushUndoState(store: MatchStoreFile): void {
-  store.undoStack.push(snapshotOfStore(store));
-  if (store.undoStack.length > HISTORY_LIMIT) {
-    store.undoStack = store.undoStack.slice(store.undoStack.length - HISTORY_LIMIT);
-  }
-  store.redoStack = [];
 }
 
 function restorePanelFromSlots(paths: AppPaths, position: 'left' | 'right', slots: MatchSlotSnapshot[]): void {
@@ -418,26 +583,6 @@ function parseSelectedSlots(selectedSlots: unknown): MatchSlotSnapshot[] {
   return nextSlots;
 }
 
-function validateUndoRedoBestOf(currentMatch: MatchRecord | undefined, targetMatch: MatchRecord | undefined): void {
-  if (!currentMatch || !targetMatch) {
-    return;
-  }
-
-  const enteredSecondGame = currentMatch.games.length > 1;
-  if (enteredSecondGame && currentMatch.bestOf !== targetMatch.bestOf) {
-    throw new Error('已经进入第二个回合，不能通过撤回修改 BO 赛制');
-  }
-}
-
-function pruneBestOfHistory(store: MatchStoreFile, matchId: string, bestOf: number): void {
-  const keepSnapshot = (snapshot: MatchStoreSnapshot): boolean => {
-    const targetMatch = snapshot.matches.find((match) => match.id === matchId);
-    return !targetMatch || targetMatch.bestOf === bestOf;
-  };
-
-  store.undoStack = store.undoStack.filter(keepSnapshot);
-  store.redoStack = store.redoStack.filter(keepSnapshot);
-}
 
 export function getMatchStore(paths: AppPaths): MatchStoreState {
   const { store, mtime } = readStoreFile(paths);
@@ -459,7 +604,6 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
   }
 
   const { store } = readStoreFile(paths);
-  pushUndoState(store);
 
   const datePrefix = getDatePrefix();
   const sameDayIds = store.matches
@@ -527,7 +671,9 @@ export function updateMatch(paths: AppPaths, matchId: string, payload: unknown):
     throw new Error('当前比分已经超过新赛制可容纳的胜局数');
   }
 
-  pushUndoState(store);
+  if (raw.bestOf !== undefined && nextBestOf !== current.bestOf) {
+    pushMatchFlowUndo(store, current);
+  }
   store.matches[index] = computeMatchProgress({
     ...current,
     leftPlayer,
@@ -555,18 +701,85 @@ export function setActiveMatch(paths: AppPaths, matchId: string): MatchStoreStat
 }
 
 export function deleteMatch(paths: AppPaths, matchId: string): MatchStoreState {
+  return deleteMatches(paths, [matchId]);
+}
+
+export function deleteMatches(paths: AppPaths, matchIds: unknown): MatchStoreState {
+  if (!Array.isArray(matchIds)) {
+    throw new Error('matchIds must be a list');
+  }
+
   const { store } = readStoreFile(paths);
-  const index = store.matches.findIndex((match) => match.id === matchId);
-  if (index === -1) {
+  const uniqueMatchIds = Array.from(new Set(
+    matchIds
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean),
+  ));
+  if (!uniqueMatchIds.length) {
+    throw new Error('请选择至少一条赛事记录');
+  }
+
+  const matchIdSet = new Set(uniqueMatchIds);
+  const entries = store.matches
+    .map((match, index) => ({ match, index }))
+    .filter(({ match }) => matchIdSet.has(match.id))
+    .map(({ match, index }) => ({
+      match: cloneValue(match),
+      index,
+      flowHistory: cloneValue(store.flowHistory[match.id] ?? { undoStack: [], redoStack: [] }),
+    }));
+
+  if (!entries.length) {
     throw new Error('比赛不存在');
   }
 
-  pushUndoState(store);
-  store.matches.splice(index, 1);
+  store.deletedHistory.push({
+    entries,
+    previousActiveMatchId: store.activeMatchId,
+  });
+  if (store.deletedHistory.length > DELETE_HISTORY_LIMIT) {
+    store.deletedHistory = store.deletedHistory.slice(store.deletedHistory.length - DELETE_HISTORY_LIMIT);
+  }
 
-  if (store.activeMatchId === matchId) {
+  store.matches = store.matches.filter((match) => !matchIdSet.has(match.id));
+  uniqueMatchIds.forEach((id) => {
+    delete store.flowHistory[id];
+  });
+
+  if (store.activeMatchId && matchIdSet.has(store.activeMatchId)) {
     store.activeMatchId = store.matches[0]?.id ?? null;
   } else if (store.activeMatchId && !store.matches.some((match) => match.id === store.activeMatchId)) {
+    store.activeMatchId = store.matches[0]?.id ?? null;
+  }
+
+  const publicStore = writeStoreFile(paths, store);
+  syncAfterStoreChange(paths, publicStore);
+  return getMatchStore(paths);
+}
+
+export function undoDeletedMatches(paths: AppPaths): MatchStoreState {
+  const { store } = readStoreFile(paths);
+  const batch = store.deletedHistory[store.deletedHistory.length - 1];
+  if (!batch) {
+    throw new Error('没有可撤回的删除记录');
+  }
+
+  store.deletedHistory = store.deletedHistory.slice(0, -1);
+  const restoredEntries = [...batch.entries].sort((left, right) => left.index - right.index);
+  const nextMatches = [...store.matches];
+
+  restoredEntries.forEach((entry) => {
+    nextMatches.splice(Math.min(entry.index, nextMatches.length), 0, cloneValue(entry.match));
+    store.flowHistory[entry.match.id] = cloneValue(entry.flowHistory);
+  });
+
+  store.matches = nextMatches;
+  if (
+    batch.previousActiveMatchId
+    && store.matches.some((match) => match.id === batch.previousActiveMatchId)
+  ) {
+    store.activeMatchId = batch.previousActiveMatchId;
+  } else if (!store.activeMatchId) {
     store.activeMatchId = store.matches[0]?.id ?? null;
   }
 
@@ -634,7 +847,7 @@ export function startCurrentGame(paths: AppPaths, matchId: string): MatchStoreSt
     throw new Error('请先为双方选择阵容，再开始本局');
   }
 
-  pushUndoState(store);
+  pushMatchFlowUndo(store, current);
   const nextGames = [...current.games];
   nextGames[pendingGameIndex] = {
     ...pendingGame,
@@ -673,7 +886,7 @@ export function recordMatchWinner(
     throw new Error('请先开始当前小局，再记录胜负');
   }
 
-  pushUndoState(store);
+  pushMatchFlowUndo(store, current);
   const completedGame = {
     ...current.games[inProgressGameIndex],
     winner,
@@ -694,9 +907,6 @@ export function recordMatchWinner(
       games: [...nextGames, createEmptyGameRecord(nextGames.length + 1)],
       updatedAt: new Date().toISOString(),
     };
-    if (nextMatch.games.length > 1) {
-      pruneBestOfHistory(store, nextMatch.id, nextMatch.bestOf);
-    }
   }
 
   store.matches[index] = nextMatch;
@@ -705,44 +915,46 @@ export function recordMatchWinner(
   return getMatchStore(paths);
 }
 
-export function undoMatchAction(paths: AppPaths): MatchStoreState {
+export function undoMatchAction(paths: AppPaths, matchId: string): MatchStoreState {
   const { store } = readStoreFile(paths);
-  const previousSnapshot = store.undoStack[store.undoStack.length - 1];
+  const history = ensureFlowHistory(store, matchId);
+  const previousSnapshot = history.undoStack[history.undoStack.length - 1];
   if (!previousSnapshot) {
     throw new Error('没有可撤回的操作');
   }
 
-  const currentMatch = store.matches.find((match) => match.id === store.activeMatchId);
-  const previousMatch = previousSnapshot.matches.find((match) => match.id === previousSnapshot.activeMatchId);
-  validateUndoRedoBestOf(currentMatch, previousMatch);
+  const matchIndex = store.matches.findIndex((match) => match.id === matchId);
+  if (matchIndex === -1) {
+    throw new Error('比赛不存在');
+  }
 
-  const currentSnapshot = snapshotOfStore(store);
-  store.undoStack = store.undoStack.slice(0, -1);
-  store.redoStack.push(currentSnapshot);
-  store.activeMatchId = previousSnapshot.activeMatchId;
-  store.matches = cloneValue(previousSnapshot.matches);
+  const currentMatch = store.matches[matchIndex];
+  history.undoStack = history.undoStack.slice(0, -1);
+  history.redoStack.push(flowSnapshotFromMatch(currentMatch));
+  store.matches[matchIndex] = applyFlowSnapshot(currentMatch, previousSnapshot);
 
   const publicStore = writeStoreFile(paths, store);
   syncAfterStoreChange(paths, publicStore);
   return getMatchStore(paths);
 }
 
-export function redoMatchAction(paths: AppPaths): MatchStoreState {
+export function redoMatchAction(paths: AppPaths, matchId: string): MatchStoreState {
   const { store } = readStoreFile(paths);
-  const nextSnapshot = store.redoStack[store.redoStack.length - 1];
+  const history = ensureFlowHistory(store, matchId);
+  const nextSnapshot = history.redoStack[history.redoStack.length - 1];
   if (!nextSnapshot) {
     throw new Error('没有可取消撤回的操作');
   }
 
-  const currentMatch = store.matches.find((match) => match.id === store.activeMatchId);
-  const nextMatch = nextSnapshot.matches.find((match) => match.id === nextSnapshot.activeMatchId);
-  validateUndoRedoBestOf(currentMatch, nextMatch);
+  const matchIndex = store.matches.findIndex((match) => match.id === matchId);
+  if (matchIndex === -1) {
+    throw new Error('比赛不存在');
+  }
 
-  const currentSnapshot = snapshotOfStore(store);
-  store.redoStack = store.redoStack.slice(0, -1);
-  store.undoStack.push(currentSnapshot);
-  store.activeMatchId = nextSnapshot.activeMatchId;
-  store.matches = cloneValue(nextSnapshot.matches);
+  const currentMatch = store.matches[matchIndex];
+  history.redoStack = history.redoStack.slice(0, -1);
+  history.undoStack.push(flowSnapshotFromMatch(currentMatch));
+  store.matches[matchIndex] = applyFlowSnapshot(currentMatch, nextSnapshot);
 
   const publicStore = writeStoreFile(paths, store);
   syncAfterStoreChange(paths, publicStore);

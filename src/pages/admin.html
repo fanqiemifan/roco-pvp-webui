@@ -1162,6 +1162,13 @@
             flex-wrap: nowrap;
         }
 
+        .history-toolbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         .match-history-action-btn {
             border: 1px solid rgba(109, 79, 54, 0.12);
             border-radius: 999px;
@@ -1178,6 +1185,12 @@
             background: rgba(255, 240, 224, 0.98);
             border-color: rgba(199, 99, 47, 0.26);
             transform: translateY(-1px);
+        }
+
+        .match-history-action-btn.selected {
+            background: rgba(199, 99, 47, 0.14);
+            border-color: rgba(199, 99, 47, 0.28);
+            color: var(--accent-deep);
         }
 
         .match-history-action-btn.danger {
@@ -2029,6 +2042,10 @@
                                 <p>独立查看每场系列赛的比分、赛制，以及每一局对应的左右阵容快照。</p>
                             </div>
                             <div class="panel-header-right">
+                                <div class="history-toolbar-actions">
+                                    <button class="btn btn-danger" type="button" id="deleteSelectedHistoryBtn">删除选中赛事</button>
+                                    <button class="btn btn-secondary" type="button" id="undoDeletedHistoryBtn">撤回最近删除</button>
+                                </div>
                                 <div class="status" id="historyStatus"></div>
                             </div>
                         </div>
@@ -2251,12 +2268,15 @@
                 matches: [],
                 history: {
                     canUndo: false,
-                    canRedo: false
+                    canRedo: false,
+                    canUndoDelete: false,
+                    deleteUndoCount: 0
                 },
                 mtime: null
             },
             historyUi: {
-                expandedMatchIds: new Set()
+                expandedMatchIds: new Set(),
+                selectedMatchIds: new Set()
             },
             scoreboard: {
                 leftName: '',
@@ -2471,7 +2491,11 @@
                     : [],
                 history: {
                     canUndo: !!(payload && payload.history && payload.history.canUndo),
-                    canRedo: !!(payload && payload.history && payload.history.canRedo)
+                    canRedo: !!(payload && payload.history && payload.history.canRedo),
+                    canUndoDelete: !!(payload && payload.history && payload.history.canUndoDelete),
+                    deleteUndoCount: payload && payload.history && Number.isFinite(Number(payload.history.deleteUndoCount))
+                        ? Number(payload.history.deleteUndoCount)
+                        : 0
                 },
                 mtime: payload && payload.mtime ? payload.mtime : null
             };
@@ -2479,6 +2503,11 @@
             state.historyUi.expandedMatchIds.forEach(matchId => {
                 if (!matchIds.has(matchId)) {
                     state.historyUi.expandedMatchIds.delete(matchId);
+                }
+            });
+            state.historyUi.selectedMatchIds.forEach(matchId => {
+                if (!matchIds.has(matchId)) {
+                    state.historyUi.selectedMatchIds.delete(matchId);
                 }
             });
             syncLocalPanelsFromMatchStore();
@@ -2651,6 +2680,28 @@
                 state.historyUi.expandedMatchIds.add(matchId);
             }
             renderMatchHistory();
+        }
+
+        function isHistoryMatchSelected(matchId) {
+            return state.historyUi.selectedMatchIds.has(matchId);
+        }
+
+        function toggleHistorySelection(matchId) {
+            if (!matchId) {
+                return;
+            }
+            if (state.historyUi.selectedMatchIds.has(matchId)) {
+                state.historyUi.selectedMatchIds.delete(matchId);
+            } else {
+                state.historyUi.selectedMatchIds.add(matchId);
+            }
+            renderMatchHistory();
+        }
+
+        function getSelectedHistoryMatchIds() {
+            return state.matchStore.matches
+                .map(match => match.id)
+                .filter(matchId => state.historyUi.selectedMatchIds.has(matchId));
         }
 
         function getHistoryLineupEntries(game, side) {
@@ -2873,6 +2924,18 @@
         function renderMatchHistory() {
             const container = document.getElementById('matchHistoryList');
             const matches = state.matchStore.matches || [];
+            const deleteSelectedButton = document.getElementById('deleteSelectedHistoryBtn');
+            const undoDeletedButton = document.getElementById('undoDeletedHistoryBtn');
+            const selectedCount = getSelectedHistoryMatchIds().length;
+
+            deleteSelectedButton.disabled = selectedCount === 0;
+            deleteSelectedButton.textContent = selectedCount > 0
+                ? `删除选中赛事（${selectedCount}）`
+                : '删除选中赛事';
+            undoDeletedButton.disabled = !state.matchStore.history.canUndoDelete;
+            undoDeletedButton.textContent = state.matchStore.history.deleteUndoCount > 0
+                ? `撤回最近删除（${state.matchStore.history.deleteUndoCount}/3）`
+                : '撤回最近删除';
 
             if (!matches.length) {
                 container.innerHTML = '<div class="empty-preview">还没有历史比赛记录。</div>';
@@ -2898,6 +2961,7 @@
                             </div>
                             <div class="match-history-summary-right">
                                 <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
+                                <button class="match-history-action-btn${isHistoryMatchSelected(match.id) ? ' selected' : ''}" type="button" data-history-select-id="${escapeHtml(match.id)}">${isHistoryMatchSelected(match.id) ? '已选中' : '选中'}</button>
                                 <button class="match-history-action-btn" type="button" data-history-match-id="${escapeHtml(match.id)}">进入赛事管理</button>
                                 <button class="match-history-action-btn danger" type="button" data-history-delete-id="${escapeHtml(match.id)}">删除赛事</button>
                             </div>
@@ -3644,32 +3708,73 @@
             });
         }
 
-        function deleteHistoryMatch(matchId) {
-            if (!matchId) {
+        function deleteHistoryMatches(matchIds) {
+            if (!Array.isArray(matchIds) || !matchIds.length) {
                 return;
             }
 
-            const match = state.matchStore.matches.find(item => item.id === matchId);
-            const matchLabel = match
-                ? `${match.leftPlayer || '左侧'} vs ${match.rightPlayer || '右侧'}`
-                : matchId;
+            const matchLabels = state.matchStore.matches
+                .filter(item => matchIds.includes(item.id))
+                .map(item => `${item.leftPlayer || '左侧'} vs ${item.rightPlayer || '右侧'}`);
+            const summary = matchLabels.length === 1
+                ? `赛事“${matchLabels[0]}”`
+                : `${matchLabels.length} 条赛事记录`;
 
-            if (!window.confirm(`确认删除赛事“${matchLabel}”吗？可以通过“撤回上一步”恢复最近一次删除。`)) {
+            if (!window.confirm(`确认删除${summary}吗？历史页最多只能撤回最近 3 次删除操作。`)) {
                 return;
             }
 
             clearStatus('historyStatus');
-            fetch(`api/matches/${encodeURIComponent(matchId)}`, {
-                method: 'DELETE'
+            fetch('api/matches/history/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ matchIds })
             })
             .then(async response => {
                 const data = await response.json();
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || '删除赛事失败');
                 }
-                state.historyUi.expandedMatchIds.delete(matchId);
+                matchIds.forEach(currentMatchId => {
+                    state.historyUi.expandedMatchIds.delete(currentMatchId);
+                    state.historyUi.selectedMatchIds.delete(currentMatchId);
+                });
                 applyMatchResponse(data);
-                showStatus('historyStatus', `已删除赛事 ${matchLabel}`, true);
+                showStatus('historyStatus', `已删除${summary}`, true);
+            })
+            .catch(error => {
+                showStatus('historyStatus', error.message, false);
+            });
+        }
+
+        function deleteHistoryMatch(matchId) {
+            if (!matchId) {
+                return;
+            }
+            deleteHistoryMatches([matchId]);
+        }
+
+        function deleteSelectedHistoryMatches() {
+            const matchIds = getSelectedHistoryMatchIds();
+            if (!matchIds.length) {
+                showStatus('historyStatus', '请先选择要删除的赛事', false);
+                return;
+            }
+            deleteHistoryMatches(matchIds);
+        }
+
+        function undoDeletedHistoryMatches() {
+            clearStatus('historyStatus');
+            fetch('api/matches/history/undo-delete', {
+                method: 'POST'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '撤回删除失败');
+                }
+                applyMatchResponse(data);
+                showStatus('historyStatus', '已恢复最近一次删除的赛事记录', true);
             })
             .catch(error => {
                 showStatus('historyStatus', error.message, false);
@@ -4297,10 +4402,18 @@
 
         function setupMatchHistoryControls() {
             const container = document.getElementById('matchHistoryList');
+            document.getElementById('deleteSelectedHistoryBtn').addEventListener('click', deleteSelectedHistoryMatches);
+            document.getElementById('undoDeletedHistoryBtn').addEventListener('click', undoDeletedHistoryMatches);
 
             container.addEventListener('click', event => {
                 const target = event.target instanceof Element ? event.target : null;
                 if (!target) {
+                    return;
+                }
+
+                const selectButton = target.closest('[data-history-select-id]');
+                if (selectButton) {
+                    toggleHistorySelection(selectButton.dataset.historySelectId);
                     return;
                 }
 
@@ -4328,6 +4441,9 @@
 
             container.addEventListener('keydown', event => {
                 const target = event.target instanceof Element ? event.target : null;
+                if (target && target.closest('button')) {
+                    return;
+                }
                 const toggle = target ? target.closest('[data-history-toggle-id]') : null;
                 if (!toggle) {
                     return;

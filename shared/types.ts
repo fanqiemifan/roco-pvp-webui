@@ -90,6 +90,8 @@ export interface MatchStoreState {
   history: {
     canUndo: boolean;
     canRedo: boolean;
+    canUndoDelete: boolean;
+    deleteUndoCount: number;
   };
   mtime: number | null;
 }
