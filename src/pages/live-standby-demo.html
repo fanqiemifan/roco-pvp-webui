@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洛克王国PVP - 直播等待页</title>
+    <link rel="stylesheet" href="/styles/live-standby-demo.css">
+</head>
+<body>
+    <main class="standby-screen" aria-label="洛克王国PVP直播等待页">
+        <div class="texture texture-left" aria-hidden="true"></div>
+        <div class="texture texture-right" aria-hidden="true"></div>
+
+        <section class="content-layout">
+            <article class="stage-card">
+                <div class="match-headline">
+                    <div class="player-title">
+                        <span class="player-side">LEFT</span>
+                        <strong id="leftPlayerName">左侧选手</strong>
+                    </div>
+                    <div class="versus-center">
+                        <div class="versus-score"><span id="leftPlayerScore">0</span><em>:</em><span id="rightPlayerScore">0</span></div>
+                        <div class="versus-meta" id="versusMeta">BO3 · 第 1 局待开始</div>
+                    </div>
+                    <div class="player-title player-title-right">
+                        <span class="player-side">RIGHT</span>
+                        <strong id="rightPlayerName">右侧选手</strong>
+                    </div>
+                </div>
+
+                <div class="lineup-showcase">
+                    <section class="pending-state" aria-label="系列赛状态">
+                        <div class="pending-chip" id="statusChip">MATCH PENDING</div>
+                        <div class="pending-copy" id="statusText">等待开始本次对局</div>
+                        <div class="game-track" id="gameTrack"></div>
+                    </section>
+
+                    <section class="battle-overview-card" aria-label="本次对局战况">
+                        <div class="recent-games-header">
+                            <div class="roster-title">本次对局战况</div>
+                            <div class="recent-games-note">按小局展示胜负与当前状态</div>
+                        </div>
+                        <div class="series-games-list" id="seriesGamesList"></div>
+                    </section>
+                </div>
+
+                <section class="recent-games-section">
+                    <div class="recent-games-header">
+                        <div class="roster-title">最近对局情况</div>
+                        <div class="recent-games-note">自动滚动展示全部已结束小局</div>
+                    </div>
+                    <div class="recent-games-viewport" id="recentGamesViewport">
+                        <div class="recent-games-list" id="recentGamesList"></div>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="history-panel">
+                <div class="history-list-viewport" id="historyListViewport">
+                    <div class="history-list" id="historyList"></div>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/live-standby-demo.js"></script>
+</body>
+</html>

@@ -109,6 +109,60 @@ function defaultPanelState(position: 'left' | 'right'): PanelState {
   };
 }
 
+function serializeSlotState(slot: SlotState) {
+  return {
+    slot: slot.slot,
+    sprite: slot.sprite,
+    opacityEnabled: slot.opacityEnabled,
+    opacity: slot.opacity,
+    saturation: slot.saturation,
+    healthEnabled: slot.healthEnabled,
+    healthPercent: slot.healthPercent,
+    energyValue: slot.energyValue,
+  };
+}
+
+function parseSlotStateInput(paths: AppPaths, index: number, item: unknown): SlotState {
+  const slot = defaultSlot(index);
+  if (item === null || item === undefined) {
+    return slot;
+  }
+  if (!item || typeof item !== 'object') {
+    throw new Error('slot must be an object or null');
+  }
+
+  const lookup = spriteLookup(paths);
+  const raw = item as Record<string, unknown>;
+  const rawSprite = raw.sprite;
+  const spriteId =
+    rawSprite && typeof rawSprite === 'object' && typeof (rawSprite as Record<string, unknown>).id === 'string'
+      ? (rawSprite as Record<string, unknown>).id
+      : rawSprite;
+
+  slot.opacityEnabled = Boolean(raw.opacityEnabled);
+  slot.opacity = normalizeOpacity(raw.opacity);
+  slot.saturation = normalizeSaturation(raw.saturation);
+  slot.healthEnabled =
+    typeof raw.healthEnabled === 'boolean' ? raw.healthEnabled : Boolean(raw.protectionEnabled);
+  slot.healthPercent = normalizeHealthPercent(raw.healthPercent ?? raw.protectionPercent);
+  slot.energyValue = normalizeEnergyValue(raw.energyValue);
+
+  if (spriteId !== null && spriteId !== undefined) {
+    if (typeof spriteId !== 'string') {
+      throw new Error('sprite id must be a string or null');
+    }
+    const normalizedName = path.basename(spriteId);
+    const sprite = lookup.get(normalizedName);
+    if (!sprite) {
+      throw new Error(`Sprite not found: ${normalizedName}`);
+    }
+    slot.sprite = sprite;
+  }
+
+  slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
+  return slot;
+}
+
 function defaultScoreboardState(): ScoreboardState {
   return {
     leftName: '',
@@ -283,50 +337,10 @@ export function savePanelState(paths: AppPaths, position: 'left' | 'right', sele
   }
 
   ensureRuntimeDirs(paths);
-  const lookup = spriteLookup(paths);
   const selected: SlotState[] = [];
 
   selectedSlots.slice(0, MAX_SELECTION_COUNT).forEach((item, index) => {
-    const slot = defaultSlot(index);
-
-    if (item === null) {
-      selected.push(slot);
-      return;
-    }
-
-    if (!item || typeof item !== 'object') {
-      throw new Error('slot must be an object or null');
-    }
-
-    const raw = item as Record<string, unknown>;
-    const rawSprite = raw.sprite;
-    const spriteId =
-      rawSprite && typeof rawSprite === 'object' && typeof (rawSprite as Record<string, unknown>).id === 'string'
-        ? (rawSprite as Record<string, unknown>).id
-        : rawSprite;
-
-    slot.opacityEnabled = Boolean(raw.opacityEnabled);
-    slot.opacity = normalizeOpacity(raw.opacity);
-    slot.saturation = normalizeSaturation(raw.saturation);
-    slot.healthEnabled =
-      typeof raw.healthEnabled === 'boolean' ? raw.healthEnabled : Boolean(raw.protectionEnabled);
-    slot.healthPercent = normalizeHealthPercent(raw.healthPercent ?? raw.protectionPercent);
-    slot.energyValue = normalizeEnergyValue(raw.energyValue);
-
-    if (spriteId !== null && spriteId !== undefined) {
-      if (typeof spriteId !== 'string') {
-        throw new Error('sprite id must be a string or null');
-      }
-      const normalizedName = path.basename(spriteId);
-      const sprite = lookup.get(normalizedName);
-      if (!sprite) {
-        throw new Error(`Sprite not found: ${normalizedName}`);
-      }
-      slot.sprite = sprite;
-    }
-
-    slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
-    selected.push(slot);
+    selected.push(parseSlotStateInput(paths, index, item));
   });
 
   while (selected.length < MAX_SELECTION_COUNT) {
@@ -335,16 +349,35 @@ export function savePanelState(paths: AppPaths, position: 'left' | 'right', sele
 
   const metadata = {
     position,
-    selected: selected.map((slot) => ({
-      slot: slot.slot,
-      sprite: slot.sprite,
-      opacityEnabled: slot.opacityEnabled,
-      opacity: slot.opacity,
-      saturation: slot.saturation,
-      healthEnabled: slot.healthEnabled,
-      healthPercent: slot.healthPercent,
-      energyValue: slot.energyValue,
-    })),
+    selected: selected.map(serializeSlotState),
+  };
+
+  fs.writeFileSync(paths.panelStatePath(position), JSON.stringify(metadata, null, 2), 'utf-8');
+  return getPanelState(paths, position);
+}
+
+export function savePanelSlotState(
+  paths: AppPaths,
+  position: 'left' | 'right',
+  slotIndex: number,
+  slotData: unknown,
+): PanelState {
+  if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= MAX_SELECTION_COUNT) {
+    throw new Error('invalid slot index');
+  }
+
+  ensureRuntimeDirs(paths);
+  const current = getPanelState(paths, position);
+  const selected = current.selected.slice(0, MAX_SELECTION_COUNT);
+  while (selected.length < MAX_SELECTION_COUNT) {
+    selected.push(defaultSlot(selected.length));
+  }
+
+  selected[slotIndex] = parseSlotStateInput(paths, slotIndex, slotData);
+
+  const metadata = {
+    position,
+    selected: selected.map(serializeSlotState),
   };
 
   fs.writeFileSync(paths.panelStatePath(position), JSON.stringify(metadata, null, 2), 'utf-8');

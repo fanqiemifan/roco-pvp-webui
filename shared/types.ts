@@ -48,6 +48,54 @@ export interface ScoreboardState {
   mtime: number | null;
 }
 
+export interface MatchSlotSnapshot {
+  slot: number;
+  spriteId: string | null;
+  opacityEnabled: boolean;
+  opacity: number;
+  saturation: number;
+  healthEnabled: boolean;
+  healthPercent: number;
+  energyValue: number;
+}
+
+export interface GameRecord {
+  gameNumber: number;
+  leftLineup: string[];
+  rightLineup: string[];
+  leftSlots: MatchSlotSnapshot[];
+  rightSlots: MatchSlotSnapshot[];
+  winner: 'left' | 'right' | null;
+  status: 'pending' | 'in_progress' | 'completed';
+}
+
+export interface MatchRecord {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  leftPlayer: string;
+  rightPlayer: string;
+  bestOf: number;
+  games: GameRecord[];
+  leftScore: number;
+  rightScore: number;
+  winner: 'left' | 'right' | null;
+  completedAt: string | null;
+}
+
+export interface MatchStoreState {
+  activeMatchId: string | null;
+  matches: MatchRecord[];
+  history: {
+    canUndo: boolean;
+    canRedo: boolean;
+    canUndoDelete: boolean;
+    deleteUndoCount: number;
+  };
+  mtime: number | null;
+}
+
 export interface BackgroundState {
   exists: boolean;
   path?: string;
@@ -55,10 +103,25 @@ export interface BackgroundState {
   mtime?: number;
 }
 
+export interface AvatarState {
+  side: 'left' | 'right';
+  exists: boolean;
+  path?: string;
+  size?: number;
+  mtime?: number;
+}
+
+export interface AvatarCollectionState {
+  left: AvatarState;
+  right: AvatarState;
+}
+
 export interface SnapshotPayload {
   panels: [PanelState, PanelState];
   scoreboard: ScoreboardState;
   background: BackgroundState;
+  avatars: AvatarCollectionState;
+  matches: MatchStoreState;
 }
 
 export interface QuickFillMatch {
