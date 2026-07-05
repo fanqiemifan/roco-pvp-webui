@@ -869,6 +869,239 @@
             color: var(--text);
         }
 
+        .match-workspace {
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .match-sidebar-card,
+        .match-focus-panel {
+            background: rgba(255, 252, 248, 0.86);
+        }
+
+        .match-main-stack,
+        .match-history-list,
+        .match-list,
+        .match-hero,
+        .lineup-chip-row {
+            display: grid;
+            gap: 14px;
+        }
+
+        .match-list {
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .match-item {
+            width: 100%;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        }
+
+        .match-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 28px rgba(170, 89, 44, 0.12);
+        }
+
+        .match-item.active {
+            border-color: rgba(199, 99, 47, 0.42);
+            box-shadow: 0 0 0 3px rgba(199, 99, 47, 0.12);
+        }
+
+        .match-item-title,
+        .match-hero-metrics,
+        .match-history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .match-item-title strong,
+        .match-history-head strong {
+            font-size: 14px;
+        }
+
+        .match-item-subtitle,
+        .match-history-meta,
+        .match-hero-subtitle,
+        .lineup-empty {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .match-status-chip,
+        .metric-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .match-status-chip.pending {
+            background: rgba(184, 137, 76, 0.16);
+            color: #8b632e;
+        }
+
+        .match-status-chip.in-progress {
+            background: rgba(199, 99, 47, 0.16);
+            color: #9b4a27;
+        }
+
+        .match-status-chip.completed {
+            background: rgba(45, 122, 88, 0.16);
+            color: #1b5a3e;
+        }
+
+        .metric-pill {
+            background: rgba(255, 246, 233, 0.96);
+            border: 1px solid rgba(199, 99, 47, 0.14);
+            color: var(--muted-strong);
+        }
+
+        .match-hero {
+            border-radius: 20px;
+            padding: 18px;
+            background: linear-gradient(145deg, rgba(255, 244, 230, 0.96), rgba(255, 252, 247, 0.96));
+            border: 1px solid rgba(199, 99, 47, 0.12);
+        }
+
+        .match-hero h3 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .match-hero-score {
+            font: 800 42px/1 var(--font-display);
+            color: var(--accent-deep);
+            letter-spacing: 0.04em;
+        }
+
+        .lineup-chip-group {
+            display: grid;
+            gap: 8px;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(109, 79, 54, 0.12);
+        }
+
+        .lineup-chip-group strong {
+            font-size: 13px;
+        }
+
+        .lineup-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .lineup-tag {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(199, 99, 47, 0.1);
+            color: var(--muted-strong);
+            font-size: 12px;
+        }
+
+        .match-history-card {
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 16px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .match-history-games {
+            display: grid;
+            gap: 10px;
+        }
+
+        .match-history-game {
+            padding: 12px;
+            border-radius: 14px;
+            background: rgba(248, 241, 231, 0.7);
+            border: 1px solid rgba(109, 79, 54, 0.1);
+            display: grid;
+            gap: 8px;
+        }
+
+        .match-actions {
+            display: grid;
+            gap: 12px;
+        }
+
+        .winner-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .btn-success {
+            background: linear-gradient(145deg, #3b9a70, #1f6d4c);
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: linear-gradient(145deg, #d56a37, #a14722);
+            color: #fff;
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .modal-backdrop[hidden] {
+            display: none;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(47, 36, 24, 0.42);
+            backdrop-filter: blur(8px);
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            z-index: 20;
+        }
+
+        .modal-card {
+            width: min(520px, 100%);
+            border-radius: 24px;
+            background: rgba(255, 251, 245, 0.98);
+            border: 1px solid rgba(109, 79, 54, 0.14);
+            box-shadow: 0 28px 80px rgba(47, 36, 24, 0.24);
+            padding: 22px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
         .form-row {
             display: grid;
             gap: 8px;
@@ -1034,6 +1267,7 @@
                 grid-template-columns: 255px minmax(0, 1fr);
             }
 
+            .match-workspace,
             .panel-grid {
                 grid-template-columns: 1fr;
             }
@@ -1083,6 +1317,8 @@
             .scoreboard-grid,
             .scoreboard-controls,
             .portal-link-grid,
+            .form-grid,
+            .winner-actions,
             .panel-layout,
             .panel-layout.preview-right {
                 grid-template-columns: 1fr;
@@ -1156,8 +1392,8 @@
                         <div class="nav-meta">
                             <div class="nav-item-icon">🎮</div>
                             <div>
-                                <strong>阵容编辑</strong>
-                                <span>双方阵容选择</span>
+                                <strong>赛事管理</strong>
+                                <span>比赛、阵容与赛制联动管理</span>
                             </div>
                         </div>
                         <span class="nav-badge">Main</span>
@@ -1166,8 +1402,8 @@
                         <div class="nav-meta">
                             <div class="nav-item-icon">🏆</div>
                             <div>
-                                <strong>顶部比分栏</strong>
-                                <span>选手名称、比分显示控制</span>
+                                <strong>显示设置</strong>
+                                <span>比分栏样式与页面2展示控制</span>
                             </div>
                         </div>
                         <span class="nav-badge">Edit</span>
@@ -1226,10 +1462,88 @@
 
             <section class="content-view active" data-view="roster">
                 <div class="container page-stack">
+                    <section class="match-workspace">
+                        <aside class="panel match-sidebar-card">
+                            <div class="panel-header">
+                                <div>
+                                    <small>Match Queue</small>
+                                    <h2>比赛列表</h2>
+                                </div>
+                                <button class="btn btn-primary" type="button" id="openCreateMatchBtn">开一局</button>
+                            </div>
+                            <p class="muted">创建赛事后会自动进入第 1 局。切换比赛会同步当前推流页的选手、比分和阵容快照。</p>
+                            <div class="match-list" id="matchList"></div>
+                        </aside>
+
+                        <div class="match-main-stack">
+                            <section class="panel match-focus-panel">
+                                <div class="panel-header">
+                                    <div>
+                                        <small>Match Focus</small>
+                                        <h2>当前比赛</h2>
+                                        <p class="muted">顶部比分栏中的选手名、比分与 BO 由这里统一管理。</p>
+                                    </div>
+                                    <div class="panel-header-right">
+                                        <div class="status" id="matchStatus"></div>
+                                    </div>
+                                </div>
+                                <div class="match-hero" id="matchHero"></div>
+                                <div class="scoreboard-grid">
+                                    <div class="scoreboard-card">
+                                        <h3>左侧选手</h3>
+                                        <div class="form-row">
+                                            <label for="matchLeftPlayerInput">选手名字</label>
+                                            <input type="text" id="matchLeftPlayerInput" maxlength="32" placeholder="输入左侧选手名字">
+                                        </div>
+                                    </div>
+                                    <div class="scoreboard-card">
+                                        <h3>右侧选手</h3>
+                                        <div class="form-row">
+                                            <label for="matchRightPlayerInput">选手名字</label>
+                                            <input type="text" id="matchRightPlayerInput" maxlength="32" placeholder="输入右侧选手名字">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="scoreboard-controls">
+                                    <div class="scoreboard-card">
+                                        <h3>比赛赛制</h3>
+                                        <div class="form-row">
+                                            <label for="matchBestOfInput">当前 BO</label>
+                                            <select id="matchBestOfInput">
+                                                <option value="1">BO1</option>
+                                                <option value="3">BO3</option>
+                                                <option value="5">BO5</option>
+                                                <option value="7">BO7</option>
+                                            </select>
+                                        </div>
+                                        <div class="lineup-empty" id="matchFormatHint">在比赛开始前可以调整 BO，开始记分后建议保持不变。</div>
+                                    </div>
+                                    <div class="scoreboard-card match-actions">
+                                        <h3>小局结算</h3>
+                                        <div class="winner-actions">
+                                            <button class="btn btn-success" type="button" id="leftWinBtn">左侧赢了</button>
+                                            <button class="btn btn-warning" type="button" id="rightWinBtn">右侧赢了</button>
+                                        </div>
+                                        <div class="btn-row">
+                                            <button class="btn btn-primary" type="button" id="saveMatchMetaBtn">保存比赛信息</button>
+                                            <button class="btn btn-secondary" type="button" id="rematchBtn">再开一局</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="info-box">
+                                <h3>比赛历史</h3>
+                                <p class="muted">每一局都会记录当时的左右阵容快照，方便回看系列赛中的换阵过程。</p>
+                                <div class="match-history-list" id="matchHistoryList"></div>
+                            </section>
+                        </div>
+                    </section>
+
                     <div class="panel-grid">
                         <section class="panel" data-panel="left" id="leftPanelCard">
                             <div class="panel-header">
-                                <h2>左侧阵容</h2>
+                                <h2>左侧当前阵容</h2>
                                 <div class="panel-header-right">
                                     <label class="auto-save-toggle">
                                         <input type="checkbox" id="leftAutoSaveToggle">
@@ -1312,7 +1626,7 @@
 
                         <section class="panel" data-panel="right" id="rightPanelCard">
                             <div class="panel-header">
-                                <h2>右侧阵容</h2>
+                                <h2>右侧当前阵容</h2>
                                 <div class="panel-header-right">
                                     <label class="auto-save-toggle">
                                         <input type="checkbox" id="rightAutoSaveToggle">
@@ -1398,7 +1712,7 @@
                         <h3>使用说明</h3>
                         <p class="muted">
                             左右两侧从 <code>img</code> 目录读取精灵图，名称和编号索引从 <code>json/sprites.json</code> 读取。每侧固定 6 个槽位，点击槽位后再点击精灵即可填充。
-                            透明度开关和数值只作用于当前选中的单个槽位，不会影响整个面板。
+                            当存在当前比赛时，保存阵容会自动同步到“当前小局”的阵容快照，结算胜负时会冻结这一局的 lineup 记录。
                         </p>
                         <h3>图片来源</h3>
                         <p class="muted">
@@ -1414,8 +1728,8 @@
                         <div class="panel-header">
                             <div>
                                 <small>Navigation Module</small>
-                                <h2>比分管理</h2>
-                                <p>这里可以设置首页顶部居中的选手名字、比分和 Center Area 的展示方式。</p>
+                                <h2>显示设置</h2>
+                                <p>这里保留比分栏显隐、字号、Center Area 和页面2阵容展示样式的控制。</p>
                             </div>
                             <div class="panel-header-right">
                                 <div class="status" id="scoreboardStatus"></div>
@@ -1423,31 +1737,7 @@
                         </div>
                         <div class="scoreboard-grid">
                             <div class="scoreboard-card">
-                                <h3>左侧选手</h3>
-                                <div class="form-row">
-                                    <label for="leftPlayerNameInput">选手名字</label>
-                                    <input type="text" id="leftPlayerNameInput" maxlength="32" placeholder="输入左侧选手名字">
-                                </div>
-                                <div class="form-row">
-                                    <label for="leftPlayerScoreInput">比分</label>
-                                    <input type="text" id="leftPlayerScoreInput" maxlength="4" placeholder="0">
-                                </div>
-                            </div>
-                            <div class="scoreboard-card">
-                                <h3>右侧选手</h3>
-                                <div class="form-row">
-                                    <label for="rightPlayerNameInput">选手名字</label>
-                                    <input type="text" id="rightPlayerNameInput" maxlength="32" placeholder="输入右侧选手名字">
-                                </div>
-                                <div class="form-row">
-                                    <label for="rightPlayerScoreInput">比分</label>
-                                    <input type="text" id="rightPlayerScoreInput" maxlength="4" placeholder="0">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="scoreboard-controls">
-                            <div class="scoreboard-card">
-                                <h3>显示控制</h3>
+                                <h3>比分栏显示</h3>
                                 <div class="form-row">
                                     <label for="scoreboardEnabledInput">顶部比分栏显示</label>
                                     <input type="checkbox" id="scoreboardEnabledInput" checked>
@@ -1485,16 +1775,7 @@
                                 </div>
                             </div>
                             <div class="scoreboard-card">
-                                <h3>字体大小</h3>
-                                <div class="form-row">
-                                    <label for="bestOfInput">比赛赛制</label>
-                                    <select id="bestOfInput">
-                                        <option value="1">BO1</option>
-                                        <option value="3">BO3</option>
-                                        <option value="5">BO5</option>
-                                        <option value="7" selected>BO7</option>
-                                    </select>
-                                </div>
+                                <h3>文本样式</h3>
                                 <div class="form-row">
                                     <label for="nameFontSizeInput">选手名字字号</label>
                                     <input type="number" id="nameFontSizeInput" min="12" max="160" value="64">
@@ -1583,6 +1864,39 @@
         </main>
     </div>
 
+    <div class="modal-backdrop" id="createMatchModal" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="createMatchTitle">
+            <div>
+                <small>New Match</small>
+                <h2 id="createMatchTitle">创建赛事</h2>
+                <p class="muted">输入选手名并选择 BO，创建后会自动生成第 1 局。</p>
+            </div>
+            <div class="form-grid">
+                <div class="form-row">
+                    <label for="createMatchLeftPlayerInput">左侧选手</label>
+                    <input type="text" id="createMatchLeftPlayerInput" maxlength="32" placeholder="例如：选手A">
+                </div>
+                <div class="form-row">
+                    <label for="createMatchRightPlayerInput">右侧选手</label>
+                    <input type="text" id="createMatchRightPlayerInput" maxlength="32" placeholder="例如：选手B">
+                </div>
+                <div class="form-row">
+                    <label for="createMatchBestOfInput">比赛赛制</label>
+                    <select id="createMatchBestOfInput">
+                        <option value="1">BO1</option>
+                        <option value="3" selected>BO3</option>
+                        <option value="5">BO5</option>
+                        <option value="7">BO7</option>
+                    </select>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" type="button" id="createMatchConfirmBtn">创建比赛</button>
+                <button class="btn btn-secondary" type="button" id="createMatchCancelBtn">取消</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const MAX_SELECTION = 6;
@@ -1617,6 +1931,11 @@
             currentView: 'roster',
             previewSlot: 'page1',
             sprites: [],
+            matchStore: {
+                activeMatchId: null,
+                matches: [],
+                mtime: null
+            },
             scoreboard: {
                 leftName: '',
                 leftScore: '0',
@@ -1743,6 +2062,7 @@
                 view.classList.toggle('active', view.dataset.view === state.currentView);
             });
             if (state.currentView === 'roster') {
+                renderMatchWorkspace();
                 renderPanel('left');
                 renderPanel('right');
                 renderSlotPreview('left');
@@ -1762,12 +2082,295 @@
             el.className = 'status';
         }
 
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatDateTime(value) {
+            if (!value) {
+                return '';
+            }
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return String(value);
+            }
+            return date.toLocaleString('zh-CN', {
+                hour12: false,
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function normalizeGameRecord(game, index) {
+            return {
+                gameNumber: game && Number.isFinite(Number(game.gameNumber)) ? Number(game.gameNumber) : index + 1,
+                leftLineup: Array.isArray(game && game.leftLineup) ? game.leftLineup.filter(Boolean) : [],
+                rightLineup: Array.isArray(game && game.rightLineup) ? game.rightLineup.filter(Boolean) : [],
+                leftSlots: Array.isArray(game && game.leftSlots) ? game.leftSlots : [],
+                rightSlots: Array.isArray(game && game.rightSlots) ? game.rightSlots : [],
+                winner: game && (game.winner === 'left' || game.winner === 'right') ? game.winner : null,
+                status: game && game.status === 'completed' ? 'completed' : 'pending'
+            };
+        }
+
+        function normalizeMatchRecord(match) {
+            const games = Array.isArray(match && match.games)
+                ? match.games.map((game, index) => normalizeGameRecord(game, index))
+                : [];
+
+            return {
+                id: match && match.id ? String(match.id) : '',
+                createdAt: match && match.createdAt ? String(match.createdAt) : '',
+                updatedAt: match && match.updatedAt ? String(match.updatedAt) : '',
+                status: match && match.status ? match.status : 'pending',
+                leftPlayer: match && match.leftPlayer ? String(match.leftPlayer) : '',
+                rightPlayer: match && match.rightPlayer ? String(match.rightPlayer) : '',
+                bestOf: match && Number(match.bestOf) ? Number(match.bestOf) : 3,
+                games,
+                leftScore: match && Number.isFinite(Number(match.leftScore)) ? Number(match.leftScore) : 0,
+                rightScore: match && Number.isFinite(Number(match.rightScore)) ? Number(match.rightScore) : 0,
+                winner: match && (match.winner === 'left' || match.winner === 'right') ? match.winner : null,
+                completedAt: match && match.completedAt ? String(match.completedAt) : null
+            };
+        }
+
+        function updateMatchesFromApi(payload) {
+            state.matchStore = {
+                activeMatchId: payload && payload.activeMatchId ? String(payload.activeMatchId) : null,
+                matches: Array.isArray(payload && payload.matches)
+                    ? payload.matches.map(normalizeMatchRecord).filter(match => match.id)
+                    : [],
+                mtime: payload && payload.mtime ? payload.mtime : null
+            };
+            renderMatchWorkspace();
+        }
+
+        function getActiveMatch() {
+            return state.matchStore.matches.find(match => match.id === state.matchStore.activeMatchId) || null;
+        }
+
+        function getPendingGame(match) {
+            if (!match) {
+                return null;
+            }
+            return match.games.find(game => game.status === 'pending') || null;
+        }
+
+        function getDisplayGame(match) {
+            if (!match || !Array.isArray(match.games) || !match.games.length) {
+                return null;
+            }
+            return getPendingGame(match) || match.games[match.games.length - 1];
+        }
+
+        function getWinsNeeded(bestOf) {
+            return Math.floor((Number(bestOf) || 1) / 2) + 1;
+        }
+
+        function getMatchStatusClass(match) {
+            if (!match) {
+                return 'pending';
+            }
+            if (match.status === 'completed') {
+                return 'completed';
+            }
+            if (match.status === 'in_progress') {
+                return 'in-progress';
+            }
+            return 'pending';
+        }
+
+        function getMatchStatusText(match) {
+            if (!match) {
+                return '未创建';
+            }
+            if (match.status === 'completed') {
+                return '已完成';
+            }
+            if (match.status === 'in_progress') {
+                return '进行中';
+            }
+            return '待开始';
+        }
+
+        function getGameResultText(game) {
+            if (!game) {
+                return '待开始';
+            }
+            if (game.status !== 'completed' || !game.winner) {
+                return '待结算';
+            }
+            return game.winner === 'left' ? '左侧胜' : '右侧胜';
+        }
+
+        function formatLineupNames(lineup) {
+            if (!Array.isArray(lineup) || !lineup.length) {
+                return '<span class="lineup-empty">待设置</span>';
+            }
+            return lineup.map(spriteId => {
+                const sprite = spriteById(spriteId);
+                const label = sprite ? getSpriteDisplayName(sprite) : spriteId;
+                return `<span class="lineup-tag">${escapeHtml(label)}</span>`;
+            }).join('');
+        }
+
+        function renderMatchList() {
+            const container = document.getElementById('matchList');
+            const activeMatchId = state.matchStore.activeMatchId;
+            const matches = state.matchStore.matches || [];
+
+            if (!matches.length) {
+                container.innerHTML = '<div class="empty-preview">当前还没有比赛，点击“开一局”创建赛事。</div>';
+                return;
+            }
+
+            container.innerHTML = matches.map(match => `
+                <button class="match-item${match.id === activeMatchId ? ' active' : ''}" type="button" data-match-id="${escapeHtml(match.id)}">
+                    <div class="match-item-title">
+                        <strong>${escapeHtml(match.id)}</strong>
+                        <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
+                    </div>
+                    <div class="match-item-subtitle">${escapeHtml(match.leftPlayer || '左侧')} vs ${escapeHtml(match.rightPlayer || '右侧')}</div>
+                    <div class="match-history-meta">BO${escapeHtml(match.bestOf)} · ${escapeHtml(String(match.leftScore))}:${escapeHtml(String(match.rightScore))} · 更新于 ${escapeHtml(formatDateTime(match.updatedAt))}</div>
+                </button>
+            `).join('');
+
+            container.querySelectorAll('[data-match-id]').forEach(button => {
+                button.addEventListener('click', () => selectMatch(button.dataset.matchId));
+            });
+        }
+
+        function renderMatchHero() {
+            const hero = document.getElementById('matchHero');
+            const match = getActiveMatch();
+            const game = getDisplayGame(match);
+            const canEditMatch = !!match && match.status !== 'completed';
+            const canEditBestOf = !!match && match.status === 'pending';
+            const leftInput = document.getElementById('matchLeftPlayerInput');
+            const rightInput = document.getElementById('matchRightPlayerInput');
+            const bestOfInput = document.getElementById('matchBestOfInput');
+            const formatHint = document.getElementById('matchFormatHint');
+            const leftWinBtn = document.getElementById('leftWinBtn');
+            const rightWinBtn = document.getElementById('rightWinBtn');
+            const saveMetaBtn = document.getElementById('saveMatchMetaBtn');
+            const rematchBtn = document.getElementById('rematchBtn');
+
+            if (!match) {
+                hero.innerHTML = `
+                    <h3>还没有当前比赛</h3>
+                    <div class="match-hero-subtitle">先创建一场赛事，系统会自动生成第 1 局并把当前比分栏绑定到该比赛。</div>
+                `;
+                leftInput.value = '';
+                rightInput.value = '';
+                bestOfInput.value = '3';
+                leftInput.disabled = true;
+                rightInput.disabled = true;
+                bestOfInput.disabled = true;
+                leftWinBtn.disabled = true;
+                rightWinBtn.disabled = true;
+                saveMetaBtn.disabled = true;
+                rematchBtn.disabled = true;
+                formatHint.textContent = '在创建比赛后，这里会显示当前 BO 与小局状态。';
+                return;
+            }
+
+            const completedGames = match.games.filter(item => item.status === 'completed').length;
+            hero.innerHTML = `
+                <div class="match-hero-metrics">
+                    <div>
+                        <h3>${escapeHtml(match.id)}</h3>
+                        <div class="match-hero-subtitle">${escapeHtml(match.leftPlayer)} vs ${escapeHtml(match.rightPlayer)} · ${escapeHtml(getMatchStatusText(match))}</div>
+                    </div>
+                    <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
+                </div>
+                <div class="match-hero-score">${escapeHtml(String(match.leftScore))} : ${escapeHtml(String(match.rightScore))}</div>
+                <div class="lineup-chip-row">
+                    <div class="metric-pill">BO${escapeHtml(match.bestOf)}</div>
+                    <div class="metric-pill">先赢 ${escapeHtml(getWinsNeeded(match.bestOf))} 局</div>
+                    <div class="metric-pill">${game ? `第 ${game.gameNumber} 局` : '暂无小局'}</div>
+                    <div class="metric-pill">${completedGames} / ${escapeHtml(match.bestOf)} 已记录</div>
+                </div>
+                <div class="scoreboard-grid">
+                    <div class="lineup-chip-group">
+                        <strong>左侧本局阵容</strong>
+                        <div class="lineup-tags">${formatLineupNames(game ? game.leftLineup : [])}</div>
+                    </div>
+                    <div class="lineup-chip-group">
+                        <strong>右侧本局阵容</strong>
+                        <div class="lineup-tags">${formatLineupNames(game ? game.rightLineup : [])}</div>
+                    </div>
+                </div>
+            `;
+
+            leftInput.value = match.leftPlayer || '';
+            rightInput.value = match.rightPlayer || '';
+            bestOfInput.value = String(match.bestOf || 3);
+            leftInput.disabled = !canEditMatch;
+            rightInput.disabled = !canEditMatch;
+            bestOfInput.disabled = !canEditBestOf;
+            leftWinBtn.disabled = !canEditMatch;
+            rightWinBtn.disabled = !canEditMatch;
+            saveMetaBtn.disabled = !canEditMatch;
+            rematchBtn.disabled = false;
+            formatHint.textContent = canEditBestOf
+                ? '当前比赛还未记分，可以修改 BO。'
+                : match.status === 'completed'
+                    ? `比赛已结束，胜者为${match.winner === 'left' ? '左侧' : '右侧'}。`
+                    : '比赛进行中，BO 已锁定，避免中途改赛制造成比分歧义。';
+        }
+
+        function renderMatchHistory() {
+            const container = document.getElementById('matchHistoryList');
+            const matches = state.matchStore.matches || [];
+
+            if (!matches.length) {
+                container.innerHTML = '<div class="empty-preview">还没有历史比赛记录。</div>';
+                return;
+            }
+
+            container.innerHTML = matches.map(match => `
+                <article class="match-history-card">
+                    <div class="match-history-head">
+                        <strong>${escapeHtml(match.id)} · ${escapeHtml(match.leftPlayer || '左侧')} vs ${escapeHtml(match.rightPlayer || '右侧')}</strong>
+                        <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
+                    </div>
+                    <div class="match-history-meta">BO${escapeHtml(match.bestOf)} · ${escapeHtml(String(match.leftScore))}:${escapeHtml(String(match.rightScore))}${match.winner ? ` · ${match.winner === 'left' ? '左侧' : '右侧'}获胜` : ''}</div>
+                    <div class="match-history-games">
+                        ${match.games.map(game => `
+                            <div class="match-history-game">
+                                <div class="match-item-title">
+                                    <strong>第 ${escapeHtml(game.gameNumber)} 局</strong>
+                                    <span class="metric-pill">${escapeHtml(getGameResultText(game))}</span>
+                                </div>
+                                <div class="lineup-chip-group">
+                                    <strong>左侧阵容</strong>
+                                    <div class="lineup-tags">${formatLineupNames(game.leftLineup)}</div>
+                                </div>
+                                <div class="lineup-chip-group">
+                                    <strong>右侧阵容</strong>
+                                    <div class="lineup-tags">${formatLineupNames(game.rightLineup)}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function renderMatchWorkspace() {
+            renderMatchList();
+            renderMatchHero();
+            renderMatchHistory();
+        }
+
         function renderScoreboardInputs() {
-            document.getElementById('leftPlayerNameInput').value = state.scoreboard.leftName || '';
-            document.getElementById('leftPlayerScoreInput').value = state.scoreboard.leftScore || '0';
-            document.getElementById('rightPlayerNameInput').value = state.scoreboard.rightName || '';
-            document.getElementById('rightPlayerScoreInput').value = state.scoreboard.rightScore || '0';
-            document.getElementById('bestOfInput').value = state.scoreboard.bestOf || 7;
             document.getElementById('scoreboardEnabledInput').checked = state.scoreboard.scoreboardEnabled !== false;
             document.getElementById('healthBadgeEnabledInput').checked = state.scoreboard.healthBadgeEnabled !== false;
             document.getElementById('abilityBadgeEnabledInput').checked = state.scoreboard.abilityBadgeEnabled !== false;
@@ -1801,6 +2404,7 @@
                 centerAreaColor: scoreboard && scoreboard.centerAreaColor ? scoreboard.centerAreaColor : '#393939'
             };
             renderScoreboardInputs();
+            renderMatchHero();
         }
 
         function spriteById(id) {
@@ -2306,6 +2910,7 @@
 
                     if (sprites.length > 0) {
                         state.sprites = sprites;
+                        renderMatchWorkspace();
                         renderPanel('left');
                         renderPanel('right');
                         return;
@@ -2313,6 +2918,7 @@
 
                     return loadSpritesFromStaticIndex().then(fallbackSprites => {
                         state.sprites = fallbackSprites;
+                        renderMatchWorkspace();
                         renderPanel('left');
                         renderPanel('right');
                     });
@@ -2321,6 +2927,7 @@
                     return loadSpritesFromStaticIndex()
                         .then(fallbackSprites => {
                             state.sprites = fallbackSprites;
+                            renderMatchWorkspace();
                             renderPanel('left');
                             renderPanel('right');
                             if (!fallbackSprites.length) {
@@ -2344,6 +2951,146 @@
                 .then(data => {
                     updateScoreboardFromApi(data);
                 });
+        }
+
+        function loadMatches() {
+            return fetch('api/matches')
+                .then(response => response.json())
+                .then(data => {
+                    updateMatchesFromApi(data);
+                });
+        }
+
+        function applyMatchResponse(data) {
+            if (data && data.matches) {
+                updateMatchesFromApi(data.matches);
+            }
+            if (data && data.scoreboard) {
+                updateScoreboardFromApi(data.scoreboard);
+            }
+            if (data && Array.isArray(data.panels)) {
+                data.panels.forEach(panelState => updatePanelFromApi(panelState, { preserveUi: true }));
+            }
+        }
+
+        function openCreateMatchModal(prefill = null) {
+            const modal = document.getElementById('createMatchModal');
+            document.getElementById('createMatchLeftPlayerInput').value = prefill && prefill.leftPlayer ? prefill.leftPlayer : '';
+            document.getElementById('createMatchRightPlayerInput').value = prefill && prefill.rightPlayer ? prefill.rightPlayer : '';
+            document.getElementById('createMatchBestOfInput').value = String(prefill && prefill.bestOf ? prefill.bestOf : 3);
+            modal.hidden = false;
+        }
+
+        function closeCreateMatchModal() {
+            document.getElementById('createMatchModal').hidden = true;
+        }
+
+        function createMatchFromModal() {
+            clearStatus('matchStatus');
+            const payload = {
+                leftPlayer: document.getElementById('createMatchLeftPlayerInput').value,
+                rightPlayer: document.getElementById('createMatchRightPlayerInput').value,
+                bestOf: document.getElementById('createMatchBestOfInput').value
+            };
+
+            fetch('api/matches', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '创建比赛失败');
+                }
+                applyMatchResponse(data);
+                closeCreateMatchModal();
+                showStatus('matchStatus', '比赛已创建并进入第 1 局', true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
+        function selectMatch(matchId) {
+            if (!matchId) {
+                return;
+            }
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(matchId)}/select`, {
+                method: 'POST'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '切换比赛失败');
+                }
+                applyMatchResponse(data);
+                showStatus('matchStatus', `已切换到比赛 ${matchId}`, true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
+        function saveActiveMatchMeta() {
+            const match = getActiveMatch();
+            if (!match) {
+                showStatus('matchStatus', '请先创建比赛', false);
+                return;
+            }
+
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(match.id)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    leftPlayer: document.getElementById('matchLeftPlayerInput').value,
+                    rightPlayer: document.getElementById('matchRightPlayerInput').value,
+                    bestOf: document.getElementById('matchBestOfInput').value
+                })
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '保存比赛信息失败');
+                }
+                applyMatchResponse(data);
+                showStatus('matchStatus', '比赛信息已保存', true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
+        function recordWinner(side) {
+            const match = getActiveMatch();
+            if (!match) {
+                showStatus('matchStatus', '请先创建比赛', false);
+                return;
+            }
+
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(match.id)}/winner`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ winner: side })
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '小局结算失败');
+                }
+                applyMatchResponse(data);
+                const nextMatch = getActiveMatch();
+                const message = nextMatch && nextMatch.status === 'completed'
+                    ? `比赛已结束，${side === 'left' ? '左侧' : '右侧'}拿下系列赛`
+                    : `已记录${side === 'left' ? '左侧' : '右侧'}本局获胜，下一局已就绪`;
+                showStatus('matchStatus', message, true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
         }
 
         function savePanel(panel, options = {}) {
@@ -2379,6 +3126,9 @@
                 }
                 appliedSaveVersions[panel] = requestVersion;
                 updatePanelFromApi(data.panel, { preserveUi });
+                if (data.matches) {
+                    updateMatchesFromApi(data.matches);
+                }
                 showStatus(
                     `${panel}Status`,
                     auto
@@ -2455,6 +3205,9 @@
                         quickFillMatches: [],
                         autoSaveEnabled: state[panel].autoSaveEnabled
                     };
+                    if (data.matches) {
+                        updateMatchesFromApi(data.matches);
+                    }
                     renderPanel(panel);
                     showStatus(`${panel}Status`, `${panel === 'left' ? '左侧' : '右侧'}配置已删除`, true);
                 })
@@ -2622,6 +3375,9 @@
             if (payload && payload.scoreboard) {
                 updateScoreboardFromApi(payload.scoreboard);
             }
+            if (payload && payload.matches) {
+                updateMatchesFromApi(payload.matches);
+            }
             if (payload && payload.background) {
                 const preview = document.getElementById('bgPreview');
                 const empty = document.getElementById('bgEmpty');
@@ -2663,6 +3419,12 @@
                 }
             });
 
+            socket.on('matches:update', payload => {
+                if (payload && payload.matches) {
+                    updateMatchesFromApi(payload.matches);
+                }
+            });
+
             socket.on('background:update', payload => {
                 applySnapshot({ background: payload ? payload.background : null });
             });
@@ -2689,11 +3451,11 @@
         function saveScoreboard() {
             clearStatus('scoreboardStatus');
             const payload = {
-                leftName: document.getElementById('leftPlayerNameInput').value,
-                leftScore: document.getElementById('leftPlayerScoreInput').value,
-                rightName: document.getElementById('rightPlayerNameInput').value,
-                rightScore: document.getElementById('rightPlayerScoreInput').value,
-                bestOf: document.getElementById('bestOfInput').value,
+                leftName: state.scoreboard.leftName,
+                leftScore: state.scoreboard.leftScore,
+                rightName: state.scoreboard.rightName,
+                rightScore: state.scoreboard.rightScore,
+                bestOf: state.scoreboard.bestOf,
                 scoreboardEnabled: document.getElementById('scoreboardEnabledInput').checked,
                 healthBadgeEnabled: document.getElementById('healthBadgeEnabledInput').checked,
                 abilityBadgeEnabled: document.getElementById('abilityBadgeEnabledInput').checked,
@@ -2789,9 +3551,32 @@
             });
         }
 
+        function setupMatchControls() {
+            document.getElementById('openCreateMatchBtn').addEventListener('click', () => openCreateMatchModal());
+            document.getElementById('createMatchCancelBtn').addEventListener('click', closeCreateMatchModal);
+            document.getElementById('createMatchConfirmBtn').addEventListener('click', createMatchFromModal);
+            document.getElementById('leftWinBtn').addEventListener('click', () => recordWinner('left'));
+            document.getElementById('rightWinBtn').addEventListener('click', () => recordWinner('right'));
+            document.getElementById('saveMatchMetaBtn').addEventListener('click', saveActiveMatchMeta);
+            document.getElementById('rematchBtn').addEventListener('click', () => {
+                const match = getActiveMatch();
+                openCreateMatchModal(match ? {
+                    leftPlayer: match.leftPlayer,
+                    rightPlayer: match.rightPlayer,
+                    bestOf: match.bestOf
+                } : null);
+            });
+            document.getElementById('createMatchModal').addEventListener('click', event => {
+                if (event.target.id === 'createMatchModal') {
+                    closeCreateMatchModal();
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             renderPortalLinks();
             setupNavigation();
+            setupMatchControls();
             renderView();
             setupPanelControls('left');
             setupPanelControls('right');
@@ -2807,8 +3592,9 @@
             renderPanel('left');
             renderPanel('right');
             renderScoreboardInputs();
+            renderMatchWorkspace();
 
-            Promise.all([loadSprites(), loadPanels(), loadScoreboard()])
+            Promise.all([loadSprites(), loadPanels(), loadScoreboard(), loadMatches()])
                 .then(loadBackground)
                 .then(() => {
                     connectSocket();

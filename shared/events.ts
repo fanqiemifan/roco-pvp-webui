@@ -3,4 +3,5 @@ export const SOCKET_EVENTS = {
   panelUpdate: 'panel:update',
   scoreboardUpdate: 'scoreboard:update',
   backgroundUpdate: 'background:update',
+  matchesUpdate: 'matches:update',
 } as const;

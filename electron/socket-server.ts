@@ -12,6 +12,14 @@ import { buildQuickFillPreview, listSprites, spriteMatchesKeyword } from './serv
 import { getBackgroundState, saveBackground, deleteBackground, ensureRuntimeDirs } from './services/image-service.js';
 import { loadRuntimeConfig, saveRuntimeConfig } from './services/config-service.js';
 import {
+  createMatch,
+  getMatchStore,
+  recordMatchWinner,
+  setActiveMatch,
+  syncActiveMatchLineupsFromPanels,
+  updateMatch,
+} from './services/match-service.js';
+import {
   clearPanelState,
   getPanelState,
   getScoreboardState,
@@ -28,6 +36,7 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     panels: [getPanelState(paths, 'left'), getPanelState(paths, 'right')],
     scoreboard: getScoreboardState(paths),
     background: getBackgroundState(paths),
+    matches: getMatchStore(paths),
   };
 }
 
@@ -89,6 +98,68 @@ export async function createLocalServer(
     response.json(getScoreboardState(paths));
   });
 
+  app.get('/api/matches', (_request, response) => {
+    response.json(getMatchStore(paths));
+  });
+
+  app.post('/api/matches', (request, response) => {
+    try {
+      const matches = createMatch(paths, request.body ?? {});
+      const scoreboard = getScoreboardState(paths);
+      const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
+      panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
+      response.json({ success: true, matches, scoreboard, panels });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.patch('/api/matches/:matchId', (request, response) => {
+    try {
+      const matches = updateMatch(paths, request.params.matchId, request.body ?? {});
+      const scoreboard = getScoreboardState(paths);
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
+      response.json({ success: true, matches, scoreboard });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/matches/:matchId/select', (request, response) => {
+    try {
+      const matches = setActiveMatch(paths, request.params.matchId);
+      const scoreboard = getScoreboardState(paths);
+      const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
+      panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
+      response.json({ success: true, matches, scoreboard, panels });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/matches/:matchId/winner', (request, response) => {
+    try {
+      const winner = request.body?.winner;
+      if (winner !== 'left' && winner !== 'right') {
+        throw new Error('winner must be left or right');
+      }
+      const matches = recordMatchWinner(paths, request.params.matchId, winner);
+      const scoreboard = getScoreboardState(paths);
+      const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
+      panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
+      response.json({ success: true, matches, scoreboard, panels });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
   app.post('/api/scoreboard', (request, response) => {
     try {
       const scoreboard = saveScoreboardState(paths, request.body ?? {});
@@ -124,8 +195,10 @@ export async function createLocalServer(
 
     try {
       const panel = savePanelState(paths, position, request.body?.selected ?? []);
+      const matches = syncActiveMatchLineupsFromPanels(paths);
       io.emit(SOCKET_EVENTS.panelUpdate, { panel });
-      response.json({ success: true, panel });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      response.json({ success: true, panel, matches });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       response.status(message.startsWith('Sprite not found') ? 404 : 400).json({ success: false, error: message });
@@ -141,8 +214,10 @@ export async function createLocalServer(
 
     clearPanelState(paths, position);
     const panel = getPanelState(paths, position);
+    const matches = syncActiveMatchLineupsFromPanels(paths);
     io.emit(SOCKET_EVENTS.panelUpdate, { panel });
-    response.json({ success: true, position, panel });
+    io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+    response.json({ success: true, position, panel, matches });
   });
 
   app.post('/api/quick-fill', (request, response) => {
