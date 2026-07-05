@@ -103,10 +103,24 @@ export interface BackgroundState {
   mtime?: number;
 }
 
+export interface AvatarState {
+  side: 'left' | 'right';
+  exists: boolean;
+  path?: string;
+  size?: number;
+  mtime?: number;
+}
+
+export interface AvatarCollectionState {
+  left: AvatarState;
+  right: AvatarState;
+}
+
 export interface SnapshotPayload {
   panels: [PanelState, PanelState];
   scoreboard: ScoreboardState;
   background: BackgroundState;
+  avatars: AvatarCollectionState;
   matches: MatchStoreState;
 }
 

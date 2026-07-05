@@ -9,7 +9,16 @@ import { Server as SocketIOServer } from 'socket.io';
 import { SOCKET_EVENTS } from '../shared/events.js';
 import type { SnapshotPayload } from '../shared/types.js';
 import { buildQuickFillPreview, listSprites, spriteMatchesKeyword } from './services/sprite-service.js';
-import { getBackgroundState, saveBackground, deleteBackground, ensureRuntimeDirs } from './services/image-service.js';
+import {
+  getBackgroundState,
+  saveBackground,
+  deleteBackground,
+  ensureRuntimeDirs,
+  getAvatarStates,
+  saveAvatar,
+  deleteAvatar,
+  readAvatarMimeType,
+} from './services/image-service.js';
 import { loadRuntimeConfig, saveRuntimeConfig } from './services/config-service.js';
 import {
   createMatch,
@@ -43,6 +52,7 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     panels: [getPanelState(paths, 'left'), getPanelState(paths, 'right')],
     scoreboard: getScoreboardState(paths),
     background: getBackgroundState(paths),
+    avatars: getAvatarStates(paths),
     matches: getMatchStore(paths),
   };
 }
@@ -100,6 +110,10 @@ export async function createLocalServer(
 
   app.get('/api/background', (_request, response) => {
     response.json(getBackgroundState(paths));
+  });
+
+  app.get('/api/avatars', (_request, response) => {
+    response.json(getAvatarStates(paths));
   });
 
   app.get('/api/scoreboard', (_request, response) => {
@@ -370,6 +384,34 @@ export async function createLocalServer(
     response.json({ success: true, position: 'background', background });
   });
 
+  app.post('/api/upload/avatar/:side', upload.single('file'), (request, response) => {
+    const side = request.params.side;
+    if (side !== 'left' && side !== 'right') {
+      response.status(400).json({ success: false, error: 'Invalid avatar side' });
+      return;
+    }
+    if (!request.file?.buffer) {
+      response.status(400).json({ success: false, error: 'No file data' });
+      return;
+    }
+
+    const avatar = saveAvatar(paths, side, request.file.buffer, request.file.mimetype);
+    io.emit(SOCKET_EVENTS.avatarUpdate, { side, avatar, avatars: getAvatarStates(paths) });
+    response.json({ success: true, side, avatar });
+  });
+
+  app.delete('/api/delete/avatar/:side', (request, response) => {
+    const side = request.params.side;
+    if (side !== 'left' && side !== 'right') {
+      response.status(400).json({ success: false, error: 'Invalid avatar side' });
+      return;
+    }
+
+    const avatar = deleteAvatar(paths, side);
+    io.emit(SOCKET_EVENTS.avatarUpdate, { side, avatar, avatars: getAvatarStates(paths) });
+    response.json({ success: true, side, avatar });
+  });
+
   app.get('/api/runtime-config', (_request, response) => {
     response.json(loadRuntimeConfig(paths));
   });
@@ -387,6 +429,24 @@ export async function createLocalServer(
       return;
     }
     response.sendFile(paths.backgroundFile);
+  });
+
+  app.get('/api/avatar/left-avatar.png', (_request, response) => {
+    if (!fs.existsSync(paths.leftAvatarFile)) {
+      response.status(404).end();
+      return;
+    }
+    response.type(readAvatarMimeType(paths, 'left'));
+    response.sendFile(paths.leftAvatarFile);
+  });
+
+  app.get('/api/avatar/right-avatar.png', (_request, response) => {
+    if (!fs.existsSync(paths.rightAvatarFile)) {
+      response.status(404).end();
+      return;
+    }
+    response.type(readAvatarMimeType(paths, 'right'));
+    response.sendFile(paths.rightAvatarFile);
   });
 
   io.on('connection', (socket) => {

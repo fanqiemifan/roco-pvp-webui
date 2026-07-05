@@ -1462,6 +1462,49 @@
             object-fit: contain;
         }
 
+        .avatar-upload-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .avatar-upload-card {
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            background: rgba(255, 255, 255, 0.78);
+        }
+
+        .avatar-upload-card strong {
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .avatar-preview {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            background: linear-gradient(135deg, #faf4ec, #efe4d4);
+        }
+
+        .avatar-preview img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .avatar-preview .empty-preview {
+            padding: 0;
+            font-size: 12px;
+        }
+
         .empty-preview {
             font-size: 14px;
             color: var(--muted);
@@ -2115,6 +2158,36 @@
                                 <div class="form-row">
                                     <label for="scoreFontSizeInput">比分字号</label>
                                     <input type="number" id="scoreFontSizeInput" min="12" max="160" value="64">
+                                </div>
+                            </div>
+                            <div class="scoreboard-card">
+                                <h3>页面3头像</h3>
+                                <p class="muted">左右头像固定显示为 64 × 64，可分别上传替换。</p>
+                                <div class="avatar-upload-grid">
+                                    <div class="avatar-upload-card">
+                                        <strong>左侧头像</strong>
+                                        <div class="avatar-preview">
+                                            <img id="leftAvatarPreview" alt="左侧头像预览" style="display:none;">
+                                            <div class="empty-preview" id="leftAvatarEmpty">未设置</div>
+                                        </div>
+                                        <div class="btn-row">
+                                            <button class="btn btn-primary" type="button" id="leftAvatarUploadBtn">选择头像</button>
+                                            <button class="btn btn-danger" type="button" id="leftAvatarDeleteBtn">删除</button>
+                                        </div>
+                                        <input type="file" accept="image/*" id="leftAvatarFileInput" class="background-input">
+                                    </div>
+                                    <div class="avatar-upload-card">
+                                        <strong>右侧头像</strong>
+                                        <div class="avatar-preview">
+                                            <img id="rightAvatarPreview" alt="右侧头像预览" style="display:none;">
+                                            <div class="empty-preview" id="rightAvatarEmpty">未设置</div>
+                                        </div>
+                                        <div class="btn-row">
+                                            <button class="btn btn-primary" type="button" id="rightAvatarUploadBtn">选择头像</button>
+                                            <button class="btn btn-danger" type="button" id="rightAvatarDeleteBtn">删除</button>
+                                        </div>
+                                        <input type="file" accept="image/*" id="rightAvatarFileInput" class="background-input">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -4207,6 +4280,65 @@
                 });
         }
 
+        function renderAvatarPreview(side, avatar) {
+            const preview = document.getElementById(`${side}AvatarPreview`);
+            const empty = document.getElementById(`${side}AvatarEmpty`);
+            if (avatar && avatar.exists && avatar.path) {
+                preview.src = `${avatar.path}?t=${Math.floor(avatar.mtime || Date.now())}`;
+                preview.style.display = 'block';
+                empty.style.display = 'none';
+            } else {
+                preview.removeAttribute('src');
+                preview.style.display = 'none';
+                empty.style.display = 'block';
+            }
+        }
+
+        function loadAvatars() {
+            return fetch('api/avatars')
+                .then(response => response.json())
+                .then(data => {
+                    renderAvatarPreview('left', data.left);
+                    renderAvatarPreview('right', data.right);
+                });
+        }
+
+        function uploadAvatar(side, file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch(`api/upload/avatar/${side}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '头像上传失败');
+                }
+                renderAvatarPreview(side, data.avatar);
+                showStatus('scoreboardStatus', `${side === 'left' ? '左侧' : '右侧'}头像已更新`, true);
+            })
+            .catch(error => {
+                showStatus('scoreboardStatus', error.message, false);
+            });
+        }
+
+        function deleteAvatar(side) {
+            fetch(`api/delete/avatar/${side}`, { method: 'DELETE' })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.error || '删除头像失败');
+                    }
+                    renderAvatarPreview(side, data.avatar);
+                    showStatus('scoreboardStatus', `${side === 'left' ? '左侧' : '右侧'}头像已删除`, true);
+                })
+                .catch(error => {
+                    showStatus('scoreboardStatus', error.message, false);
+                });
+        }
+
         function applySnapshot(payload) {
             const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
             panels.forEach(panelState => updatePanelFromApi(panelState, { preserveUi: true }));
@@ -4229,6 +4361,10 @@
                     preview.style.display = 'none';
                     empty.style.display = 'block';
                 }
+            }
+            if (payload && payload.avatars) {
+                renderAvatarPreview('left', payload.avatars.left);
+                renderAvatarPreview('right', payload.avatars.right);
             }
         }
 
@@ -4265,6 +4401,10 @@
 
             socket.on('background:update', payload => {
                 applySnapshot({ background: payload ? payload.background : null });
+            });
+
+            socket.on('avatar:update', payload => {
+                applySnapshot({ avatars: payload ? payload.avatars : null });
             });
         }
 
@@ -4321,6 +4461,20 @@
             })
             .catch(error => {
                 showStatus('scoreboardStatus', error.message, false);
+            });
+        }
+
+        function setupAvatarUpload(side) {
+            const input = document.getElementById(`${side}AvatarFileInput`);
+            document.getElementById(`${side}AvatarUploadBtn`).addEventListener('click', () => input.click());
+            document.getElementById(`${side}AvatarDeleteBtn`).addEventListener('click', () => deleteAvatar(side));
+            input.addEventListener('change', event => {
+                const file = event.target.files && event.target.files[0];
+                if (!file) {
+                    return;
+                }
+                uploadAvatar(side, file);
+                event.target.value = '';
             });
         }
 
@@ -4478,6 +4632,8 @@
                 document.getElementById('eventTitleInput').disabled = !event.target.checked;
             });
             setupBackgroundUpload();
+            setupAvatarUpload('left');
+            setupAvatarUpload('right');
             renderPanel('left');
             renderPanel('right');
             renderScoreboardInputs();
@@ -4494,7 +4650,7 @@
                 .then(() => {
                     syncLocalPanelsFromMatchStore();
                     renderMatchWorkspace();
-                    return loadBackground();
+                    return Promise.all([loadBackground(), loadAvatars()]);
                 })
                 .then(() => {
                     connectSocket();
