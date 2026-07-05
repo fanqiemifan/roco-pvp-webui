@@ -2233,7 +2233,7 @@
                             <div>
                                 <small>Preview Workspace</small>
                                 <h2 id="previewPanelTitle">推流页面1</h2>
-                                <p>这里可以预览 <code id="previewPanelFile">index.html</code>，并通过 slot 快速切换推流页面 1、2、3。</p>
+                                <p>这里可以预览 <code id="previewPanelFile">index.html</code>，并通过 slot 快速切换推流页面 1、2、3 和等待页。</p>
                             </div>
                             <div class="panel-header-right">
                                 <div class="status" id="previewStatus"></div>
@@ -2244,6 +2244,7 @@
                             <button class="btn btn-primary preview-slot-btn active" type="button" data-preview-slot="page1">推流页面1</button>
                             <button class="btn btn-secondary preview-slot-btn" type="button" data-preview-slot="page2">推流页面2</button>
                             <button class="btn btn-secondary preview-slot-btn" type="button" data-preview-slot="page3">推流页面3</button>
+                            <button class="btn btn-secondary preview-slot-btn" type="button" data-preview-slot="standby">等待页 Demo</button>
                         </div>
                         <div class="portal-link-grid">
                             <div class="portal-link-card">
@@ -2321,6 +2322,11 @@
                 title: '推流页面3',
                 fileName: 'roco-pvp-page3.html',
                 path: '/roco-pvp-page3.html'
+            },
+            standby: {
+                title: '直播等待页 Demo',
+                fileName: 'live-standby-demo.html',
+                path: '/live-standby-demo.html'
             }
         };
 

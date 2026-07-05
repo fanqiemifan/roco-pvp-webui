@@ -103,6 +103,7 @@ export async function createLocalServer(
   app.get('/', (_request, response) => sendPage(paths, response, 'index.html'));
   app.get('/admin.html', (_request, response) => sendPage(paths, response, 'admin.html'));
   app.get('/live-control.html', (_request, response) => sendPage(paths, response, 'live-control.html'));
+  app.get('/live-standby-demo.html', (_request, response) => sendPage(paths, response, 'live-standby-demo.html'));
   app.get('/roco-pvp.html', (_request, response) => sendPage(paths, response, 'roco-pvp.html'));
   app.get('/roco-pvp-page3.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page3.html'));
 

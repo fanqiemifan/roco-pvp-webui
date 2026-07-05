@@ -92,7 +92,8 @@ function getWindowPreset(targetUrl: string): WindowPreset {
   }
 
   if (
-    targetUrl.endsWith('/roco-pvp.html')
+    targetUrl.endsWith('/live-standby-demo.html')
+    || targetUrl.endsWith('/roco-pvp.html')
     || targetUrl.endsWith('/roco-pvp-page3.html')
     || targetUrl.endsWith('/')
   ) {
