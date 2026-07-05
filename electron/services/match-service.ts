@@ -583,6 +583,17 @@ function parseSelectedSlots(selectedSlots: unknown): MatchSlotSnapshot[] {
   return nextSlots;
 }
 
+function parseSelectedSlot(slotIndex: number, slotData: unknown): MatchSlotSnapshot {
+  if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= MAX_GAME_SLOTS) {
+    throw new Error('invalid slot index');
+  }
+
+  const nextSlots = parseSelectedSlots(
+    Array.from({ length: MAX_GAME_SLOTS }, (_, index) => (index === slotIndex ? slotData : null)),
+  );
+  return nextSlots[slotIndex];
+}
+
 
 export function getMatchStore(paths: AppPaths): MatchStoreState {
   const { store, mtime } = readStoreFile(paths);
@@ -805,8 +816,8 @@ export function saveDraftPanelStateForActiveMatch(
 
   const current = store.matches[index];
   const currentGame = getCurrentGame(current);
-  if (currentGame.status !== 'pending') {
-    throw new Error('当前小局已开始，不能继续修改阵容');
+  if (currentGame.status === 'completed') {
+    throw new Error('当前小局已结束，不能继续修改阵容');
   }
 
   const nextSlots = parseSelectedSlots(selectedSlots);
@@ -818,6 +829,64 @@ export function saveDraftPanelStateForActiveMatch(
     rightSlots: position === 'right' ? nextSlots : currentGame.rightSlots,
     leftLineup: position === 'left' ? lineupFromSlots(nextSlots) : currentGame.leftLineup,
     rightLineup: position === 'right' ? lineupFromSlots(nextSlots) : currentGame.rightLineup,
+  };
+
+  store.matches[index] = {
+    ...current,
+    games: nextGames,
+    updatedAt: new Date().toISOString(),
+  };
+
+  return writeStoreFile(paths, store);
+}
+
+export function saveDraftPanelSlotStateForActiveMatch(
+  paths: AppPaths,
+  position: 'left' | 'right',
+  slotIndex: number,
+  slotData: unknown,
+): MatchStoreState {
+  const { store } = readStoreFile(paths);
+  if (!store.activeMatchId) {
+    throw new Error('当前没有活动比赛');
+  }
+
+  const index = store.matches.findIndex((match) => match.id === store.activeMatchId);
+  if (index === -1) {
+    throw new Error('比赛不存在');
+  }
+
+  const current = store.matches[index];
+  const currentGame = getCurrentGame(current);
+  if (currentGame.status === 'completed') {
+    throw new Error('当前小局已结束，不能继续修改阵容');
+  }
+
+  const nextSlot = parseSelectedSlot(slotIndex, slotData);
+  const nextGames = [...current.games];
+  const gameIndex = nextGames.findIndex((game) => game.gameNumber === currentGame.gameNumber);
+  const leftSlots = currentGame.leftSlots.slice(0, MAX_GAME_SLOTS);
+  const rightSlots = currentGame.rightSlots.slice(0, MAX_GAME_SLOTS);
+
+  while (leftSlots.length < MAX_GAME_SLOTS) {
+    leftSlots.push(createEmptySlotSnapshot(leftSlots.length));
+  }
+  while (rightSlots.length < MAX_GAME_SLOTS) {
+    rightSlots.push(createEmptySlotSnapshot(rightSlots.length));
+  }
+
+  if (position === 'left') {
+    leftSlots[slotIndex] = nextSlot;
+  } else {
+    rightSlots[slotIndex] = nextSlot;
+  }
+
+  nextGames[gameIndex] = {
+    ...currentGame,
+    leftSlots,
+    rightSlots,
+    leftLineup: lineupFromSlots(leftSlots),
+    rightLineup: lineupFromSlots(rightSlots),
   };
 
   store.matches[index] = {

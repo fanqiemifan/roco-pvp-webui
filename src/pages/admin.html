@@ -2378,6 +2378,10 @@
             right: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: true }
         };
         const autoSaveTimers = { left: null, right: null };
+        const autoSavePlans = {
+            left: { slotIndexes: new Set(), requiresFullSave: false },
+            right: { slotIndexes: new Set(), requiresFullSave: false }
+        };
         const saveRequestVersions = { left: 0, right: 0 };
         const appliedSaveVersions = { left: 0, right: 0 };
         const LIVE_CONTROL_WINDOW_NAME = 'roco-live-control-window';
@@ -2616,7 +2620,7 @@
         function canEditLineup() {
             const match = getActiveMatch();
             const game = getCurrentGame(match);
-            return !!match && !!game && game.status === 'pending';
+            return !!match && !!game && match.status !== 'completed' && game.status !== 'completed';
         }
 
         function canStartCurrentGame() {
@@ -2992,7 +2996,7 @@
             } else if (currentGame && currentGame.status === 'pending') {
                 formatHint.textContent = '先完成双方阵容选择，再点击“开始本次对局”同步到推流页面。';
             } else if (currentGame && currentGame.status === 'in_progress') {
-                formatHint.textContent = '本局已经开始，当前阵容已同步到推流页面，请记录胜负或使用撤回修正。';
+                formatHint.textContent = '本局已经开始，仍可继续编辑阵容、血量和能量值，修改会同步到当前对局与推流页面。';
             } else if (match.status === 'completed') {
                 formatHint.textContent = `比赛已结束，胜者为${match.winner === 'left' ? '左侧' : '右侧'}。`;
             } else {
@@ -3238,6 +3242,19 @@
             return Math.min(10, Math.max(0, Math.round(slot.energyValue)));
         }
 
+        function serializePanelSlot(slot) {
+            return {
+                slot: slot.slot,
+                sprite: slot.sprite ? slot.sprite.id : null,
+                opacityEnabled: slot.opacityEnabled,
+                opacity: slot.opacity,
+                saturation: slot.saturation,
+                healthEnabled: !slot.opacityEnabled && !!slot.healthEnabled,
+                healthPercent: getHealthLevel(slot),
+                energyValue: getEnergyLevel(slot)
+            };
+        }
+
         function getHeartAsset(percent) {
             const health = Math.min(100, Math.max(0, Number(percent ?? 100)));
             if (health <= 0) {
@@ -3348,22 +3365,50 @@
             document.getElementById(`${panel}AutoSaveToggle`).checked = !!state[panel].autoSaveEnabled;
         }
 
+        function resetAutoSavePlan(panel) {
+            autoSavePlans[panel].slotIndexes.clear();
+            autoSavePlans[panel].requiresFullSave = false;
+        }
+
+        function flushPanelAutoSave(panel) {
+            const slotIndexes = Array.from(autoSavePlans[panel].slotIndexes);
+            const requiresFullSave = autoSavePlans[panel].requiresFullSave;
+            resetAutoSavePlan(panel);
+
+            if (requiresFullSave || slotIndexes.length !== 1) {
+                savePanel(panel, { auto: true, preserveUi: true });
+                return;
+            }
+
+            savePanelSlot(panel, slotIndexes[0], { auto: true, preserveUi: true });
+        }
+
         function schedulePanelAutoSave(panel, immediate = false) {
             clearTimeout(autoSaveTimers[panel]);
             const delay = immediate ? 0 : 600;
             autoSaveTimers[panel] = setTimeout(() => {
-                savePanel(panel, { auto: true, preserveUi: true });
+                flushPanelAutoSave(panel);
             }, delay);
         }
 
+        function queuePanelAutoSave(panel, options = {}) {
+            const { slotIndex = null, fullSave = false, immediate = false } = options;
+            if (fullSave || !Number.isInteger(slotIndex)) {
+                autoSavePlans[panel].requiresFullSave = true;
+            } else {
+                autoSavePlans[panel].slotIndexes.add(slotIndex);
+            }
+            schedulePanelAutoSave(panel, immediate);
+        }
+
         function handlePanelMutation(panel, options = {}) {
-            const { clearStatusBeforeRender = true, autoSave = true } = options;
+            const { clearStatusBeforeRender = true, autoSave = true, slotIndex = null, fullSave = false } = options;
             if (clearStatusBeforeRender) {
                 clearStatus(`${panel}Status`);
             }
             renderPanel(panel);
             if (autoSave && state[panel].autoSaveEnabled) {
-                schedulePanelAutoSave(panel);
+                queuePanelAutoSave(panel, { slotIndex, fullSave });
             }
         }
 
@@ -3415,7 +3460,7 @@
                             slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
                             match.sprite = candidate;
                             state[panel].activeSlot = match.slot;
-                            handlePanelMutation(panel);
+                            handlePanelMutation(panel, { slotIndex: match.slot });
                         });
                     }
                     options.appendChild(card);
@@ -3464,6 +3509,7 @@
                 `;
                 if (editable) {
                     card.addEventListener('click', () => {
+                        const changedSlotIndex = state[panel].activeSlot;
                         const slot = currentSlot(panel);
                         slot.sprite = sprite;
                         slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
@@ -3471,7 +3517,7 @@
                         if (nextEmpty !== -1) {
                             state[panel].activeSlot = nextEmpty;
                         }
-                        handlePanelMutation(panel);
+                        handlePanelMutation(panel, { slotIndex: changedSlotIndex });
                     });
                 }
                 grid.appendChild(card);
@@ -3550,7 +3596,7 @@
             const index = state[panel].activeSlot;
             state[panel].selected[index] = createEmptySlot(index);
             state[panel].quickFillMatches = (state[panel].quickFillMatches || []).filter(match => Number(match.slot) !== index);
-            handlePanelMutation(panel);
+            handlePanelMutation(panel, { slotIndex: index });
         }
 
         function clearSelection(panel) {
@@ -3560,7 +3606,7 @@
             state[panel].selected = Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index));
             state[panel].activeSlot = 0;
             state[panel].quickFillMatches = [];
-            handlePanelMutation(panel);
+            handlePanelMutation(panel, { fullSave: true });
         }
 
         function applyQuickFillMatches(panel, matches) {
@@ -3598,7 +3644,7 @@
                         : []
                 }))
                 : [];
-            handlePanelMutation(panel, { clearStatusBeforeRender: false });
+            handlePanelMutation(panel, { clearStatusBeforeRender: false, fullSave: true });
         }
 
         function updatePanelFromApi(panelState, options = {}) {
@@ -3937,7 +3983,7 @@
                     throw new Error(data.error || '开始本局失败');
                 }
                 applyMatchResponse(data);
-                showStatus('matchStatus', '本局已开始，阵容已同步到推流页面', true);
+                showStatus('matchStatus', '本局已开始，后续仍可继续编辑阵容、血量与能量值', true);
             })
             .catch(error => {
                 showStatus('matchStatus', error.message, false);
@@ -3998,6 +4044,7 @@
             }
             const { auto = false, preserveUi = true } = options;
             clearTimeout(autoSaveTimers[panel]);
+            resetAutoSavePlan(panel);
             if (!auto) {
                 clearStatus(`${panel}Status`);
             }
@@ -4006,16 +4053,60 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    selected: state[panel].selected.map(slot => ({
-                        slot: slot.slot,
-                        sprite: slot.sprite ? slot.sprite.id : null,
-                        opacityEnabled: slot.opacityEnabled,
-                        opacity: slot.opacity,
-                        saturation: slot.saturation,
-                        healthEnabled: !slot.opacityEnabled && !!slot.healthEnabled,
-                        healthPercent: getHealthLevel(slot),
-                        energyValue: getEnergyLevel(slot)
-                    }))
+                    selected: state[panel].selected.map(serializePanelSlot)
+                })
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '保存失败');
+                }
+                if (requestVersion < appliedSaveVersions[panel]) {
+                    return;
+                }
+                appliedSaveVersions[panel] = requestVersion;
+                if (data.panel) {
+                    updatePanelFromApi(data.panel, { preserveUi });
+                }
+                if (data.matches) {
+                    updateMatchesFromApi(data.matches);
+                }
+                const currentGame = getCurrentGame(getActiveMatch());
+                showStatus(
+                    `${panel}Status`,
+                    auto
+                        ? `${panel === 'left' ? '左侧' : '右侧'}阵容草稿已自动保存`
+                        : currentGame && currentGame.status === 'in_progress'
+                            ? `${panel === 'left' ? '左侧' : '右侧'}阵容已同步到当前对局与推流页面`
+                            : `${panel === 'left' ? '左侧' : '右侧'}阵容草稿已保存，等待开始本局后同步前端`,
+                    true
+                );
+            })
+            .catch(error => {
+                showStatus(`${panel}Status`, error.message, false);
+            });
+        }
+
+        function savePanelSlot(panel, slotIndex, options = {}) {
+            if (!canEditLineup()) {
+                return;
+            }
+            if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= MAX_SELECTION) {
+                savePanel(panel, options);
+                return;
+            }
+
+            const { auto = false, preserveUi = true } = options;
+            clearTimeout(autoSaveTimers[panel]);
+            if (!auto) {
+                clearStatus(`${panel}Status`);
+            }
+            const requestVersion = ++saveRequestVersions[panel];
+            fetch(`api/panels/${panel}/slots/${slotIndex}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    slot: serializePanelSlot(state[panel].selected[slotIndex])
                 })
             })
             .then(async response => {
@@ -4036,8 +4127,8 @@
                 showStatus(
                     `${panel}Status`,
                     auto
-                        ? `${panel === 'left' ? '左侧' : '右侧'}阵容草稿已自动保存`
-                        : `${panel === 'left' ? '左侧' : '右侧'}阵容草稿已保存，等待开始本局后同步前端`,
+                        ? `${panel === 'left' ? '左侧' : '右侧'}当前槽位已自动保存`
+                        : `${panel === 'left' ? '左侧' : '右侧'}当前槽位已保存`,
                     true
                 );
             })
@@ -4138,14 +4229,16 @@
                 state[panel].autoSaveEnabled = event.target.checked;
                 if (state[panel].autoSaveEnabled) {
                     showStatus(`${panel}Status`, `${panel === 'left' ? '左侧' : '右侧'}自动保存已开启`, true);
-                    schedulePanelAutoSave(panel, true);
+                    queuePanelAutoSave(panel, { fullSave: true, immediate: true });
                     return;
                 }
                 clearTimeout(autoSaveTimers[panel]);
+                resetAutoSavePlan(panel);
                 showStatus(`${panel}Status`, `${panel === 'left' ? '左侧' : '右侧'}自动保存已关闭，请手动保存修改`, false);
             });
 
             document.getElementById(`${panel}OpacityEnabled`).addEventListener('change', event => {
+                const slotIndex = state[panel].activeSlot;
                 const slot = currentSlot(panel);
                 slot.opacityEnabled = event.target.checked;
                 if (slot.opacityEnabled) {
@@ -4160,10 +4253,11 @@
                     slot.saturation = 1;
                 }
                 slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
-                handlePanelMutation(panel);
+                handlePanelMutation(panel, { slotIndex });
             });
 
             document.getElementById(`${panel}ProtectionEnabled`).addEventListener('change', event => {
+                const slotIndex = state[panel].activeSlot;
                 const slot = currentSlot(panel);
                 slot.healthEnabled = event.target.checked;
                 if (slot.healthEnabled) {
@@ -4177,7 +4271,7 @@
                 } else {
                     slot.healthPercent = 100;
                 }
-                handlePanelMutation(panel);
+                handlePanelMutation(panel, { slotIndex });
             });
 
             [`${panel}ProtectionRange`, `${panel}ProtectionNumber`].forEach(id => {
@@ -4193,7 +4287,7 @@
                         return;
                     }
                     slot.healthPercent = value;
-                    handlePanelMutation(panel);
+                    handlePanelMutation(panel, { slotIndex: state[panel].activeSlot });
                 });
             });
 
@@ -4207,7 +4301,7 @@
                     const slot = currentSlot(panel);
                     slot.opacity = value / 100;
                     slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
-                    handlePanelMutation(panel);
+                    handlePanelMutation(panel, { slotIndex: state[panel].activeSlot });
                 });
             });
 
@@ -4220,7 +4314,7 @@
                     value = Math.min(300, Math.max(0, value));
                     const slot = currentSlot(panel);
                     slot.saturation = value / 100;
-                    handlePanelMutation(panel);
+                    handlePanelMutation(panel, { slotIndex: state[panel].activeSlot });
                 });
             });
 
@@ -4233,7 +4327,7 @@
                     value = Math.min(10, Math.max(0, Math.round(value)));
                     const slot = currentSlot(panel);
                     slot.energyValue = value;
-                    handlePanelMutation(panel);
+                    handlePanelMutation(panel, { slotIndex: state[panel].activeSlot });
                 });
             });
         }

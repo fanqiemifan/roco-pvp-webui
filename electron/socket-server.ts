@@ -28,6 +28,7 @@ import {
   recordMatchWinner,
   redoMatchAction,
   saveDraftPanelStateForActiveMatch,
+  saveDraftPanelSlotStateForActiveMatch,
   setActiveMatch,
   startCurrentGame,
   syncActiveMatchLineupsFromPanels,
@@ -39,6 +40,7 @@ import {
   clearPanelState,
   getPanelState,
   getScoreboardState,
+  savePanelSlotState,
   savePanelState,
   saveScoreboardBestOf,
   saveScoreboardState,
@@ -314,7 +316,63 @@ export async function createLocalServer(
         return;
       }
 
+      if (activeMatch && activeGame?.status === 'in_progress') {
+        const panel = savePanelState(paths, position, request.body?.selected ?? []);
+        const matches = saveDraftPanelStateForActiveMatch(paths, position, request.body?.selected ?? []);
+        io.emit(SOCKET_EVENTS.panelUpdate, { panel });
+        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+        response.json({ success: true, panel, matches });
+        return;
+      }
+
       const panel = savePanelState(paths, position, request.body?.selected ?? []);
+      const matches = syncActiveMatchLineupsFromPanels(paths);
+      io.emit(SOCKET_EVENTS.panelUpdate, { panel });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      response.json({ success: true, panel, matches });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      response.status(message.startsWith('Sprite not found') ? 404 : 400).json({ success: false, error: message });
+    }
+  });
+
+  app.patch('/api/panels/:position/slots/:slot', (request, response) => {
+    const position = request.params.position;
+    const slotIndex = Number.parseInt(request.params.slot, 10);
+    if (position !== 'left' && position !== 'right') {
+      response.status(404).json({ success: false, error: 'Invalid position' });
+      return;
+    }
+    if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 6) {
+      response.status(400).json({ success: false, error: 'Invalid slot index' });
+      return;
+    }
+
+    try {
+      const activeStore = getMatchStore(paths);
+      const activeMatch = activeStore.matches.find((match) => match.id === activeStore.activeMatchId);
+      const activeGame =
+        activeMatch?.games.find((game) => game.status === 'in_progress')
+        ?? activeMatch?.games.find((game) => game.status === 'pending')
+        ?? null;
+
+      if (activeMatch && activeGame?.status === 'pending') {
+        const matches = saveDraftPanelSlotStateForActiveMatch(paths, position, slotIndex, request.body?.slot ?? null);
+        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+        response.json({ success: true, matches });
+        return;
+      }
+
+      if (activeMatch && activeGame?.status === 'in_progress') {
+        const panel = savePanelSlotState(paths, position, slotIndex, request.body?.slot ?? null);
+        const matches = saveDraftPanelSlotStateForActiveMatch(paths, position, slotIndex, request.body?.slot ?? null);
+        io.emit(SOCKET_EVENTS.panelUpdate, { panel });
+        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+        response.json({ success: true, panel, matches });
+        return;
+      }
+
+      const panel = savePanelSlotState(paths, position, slotIndex, request.body?.slot ?? null);
       const matches = syncActiveMatchLineupsFromPanels(paths);
       io.emit(SOCKET_EVENTS.panelUpdate, { panel });
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
@@ -344,6 +402,16 @@ export async function createLocalServer(
         const matches = saveDraftPanelStateForActiveMatch(paths, position, []);
         io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
         response.json({ success: true, position, matches });
+        return;
+      }
+
+      if (activeMatch && activeGame?.status === 'in_progress') {
+        clearPanelState(paths, position);
+        const panel = getPanelState(paths, position);
+        const matches = saveDraftPanelStateForActiveMatch(paths, position, []);
+        io.emit(SOCKET_EVENTS.panelUpdate, { panel });
+        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+        response.json({ success: true, position, panel, matches });
         return;
       }
 
