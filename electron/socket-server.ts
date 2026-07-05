@@ -6,7 +6,6 @@ import crypto from 'node:crypto';
 import express, { type Request, type Response } from 'express';
 import multer from 'multer';
 import { Server as SocketIOServer } from 'socket.io';
-import bcrypt from 'bcrypt';
 
 import { SOCKET_EVENTS } from '../shared/events.js';
 import type { SnapshotPayload } from '../shared/types.js';
@@ -87,6 +86,14 @@ export interface AuthConfig {
   password: string;
 }
 
+function sha256(value: string): Buffer {
+  return crypto.createHash('sha256').update(value, 'utf8').digest();
+}
+
+function safePasswordEquals(input: string, expected: string): boolean {
+  return crypto.timingSafeEqual(sha256(input), sha256(expected));
+}
+
 export async function createLocalServer(
   paths: AppPaths,
   port: number,
@@ -96,7 +103,6 @@ export async function createLocalServer(
   // Single-session tracking: only one active session at a time.
   // Each new login generates a random sessionId, invalidating all previous sessions.
   let activeSessionId: string | null = null;
-  const hashedPassword = authConfig ? await bcrypt.hash(authConfig.password, 10) : null;
 
   ensureRuntimeDirs(paths);
 
@@ -159,7 +165,7 @@ export async function createLocalServer(
     }
     const { username, password } = req.body || {};
     try {
-      const passwordMatch = await bcrypt.compare(password || '', hashedPassword!);
+      const passwordMatch = safePasswordEquals(password || '', authConfig.password);
       if (username === authConfig.username && passwordMatch) {
         // Invalidate all previous sessions by rotating the active session ID
         activeSessionId = crypto.randomUUID();
