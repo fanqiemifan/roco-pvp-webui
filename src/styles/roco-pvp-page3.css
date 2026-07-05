@@ -1,0 +1,350 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: transparent !important;
+    color: #fff;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+body {
+    --page3-name-size: 36px;
+    --page3-score-size: 48px;
+}
+
+.page3-screen {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+.page3-lineup {
+    position: absolute;
+    inset: 0;
+}
+
+.page3-spirit-slot {
+    position: absolute;
+    width: 108px;
+    height: 108px;
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity 180ms ease, transform 180ms ease;
+    pointer-events: none;
+}
+
+.page3-spirit-slot.is-active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.page3-spirit-slot[data-side="left"][data-slot="0"] { left: 106px; top: 196px; }
+.page3-spirit-slot[data-side="left"][data-slot="1"] { left: 68px; top: 312px; }
+.page3-spirit-slot[data-side="left"][data-slot="2"] { left: 44px; top: 428px; }
+.page3-spirit-slot[data-side="left"][data-slot="3"] { left: 55px; top: 544px; }
+.page3-spirit-slot[data-side="left"][data-slot="4"] { left: 68px; top: 660px; }
+.page3-spirit-slot[data-side="left"][data-slot="5"] { left: 106px; top: 776px; }
+.page3-spirit-slot[data-side="right"][data-slot="0"] { left: 1718px; top: 196px; }
+.page3-spirit-slot[data-side="right"][data-slot="1"] { left: 1756px; top: 312px; }
+.page3-spirit-slot[data-side="right"][data-slot="2"] { left: 1780px; top: 428px; }
+.page3-spirit-slot[data-side="right"][data-slot="3"] { left: 1769px; top: 544px; }
+.page3-spirit-slot[data-side="right"][data-slot="4"] { left: 1756px; top: 660px; }
+.page3-spirit-slot[data-side="right"][data-slot="5"] { left: 1718px; top: 776px; }
+
+.page3-spirit-shell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.page3-spirit-glow {
+    position: absolute;
+    left: 16px;
+    top: 12px;
+    width: 76px;
+    height: 76px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.7);
+    filter: blur(22px);
+    opacity: 0.28;
+}
+
+.page3-spirit-plate {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 8px;
+    height: 34px;
+    border-radius: 17px;
+    background:
+        radial-gradient(circle at 24% 28%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 46%),
+        linear-gradient(135deg, #fbf8f0 0%, #efe7d4 100%);
+    box-shadow:
+        0 10px 18px rgba(14, 14, 18, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.page3-spirit-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.32));
+    transition: opacity 180ms ease, filter 180ms ease;
+}
+
+.page3-spirit-status {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    min-width: 40px;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #101117;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    box-shadow: 0 8px 16px rgba(12, 12, 16, 0.16);
+}
+
+.page3-spirit-tag {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 14px;
+    height: 18px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: rgba(15, 15, 19, 0.78);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.24);
+}
+
+.page3-spirit-dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #5bc0ff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+.page3-spirit-label {
+    min-width: 0;
+    flex: 1;
+    font-size: 10px;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.page3-spirit-slot.is-done .page3-spirit-image {
+    filter: grayscale(1) saturate(0.25) drop-shadow(0 10px 12px rgba(0, 0, 0, 0.16));
+}
+
+.page3-spirit-slot.is-done .page3-spirit-plate {
+    background: linear-gradient(135deg, #ebe7dd 0%, #d2cbbc 100%);
+}
+
+.page3-spirit-slot.is-done .page3-spirit-tag {
+    background: rgba(62, 62, 67, 0.8);
+}
+
+.page3-spirit-slot.energy-low .page3-spirit-dot {
+    background: #ff74bf;
+}
+
+.page3-spirit-slot.energy-mid .page3-spirit-dot {
+    background: #f0c34c;
+}
+
+.page3-spirit-slot.energy-high .page3-spirit-dot {
+    background: #6ec6ff;
+}
+
+.page3-spirit-slot.health-critical .page3-spirit-status {
+    background: rgba(255, 111, 111, 0.94);
+    color: #fff;
+}
+
+.page3-spirit-slot.health-warning .page3-spirit-status {
+    background: rgba(255, 206, 97, 0.96);
+    color: #241808;
+}
+
+.page3-scoreboard {
+    position: absolute;
+    left: 376px;
+    top: 956px;
+    width: 1170px;
+    height: 100px;
+    transition: opacity 180ms ease;
+}
+
+.page3-scoreboard.is-hidden {
+    opacity: 0;
+}
+
+.page3-scoreboard-track {
+    position: absolute;
+    inset: 4px 0;
+    border-radius: 30px;
+    border: 4px solid #c9c9c9;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 48%),
+        linear-gradient(135deg, #f7f1e5 0%, #eee4d1 100%);
+    box-shadow:
+        0 14px 26px rgba(17, 17, 24, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.page3-scoreboard-center {
+    position: absolute;
+    left: 452px;
+    top: 0;
+    width: 266px;
+    height: 100px;
+    border-radius: 30px;
+    background: #06060a;
+    box-shadow: 0 12px 24px rgba(7, 7, 10, 0.28);
+}
+
+.page3-score {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--page3-score-size);
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+}
+
+.page3-score-left {
+    left: 37px;
+}
+
+.page3-score-right {
+    right: 35px;
+}
+
+.page3-versus {
+    position: absolute;
+    left: 94px;
+    top: 0;
+    width: 80px;
+    height: 100px;
+    border-radius: 17px;
+    background: linear-gradient(180deg, #faf6ee 0%, #efe4d4 100%);
+    color: #0a0a0f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(13, 13, 18, 0.16);
+}
+
+.page3-versus-main {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.page3-versus-sub {
+    margin-top: 4px;
+    font-size: 20px;
+    line-height: 1;
+    opacity: 0.88;
+}
+
+.page3-player {
+    position: absolute;
+    top: 16px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: #09090d;
+}
+
+.page3-player-left {
+    left: 38px;
+    width: 330px;
+}
+
+.page3-player-right {
+    right: 38px;
+    width: 330px;
+    justify-content: flex-end;
+}
+
+.page3-player-name {
+    min-width: 0;
+    flex: 1;
+    font-size: var(--page3-name-size);
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.page3-player-right .page3-player-name {
+    text-align: right;
+}
+
+.page3-player-avatar {
+    position: relative;
+    width: 55px;
+    height: 36px;
+    flex: none;
+    border-radius: 999px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0) 46%),
+        linear-gradient(135deg, #fff7e9 0%, #ead8bf 100%);
+    box-shadow:
+        0 8px 14px rgba(14, 14, 18, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page3-player-avatar span {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.page3-player-avatar-left span {
+    background: linear-gradient(135deg, #6db7ff 0%, #3973ff 100%);
+}
+
+.page3-player-avatar-right span {
+    background: linear-gradient(135deg, #ffb58b 0%, #ff7c6b 100%);
+}

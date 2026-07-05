@@ -1753,19 +1753,8 @@
                 </div>
             </div>
 
-            <section class="info-box">
-                <h3>赛事说明</h3>
-                <p class="muted">
-                    阵容编辑、选手名字、比分和 BO 都统一收口到赛事管理。保存阵容时只会写入当前小局草稿，点击“开始本次对局”后才会同步到推流页面。
-                </p>
-                <h3>素材来源</h3>
-                <p class="muted">
-                    所有精灵图均来自洛克王国世界 WIKI，图片来源：<a href="https://wiki.biligame.com/rocom/" target="_blank">https://wiki.biligame.com/rocom/</a>。转载规范：<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</a>。
-                </p>
-            </section>
-
             <div class="sidebar-footer">
-                <p>可自行选择推流页面1或页面2</p>
+                <p>可自行选择推流页面1、页面2或页面3</p>
             </div>
         </aside>
 
@@ -1804,7 +1793,7 @@
                                     <div>
                                         <small>Match Focus</small>
                                         <h2>当前比赛</h2>
-                                        <p class="muted">顶部比分栏中的选手名、比分与 BO 由这里统一管理。</p>
+                                        <p class="muted">统一管理比分栏中的选手名、比分与赛制。选择好双方阵容后点击开始对局，即可同步双方阵容到推流页面。</p>
                                     </div>
                                     <div class="panel-header-right">
                                         <div class="status" id="matchStatus"></div>
@@ -2029,6 +2018,17 @@
                         </section>
                     </div>
 
+            <section class="info-box">
+                <h3>赛事说明</h3>
+                <p class="muted">
+                    阵容编辑、选手名字、比分和 BO 都统一收口到赛事管理。保存阵容时只会写入当前小局草稿，点击“开始本次对局”后才会同步到推流页面。
+                </p>
+                <h3>素材来源</h3>
+                <p class="muted">
+                    所有精灵图均来自洛克王国世界 WIKI，图片来源：<a href="https://wiki.biligame.com/rocom/" target="_blank">https://wiki.biligame.com/rocom/</a>。转载规范：<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</a>。
+                </p>
+            </section>
+
                 </div>
             </section>
 
@@ -2160,7 +2160,7 @@
                             <div>
                                 <small>Preview Workspace</small>
                                 <h2 id="previewPanelTitle">推流页面1</h2>
-                                <p>这里可以预览 <code id="previewPanelFile">index.html</code>，并通过 slot 快速切换推流页面 1 或 2。</p>
+                                <p>这里可以预览 <code id="previewPanelFile">index.html</code>，并通过 slot 快速切换推流页面 1、2、3。</p>
                             </div>
                             <div class="panel-header-right">
                                 <div class="status" id="previewStatus"></div>
@@ -2170,6 +2170,7 @@
                         <div class="preview-slot-switch" aria-label="推流页面切换">
                             <button class="btn btn-primary preview-slot-btn active" type="button" data-preview-slot="page1">推流页面1</button>
                             <button class="btn btn-secondary preview-slot-btn" type="button" data-preview-slot="page2">推流页面2</button>
+                            <button class="btn btn-secondary preview-slot-btn" type="button" data-preview-slot="page3">推流页面3</button>
                         </div>
                         <div class="portal-link-grid">
                             <div class="portal-link-card">
@@ -2242,6 +2243,11 @@
                 title: '推流页面2',
                 fileName: 'roco-pvp.html',
                 path: '/roco-pvp.html'
+            },
+            page3: {
+                title: '推流页面3',
+                fileName: 'roco-pvp-page3.html',
+                path: '/roco-pvp-page3.html'
             }
         };
 

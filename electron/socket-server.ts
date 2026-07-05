@@ -92,6 +92,7 @@ export async function createLocalServer(
   app.get('/admin.html', (_request, response) => sendPage(paths, response, 'admin.html'));
   app.get('/live-control.html', (_request, response) => sendPage(paths, response, 'live-control.html'));
   app.get('/roco-pvp.html', (_request, response) => sendPage(paths, response, 'roco-pvp.html'));
+  app.get('/roco-pvp-page3.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page3.html'));
 
   app.get('/api/images', (_request, response) => {
     response.json({ images: [getPanelState(paths, 'left'), getPanelState(paths, 'right')] });

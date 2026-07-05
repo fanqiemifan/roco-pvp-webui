@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洛克王国PVP - 推流页面3</title>
+    <link rel="stylesheet" href="/styles/roco-pvp-page3.css">
+</head>
+<body>
+    <main class="page3-screen" aria-label="洛克王国PVP推流页面3">
+        <section class="page3-lineup page3-lineup-left" aria-label="左侧阵容">
+            <article class="page3-spirit-slot" data-side="left" data-slot="0"></article>
+            <article class="page3-spirit-slot" data-side="left" data-slot="1"></article>
+            <article class="page3-spirit-slot" data-side="left" data-slot="2"></article>
+            <article class="page3-spirit-slot" data-side="left" data-slot="3"></article>
+            <article class="page3-spirit-slot" data-side="left" data-slot="4"></article>
+            <article class="page3-spirit-slot" data-side="left" data-slot="5"></article>
+        </section>
+
+        <section class="page3-lineup page3-lineup-right" aria-label="右侧阵容">
+            <article class="page3-spirit-slot" data-side="right" data-slot="0"></article>
+            <article class="page3-spirit-slot" data-side="right" data-slot="1"></article>
+            <article class="page3-spirit-slot" data-side="right" data-slot="2"></article>
+            <article class="page3-spirit-slot" data-side="right" data-slot="3"></article>
+            <article class="page3-spirit-slot" data-side="right" data-slot="4"></article>
+            <article class="page3-spirit-slot" data-side="right" data-slot="5"></article>
+        </section>
+
+        <section class="page3-scoreboard" id="page3Scoreboard" aria-label="比分栏">
+            <div class="page3-scoreboard-track"></div>
+
+            <div class="page3-player page3-player-left">
+                <div class="page3-player-avatar page3-player-avatar-left">
+                    <span id="page3LeftAvatar">L</span>
+                </div>
+                <div class="page3-player-name" id="page3LeftName"></div>
+            </div>
+
+            <div class="page3-scoreboard-center">
+                <div class="page3-score page3-score-left" id="page3LeftScore">0</div>
+                <div class="page3-versus">
+                    <div class="page3-versus-main">VS</div>
+                    <div class="page3-versus-sub" id="page3BestOf">BO7</div>
+                </div>
+                <div class="page3-score page3-score-right" id="page3RightScore">0</div>
+            </div>
+
+            <div class="page3-player page3-player-right">
+                <div class="page3-player-name" id="page3RightName"></div>
+                <div class="page3-player-avatar page3-player-avatar-right">
+                    <span id="page3RightAvatar">R</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/page3-display.js"></script>
+</body>
+</html>
