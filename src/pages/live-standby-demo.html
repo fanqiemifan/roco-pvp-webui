@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>洛克王国PVP - 直播等待页 Demo</title>
+    <title>洛克王国PVP - 直播等待页</title>
     <link rel="stylesheet" href="/styles/live-standby-demo.css">
 </head>
 <body>
-    <main class="standby-screen" aria-label="洛克王国PVP直播等待页演示">
+    <main class="standby-screen" aria-label="洛克王国PVP直播等待页">
         <div class="texture texture-left" aria-hidden="true"></div>
         <div class="texture texture-right" aria-hidden="true"></div>
 
@@ -16,176 +16,63 @@
                 <div class="eyebrow">ROCO PVP STANDBY</div>
                 <h1>等待开始比赛</h1>
             </div>
-            <div class="topbar-badge">主舞台等待页</div>
+            <div class="topbar-badge" id="topbarBadge">主舞台等待页</div>
         </header>
 
-        <section class="hero-layout">
+        <section class="content-layout">
             <article class="stage-card">
-                <div class="card-label">主舞台 · 待开始</div>
+                <div class="card-label">主舞台</div>
                 <h2>当前已选精灵</h2>
-                <p class="card-desc">后台已经完成本局左右阵容选择，但还没有点击开始本次对局。等待页只展示已选阵容与系列赛状态，不显示额外推断信息。</p>
+                <p class="card-desc" id="stageDescription">后台已经完成本局左右阵容选择，等待开始本次对局。</p>
 
                 <div class="match-headline">
                     <div class="player-title">
                         <span class="player-side">LEFT</span>
-                        <strong>星尘</strong>
+                        <strong id="leftPlayerName">左侧选手</strong>
                     </div>
                     <div class="versus-center">
-                        <div class="versus-score">0<span>:</span>0</div>
-                        <div class="versus-meta">BO5 · 第 1 局待开始</div>
+                        <div class="versus-score"><span id="leftPlayerScore">0</span><em>:</em><span id="rightPlayerScore">0</span></div>
+                        <div class="versus-meta" id="versusMeta">BO3 · 第 1 局待开始</div>
                     </div>
                     <div class="player-title player-title-right">
                         <span class="player-side">RIGHT</span>
-                        <strong>岚夜</strong>
+                        <strong id="rightPlayerName">右侧选手</strong>
                     </div>
                 </div>
 
                 <div class="lineup-showcase">
                     <section class="roster-card">
                         <div class="roster-title">左侧已选精灵</div>
-                        <div class="roster-grid">
-                            <img src="/img-2/141xueling.png" alt="雪影">
-                            <img src="/img-2/316rongyanbuding.png" alt="熔岩布丁">
-                            <img src="/img-2/107luoyin.png" alt="罗隐">
-                            <img src="/img-2/344chunhuatu.png" alt="春花兔">
-                            <img src="/img-2/322yueyaxuexiong.png" alt="月牙雪熊">
-                            <img src="/img-2/350jimufangzhou.png" alt="积木方舟">
-                        </div>
+                        <div class="roster-grid" id="leftRosterGrid"></div>
                     </section>
 
                     <section class="pending-state" aria-label="系列赛状态">
-                        <div class="pending-chip">MATCH PENDING</div>
-                        <div class="pending-copy">等待开始本次对局</div>
-                        <div class="game-track">
-                            <span class="game-chip game-chip-active">G1 待开始</span>
-                            <span class="game-chip">G2</span>
-                            <span class="game-chip">G3</span>
-                            <span class="game-chip">G4</span>
-                            <span class="game-chip">G5</span>
-                        </div>
+                        <div class="pending-chip" id="statusChip">MATCH PENDING</div>
+                        <div class="pending-copy" id="statusText">等待开始本次对局</div>
+                        <div class="game-track" id="gameTrack"></div>
                     </section>
 
                     <section class="roster-card roster-card-right">
                         <div class="roster-title">右侧已选精灵</div>
-                        <div class="roster-grid">
-                            <img src="/img-2/206kula.png" alt="酷拉">
-                            <img src="/img-2/370pilididi.png" alt="霹雳弟弟">
-                            <img src="/img-2/241longyu.png" alt="龙鱼">
-                            <img src="/img-2/315yejiangbuding.png" alt="椰浆布丁">
-                            <img src="/img-2/243shandianmanyu.png" alt="闪电鳗鱼">
-                            <img src="/img-2/254bingzuanbulusi.png" alt="冰钻布鲁斯">
-                        </div>
+                        <div class="roster-grid" id="rightRosterGrid"></div>
                     </section>
                 </div>
             </article>
 
-            <aside class="info-column">
-                <article class="summary-card">
-                    <div class="card-label">当前系列赛</div>
-                    <h3>系列赛状态</h3>
-                    <ul class="summary-list">
-                        <li>比赛状态：待开始</li>
-                        <li>赛制：BO5</li>
-                        <li>当前比分：0 : 0</li>
-                        <li>当前小局：第 1 局</li>
-                    </ul>
-                </article>
-
-                <article class="summary-card history-highlight">
-                    <div class="card-label">最近完赛</div>
-                    <h3>夜航 胜 墨岚</h3>
-                    <div class="highlight-score">3 : 2</div>
-                    <div class="highlight-meta">状态 completed · BO5</div>
-                    <div class="result-track">
-                        <span class="result-chip is-win">G1 胜</span>
-                        <span class="result-chip">G2 负</span>
-                        <span class="result-chip is-win">G3 胜</span>
-                        <span class="result-chip">G4 负</span>
-                        <span class="result-chip is-win">G5 胜</span>
+            <aside class="history-panel">
+                <div class="section-header">
+                    <div>
+                        <div class="eyebrow">MATCH HISTORY</div>
+                        <h2>历史对局结果</h2>
                     </div>
-                </article>
+                    <div class="section-note" id="historyCountText">暂无已完赛记录</div>
+                </div>
+                <div class="history-list" id="historyList"></div>
             </aside>
         </section>
-
-        <section class="history-section">
-            <div class="section-header">
-                <div>
-                    <div class="eyebrow">MATCH HISTORY</div>
-                    <h2>历史对局结果</h2>
-                </div>
-                <div class="section-note">最近完赛系列赛</div>
-            </div>
-
-            <div class="history-grid">
-                <article class="history-card history-card-emphasis">
-                    <div class="history-top">
-                        <span>completed</span>
-                        <span>BO5</span>
-                    </div>
-                    <div class="history-scoreline">
-                        <strong>夜航</strong>
-                        <div class="history-score">3 : 2</div>
-                        <strong>墨岚</strong>
-                    </div>
-                    <div class="history-games">
-                        <span class="game-result is-win">G1</span>
-                        <span class="game-result is-lose">G2</span>
-                        <span class="game-result is-win">G3</span>
-                        <span class="game-result is-lose">G4</span>
-                        <span class="game-result is-win">G5</span>
-                    </div>
-                </article>
-
-                <article class="history-card">
-                    <div class="history-top">
-                        <span>completed</span>
-                        <span>BO3</span>
-                    </div>
-                    <div class="history-scoreline">
-                        <strong>白露</strong>
-                        <div class="history-score">2 : 0</div>
-                        <strong>山止</strong>
-                    </div>
-                    <div class="history-games">
-                        <span class="game-result is-win">G1</span>
-                        <span class="game-result is-win">G2</span>
-                    </div>
-                </article>
-
-                <article class="history-card">
-                    <div class="history-top">
-                        <span>completed</span>
-                        <span>BO3</span>
-                    </div>
-                    <div class="history-scoreline">
-                        <strong>千川</strong>
-                        <div class="history-score">2 : 1</div>
-                        <strong>南汐</strong>
-                    </div>
-                    <div class="history-games">
-                        <span class="game-result is-lose">G1</span>
-                        <span class="game-result is-win">G2</span>
-                        <span class="game-result is-win">G3</span>
-                    </div>
-                </article>
-
-                <article class="history-card">
-                    <div class="history-top">
-                        <span>completed</span>
-                        <span>BO3</span>
-                    </div>
-                    <div class="history-scoreline">
-                        <strong>北屿</strong>
-                        <div class="history-score">2 : 0</div>
-                        <strong>陆行舟</strong>
-                    </div>
-                    <div class="history-games">
-                        <span class="game-result is-win">G1</span>
-                        <span class="game-result is-win">G2</span>
-                    </div>
-                </article>
-            </div>
-        </section>
     </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/live-standby-demo.js"></script>
 </body>
 </html>
