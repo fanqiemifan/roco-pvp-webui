@@ -1575,9 +1575,160 @@
             display: block;
         }
 
+        .about-page,
+        .about-grid,
+        .about-points,
+        .about-links {
+            display: grid;
+            gap: 20px;
+        }
+
+        .about-hero {
+            grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+            align-items: stretch;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top right, rgba(213, 106, 55, 0.2), transparent 34%),
+                linear-gradient(135deg, rgba(255, 251, 245, 0.96), rgba(244, 231, 215, 0.88));
+        }
+
+        .about-hero-copy {
+            display: grid;
+            gap: 14px;
+        }
+
+        .about-hero-copy h2 {
+            font-size: 32px;
+            line-height: 1.1;
+        }
+
+        .about-hero-copy p {
+            color: var(--muted-strong);
+            line-height: 1.8;
+        }
+
+        .about-pill-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .about-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(199, 99, 47, 0.1);
+            color: var(--accent-deep);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .about-highlight {
+            border-radius: 22px;
+            padding: 22px;
+            background: linear-gradient(160deg, rgba(56, 38, 26, 0.96), rgba(111, 67, 41, 0.92));
+            color: #fff8ef;
+            display: grid;
+            gap: 16px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .about-highlight small,
+        .about-section small {
+            display: block;
+            margin-bottom: 10px;
+            color: inherit;
+            opacity: 0.72;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-size: 11px;
+        }
+
+        .about-highlight strong {
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        .about-highlight p {
+            color: rgba(255, 248, 239, 0.8);
+            line-height: 1.7;
+            font-size: 13px;
+        }
+
+        .about-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .about-section {
+            display: grid;
+            gap: 16px;
+        }
+
+        .about-section h3 {
+            font-size: 22px;
+        }
+
+        .about-section p {
+            color: var(--muted);
+            line-height: 1.75;
+        }
+
+        .about-point {
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            border-radius: 18px;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.72);
+        }
+
+        .about-point strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .about-point p {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .about-note {
+            border-radius: 18px;
+            padding: 16px 18px;
+            background: rgba(199, 99, 47, 0.08);
+            border: 1px solid rgba(199, 99, 47, 0.14);
+        }
+
+        .about-links {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .about-link-card {
+            display: grid;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .about-link-card strong {
+            font-size: 15px;
+            color: var(--text);
+        }
+
+        .about-link-card p {
+            font-size: 13px;
+        }
+
+        .about-link-card code,
+        .about-highlight code {
+            justify-self: start;
+        }
+
         .info-box code,
         .workspace-card code,
-        .portal-header code {
+        .portal-header code,
+        .about-link-card code,
+        .about-highlight code {
             background: rgba(199, 99, 47, 0.08);
             border-radius: 8px;
             padding: 2px 6px;
@@ -1638,10 +1789,16 @@
             .scoreboard-grid,
             .scoreboard-controls,
             .portal-link-grid,
+            .about-grid,
+            .about-links,
             .form-grid,
             .winner-actions,
             .panel-layout,
             .panel-layout.preview-right {
+                grid-template-columns: 1fr;
+            }
+
+            .about-hero {
                 grid-template-columns: 1fr;
             }
 
@@ -1792,6 +1949,16 @@
                             </div>
                         </div>
                         <span class="nav-badge">View</span>
+                    </button>
+                    <button class="nav-item" type="button" data-view="about">
+                        <div class="nav-meta">
+                            <div class="nav-item-icon">ℹ️</div>
+                            <div>
+                                <strong>关于本站</strong>
+                                <span>主要能力、免责声明与扩展说明</span>
+                            </div>
+                        </div>
+                        <span class="nav-badge">Info</span>
                     </button>
                 </div>
             </div>
@@ -2266,6 +2433,106 @@
                             <iframe class="portal-iframe portal-iframe-preview" id="previewFrame" src="/" title="预览页"></iframe>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <section class="content-view" data-view="about">
+                <div class="portal-page about-page">
+                    <section class="portal-card about-hero">
+                        <div class="about-hero-copy">
+                            <div>
+                                <small>About This Site</small>
+                                <h2>关于本站</h2>
+                            </div>
+                            <p>本站是一个面向洛克王国 PVP 直播场景的本地管理后台，用来把赛事信息、阵容状态、推流页面和素材控制收口到同一套工作台里，方便主持、导播或裁判协同操作。</p>
+                            <div class="about-pill-group" aria-label="站点特点">
+                                <span class="about-pill">本地运行</span>
+                                <span class="about-pill">赛事联动</span>
+                                <span class="about-pill">多页面预览</span>
+                                <span class="about-pill">素材可替换</span>
+                            </div>
+                        </div>
+                        <aside class="about-highlight" aria-label="站点定位">
+                            <div>
+                                <small>Current Focus</small>
+                                <strong>把直播现场常用的赛事录入、比分控制、阵容同步和预览切换集中到一个 <code>admin</code> 工作台。</strong>
+                            </div>
+                            <p>左侧 Navigation 用于模块切换，右侧 content-shell 负责承载管理内容。整体更适合本地桌面环境中的实际推流操作，而不是对外公开的内容站点。</p>
+                        </aside>
+                    </section>
+
+                    <div class="about-grid">
+                        <section class="portal-card about-section">
+                            <div>
+                                <small>Core Capabilities</small>
+                                <h3>主要能力</h3>
+                            </div>
+                            <div class="about-points">
+                                <article class="about-point">
+                                    <strong>赛事与比分统一管理</strong>
+                                    <p>支持创建赛事、维护 BO 赛制、记录每小局胜负，并把当前比赛状态同步到推流页面。</p>
+                                </article>
+                                <article class="about-point">
+                                    <strong>左右阵容独立编辑</strong>
+                                    <p>可分别配置双方精灵阵容，并细调每个槽位的血量、能力值、透明度和饱和度。</p>
+                                </article>
+                                <article class="about-point">
+                                    <strong>预览与素材控制</strong>
+                                    <p>支持切换推流页面 1、2、3 和等待页预览，同时可上传背景图、左右头像等直播素材。</p>
+                                </article>
+                            </div>
+                        </section>
+
+                        <section class="portal-card about-section">
+                            <div>
+                                <small>Disclaimer</small>
+                                <h3>免责声明</h3>
+                            </div>
+                            <div class="about-points">
+                                <div class="about-note">
+                                    <p>本站主要用于本地直播控制与赛事辅助展示，不代表洛克王国官方立场，也不构成任何官方公告、赛事裁定或商业背书。</p>
+                                </div>
+                                <article class="about-point">
+                                    <strong>素材版权与来源</strong>
+                                    <p>精灵图等相关素材请按原始来源与授权规范使用。当前项目内已注明的公开来源为洛克王国世界 WIKI，并应遵守对应转载协议。</p>
+                                </article>
+                                <article class="about-point">
+                                    <strong>数据展示仅供直播辅助</strong>
+                                    <p>页面中的阵容、比分、状态和文案以当前操作员录入为准，如需正式记录，请结合赛事流程另行复核。</p>
+                                </article>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section class="portal-card about-section">
+                        <div>
+                            <small>Learn More</small>
+                            <h3>了解更多</h3>
+                            <p>如果你要继续扩展本站，可以从以下入口快速了解页面、素材和项目结构。</p>
+                        </div>
+                        <div class="about-links">
+                            <a class="portal-link-card about-link-card" href="/admin.html" target="_blank" rel="noopener noreferrer">
+                                <strong>后台工作台</strong>
+                                <p>查看当前 <code>admin</code> 入口，了解 sidebar 与 content-shell 的整体组织方式。</p>
+                                <code>/admin.html</code>
+                            </a>
+                            <a class="portal-link-card about-link-card" href="/roco-pvp.html" target="_blank" rel="noopener noreferrer">
+                                <strong>推流页面 2</strong>
+                                <p>查看赛事标题、阵容展示等前台效果，便于联调后台控制项。</p>
+                                <code>/roco-pvp.html</code>
+                            </a>
+                            <a class="portal-link-card about-link-card" href="https://wiki.biligame.com/rocom/" target="_blank" rel="noopener noreferrer">
+                                <strong>精灵图素材来源</strong>
+                                <p>当前页面中使用到的精灵图公开来源说明，可进一步核对素材名称与出处。</p>
+                                <code>wiki.biligame.com/rocom</code>
+                            </a>
+                            <a class="portal-link-card about-link-card" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank" rel="noopener noreferrer">
+                                <strong>转载授权协议</strong>
+                                <p>查看素材转载时应遵守的授权条款，避免在分发或展示时超出许可范围。</p>
+                                <code>CC BY-NC-SA 4.0</code>
+                            </a>
+                        </div>
+                    </section>
                 </div>
             </section>
         </main>
