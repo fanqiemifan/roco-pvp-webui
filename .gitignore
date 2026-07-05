@@ -18,4 +18,4 @@ docs/
 src/pages/match-result.html
 /图片清洗
 .DS_Store
-scripts/
+scripts/deploy-prod.sh
