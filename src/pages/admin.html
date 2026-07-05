@@ -2389,7 +2389,8 @@
             right: { slotIndexes: new Set(), requiresFullSave: false }
         };
         const saveRequestVersions = { left: 0, right: 0 };
-        const appliedSaveVersions = { left: 0, right: 0 };
+        const panelMutationVersions = { left: 0, right: 0 };
+        const panelSyncedMutationVersions = { left: 0, right: 0 };
         const LIVE_CONTROL_WINDOW_NAME = 'roco-live-control-window';
         let socket = null;
         let liveControlWindow = null;
@@ -2616,6 +2617,18 @@
                 || null;
         }
 
+        function markPanelDirty(panel) {
+            panelMutationVersions[panel] += 1;
+        }
+
+        function markPanelSynced(panel, version = panelMutationVersions[panel]) {
+            panelSyncedMutationVersions[panel] = Math.max(panelSyncedMutationVersions[panel], version);
+        }
+
+        function hasUnsyncedPanelMutations(panel) {
+            return panelMutationVersions[panel] > panelSyncedMutationVersions[panel];
+        }
+
         function getDisplayGame(match) {
             if (!match || !Array.isArray(match.games) || !match.games.length) {
                 return null;
@@ -2685,10 +2698,15 @@
                 return;
             }
 
-            applySlotsToLocalPanel('left', game.leftSlots || []);
-            applySlotsToLocalPanel('right', game.rightSlots || []);
-            renderPanel('left');
-            renderPanel('right');
+            if (!hasUnsyncedPanelMutations('left')) {
+                applySlotsToLocalPanel('left', game.leftSlots || []);
+                renderPanel('left');
+            }
+
+            if (!hasUnsyncedPanelMutations('right')) {
+                applySlotsToLocalPanel('right', game.rightSlots || []);
+                renderPanel('right');
+            }
         }
 
         function getWinsNeeded(bestOf) {
@@ -3409,6 +3427,7 @@
 
         function handlePanelMutation(panel, options = {}) {
             const { clearStatusBeforeRender = true, autoSave = true, slotIndex = null, fullSave = false } = options;
+            markPanelDirty(panel);
             if (clearStatusBeforeRender) {
                 clearStatus(`${panel}Status`);
             }
@@ -3656,6 +3675,9 @@
         function updatePanelFromApi(panelState, options = {}) {
             const panel = panelState.position;
             const preserveUi = !!options.preserveUi;
+            if (hasUnsyncedPanelMutations(panel)) {
+                return;
+            }
             const selected = Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index));
 
             (panelState.selected || []).slice(0, MAX_SELECTION).forEach((slotData, index) => {
@@ -4054,6 +4076,7 @@
             if (!auto) {
                 clearStatus(`${panel}Status`);
             }
+            const mutationVersion = panelMutationVersions[panel];
             const requestVersion = ++saveRequestVersions[panel];
             fetch(`api/panels/${panel}`, {
                 method: 'POST',
@@ -4067,10 +4090,10 @@
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || '保存失败');
                 }
-                if (requestVersion < appliedSaveVersions[panel]) {
+                if (requestVersion !== saveRequestVersions[panel] || mutationVersion !== panelMutationVersions[panel]) {
                     return;
                 }
-                appliedSaveVersions[panel] = requestVersion;
+                markPanelSynced(panel, mutationVersion);
                 if (data.panel) {
                     updatePanelFromApi(data.panel, { preserveUi });
                 }
@@ -4107,6 +4130,7 @@
             if (!auto) {
                 clearStatus(`${panel}Status`);
             }
+            const mutationVersion = panelMutationVersions[panel];
             const requestVersion = ++saveRequestVersions[panel];
             fetch(`api/panels/${panel}/slots/${slotIndex}`, {
                 method: 'PATCH',
@@ -4120,10 +4144,10 @@
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || '保存失败');
                 }
-                if (requestVersion < appliedSaveVersions[panel]) {
+                if (requestVersion !== saveRequestVersions[panel] || mutationVersion !== panelMutationVersions[panel]) {
                     return;
                 }
-                appliedSaveVersions[panel] = requestVersion;
+                markPanelSynced(panel, mutationVersion);
                 if (data.panel) {
                     updatePanelFromApi(data.panel, { preserveUi });
                 }
