@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 import express, { type Request, type Response } from 'express';
 import multer from 'multer';
 import { Server as SocketIOServer } from 'socket.io';
+import bcrypt from 'bcrypt';
 
 import { SOCKET_EVENTS } from '../shared/events.js';
 import type { SnapshotPayload } from '../shared/types.js';
@@ -45,7 +47,17 @@ import {
   saveScoreboardBestOf,
   saveScoreboardState,
 } from './services/state-service.js';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import type { AppPaths } from './services/path-service.js';
+
+// Augment express-session to include our auth flag
+declare module 'express-session' {
+  interface SessionData {
+    isAuthenticated?: boolean;
+    sessionId?: string;
+  }
+}
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -70,11 +82,22 @@ export interface LocalServer {
   close(): Promise<void>;
 }
 
+export interface AuthConfig {
+  username: string;
+  password: string;
+}
+
 export async function createLocalServer(
   paths: AppPaths,
   port: number,
   host = '127.0.0.1',
+  authConfig?: AuthConfig,
 ): Promise<LocalServer> {
+  // Single-session tracking: only one active session at a time.
+  // Each new login generates a random sessionId, invalidating all previous sessions.
+  let activeSessionId: string | null = null;
+  const hashedPassword = authConfig ? await bcrypt.hash(authConfig.password, 10) : null;
+
   ensureRuntimeDirs(paths);
 
   const app = express();
@@ -88,6 +111,26 @@ export async function createLocalServer(
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));
 
+  // Session & cookie middleware for auth
+  const sessionMiddleware = session({
+    secret: process.env.SESSION_SECRET || 'roco-pvp-session-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'lax',
+    },
+  });
+
+  app.use(cookieParser(process.env.SESSION_SECRET || 'roco-pvp-session-secret'));
+  app.use(sessionMiddleware);
+
+  // Share session with Socket.IO so admin sockets can verify auth
+  io.engine.use(sessionMiddleware);
+
+  // Static files (public, no auth)
   app.use('/scripts', express.static(paths.scriptsDir));
   app.use('/styles', express.static(paths.stylesDir));
   app.use('/assets', express.static(paths.assetsDir));
@@ -100,12 +143,81 @@ export async function createLocalServer(
   app.use('/image', express.static(path.join(paths.assetsDir, 'ui')));
   app.use('/font', express.static(path.join(paths.assetsDir, 'fonts')));
 
+  // === Public routes (no auth required) ===
   app.get('/', (_request, response) => sendPage(paths, response, 'index.html'));
-  app.get('/admin.html', (_request, response) => sendPage(paths, response, 'admin.html'));
-  app.get('/live-control.html', (_request, response) => sendPage(paths, response, 'live-control.html'));
-  app.get('/live-standby-demo.html', (_request, response) => sendPage(paths, response, 'live-standby-demo.html'));
+  app.get('/login.html', (_request, response) => sendPage(paths, response, 'login.html'));
   app.get('/roco-pvp.html', (_request, response) => sendPage(paths, response, 'roco-pvp.html'));
   app.get('/roco-pvp-page3.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page3.html'));
+  app.get('/live-standby-demo.html', (_request, response) => sendPage(paths, response, 'live-standby-demo.html'));
+
+  // Auth API — always public
+  app.post('/api/auth/login', async (req, res) => {
+    // Auth disabled in desktop mode
+    if (!authConfig) {
+      req.session.isAuthenticated = true;
+      return res.json({ success: true });
+    }
+    const { username, password } = req.body || {};
+    try {
+      const passwordMatch = await bcrypt.compare(password || '', hashedPassword!);
+      if (username === authConfig.username && passwordMatch) {
+        // Invalidate all previous sessions by rotating the active session ID
+        activeSessionId = crypto.randomUUID();
+        req.session.sessionId = activeSessionId;
+        req.session.isAuthenticated = true;
+        return res.json({ success: true });
+      }
+    } catch {
+      // bcrypt compare failed — fall through to error
+    }
+    res.status(401).json({ success: false, error: '账号或密码错误' });
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    activeSessionId = crypto.randomUUID(); // invalidate any lingering sessions
+    req.session.destroy(() => {
+      res.json({ success: true });
+    });
+  });
+
+  app.get('/api/auth/check', (req, res) => {
+    if (!authConfig) {
+      return res.json({ authenticated: true });
+    }
+    if (req.session?.isAuthenticated && req.session.sessionId === activeSessionId) {
+      return res.json({ authenticated: true });
+    }
+    res.status(401).json({ authenticated: false });
+  });
+
+  // === Auth guard for protected routes ===
+  if (authConfig) {
+    app.use((req, res, next) => {
+      const publicStaticPrefixes = [
+        '/scripts', '/styles', '/assets', '/resources', '/runtime',
+        '/img-2', '/img', '/image', '/json', '/font', '/cache',
+      ];
+      const isPublicStatic = publicStaticPrefixes.some(p =>
+        req.path === p || req.path.startsWith(p + '/')
+      );
+      const isPublicPage = ['/', '/login.html', '/roco-pvp.html', '/roco-pvp-page3.html', '/live-standby-demo.html'].includes(req.path);
+      const isAuthApi = req.path.startsWith('/api/auth/');
+      const isFavicon = req.path === '/favicon.ico';
+
+      if (isPublicStatic || isPublicPage || isAuthApi || isFavicon) return next();
+      // Verify both authenticated flag AND single-session ID match
+      if (req.session?.isAuthenticated && req.session.sessionId === activeSessionId) return next();
+
+    if (req.path.startsWith('/api/')) {
+      return res.status(401).json({ success: false, error: '请先登录' });
+    }
+    res.redirect('/login.html');
+    });
+  }
+
+  // === Protected routes (auth required when authConfig is set) ===
+  app.get('/admin.html', (_request, response) => sendPage(paths, response, 'admin.html'));
+  app.get('/live-control.html', (_request, response) => sendPage(paths, response, 'live-control.html'));
 
   app.get('/api/images', (_request, response) => {
     response.json({ images: [getPanelState(paths, 'left'), getPanelState(paths, 'right')] });
