@@ -4283,14 +4283,15 @@
         function renderAvatarPreview(side, avatar) {
             const preview = document.getElementById(`${side}AvatarPreview`);
             const empty = document.getElementById(`${side}AvatarEmpty`);
+            const defaultPath = side === 'left' ? '/assets/ui/left-avatar.png' : '/assets/ui/right-avatar.png';
             if (avatar && avatar.exists && avatar.path) {
                 preview.src = `${avatar.path}?t=${Math.floor(avatar.mtime || Date.now())}`;
                 preview.style.display = 'block';
                 empty.style.display = 'none';
             } else {
-                preview.removeAttribute('src');
-                preview.style.display = 'none';
-                empty.style.display = 'block';
+                preview.src = defaultPath;
+                preview.style.display = 'block';
+                empty.style.display = 'none';
             }
         }
 
