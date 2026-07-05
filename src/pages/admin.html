@@ -1104,16 +1104,108 @@
             padding: 16px;
             display: grid;
             gap: 12px;
+            cursor: pointer;
         }
 
-        .match-history-actions {
-            display: flex;
-            justify-content: flex-end;
+        .match-history-card.expanded {
+            border-color: rgba(199, 99, 47, 0.22);
+            box-shadow: 0 10px 28px rgba(170, 89, 44, 0.08);
         }
 
-        .match-history-games {
+        .match-history-summary {
+            display: block;
+        }
+
+        .match-history-summary-top {
             display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .match-history-main {
+            min-width: 0;
+            display: grid;
+            gap: 8px;
+        }
+
+        .match-history-player-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+
+        .match-history-player-row strong {
+            font-size: 15px;
+            min-width: 0;
+        }
+
+        .match-history-score-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(199, 99, 47, 0.1);
+            color: var(--accent-deep);
+            font: 800 20px/1 var(--font-display);
+            white-space: nowrap;
+        }
+
+        .match-history-summary-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
             gap: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .match-history-action-btn {
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            border-radius: 999px;
+            background: rgba(255, 248, 240, 0.96);
+            color: var(--muted-strong);
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        }
+
+        .match-history-action-btn:hover {
+            background: rgba(255, 240, 224, 0.98);
+            border-color: rgba(199, 99, 47, 0.26);
+            transform: translateY(-1px);
+        }
+
+        .match-history-action-btn.danger {
+            background: rgba(254, 242, 242, 0.96);
+            border-color: rgba(217, 100, 79, 0.18);
+            color: #a13e31;
+        }
+
+        .match-history-action-btn.danger:hover {
+            background: rgba(254, 228, 228, 0.98);
+            border-color: rgba(217, 100, 79, 0.28);
+        }
+
+        .match-history-detail {
+            display: grid;
+            gap: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(109, 79, 54, 0.1);
+        }
+
+        .match-history-detail[hidden] {
+            display: none;
+        }
+
+        .match-history-detail-meta {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
         }
 
         .match-history-list {
@@ -1123,12 +1215,96 @@
         }
 
         .match-history-game {
-            padding: 12px;
+            padding: 14px;
             border-radius: 14px;
             background: rgba(248, 241, 231, 0.7);
             border: 1px solid rgba(109, 79, 54, 0.1);
             display: grid;
+            gap: 12px;
+        }
+
+        .match-history-game-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .match-history-board {
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: thin;
+        }
+
+        .match-history-spirit {
+            display: grid;
+            grid-template-rows: auto auto;
+            justify-items: center;
+            align-content: start;
             gap: 8px;
+            min-width: 72px;
+            padding: 10px 8px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.84);
+            border: 1px solid rgba(109, 79, 54, 0.08);
+            text-align: center;
+        }
+
+        .match-history-board-grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(72px, 1fr));
+            gap: 8px;
+            min-width: max(100%, 936px);
+        }
+
+        .match-history-spirit.team-divider {
+            border-left: 2px solid rgba(199, 99, 47, 0.18);
+        }
+
+        .match-history-spirit.lost {
+            filter: saturate(0);
+            opacity: 0.72;
+        }
+
+        .match-history-spirit img,
+        .match-history-spirit-fallback {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #fffdf8, #f5eadc);
+        }
+
+        .match-history-spirit img {
+            display: block;
+            object-fit: contain;
+            padding: 4px;
+        }
+
+        .match-history-spirit-fallback {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .match-history-spirit-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.35;
+            font-size: 12px;
+            color: var(--muted-strong);
+        }
+
+        .match-history-empty-slot {
+            border-style: dashed;
+            color: var(--muted);
         }
 
         .match-actions {
@@ -1422,6 +1598,19 @@
             .match-hero-score-block {
                 text-align: left;
                 justify-items: start;
+            }
+
+            .match-history-summary-top {
+                grid-template-columns: 1fr;
+            }
+
+            .match-history-summary-right {
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .match-history-board-grid {
+                min-width: 936px;
             }
 
             .slot-preview {
@@ -1839,6 +2028,9 @@
                                 <h2>比赛历史</h2>
                                 <p>独立查看每场系列赛的比分、赛制，以及每一局对应的左右阵容快照。</p>
                             </div>
+                            <div class="panel-header-right">
+                                <div class="status" id="historyStatus"></div>
+                            </div>
                         </div>
                         <div class="match-history-list" id="matchHistoryList"></div>
                     </section>
@@ -2063,6 +2255,9 @@
                 },
                 mtime: null
             },
+            historyUi: {
+                expandedMatchIds: new Set()
+            },
             scoreboard: {
                 leftName: '',
                 leftScore: '0',
@@ -2280,6 +2475,12 @@
                 },
                 mtime: payload && payload.mtime ? payload.mtime : null
             };
+            const matchIds = new Set(state.matchStore.matches.map(match => match.id));
+            state.historyUi.expandedMatchIds.forEach(matchId => {
+                if (!matchIds.has(matchId)) {
+                    state.historyUi.expandedMatchIds.delete(matchId);
+                }
+            });
             syncLocalPanelsFromMatchStore();
             renderMatchWorkspace();
         }
@@ -2436,6 +2637,119 @@
             }).join(' / ');
         }
 
+        function isHistoryMatchExpanded(matchId) {
+            return state.historyUi.expandedMatchIds.has(matchId);
+        }
+
+        function toggleHistoryMatch(matchId) {
+            if (!matchId) {
+                return;
+            }
+            if (state.historyUi.expandedMatchIds.has(matchId)) {
+                state.historyUi.expandedMatchIds.delete(matchId);
+            } else {
+                state.historyUi.expandedMatchIds.add(matchId);
+            }
+            renderMatchHistory();
+        }
+
+        function getHistoryLineupEntries(game, side) {
+            const slotSource = side === 'left'
+                ? (game && Array.isArray(game.leftSlots) ? game.leftSlots : [])
+                : (game && Array.isArray(game.rightSlots) ? game.rightSlots : []);
+            const lineupSource = side === 'left'
+                ? (game && Array.isArray(game.leftLineup) ? game.leftLineup : [])
+                : (game && Array.isArray(game.rightLineup) ? game.rightLineup : []);
+
+            const slotEntries = slotSource
+                .filter(slot => slot && slot.spriteId)
+                .map(slot => slot.spriteId);
+            const source = slotEntries.length ? slotEntries : lineupSource;
+
+            const entries = source.slice(0, 6).map(spriteId => {
+                const sprite = spriteById(spriteId);
+                return {
+                    id: spriteId,
+                    name: sprite ? getSpriteDisplayName(sprite) : String(spriteId || '未设置'),
+                    path: sprite && sprite.path ? sprite.path : ''
+                };
+            });
+
+            while (entries.length < 6) {
+                entries.push(null);
+            }
+
+            return entries;
+        }
+
+        function renderHistorySpiritCell(entry, options = {}) {
+            const {
+                isLost = false,
+                addDivider = false
+            } = options;
+
+            if (!entry) {
+                return `
+                    <div class="match-history-spirit match-history-empty-slot${addDivider ? ' team-divider' : ''}">
+                        <span class="match-history-spirit-fallback">-</span>
+                        <span class="match-history-spirit-name">未上阵</span>
+                    </div>
+                `;
+            }
+
+            const visual = entry.path
+                ? `<img src="${escapeHtml(entry.path)}" alt="${escapeHtml(entry.name)}" loading="lazy" decoding="async">`
+                : `<span class="match-history-spirit-fallback">N/A</span>`;
+
+            return `
+                <div class="match-history-spirit${addDivider ? ' team-divider' : ''}${isLost ? ' lost' : ''}">
+                    ${visual}
+                    <span class="match-history-spirit-name">${escapeHtml(entry.name)}</span>
+                </div>
+            `;
+        }
+
+        function renderHistoryGameDetail(game) {
+            const leftEntries = getHistoryLineupEntries(game, 'left');
+            const rightEntries = getHistoryLineupEntries(game, 'right');
+            const leftLost = game && game.winner === 'right';
+            const rightLost = game && game.winner === 'left';
+            const cells = [
+                ...leftEntries.map(entry => renderHistorySpiritCell(entry, { isLost: leftLost })),
+                ...rightEntries.map((entry, index) => renderHistorySpiritCell(entry, {
+                    isLost: rightLost,
+                    addDivider: index === 0
+                }))
+            ].join('');
+
+            return `
+                <section class="match-history-game">
+                    <div class="match-history-game-head">
+                        <strong>第 ${escapeHtml(game.gameNumber)} 局</strong>
+                        <span class="metric-pill">${escapeHtml(getGameResultText(game))}</span>
+                    </div>
+                    <div class="match-history-board">
+                        <div class="match-history-board-grid">${cells}</div>
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderHistoryMatchDetail(match) {
+            const completedGames = match.games.filter(game => game.status === 'completed').length;
+            const visibleGames = match.games.filter(game =>
+                game.status !== 'pending'
+                || (Array.isArray(game.leftLineup) && game.leftLineup.length > 0)
+                || (Array.isArray(game.rightLineup) && game.rightLineup.length > 0)
+            );
+            return `
+                <div class="match-history-detail-meta">
+                    ${escapeHtml(match.id)} · BO${escapeHtml(match.bestOf)} · 已记录 ${completedGames} 局${match.completedAt ? ` · 完成于 ${escapeHtml(formatDateTime(match.completedAt))}` : ''}
+                </div>
+                ${visibleGames.map(game => renderHistoryGameDetail(game)).join('')}
+            `;
+        }
+
         function renderMatchList() {
             const container = document.getElementById('matchList');
             const activeMatchId = state.matchStore.activeMatchId;
@@ -2566,44 +2880,34 @@
             }
 
             container.innerHTML = matches.map(match => `
-                <article class="match-history-card">
-                    <div class="match-history-head">
-                        <strong>${escapeHtml(match.id)} · ${escapeHtml(match.leftPlayer || '左侧')} vs ${escapeHtml(match.rightPlayer || '右侧')}</strong>
-                        <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
-                    </div>
-                    <div class="match-history-meta">BO${escapeHtml(match.bestOf)} · ${escapeHtml(String(match.leftScore))}:${escapeHtml(String(match.rightScore))}${match.winner ? ` · ${match.winner === 'left' ? '左侧' : '右侧'}获胜` : ''}</div>
-                    <div class="match-history-actions">
-                        <button class="btn btn-secondary" type="button" data-history-match-id="${escapeHtml(match.id)}">进入赛事管理</button>
-                    </div>
-                    <div class="match-history-games">
-                        ${match.games.map(game => `
-                            <div class="match-history-game">
-                                <div class="match-item-title">
-                                    <strong>第 ${escapeHtml(game.gameNumber)} 局</strong>
-                                    <span class="metric-pill">${escapeHtml(getGameResultText(game))}</span>
-                                </div>
-                                <div class="lineup-chip-group">
-                                    <strong>左侧阵容</strong>
-                                    <div class="lineup-tags">${formatLineupNames(game.leftLineup)}</div>
-                                </div>
-                                <div class="lineup-chip-group">
-                                    <strong>右侧阵容</strong>
-                                    <div class="lineup-tags">${formatLineupNames(game.rightLineup)}</div>
+                <article
+                    class="match-history-card${isHistoryMatchExpanded(match.id) ? ' expanded' : ''}"
+                    data-history-toggle-id="${escapeHtml(match.id)}"
+                    role="button"
+                    tabindex="0"
+                    aria-expanded="${isHistoryMatchExpanded(match.id) ? 'true' : 'false'}"
+                >
+                    <div class="match-history-summary">
+                        <div class="match-history-summary-top">
+                            <div class="match-history-main">
+                                <div class="match-history-player-row">
+                                    <strong>${escapeHtml(match.leftPlayer || '左侧')}</strong>
+                                    <span class="match-history-score-badge">${escapeHtml(String(match.leftScore))} : ${escapeHtml(String(match.rightScore))}</span>
+                                    <strong>${escapeHtml(match.rightPlayer || '右侧')}</strong>
                                 </div>
                             </div>
-                        `).join('')}
+                            <div class="match-history-summary-right">
+                                <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
+                                <button class="match-history-action-btn" type="button" data-history-match-id="${escapeHtml(match.id)}">进入赛事管理</button>
+                                <button class="match-history-action-btn danger" type="button" data-history-delete-id="${escapeHtml(match.id)}">删除赛事</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="match-history-detail" ${isHistoryMatchExpanded(match.id) ? '' : 'hidden'}>
+                        ${isHistoryMatchExpanded(match.id) ? renderHistoryMatchDetail(match) : ''}
                     </div>
                 </article>
             `).join('');
-
-            container.querySelectorAll('[data-history-match-id]').forEach(button => {
-                button.addEventListener('click', () => {
-                    selectMatch(button.dataset.historyMatchId, {
-                        nextView: 'roster',
-                        successMessage: `已从比赛历史切换到 ${button.dataset.historyMatchId}`
-                    });
-                });
-            });
         }
 
         function renderMatchWorkspace() {
@@ -3316,9 +3620,10 @@
             }
             const {
                 nextView = null,
-                successMessage = `已切换到比赛 ${matchId}`
+                successMessage = `已切换到比赛 ${matchId}`,
+                statusId = 'matchStatus'
             } = options;
-            clearStatus('matchStatus');
+            clearStatus(statusId);
             fetch(`api/matches/${encodeURIComponent(matchId)}/select`, {
                 method: 'POST'
             })
@@ -3332,10 +3637,42 @@
                     state.currentView = nextView;
                     renderView();
                 }
-                showStatus('matchStatus', successMessage, true);
+                showStatus(statusId, successMessage, true);
             })
             .catch(error => {
-                showStatus('matchStatus', error.message, false);
+                showStatus(statusId, error.message, false);
+            });
+        }
+
+        function deleteHistoryMatch(matchId) {
+            if (!matchId) {
+                return;
+            }
+
+            const match = state.matchStore.matches.find(item => item.id === matchId);
+            const matchLabel = match
+                ? `${match.leftPlayer || '左侧'} vs ${match.rightPlayer || '右侧'}`
+                : matchId;
+
+            if (!window.confirm(`确认删除赛事“${matchLabel}”吗？可以通过“撤回上一步”恢复最近一次删除。`)) {
+                return;
+            }
+
+            clearStatus('historyStatus');
+            fetch(`api/matches/${encodeURIComponent(matchId)}`, {
+                method: 'DELETE'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '删除赛事失败');
+                }
+                state.historyUi.expandedMatchIds.delete(matchId);
+                applyMatchResponse(data);
+                showStatus('historyStatus', `已删除赛事 ${matchLabel}`, true);
+            })
+            .catch(error => {
+                showStatus('historyStatus', error.message, false);
             });
         }
 
@@ -3958,10 +4295,55 @@
             });
         }
 
+        function setupMatchHistoryControls() {
+            const container = document.getElementById('matchHistoryList');
+
+            container.addEventListener('click', event => {
+                const target = event.target instanceof Element ? event.target : null;
+                if (!target) {
+                    return;
+                }
+
+                const manageButton = target.closest('[data-history-match-id]');
+                if (manageButton) {
+                    selectMatch(manageButton.dataset.historyMatchId, {
+                        nextView: 'roster',
+                        statusId: 'matchStatus',
+                        successMessage: `已切换到赛事 ${manageButton.dataset.historyMatchId}`
+                    });
+                    return;
+                }
+
+                const deleteButton = target.closest('[data-history-delete-id]');
+                if (deleteButton) {
+                    deleteHistoryMatch(deleteButton.dataset.historyDeleteId);
+                    return;
+                }
+
+                const toggle = target.closest('[data-history-toggle-id]');
+                if (toggle) {
+                    toggleHistoryMatch(toggle.dataset.historyToggleId);
+                }
+            });
+
+            container.addEventListener('keydown', event => {
+                const target = event.target instanceof Element ? event.target : null;
+                const toggle = target ? target.closest('[data-history-toggle-id]') : null;
+                if (!toggle) {
+                    return;
+                }
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    toggleHistoryMatch(toggle.dataset.historyToggleId);
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             renderPortalLinks();
             setupNavigation();
             setupMatchControls();
+            setupMatchHistoryControls();
             renderView();
             setupPanelControls('left');
             setupPanelControls('right');

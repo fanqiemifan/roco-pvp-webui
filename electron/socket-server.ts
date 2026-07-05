@@ -13,6 +13,7 @@ import { getBackgroundState, saveBackground, deleteBackground, ensureRuntimeDirs
 import { loadRuntimeConfig, saveRuntimeConfig } from './services/config-service.js';
 import {
   createMatch,
+  deleteMatch,
   getMatchStore,
   recordMatchWinner,
   redoMatchAction,
@@ -127,6 +128,20 @@ export async function createLocalServer(
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       response.json({ success: true, matches, scoreboard });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.delete('/api/matches/:matchId', (_request, response) => {
+    try {
+      const matches = deleteMatch(paths, _request.params.matchId);
+      const scoreboard = getScoreboardState(paths);
+      const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
+      panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
+      response.json({ success: true, matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }

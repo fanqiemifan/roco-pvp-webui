@@ -9,7 +9,13 @@ import type {
 } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
 import { ensureRuntimeDirs } from './image-service.js';
-import { getPanelState, getScoreboardState, savePanelState, saveScoreboardState } from './state-service.js';
+import {
+  clearPanelState,
+  getPanelState,
+  getScoreboardState,
+  savePanelState,
+  saveScoreboardState,
+} from './state-service.js';
 
 const PLAYER_NAME_MAX_LENGTH = 32;
 const MAX_GAME_SLOTS = 6;
@@ -324,6 +330,21 @@ function syncScoreboardFromMatch(paths: AppPaths, match: MatchRecord): void {
   });
 }
 
+function clearActiveDisplayState(paths: AppPaths): void {
+  clearPanelState(paths, 'left');
+  clearPanelState(paths, 'right');
+
+  const scoreboard = getScoreboardState(paths);
+  saveScoreboardState(paths, {
+    ...scoreboard,
+    leftName: '',
+    rightName: '',
+    leftScore: '0',
+    rightScore: '0',
+    bestOf: DEFAULT_BEST_OF,
+  });
+}
+
 function getCurrentGame(match: MatchRecord): GameRecord {
   return (
     match.games.find((game) => game.status === 'in_progress')
@@ -351,7 +372,10 @@ function syncAfterStoreChange(paths: AppPaths, publicStore: MatchStoreState): vo
   const activeMatch = publicStore.matches.find((match) => match.id === publicStore.activeMatchId);
   if (activeMatch) {
     syncMatchToPanelsAndScoreboard(paths, activeMatch);
+    return;
   }
+
+  clearActiveDisplayState(paths);
 }
 
 function parseSelectedSlots(selectedSlots: unknown): MatchSlotSnapshot[] {
@@ -525,6 +549,27 @@ export function setActiveMatch(paths: AppPaths, matchId: string): MatchStoreStat
   }
 
   store.activeMatchId = matchId;
+  const publicStore = writeStoreFile(paths, store);
+  syncAfterStoreChange(paths, publicStore);
+  return getMatchStore(paths);
+}
+
+export function deleteMatch(paths: AppPaths, matchId: string): MatchStoreState {
+  const { store } = readStoreFile(paths);
+  const index = store.matches.findIndex((match) => match.id === matchId);
+  if (index === -1) {
+    throw new Error('比赛不存在');
+  }
+
+  pushUndoState(store);
+  store.matches.splice(index, 1);
+
+  if (store.activeMatchId === matchId) {
+    store.activeMatchId = store.matches[0]?.id ?? null;
+  } else if (store.activeMatchId && !store.matches.some((match) => match.id === store.activeMatchId)) {
+    store.activeMatchId = store.matches[0]?.id ?? null;
+  }
+
   const publicStore = writeStoreFile(paths, store);
   syncAfterStoreChange(paths, publicStore);
   return getMatchStore(paths);
