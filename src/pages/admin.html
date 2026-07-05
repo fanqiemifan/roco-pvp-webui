@@ -2374,8 +2374,8 @@
                 centerAreaEnabled: true,
                 centerAreaColor: '#393939'
             },
-            left: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: false },
-            right: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: false }
+            left: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: true },
+            right: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: true }
         };
         const autoSaveTimers = { left: null, right: null };
         const saveRequestVersions = { left: 0, right: 0 };
