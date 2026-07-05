@@ -869,6 +869,524 @@
             color: var(--text);
         }
 
+        .match-workspace {
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .match-sidebar-card,
+        .match-focus-panel,
+        .match-history-page {
+            background: rgba(255, 252, 248, 0.86);
+        }
+
+        .match-main-stack,
+        .match-history-list,
+        .match-list,
+        .match-hero {
+            display: grid;
+            gap: 14px;
+        }
+
+        .match-sidebar-card {
+            min-height: 0;
+        }
+
+        .match-sidebar-card {
+            display: grid;
+            grid-template-rows: auto auto minmax(0, 1fr);
+            overflow: hidden;
+        }
+
+        .match-list {
+            overflow-y: auto;
+            padding-right: 4px;
+            min-height: 0;
+        }
+
+        .match-list,
+        .match-history-list {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .match-list::-webkit-scrollbar,
+        .match-history-list::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            display: none;
+        }
+
+        .match-item {
+            width: 100%;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        }
+
+        .match-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 28px rgba(170, 89, 44, 0.12);
+        }
+
+        .match-item.active {
+            border-color: rgba(199, 99, 47, 0.42);
+            box-shadow: 0 0 0 3px rgba(199, 99, 47, 0.12);
+        }
+
+        .match-item-title,
+        .match-hero-metrics,
+        .match-history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .match-item-title strong,
+        .match-history-head strong {
+            font-size: 14px;
+        }
+
+        .match-item-subtitle,
+        .match-history-meta,
+        .match-hero-subtitle,
+        .lineup-empty {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .match-status-chip,
+        .metric-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .match-status-chip.pending {
+            background: rgba(184, 137, 76, 0.16);
+            color: #8b632e;
+        }
+
+        .match-status-chip.in-progress {
+            background: rgba(199, 99, 47, 0.16);
+            color: #9b4a27;
+        }
+
+        .match-status-chip.completed {
+            background: rgba(45, 122, 88, 0.16);
+            color: #1b5a3e;
+        }
+
+        .metric-pill {
+            background: rgba(255, 246, 233, 0.96);
+            border: 1px solid rgba(199, 99, 47, 0.14);
+            color: var(--muted-strong);
+        }
+
+        .match-hero {
+            border-radius: 20px;
+            padding: 18px;
+            background: linear-gradient(145deg, rgba(255, 244, 230, 0.96), rgba(255, 252, 247, 0.96));
+            border: 1px solid rgba(199, 99, 47, 0.12);
+        }
+
+        .match-hero h3 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .match-hero-score-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            align-items: center;
+            gap: 16px;
+        }
+
+        .match-hero-score {
+            font: 800 42px/1 var(--font-display);
+            color: var(--accent-deep);
+            letter-spacing: 0.04em;
+        }
+
+        .match-hero-score-block {
+            display: grid;
+            justify-items: center;
+            gap: 10px;
+            text-align: center;
+        }
+
+        .match-hero-side {
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(109, 79, 54, 0.1);
+        }
+
+        .match-hero-side.right {
+            text-align: right;
+        }
+
+        .match-hero-side-label {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .match-hero-lineup-text {
+            color: var(--muted-strong);
+            font-size: 13px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+
+        .match-hero-meta-inline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            color: var(--muted-strong);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .match-hero-meta-inline span {
+            white-space: nowrap;
+        }
+
+        .lineup-chip-group {
+            display: grid;
+            gap: 8px;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(109, 79, 54, 0.12);
+        }
+
+        .lineup-chip-group strong {
+            font-size: 13px;
+        }
+
+        .lineup-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .lineup-tag {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(199, 99, 47, 0.1);
+            color: var(--muted-strong);
+            font-size: 12px;
+        }
+
+        .match-history-card {
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 16px;
+            display: grid;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .match-history-card.expanded {
+            border-color: rgba(199, 99, 47, 0.22);
+            box-shadow: 0 10px 28px rgba(170, 89, 44, 0.08);
+        }
+
+        .match-history-summary {
+            display: block;
+        }
+
+        .match-history-summary-top {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .match-history-main {
+            min-width: 0;
+            display: grid;
+            gap: 8px;
+        }
+
+        .match-history-player-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+
+        .match-history-player-row strong {
+            font-size: 15px;
+            min-width: 0;
+        }
+
+        .match-history-score-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(199, 99, 47, 0.1);
+            color: var(--accent-deep);
+            font: 800 20px/1 var(--font-display);
+            white-space: nowrap;
+        }
+
+        .match-history-summary-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .history-toolbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .match-history-action-btn {
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            border-radius: 999px;
+            background: rgba(255, 248, 240, 0.96);
+            color: var(--muted-strong);
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        }
+
+        .match-history-action-btn:hover {
+            background: rgba(255, 240, 224, 0.98);
+            border-color: rgba(199, 99, 47, 0.26);
+            transform: translateY(-1px);
+        }
+
+        .match-history-action-btn.selected {
+            background: rgba(199, 99, 47, 0.14);
+            border-color: rgba(199, 99, 47, 0.28);
+            color: var(--accent-deep);
+        }
+
+        .match-history-action-btn.danger {
+            background: rgba(254, 242, 242, 0.96);
+            border-color: rgba(217, 100, 79, 0.18);
+            color: #a13e31;
+        }
+
+        .match-history-action-btn.danger:hover {
+            background: rgba(254, 228, 228, 0.98);
+            border-color: rgba(217, 100, 79, 0.28);
+        }
+
+        .match-history-detail {
+            display: grid;
+            gap: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(109, 79, 54, 0.1);
+        }
+
+        .match-history-detail[hidden] {
+            display: none;
+        }
+
+        .match-history-detail-meta {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .match-history-list {
+            overflow-y: auto;
+            min-height: 0;
+            padding-right: 4px;
+        }
+
+        .match-history-game {
+            padding: 14px;
+            border-radius: 14px;
+            background: rgba(248, 241, 231, 0.7);
+            border: 1px solid rgba(109, 79, 54, 0.1);
+            display: grid;
+            gap: 12px;
+        }
+
+        .match-history-game-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .match-history-board {
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: thin;
+        }
+
+        .match-history-spirit {
+            display: grid;
+            grid-template-rows: auto auto;
+            justify-items: center;
+            align-content: start;
+            gap: 8px;
+            min-width: 72px;
+            padding: 10px 8px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.84);
+            border: 1px solid rgba(109, 79, 54, 0.08);
+            text-align: center;
+        }
+
+        .match-history-board-grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(72px, 1fr));
+            gap: 8px;
+            min-width: max(100%, 936px);
+        }
+
+        .match-history-spirit.team-divider {
+            border-left: 2px solid rgba(199, 99, 47, 0.18);
+        }
+
+        .match-history-spirit.lost {
+            filter: saturate(0);
+            opacity: 0.72;
+        }
+
+        .match-history-spirit img,
+        .match-history-spirit-fallback {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #fffdf8, #f5eadc);
+        }
+
+        .match-history-spirit img {
+            display: block;
+            object-fit: contain;
+            padding: 4px;
+        }
+
+        .match-history-spirit-fallback {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .match-history-spirit-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.35;
+            font-size: 12px;
+            color: var(--muted-strong);
+        }
+
+        .match-history-empty-slot {
+            border-style: dashed;
+            color: var(--muted);
+        }
+
+        .match-actions {
+            display: grid;
+            gap: 12px;
+        }
+
+        .match-actions .btn {
+            width: 100%;
+            min-height: 46px;
+            padding: 12px 16px;
+        }
+
+        .match-actions .btn-row,
+        .winner-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .btn-success {
+            background: linear-gradient(145deg, #3b9a70, #1f6d4c);
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: linear-gradient(145deg, #d56a37, #a14722);
+            color: #fff;
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .modal-backdrop[hidden] {
+            display: none;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(47, 36, 24, 0.42);
+            backdrop-filter: blur(8px);
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            z-index: 20;
+        }
+
+        .modal-card {
+            width: min(520px, 100%);
+            border-radius: 24px;
+            background: rgba(255, 251, 245, 0.98);
+            border: 1px solid rgba(109, 79, 54, 0.14);
+            box-shadow: 0 28px 80px rgba(47, 36, 24, 0.24);
+            padding: 22px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
         .form-row {
             display: grid;
             gap: 8px;
@@ -951,6 +1469,49 @@
             object-fit: contain;
         }
 
+        .avatar-upload-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .avatar-upload-card {
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            background: rgba(255, 255, 255, 0.78);
+        }
+
+        .avatar-upload-card strong {
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .avatar-preview {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            background: linear-gradient(135deg, #faf4ec, #efe4d4);
+        }
+
+        .avatar-preview img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .avatar-preview .empty-preview {
+            padding: 0;
+            font-size: 12px;
+        }
+
         .empty-preview {
             font-size: 14px;
             color: var(--muted);
@@ -1021,9 +1582,160 @@
             display: block;
         }
 
+        .about-page,
+        .about-grid,
+        .about-points,
+        .about-links {
+            display: grid;
+            gap: 20px;
+        }
+
+        .about-hero {
+            grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+            align-items: stretch;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top right, rgba(213, 106, 55, 0.2), transparent 34%),
+                linear-gradient(135deg, rgba(255, 251, 245, 0.96), rgba(244, 231, 215, 0.88));
+        }
+
+        .about-hero-copy {
+            display: grid;
+            gap: 14px;
+        }
+
+        .about-hero-copy h2 {
+            font-size: 32px;
+            line-height: 1.1;
+        }
+
+        .about-hero-copy p {
+            color: var(--muted-strong);
+            line-height: 1.8;
+        }
+
+        .about-pill-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .about-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(199, 99, 47, 0.1);
+            color: var(--accent-deep);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .about-highlight {
+            border-radius: 22px;
+            padding: 22px;
+            background: linear-gradient(160deg, rgba(56, 38, 26, 0.96), rgba(111, 67, 41, 0.92));
+            color: #fff8ef;
+            display: grid;
+            gap: 16px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .about-highlight small,
+        .about-section small {
+            display: block;
+            margin-bottom: 10px;
+            color: inherit;
+            opacity: 0.72;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-size: 11px;
+        }
+
+        .about-highlight strong {
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        .about-highlight p {
+            color: rgba(255, 248, 239, 0.8);
+            line-height: 1.7;
+            font-size: 13px;
+        }
+
+        .about-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .about-section {
+            display: grid;
+            gap: 16px;
+        }
+
+        .about-section h3 {
+            font-size: 22px;
+        }
+
+        .about-section p {
+            color: var(--muted);
+            line-height: 1.75;
+        }
+
+        .about-point {
+            border: 1px solid rgba(109, 79, 54, 0.12);
+            border-radius: 18px;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.72);
+        }
+
+        .about-point strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .about-point p {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .about-note {
+            border-radius: 18px;
+            padding: 16px 18px;
+            background: rgba(199, 99, 47, 0.08);
+            border: 1px solid rgba(199, 99, 47, 0.14);
+        }
+
+        .about-links {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .about-link-card {
+            display: grid;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .about-link-card strong {
+            font-size: 15px;
+            color: var(--text);
+        }
+
+        .about-link-card p {
+            font-size: 13px;
+        }
+
+        .about-link-card code,
+        .about-highlight code {
+            justify-self: start;
+        }
+
         .info-box code,
         .workspace-card code,
-        .portal-header code {
+        .portal-header code,
+        .about-link-card code,
+        .about-highlight code {
             background: rgba(199, 99, 47, 0.08);
             border-radius: 8px;
             padding: 2px 6px;
@@ -1034,6 +1746,7 @@
                 grid-template-columns: 255px minmax(0, 1fr);
             }
 
+            .match-workspace,
             .panel-grid {
                 grid-template-columns: 1fr;
             }
@@ -1083,9 +1796,41 @@
             .scoreboard-grid,
             .scoreboard-controls,
             .portal-link-grid,
+            .about-grid,
+            .about-links,
+            .form-grid,
+            .winner-actions,
             .panel-layout,
             .panel-layout.preview-right {
                 grid-template-columns: 1fr;
+            }
+
+            .about-hero {
+                grid-template-columns: 1fr;
+            }
+
+            .match-hero-score-row {
+                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
+
+            .match-hero-side.right,
+            .match-hero-score-block {
+                text-align: left;
+                justify-items: start;
+            }
+
+            .match-history-summary-top {
+                grid-template-columns: 1fr;
+            }
+
+            .match-history-summary-right {
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .match-history-board-grid {
+                min-width: 936px;
             }
 
             .slot-preview {
@@ -1156,8 +1901,8 @@
                         <div class="nav-meta">
                             <div class="nav-item-icon">🎮</div>
                             <div>
-                                <strong>阵容编辑</strong>
-                                <span>双方阵容选择</span>
+                                <strong>赛事管理</strong>
+                                <span>比赛、阵容与赛制联动管理</span>
                             </div>
                         </div>
                         <span class="nav-badge">Main</span>
@@ -1166,11 +1911,21 @@
                         <div class="nav-meta">
                             <div class="nav-item-icon">🏆</div>
                             <div>
-                                <strong>顶部比分栏</strong>
-                                <span>选手名称、比分显示控制</span>
+                                <strong>显示设置</strong>
+                                <span>比分栏样式与页面2展示控制</span>
                             </div>
                         </div>
                         <span class="nav-badge">Edit</span>
+                    </button>
+                    <button class="nav-item" type="button" data-view="history">
+                        <div class="nav-meta">
+                            <div class="nav-item-icon">📚</div>
+                            <div>
+                                <strong>比赛历史</strong>
+                                <span>独立查看系列赛与每局阵容快照</span>
+                            </div>
+                        </div>
+                        <span class="nav-badge">Log</span>
                     </button>
                     <button class="nav-item" type="button" data-view="background">
                         <div class="nav-meta">
@@ -1202,11 +1957,21 @@
                         </div>
                         <span class="nav-badge">View</span>
                     </button>
+                    <button class="nav-item" type="button" data-view="about">
+                        <div class="nav-meta">
+                            <div class="nav-item-icon">ℹ️</div>
+                            <div>
+                                <strong>关于本站</strong>
+                                <span>主要能力、免责声明与扩展说明</span>
+                            </div>
+                        </div>
+                        <span class="nav-badge">Info</span>
+                    </button>
                 </div>
             </div>
 
             <div class="sidebar-footer">
-                <p>可自行选择推流页面1或页面2</p>
+                <p>可自行选择推流页面1、页面2或页面3</p>
             </div>
         </aside>
 
@@ -1226,10 +1991,86 @@
 
             <section class="content-view active" data-view="roster">
                 <div class="container page-stack">
+                    <section class="match-workspace">
+                        <aside class="panel match-sidebar-card" id="matchSidebarCard">
+                            <div class="panel-header">
+                                <div>
+                                    <small>Match Queue</small>
+                                    <h2>比赛列表</h2>
+                                </div>
+                                <button class="btn btn-primary" type="button" id="openCreateMatchBtn">开一局</button>
+                            </div>
+                            <p class="muted">创建赛事后会自动进入第 1 局。切换比赛会同步当前推流页的选手、比分和阵容快照。</p>
+                            <div class="match-list" id="matchList"></div>
+                        </aside>
+
+                        <div class="match-main-stack">
+                            <section class="panel match-focus-panel" id="matchFocusPanel">
+                                <div class="panel-header">
+                                    <div>
+                                        <small>Match Focus</small>
+                                        <h2>当前比赛</h2>
+                                        <p class="muted">统一管理比分栏中的选手名、比分与赛制。选择好双方阵容后点击开始对局，即可同步双方阵容到推流页面。</p>
+                                    </div>
+                                    <div class="panel-header-right">
+                                        <div class="status" id="matchStatus"></div>
+                                    </div>
+                                </div>
+                                <div class="match-hero" id="matchHero"></div>
+                                <div class="scoreboard-grid">
+                                    <div class="scoreboard-card">
+                                        <h3>左侧选手</h3>
+                                        <div class="form-row">
+                                            <label for="matchLeftPlayerInput">选手名字</label>
+                                            <input type="text" id="matchLeftPlayerInput" maxlength="32" placeholder="输入左侧选手名字">
+                                        </div>
+                                    </div>
+                                    <div class="scoreboard-card">
+                                        <h3>右侧选手</h3>
+                                        <div class="form-row">
+                                            <label for="matchRightPlayerInput">选手名字</label>
+                                            <input type="text" id="matchRightPlayerInput" maxlength="32" placeholder="输入右侧选手名字">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="scoreboard-controls">
+                                    <div class="scoreboard-card">
+                                        <h3>比赛赛制</h3>
+                                        <div class="form-row">
+                                            <label for="matchBestOfInput">当前 BO</label>
+                                            <select id="matchBestOfInput">
+                                                <option value="1">BO1</option>
+                                                <option value="3">BO3</option>
+                                                <option value="5">BO5</option>
+                                                <option value="7">BO7</option>
+                                            </select>
+                                        </div>
+                                        <div class="lineup-empty" id="matchFormatHint">在比赛开始前可以调整 BO，开始记分后建议保持不变。</div>
+                                    </div>
+                                    <div class="scoreboard-card match-actions">
+                                        <h3>小局结算</h3>
+                                        <div class="winner-actions">
+                                            <button class="btn btn-success" type="button" id="leftWinBtn">左侧赢了</button>
+                                            <button class="btn btn-warning" type="button" id="rightWinBtn">右侧赢了</button>
+                                        </div>
+                                        <div class="btn-row">
+                                            <button class="btn btn-secondary" type="button" id="undoMatchBtn">撤回上一步</button>
+                                            <button class="btn btn-secondary" type="button" id="redoMatchBtn">取消撤回</button>
+                                        </div>
+                                        <div class="btn-row">
+                                            <button class="btn btn-primary" type="button" id="saveMatchMetaBtn">保存比赛信息</button>
+                                            <button class="btn btn-primary" type="button" id="rematchBtn">开始本次对局</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </section>
+
                     <div class="panel-grid">
                         <section class="panel" data-panel="left" id="leftPanelCard">
                             <div class="panel-header">
-                                <h2>左侧阵容</h2>
+                                <h2>左侧当前阵容</h2>
                                 <div class="panel-header-right">
                                     <label class="auto-save-toggle">
                                         <input type="checkbox" id="leftAutoSaveToggle">
@@ -1312,7 +2153,7 @@
 
                         <section class="panel" data-panel="right" id="rightPanelCard">
                             <div class="panel-header">
-                                <h2>右侧阵容</h2>
+                                <h2>右侧当前阵容</h2>
                                 <div class="panel-header-right">
                                     <label class="auto-save-toggle">
                                         <input type="checkbox" id="rightAutoSaveToggle">
@@ -1394,16 +2235,38 @@
                         </section>
                     </div>
 
-                    <section class="info-box">
-                        <h3>使用说明</h3>
-                        <p class="muted">
-                            左右两侧从 <code>img</code> 目录读取精灵图，名称和编号索引从 <code>json/sprites.json</code> 读取。每侧固定 6 个槽位，点击槽位后再点击精灵即可填充。
-                            透明度开关和数值只作用于当前选中的单个槽位，不会影响整个面板。
-                        </p>
-                        <h3>图片来源</h3>
-                        <p class="muted">
-                            所有精灵图均来自洛克王国世界WIKI，版权归洛克王国世界所有，图片来源地址：<a href="https://wiki.biligame.com/rocom/" target="_blank">https://wiki.biligame.com/rocom/</a>其他声明：<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">规范转载需注明来源链接，感谢您的理解与配合。自动授权协议：CC BY-NC-SA 4.0（署名-非商业性使用-相同方式共享）</a>
-                        </p>
+            <section class="info-box">
+                <h3>赛事说明</h3>
+                <p class="muted">
+                    阵容编辑、选手名字、比分和 BO 都统一收口到赛事管理。保存阵容时只会写入当前小局草稿，点击“开始本次对局”后才会同步到推流页面。
+                </p>
+                <h3>素材来源</h3>
+                <p class="muted">
+                    所有精灵图均来自洛克王国世界 WIKI，图片来源：<a href="https://wiki.biligame.com/rocom/" target="_blank">https://wiki.biligame.com/rocom/</a>。转载规范：<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</a>。
+                </p>
+            </section>
+
+                </div>
+            </section>
+
+            <section class="content-view" data-view="history">
+                <div class="portal-page">
+                    <section class="portal-card match-history-page">
+                        <div class="panel-header">
+                            <div>
+                                <small>History Archive</small>
+                                <h2>比赛历史</h2>
+                                <p>独立查看每场系列赛的比分、赛制，以及每一局对应的左右阵容快照。</p>
+                            </div>
+                            <div class="panel-header-right">
+                                <div class="history-toolbar-actions">
+                                    <button class="btn btn-danger" type="button" id="deleteSelectedHistoryBtn">删除选中赛事</button>
+                                    <button class="btn btn-secondary" type="button" id="undoDeletedHistoryBtn">撤回最近删除</button>
+                                </div>
+                                <div class="status" id="historyStatus"></div>
+                            </div>
+                        </div>
+                        <div class="match-history-list" id="matchHistoryList"></div>
                     </section>
                 </div>
             </section>
@@ -1414,8 +2277,8 @@
                         <div class="panel-header">
                             <div>
                                 <small>Navigation Module</small>
-                                <h2>比分管理</h2>
-                                <p>这里可以设置首页顶部居中的选手名字、比分和 Center Area 的展示方式。</p>
+                                <h2>显示设置</h2>
+                                <p>这里保留比分栏显隐、字号、Center Area 和页面2阵容展示样式的控制。</p>
                             </div>
                             <div class="panel-header-right">
                                 <div class="status" id="scoreboardStatus"></div>
@@ -1423,31 +2286,7 @@
                         </div>
                         <div class="scoreboard-grid">
                             <div class="scoreboard-card">
-                                <h3>左侧选手</h3>
-                                <div class="form-row">
-                                    <label for="leftPlayerNameInput">选手名字</label>
-                                    <input type="text" id="leftPlayerNameInput" maxlength="32" placeholder="输入左侧选手名字">
-                                </div>
-                                <div class="form-row">
-                                    <label for="leftPlayerScoreInput">比分</label>
-                                    <input type="text" id="leftPlayerScoreInput" maxlength="4" placeholder="0">
-                                </div>
-                            </div>
-                            <div class="scoreboard-card">
-                                <h3>右侧选手</h3>
-                                <div class="form-row">
-                                    <label for="rightPlayerNameInput">选手名字</label>
-                                    <input type="text" id="rightPlayerNameInput" maxlength="32" placeholder="输入右侧选手名字">
-                                </div>
-                                <div class="form-row">
-                                    <label for="rightPlayerScoreInput">比分</label>
-                                    <input type="text" id="rightPlayerScoreInput" maxlength="4" placeholder="0">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="scoreboard-controls">
-                            <div class="scoreboard-card">
-                                <h3>显示控制</h3>
+                                <h3>比分栏显示</h3>
                                 <div class="form-row">
                                     <label for="scoreboardEnabledInput">顶部比分栏显示</label>
                                     <input type="checkbox" id="scoreboardEnabledInput" checked>
@@ -1485,16 +2324,7 @@
                                 </div>
                             </div>
                             <div class="scoreboard-card">
-                                <h3>字体大小</h3>
-                                <div class="form-row">
-                                    <label for="bestOfInput">比赛赛制</label>
-                                    <select id="bestOfInput">
-                                        <option value="1">BO1</option>
-                                        <option value="3">BO3</option>
-                                        <option value="5">BO5</option>
-                                        <option value="7" selected>BO7</option>
-                                    </select>
-                                </div>
+                                <h3>文本样式</h3>
                                 <div class="form-row">
                                     <label for="nameFontSizeInput">选手名字字号</label>
                                     <input type="number" id="nameFontSizeInput" min="12" max="160" value="64">
@@ -1502,6 +2332,36 @@
                                 <div class="form-row">
                                     <label for="scoreFontSizeInput">比分字号</label>
                                     <input type="number" id="scoreFontSizeInput" min="12" max="160" value="64">
+                                </div>
+                            </div>
+                            <div class="scoreboard-card">
+                                <h3>页面3头像</h3>
+                                <p class="muted">左右头像固定显示为 64 × 64，可分别上传替换。</p>
+                                <div class="avatar-upload-grid">
+                                    <div class="avatar-upload-card">
+                                        <strong>左侧头像</strong>
+                                        <div class="avatar-preview">
+                                            <img id="leftAvatarPreview" alt="左侧头像预览" style="display:none;">
+                                            <div class="empty-preview" id="leftAvatarEmpty">未设置</div>
+                                        </div>
+                                        <div class="btn-row">
+                                            <button class="btn btn-primary" type="button" id="leftAvatarUploadBtn">选择头像</button>
+                                            <button class="btn btn-danger" type="button" id="leftAvatarDeleteBtn">删除</button>
+                                        </div>
+                                        <input type="file" accept="image/*" id="leftAvatarFileInput" class="background-input">
+                                    </div>
+                                    <div class="avatar-upload-card">
+                                        <strong>右侧头像</strong>
+                                        <div class="avatar-preview">
+                                            <img id="rightAvatarPreview" alt="右侧头像预览" style="display:none;">
+                                            <div class="empty-preview" id="rightAvatarEmpty">未设置</div>
+                                        </div>
+                                        <div class="btn-row">
+                                            <button class="btn btn-primary" type="button" id="rightAvatarUploadBtn">选择头像</button>
+                                            <button class="btn btn-danger" type="button" id="rightAvatarDeleteBtn">删除</button>
+                                        </div>
+                                        <input type="file" accept="image/*" id="rightAvatarFileInput" class="background-input">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1547,7 +2407,7 @@
                             <div>
                                 <small>Preview Workspace</small>
                                 <h2 id="previewPanelTitle">推流页面1</h2>
-                                <p>这里可以预览 <code id="previewPanelFile">index.html</code>，并通过 slot 快速切换推流页面 1 或 2。</p>
+                                <p>这里可以预览 <code id="previewPanelFile">index.html</code>，并通过 slot 快速切换推流页面 1、2、3 和等待页。</p>
                             </div>
                             <div class="panel-header-right">
                                 <div class="status" id="previewStatus"></div>
@@ -1557,6 +2417,8 @@
                         <div class="preview-slot-switch" aria-label="推流页面切换">
                             <button class="btn btn-primary preview-slot-btn active" type="button" data-preview-slot="page1">推流页面1</button>
                             <button class="btn btn-secondary preview-slot-btn" type="button" data-preview-slot="page2">推流页面2</button>
+                            <button class="btn btn-secondary preview-slot-btn" type="button" data-preview-slot="page3">推流页面3</button>
+                            <button class="btn btn-secondary preview-slot-btn" type="button" data-preview-slot="standby">等待页 Demo</button>
                         </div>
                         <div class="portal-link-grid">
                             <div class="portal-link-card">
@@ -1580,7 +2442,140 @@
                     </div>
                 </div>
             </section>
+
+            <section class="content-view" data-view="about">
+                <div class="portal-page about-page">
+                    <section class="portal-card about-hero">
+                        <div class="about-hero-copy">
+                            <div>
+                                <small>About This Site</small>
+                                <h2>关于本站</h2>
+                            </div>
+                            <p>本站是一个面向洛克王国 PVP 直播场景的本地管理后台，用来把赛事信息、阵容状态、推流页面和素材控制收口到同一套工作台里，方便主持、导播或裁判协同操作。</p>
+                            <div class="about-pill-group" aria-label="站点特点">
+                                <span class="about-pill">本地运行</span>
+                                <span class="about-pill">赛事联动</span>
+                                <span class="about-pill">多页面预览</span>
+                                <span class="about-pill">素材可替换</span>
+                            </div>
+                        </div>
+                        <aside class="about-highlight" aria-label="站点定位">
+                            <div>
+                                <small>Current Focus</small>
+                                <strong>把直播现场常用的赛事录入、比分控制、阵容同步和预览切换集中到一个 <code>admin</code> 工作台。</strong>
+                            </div>
+                            <p>左侧 Navigation 用于模块切换，右侧 content-shell 负责承载管理内容。整体更适合本地桌面环境中的实际推流操作，而不是对外公开的内容站点。</p>
+                        </aside>
+                    </section>
+
+                    <div class="about-grid">
+                        <section class="portal-card about-section">
+                            <div>
+                                <small>Core Capabilities</small>
+                                <h3>主要能力</h3>
+                            </div>
+                            <div class="about-points">
+                                <article class="about-point">
+                                    <strong>赛事与比分统一管理</strong>
+                                    <p>支持创建赛事、维护 BO 赛制、记录每小局胜负，并把当前比赛状态同步到推流页面。</p>
+                                </article>
+                                <article class="about-point">
+                                    <strong>左右阵容独立编辑</strong>
+                                    <p>可分别配置双方精灵阵容，并细调每个槽位的血量、能力值、透明度和饱和度。</p>
+                                </article>
+                                <article class="about-point">
+                                    <strong>预览与素材控制</strong>
+                                    <p>支持切换推流页面 1、2、3 和等待页预览，同时可上传背景图、左右头像等直播素材。</p>
+                                </article>
+                            </div>
+                        </section>
+
+                        <section class="portal-card about-section">
+                            <div>
+                                <small>Disclaimer</small>
+                                <h3>免责声明</h3>
+                            </div>
+                            <div class="about-points">
+                                <div class="about-note">
+                                    <p>本站主要用于本地直播控制与赛事辅助展示，不代表洛克王国官方立场，也不构成任何官方公告、赛事裁定或商业背书。</p>
+                                </div>
+                                <article class="about-point">
+                                    <strong>素材版权与来源</strong>
+                                    <p>精灵图等相关素材请按原始来源与授权规范使用。当前项目内已注明的公开来源为洛克王国世界 WIKI，并应遵守对应转载协议。</p>
+                                </article>
+                                <article class="about-point">
+                                    <strong>数据展示仅供直播辅助</strong>
+                                    <p>页面中的阵容、比分、状态和文案以当前操作员录入为准，如需正式记录，请结合赛事流程另行复核。</p>
+                                </article>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section class="portal-card about-section">
+                        <div>
+                            <small>Learn More</small>
+                            <h3>了解更多</h3>
+                            <p>如果你要继续扩展本站，可以从以下入口快速了解页面、素材和项目结构。</p>
+                        </div>
+                        <div class="about-links">
+                            <a class="portal-link-card about-link-card" href="/admin.html" target="_blank" rel="noopener noreferrer">
+                                <strong>后台工作台</strong>
+                                <p>查看当前 <code>admin</code> 入口，了解 sidebar 与 content-shell 的整体组织方式。</p>
+                                <code>/admin.html</code>
+                            </a>
+                            <a class="portal-link-card about-link-card" href="/roco-pvp.html" target="_blank" rel="noopener noreferrer">
+                                <strong>推流页面 2</strong>
+                                <p>查看赛事标题、阵容展示等前台效果，便于联调后台控制项。</p>
+                                <code>/roco-pvp.html</code>
+                            </a>
+                            <a class="portal-link-card about-link-card" href="https://wiki.biligame.com/rocom/" target="_blank" rel="noopener noreferrer">
+                                <strong>精灵图素材来源</strong>
+                                <p>当前页面中使用到的精灵图公开来源说明，可进一步核对素材名称与出处。</p>
+                                <code>wiki.biligame.com/rocom</code>
+                            </a>
+                            <a class="portal-link-card about-link-card" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank" rel="noopener noreferrer">
+                                <strong>转载授权协议</strong>
+                                <p>查看素材转载时应遵守的授权条款，避免在分发或展示时超出许可范围。</p>
+                                <code>CC BY-NC-SA 4.0</code>
+                            </a>
+                        </div>
+                    </section>
+                </div>
+            </section>
         </main>
+    </div>
+
+    <div class="modal-backdrop" id="createMatchModal" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="createMatchTitle">
+            <div>
+                <small>New Match</small>
+                <h2 id="createMatchTitle">创建赛事</h2>
+                <p class="muted">输入选手名并选择 BO，创建后会自动生成第 1 局。</p>
+            </div>
+            <div class="form-grid">
+                <div class="form-row">
+                    <label for="createMatchLeftPlayerInput">左侧选手</label>
+                    <input type="text" id="createMatchLeftPlayerInput" maxlength="32" placeholder="例如：选手A">
+                </div>
+                <div class="form-row">
+                    <label for="createMatchRightPlayerInput">右侧选手</label>
+                    <input type="text" id="createMatchRightPlayerInput" maxlength="32" placeholder="例如：选手B">
+                </div>
+                <div class="form-row">
+                    <label for="createMatchBestOfInput">比赛赛制</label>
+                    <select id="createMatchBestOfInput">
+                        <option value="1">BO1</option>
+                        <option value="3" selected>BO3</option>
+                        <option value="5">BO5</option>
+                        <option value="7">BO7</option>
+                    </select>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" type="button" id="createMatchConfirmBtn">创建比赛</button>
+                <button class="btn btn-secondary" type="button" id="createMatchCancelBtn">取消</button>
+            </div>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -1596,6 +2591,16 @@
                 title: '推流页面2',
                 fileName: 'roco-pvp.html',
                 path: '/roco-pvp.html'
+            },
+            page3: {
+                title: '推流页面3',
+                fileName: 'roco-pvp-page3.html',
+                path: '/roco-pvp-page3.html'
+            },
+            standby: {
+                title: '直播等待页 Demo',
+                fileName: 'live-standby-demo.html',
+                path: '/live-standby-demo.html'
             }
         };
 
@@ -1617,6 +2622,21 @@
             currentView: 'roster',
             previewSlot: 'page1',
             sprites: [],
+            matchStore: {
+                activeMatchId: null,
+                matches: [],
+                history: {
+                    canUndo: false,
+                    canRedo: false,
+                    canUndoDelete: false,
+                    deleteUndoCount: 0
+                },
+                mtime: null
+            },
+            historyUi: {
+                expandedMatchIds: new Set(),
+                selectedMatchIds: new Set()
+            },
             scoreboard: {
                 leftName: '',
                 leftScore: '0',
@@ -1634,16 +2654,35 @@
                 centerAreaEnabled: true,
                 centerAreaColor: '#393939'
             },
-            left: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: false },
-            right: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: false }
+            left: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: true },
+            right: { selected: Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index)), activeSlot: 0, quickFillMatches: [], autoSaveEnabled: true }
         };
         const autoSaveTimers = { left: null, right: null };
+        const autoSavePlans = {
+            left: { slotIndexes: new Set(), requiresFullSave: false },
+            right: { slotIndexes: new Set(), requiresFullSave: false }
+        };
         const saveRequestVersions = { left: 0, right: 0 };
-        const appliedSaveVersions = { left: 0, right: 0 };
+        const panelMutationVersions = { left: 0, right: 0 };
+        const panelSyncedMutationVersions = { left: 0, right: 0 };
+        const LIVE_CONTROL_WINDOW_NAME = 'roco-live-control-window';
         let socket = null;
+        let liveControlWindow = null;
 
         function getPreviewOrigin() {
             return `${window.location.protocol}//${window.location.host}`;
+        }
+
+        function openLiveControlWindow() {
+            if (liveControlWindow && !liveControlWindow.closed) {
+                liveControlWindow.focus();
+                return;
+            }
+
+            liveControlWindow = window.open('/live-control.html', LIVE_CONTROL_WINDOW_NAME, 'popup=yes,width=880,height=400');
+            if (liveControlWindow) {
+                liveControlWindow.focus();
+            }
         }
 
         function getLocalAddressText() {
@@ -1729,6 +2768,7 @@
                 view.classList.toggle('active', view.dataset.view === state.currentView);
             });
             if (state.currentView === 'roster') {
+                renderMatchWorkspace();
                 renderPanel('left');
                 renderPanel('right');
                 renderSlotPreview('left');
@@ -1748,12 +2788,597 @@
             el.className = 'status';
         }
 
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatDateTime(value) {
+            if (!value) {
+                return '';
+            }
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return String(value);
+            }
+            return date.toLocaleString('zh-CN', {
+                hour12: false,
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function normalizeGameRecord(game, index) {
+            return {
+                gameNumber: game && Number.isFinite(Number(game.gameNumber)) ? Number(game.gameNumber) : index + 1,
+                leftLineup: Array.isArray(game && game.leftLineup) ? game.leftLineup.filter(Boolean) : [],
+                rightLineup: Array.isArray(game && game.rightLineup) ? game.rightLineup.filter(Boolean) : [],
+                leftSlots: Array.isArray(game && game.leftSlots) ? game.leftSlots : [],
+                rightSlots: Array.isArray(game && game.rightSlots) ? game.rightSlots : [],
+                winner: game && (game.winner === 'left' || game.winner === 'right') ? game.winner : null,
+                status: game && (game.status === 'completed' || game.status === 'in_progress') ? game.status : 'pending'
+            };
+        }
+
+        function normalizeMatchRecord(match) {
+            const games = Array.isArray(match && match.games)
+                ? match.games.map((game, index) => normalizeGameRecord(game, index))
+                : [];
+
+            return {
+                id: match && match.id ? String(match.id) : '',
+                createdAt: match && match.createdAt ? String(match.createdAt) : '',
+                updatedAt: match && match.updatedAt ? String(match.updatedAt) : '',
+                status: match && match.status ? match.status : 'pending',
+                leftPlayer: match && match.leftPlayer ? String(match.leftPlayer) : '',
+                rightPlayer: match && match.rightPlayer ? String(match.rightPlayer) : '',
+                bestOf: match && Number(match.bestOf) ? Number(match.bestOf) : 3,
+                games,
+                leftScore: match && Number.isFinite(Number(match.leftScore)) ? Number(match.leftScore) : 0,
+                rightScore: match && Number.isFinite(Number(match.rightScore)) ? Number(match.rightScore) : 0,
+                winner: match && (match.winner === 'left' || match.winner === 'right') ? match.winner : null,
+                completedAt: match && match.completedAt ? String(match.completedAt) : null
+            };
+        }
+
+        function updateMatchesFromApi(payload) {
+            state.matchStore = {
+                activeMatchId: payload && payload.activeMatchId ? String(payload.activeMatchId) : null,
+                matches: Array.isArray(payload && payload.matches)
+                    ? payload.matches.map(normalizeMatchRecord).filter(match => match.id)
+                    : [],
+                history: {
+                    canUndo: !!(payload && payload.history && payload.history.canUndo),
+                    canRedo: !!(payload && payload.history && payload.history.canRedo),
+                    canUndoDelete: !!(payload && payload.history && payload.history.canUndoDelete),
+                    deleteUndoCount: payload && payload.history && Number.isFinite(Number(payload.history.deleteUndoCount))
+                        ? Number(payload.history.deleteUndoCount)
+                        : 0
+                },
+                mtime: payload && payload.mtime ? payload.mtime : null
+            };
+            const matchIds = new Set(state.matchStore.matches.map(match => match.id));
+            state.historyUi.expandedMatchIds.forEach(matchId => {
+                if (!matchIds.has(matchId)) {
+                    state.historyUi.expandedMatchIds.delete(matchId);
+                }
+            });
+            state.historyUi.selectedMatchIds.forEach(matchId => {
+                if (!matchIds.has(matchId)) {
+                    state.historyUi.selectedMatchIds.delete(matchId);
+                }
+            });
+            syncLocalPanelsFromMatchStore();
+            renderMatchWorkspace();
+        }
+
+        function getActiveMatch() {
+            return state.matchStore.matches.find(match => match.id === state.matchStore.activeMatchId) || null;
+        }
+
+        function getCurrentGame(match) {
+            if (!match) {
+                return null;
+            }
+            return match.games.find(game => game.status === 'in_progress')
+                || match.games.find(game => game.status === 'pending')
+                || null;
+        }
+
+        function markPanelDirty(panel) {
+            panelMutationVersions[panel] += 1;
+        }
+
+        function markPanelSynced(panel, version = panelMutationVersions[panel]) {
+            panelSyncedMutationVersions[panel] = Math.max(panelSyncedMutationVersions[panel], version);
+        }
+
+        function hasUnsyncedPanelMutations(panel) {
+            return panelMutationVersions[panel] > panelSyncedMutationVersions[panel];
+        }
+
+        function getDisplayGame(match) {
+            if (!match || !Array.isArray(match.games) || !match.games.length) {
+                return null;
+            }
+            return getCurrentGame(match) || match.games[match.games.length - 1];
+        }
+
+        function canEditLineup() {
+            const match = getActiveMatch();
+            const game = getCurrentGame(match);
+            return !!match && !!game && match.status !== 'completed' && game.status !== 'completed';
+        }
+
+        function canStartCurrentGame() {
+            const match = getActiveMatch();
+            const game = getCurrentGame(match);
+            return !!match && !!game && game.status === 'pending'
+                && Array.isArray(game.leftLineup) && game.leftLineup.length > 0
+                && Array.isArray(game.rightLineup) && game.rightLineup.length > 0;
+        }
+
+        function canRecordWinner() {
+            const match = getActiveMatch();
+            const game = getCurrentGame(match);
+            return !!match && !!game && game.status === 'in_progress';
+        }
+
+        function applySlotsToLocalPanel(panel, slots) {
+            const selected = Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index));
+
+            (Array.isArray(slots) ? slots : []).slice(0, MAX_SELECTION).forEach((slotData, index) => {
+                const spriteId = slotData && slotData.spriteId ? slotData.spriteId : null;
+                selected[index] = {
+                    slot: index,
+                    sprite: spriteId ? spriteById(spriteId) || { id: spriteId, displayName: spriteId, chineseName: spriteId, name: spriteId, filename: spriteId, path: '', aliases: [], number: null, variant: 0 } : null,
+                    opacityEnabled: !!(slotData && slotData.opacityEnabled),
+                    opacity: typeof (slotData && slotData.opacity) === 'number' ? slotData.opacity : 0.5,
+                    effectiveOpacity: slotData && slotData.opacityEnabled ? (typeof slotData.opacity === 'number' ? slotData.opacity : 0.5) : 1,
+                    saturation: typeof (slotData && slotData.saturation) === 'number' ? slotData.saturation : 1,
+                    healthEnabled: slotData ? slotData.healthEnabled !== false : true,
+                    healthPercent: typeof (slotData && slotData.healthPercent) === 'number' ? slotData.healthPercent : 100,
+                    energyValue: typeof (slotData && slotData.energyValue) === 'number' ? slotData.energyValue : 10
+                };
+            });
+
+            state[panel].selected = selected;
+            state[panel].activeSlot = Math.min(state[panel].activeSlot, MAX_SELECTION - 1);
+        }
+
+        function syncLocalPanelsFromMatchStore() {
+            const match = getActiveMatch();
+            const game = getCurrentGame(match);
+
+            if (!match) {
+                return;
+            }
+
+            if (match.status === 'completed') {
+                applySlotsToLocalPanel('left', []);
+                applySlotsToLocalPanel('right', []);
+                renderPanel('left');
+                renderPanel('right');
+                return;
+            }
+
+            if (!game) {
+                return;
+            }
+
+            if (!hasUnsyncedPanelMutations('left')) {
+                applySlotsToLocalPanel('left', game.leftSlots || []);
+                renderPanel('left');
+            }
+
+            if (!hasUnsyncedPanelMutations('right')) {
+                applySlotsToLocalPanel('right', game.rightSlots || []);
+                renderPanel('right');
+            }
+        }
+
+        function getWinsNeeded(bestOf) {
+            return Math.floor((Number(bestOf) || 1) / 2) + 1;
+        }
+
+        function getMatchStatusClass(match) {
+            if (!match) {
+                return 'pending';
+            }
+            if (match.status === 'completed') {
+                return 'completed';
+            }
+            if (match.status === 'in_progress') {
+                return 'in-progress';
+            }
+            return 'pending';
+        }
+
+        function getMatchStatusText(match) {
+            if (!match) {
+                return '未创建';
+            }
+            if (match.status === 'completed') {
+                return '已完成';
+            }
+            if (match.status === 'in_progress') {
+                return '进行中';
+            }
+            return '待开始';
+        }
+
+        function getGameResultText(game) {
+            if (!game) {
+                return '待开始';
+            }
+            if (game.status === 'in_progress') {
+                return '进行中';
+            }
+            if (game.status !== 'completed' || !game.winner) {
+                return '待结算';
+            }
+            return game.winner === 'left' ? '左侧胜' : '右侧胜';
+        }
+
+        function formatLineupNames(lineup) {
+            if (!Array.isArray(lineup) || !lineup.length) {
+                return '<span class="lineup-empty">待设置</span>';
+            }
+            return lineup.map(spriteId => {
+                const sprite = spriteById(spriteId);
+                const label = sprite ? getSpriteDisplayName(sprite) : spriteId;
+                return `<span class="lineup-tag">${escapeHtml(label)}</span>`;
+            }).join('');
+        }
+
+        function formatLineupSummary(lineup) {
+            if (!Array.isArray(lineup) || !lineup.length) {
+                return '待设置';
+            }
+            return lineup.map(spriteId => {
+                const sprite = spriteById(spriteId);
+                return sprite ? getSpriteDisplayName(sprite) : spriteId;
+            }).join(' / ');
+        }
+
+        function isHistoryMatchExpanded(matchId) {
+            return state.historyUi.expandedMatchIds.has(matchId);
+        }
+
+        function toggleHistoryMatch(matchId) {
+            if (!matchId) {
+                return;
+            }
+            if (state.historyUi.expandedMatchIds.has(matchId)) {
+                state.historyUi.expandedMatchIds.delete(matchId);
+            } else {
+                state.historyUi.expandedMatchIds.add(matchId);
+            }
+            renderMatchHistory();
+        }
+
+        function isHistoryMatchSelected(matchId) {
+            return state.historyUi.selectedMatchIds.has(matchId);
+        }
+
+        function toggleHistorySelection(matchId) {
+            if (!matchId) {
+                return;
+            }
+            if (state.historyUi.selectedMatchIds.has(matchId)) {
+                state.historyUi.selectedMatchIds.delete(matchId);
+            } else {
+                state.historyUi.selectedMatchIds.add(matchId);
+            }
+            renderMatchHistory();
+        }
+
+        function getSelectedHistoryMatchIds() {
+            return state.matchStore.matches
+                .map(match => match.id)
+                .filter(matchId => state.historyUi.selectedMatchIds.has(matchId));
+        }
+
+        function getHistoryLineupEntries(game, side) {
+            const slotSource = side === 'left'
+                ? (game && Array.isArray(game.leftSlots) ? game.leftSlots : [])
+                : (game && Array.isArray(game.rightSlots) ? game.rightSlots : []);
+            const lineupSource = side === 'left'
+                ? (game && Array.isArray(game.leftLineup) ? game.leftLineup : [])
+                : (game && Array.isArray(game.rightLineup) ? game.rightLineup : []);
+
+            const slotEntries = slotSource
+                .filter(slot => slot && slot.spriteId)
+                .map(slot => slot.spriteId);
+            const source = slotEntries.length ? slotEntries : lineupSource;
+
+            const entries = source.slice(0, 6).map(spriteId => {
+                const sprite = spriteById(spriteId);
+                return {
+                    id: spriteId,
+                    name: sprite ? getSpriteDisplayName(sprite) : String(spriteId || '未设置'),
+                    path: sprite && sprite.path ? sprite.path : ''
+                };
+            });
+
+            while (entries.length < 6) {
+                entries.push(null);
+            }
+
+            return entries;
+        }
+
+        function renderHistorySpiritCell(entry, options = {}) {
+            const {
+                isLost = false,
+                addDivider = false
+            } = options;
+
+            if (!entry) {
+                return `
+                    <div class="match-history-spirit match-history-empty-slot${addDivider ? ' team-divider' : ''}">
+                        <span class="match-history-spirit-fallback">-</span>
+                        <span class="match-history-spirit-name">未上阵</span>
+                    </div>
+                `;
+            }
+
+            const visual = entry.path
+                ? `<img src="${escapeHtml(entry.path)}" alt="${escapeHtml(entry.name)}" loading="lazy" decoding="async">`
+                : `<span class="match-history-spirit-fallback">N/A</span>`;
+
+            return `
+                <div class="match-history-spirit${addDivider ? ' team-divider' : ''}${isLost ? ' lost' : ''}">
+                    ${visual}
+                    <span class="match-history-spirit-name">${escapeHtml(entry.name)}</span>
+                </div>
+            `;
+        }
+
+        function renderHistoryGameDetail(game) {
+            const leftEntries = getHistoryLineupEntries(game, 'left');
+            const rightEntries = getHistoryLineupEntries(game, 'right');
+            const leftLost = game && game.winner === 'right';
+            const rightLost = game && game.winner === 'left';
+            const cells = [
+                ...leftEntries.map(entry => renderHistorySpiritCell(entry, { isLost: leftLost })),
+                ...rightEntries.map((entry, index) => renderHistorySpiritCell(entry, {
+                    isLost: rightLost,
+                    addDivider: index === 0
+                }))
+            ].join('');
+
+            return `
+                <section class="match-history-game">
+                    <div class="match-history-game-head">
+                        <strong>第 ${escapeHtml(game.gameNumber)} 局</strong>
+                        <span class="metric-pill">${escapeHtml(getGameResultText(game))}</span>
+                    </div>
+                    <div class="match-history-board">
+                        <div class="match-history-board-grid">${cells}</div>
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderHistoryMatchDetail(match) {
+            const completedGames = match.games.filter(game => game.status === 'completed').length;
+            const visibleGames = match.games.filter(game =>
+                game.status !== 'pending'
+                || (Array.isArray(game.leftLineup) && game.leftLineup.length > 0)
+                || (Array.isArray(game.rightLineup) && game.rightLineup.length > 0)
+            );
+            return `
+                <div class="match-history-detail-meta">
+                    ${escapeHtml(match.id)} · BO${escapeHtml(match.bestOf)} · 已记录 ${completedGames} 局${match.completedAt ? ` · 完成于 ${escapeHtml(formatDateTime(match.completedAt))}` : ''}
+                </div>
+                ${visibleGames.map(game => renderHistoryGameDetail(game)).join('')}
+            `;
+        }
+
+        function renderMatchList() {
+            const container = document.getElementById('matchList');
+            const activeMatchId = state.matchStore.activeMatchId;
+            const matches = state.matchStore.matches || [];
+
+            if (!matches.length) {
+                container.innerHTML = '<div class="empty-preview">当前还没有比赛，点击“开一局”创建赛事。</div>';
+                return;
+            }
+
+            container.innerHTML = matches.map(match => `
+                <button class="match-item${match.id === activeMatchId ? ' active' : ''}" type="button" data-match-id="${escapeHtml(match.id)}">
+                    <div class="match-item-title">
+                        <strong>${escapeHtml(match.id)}</strong>
+                        <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
+                    </div>
+                    <div class="match-item-subtitle">${escapeHtml(match.leftPlayer || '左侧')} vs ${escapeHtml(match.rightPlayer || '右侧')}</div>
+                    <div class="match-history-meta">BO${escapeHtml(match.bestOf)} · ${escapeHtml(String(match.leftScore))}:${escapeHtml(String(match.rightScore))} · 更新于 ${escapeHtml(formatDateTime(match.updatedAt))}</div>
+                </button>
+            `).join('');
+
+            container.querySelectorAll('[data-match-id]').forEach(button => {
+                button.addEventListener('click', () => selectMatch(button.dataset.matchId));
+            });
+        }
+
+        function renderMatchHero() {
+            const hero = document.getElementById('matchHero');
+            const match = getActiveMatch();
+            const game = getDisplayGame(match);
+            const currentGame = getCurrentGame(match);
+            const canEditMatch = !!match && match.status !== 'completed';
+            const canEditBestOf = !!match && !!currentGame && currentGame.status === 'pending' && match.games.length === 1;
+            const leftInput = document.getElementById('matchLeftPlayerInput');
+            const rightInput = document.getElementById('matchRightPlayerInput');
+            const bestOfInput = document.getElementById('matchBestOfInput');
+            const formatHint = document.getElementById('matchFormatHint');
+            const leftWinBtn = document.getElementById('leftWinBtn');
+            const rightWinBtn = document.getElementById('rightWinBtn');
+            const saveMetaBtn = document.getElementById('saveMatchMetaBtn');
+            const rematchBtn = document.getElementById('rematchBtn');
+            const undoBtn = document.getElementById('undoMatchBtn');
+            const redoBtn = document.getElementById('redoMatchBtn');
+
+            if (!match) {
+                hero.innerHTML = `
+                    <h3>还没有当前比赛</h3>
+                    <div class="match-hero-subtitle">先创建一场赛事，系统会自动生成第 1 局并把当前比分栏绑定到该比赛。</div>
+                `;
+                leftInput.value = '';
+                rightInput.value = '';
+                bestOfInput.value = '3';
+                leftInput.disabled = true;
+                rightInput.disabled = true;
+                bestOfInput.disabled = true;
+                leftWinBtn.disabled = true;
+                rightWinBtn.disabled = true;
+                saveMetaBtn.disabled = true;
+                rematchBtn.disabled = true;
+                undoBtn.disabled = true;
+                redoBtn.disabled = true;
+                formatHint.textContent = '在创建比赛后，这里会显示当前 BO 与小局状态。';
+                return;
+            }
+
+            const completedGames = match.games.filter(item => item.status === 'completed').length;
+            hero.innerHTML = `
+                <div class="match-hero-metrics">
+                    <div>
+                        <h3>${escapeHtml(match.id)}</h3>
+                        <div class="match-hero-subtitle">${escapeHtml(match.leftPlayer)} vs ${escapeHtml(match.rightPlayer)} · ${escapeHtml(getMatchStatusText(match))}</div>
+                    </div>
+                    <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
+                </div>
+                <div class="match-hero-score-row">
+                    <div class="match-hero-side">
+                        <span class="match-hero-side-label">左侧本局阵容</span>
+                        <div class="match-hero-lineup-text">${escapeHtml(formatLineupSummary(game ? game.leftLineup : []))}</div>
+                    </div>
+                    <div class="match-hero-score-block">
+                        <div class="match-hero-score">${escapeHtml(String(match.leftScore))} : ${escapeHtml(String(match.rightScore))}</div>
+                        <div class="match-hero-meta-inline">
+                            <span>BO${escapeHtml(match.bestOf)}</span>
+                            <span>先赢 ${escapeHtml(getWinsNeeded(match.bestOf))} 局</span>
+                            <span>${game ? `第 ${game.gameNumber} 局` : '暂无小局'}</span>
+                            <span>${completedGames} / ${escapeHtml(match.bestOf)} 已记录</span>
+                        </div>
+                    </div>
+                    <div class="match-hero-side right">
+                        <span class="match-hero-side-label">右侧本局阵容</span>
+                        <div class="match-hero-lineup-text">${escapeHtml(formatLineupSummary(game ? game.rightLineup : []))}</div>
+                    </div>
+                </div>
+            `;
+
+            leftInput.value = match.leftPlayer || '';
+            rightInput.value = match.rightPlayer || '';
+            bestOfInput.value = String(match.bestOf || 3);
+            leftInput.disabled = !canEditMatch;
+            rightInput.disabled = !canEditMatch;
+            bestOfInput.disabled = !canEditBestOf;
+            leftWinBtn.disabled = !canRecordWinner();
+            rightWinBtn.disabled = !canRecordWinner();
+            saveMetaBtn.disabled = !canEditMatch;
+            rematchBtn.disabled = !canStartCurrentGame();
+            undoBtn.disabled = !state.matchStore.history.canUndo;
+            redoBtn.disabled = !state.matchStore.history.canRedo;
+            if (canEditBestOf) {
+                formatHint.textContent = '当前比赛还未记分，可以修改 BO。';
+            } else if (currentGame && currentGame.status === 'pending') {
+                formatHint.textContent = '先完成双方阵容选择，再点击“开始本次对局”同步到推流页面。';
+            } else if (currentGame && currentGame.status === 'in_progress') {
+                formatHint.textContent = '本局已经开始，仍可继续编辑阵容、血量和能量值，修改会同步到当前对局与推流页面。';
+            } else if (match.status === 'completed') {
+                formatHint.textContent = `比赛已结束，胜者为${match.winner === 'left' ? '左侧' : '右侧'}。`;
+            } else {
+                formatHint.textContent = '比赛进行中，BO 已锁定，避免中途改赛制造成比分歧义。';
+            }
+        }
+
+        function renderMatchHistory() {
+            const container = document.getElementById('matchHistoryList');
+            const matches = state.matchStore.matches || [];
+            const deleteSelectedButton = document.getElementById('deleteSelectedHistoryBtn');
+            const undoDeletedButton = document.getElementById('undoDeletedHistoryBtn');
+            const selectedCount = getSelectedHistoryMatchIds().length;
+
+            deleteSelectedButton.disabled = selectedCount === 0;
+            deleteSelectedButton.textContent = selectedCount > 0
+                ? `删除选中赛事（${selectedCount}）`
+                : '删除选中赛事';
+            undoDeletedButton.disabled = !state.matchStore.history.canUndoDelete;
+            undoDeletedButton.textContent = state.matchStore.history.deleteUndoCount > 0
+                ? `撤回最近删除（${state.matchStore.history.deleteUndoCount}/3）`
+                : '撤回最近删除';
+
+            if (!matches.length) {
+                container.innerHTML = '<div class="empty-preview">还没有历史比赛记录。</div>';
+                return;
+            }
+
+            container.innerHTML = matches.map(match => `
+                <article
+                    class="match-history-card${isHistoryMatchExpanded(match.id) ? ' expanded' : ''}"
+                    data-history-toggle-id="${escapeHtml(match.id)}"
+                    role="button"
+                    tabindex="0"
+                    aria-expanded="${isHistoryMatchExpanded(match.id) ? 'true' : 'false'}"
+                >
+                    <div class="match-history-summary">
+                        <div class="match-history-summary-top">
+                            <div class="match-history-main">
+                                <div class="match-history-player-row">
+                                    <strong>${escapeHtml(match.leftPlayer || '左侧')}</strong>
+                                    <span class="match-history-score-badge">${escapeHtml(String(match.leftScore))} : ${escapeHtml(String(match.rightScore))}</span>
+                                    <strong>${escapeHtml(match.rightPlayer || '右侧')}</strong>
+                                </div>
+                            </div>
+                            <div class="match-history-summary-right">
+                                <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
+                                <button class="match-history-action-btn${isHistoryMatchSelected(match.id) ? ' selected' : ''}" type="button" data-history-select-id="${escapeHtml(match.id)}">${isHistoryMatchSelected(match.id) ? '已选中' : '选中'}</button>
+                                <button class="match-history-action-btn" type="button" data-history-match-id="${escapeHtml(match.id)}">进入赛事管理</button>
+                                <button class="match-history-action-btn danger" type="button" data-history-delete-id="${escapeHtml(match.id)}">删除赛事</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="match-history-detail" ${isHistoryMatchExpanded(match.id) ? '' : 'hidden'}>
+                        ${isHistoryMatchExpanded(match.id) ? renderHistoryMatchDetail(match) : ''}
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function renderMatchWorkspace() {
+            renderMatchList();
+            renderMatchHero();
+            renderMatchHistory();
+            syncMatchSidebarHeight();
+        }
+
+        function syncMatchSidebarHeight() {
+            const sidebarCard = document.getElementById('matchSidebarCard');
+            const focusPanel = document.getElementById('matchFocusPanel');
+            if (!sidebarCard || !focusPanel) {
+                return;
+            }
+
+            window.requestAnimationFrame(() => {
+                if (window.matchMedia('(max-width: 1560px)').matches) {
+                    sidebarCard.style.height = 'auto';
+                    return;
+                }
+                sidebarCard.style.height = `${focusPanel.offsetHeight}px`;
+            });
+        }
+
         function renderScoreboardInputs() {
-            document.getElementById('leftPlayerNameInput').value = state.scoreboard.leftName || '';
-            document.getElementById('leftPlayerScoreInput').value = state.scoreboard.leftScore || '0';
-            document.getElementById('rightPlayerNameInput').value = state.scoreboard.rightName || '';
-            document.getElementById('rightPlayerScoreInput').value = state.scoreboard.rightScore || '0';
-            document.getElementById('bestOfInput').value = state.scoreboard.bestOf || 7;
             document.getElementById('scoreboardEnabledInput').checked = state.scoreboard.scoreboardEnabled !== false;
             document.getElementById('healthBadgeEnabledInput').checked = state.scoreboard.healthBadgeEnabled !== false;
             document.getElementById('abilityBadgeEnabledInput').checked = state.scoreboard.abilityBadgeEnabled !== false;
@@ -1787,6 +3412,7 @@
                 centerAreaColor: scoreboard && scoreboard.centerAreaColor ? scoreboard.centerAreaColor : '#393939'
             };
             renderScoreboardInputs();
+            renderMatchHero();
         }
 
         function spriteById(id) {
@@ -1914,6 +3540,19 @@
             return Math.min(10, Math.max(0, Math.round(slot.energyValue)));
         }
 
+        function serializePanelSlot(slot) {
+            return {
+                slot: slot.slot,
+                sprite: slot.sprite ? slot.sprite.id : null,
+                opacityEnabled: slot.opacityEnabled,
+                opacity: slot.opacity,
+                saturation: slot.saturation,
+                healthEnabled: !slot.opacityEnabled && !!slot.healthEnabled,
+                healthPercent: getHealthLevel(slot),
+                energyValue: getEnergyLevel(slot)
+            };
+        }
+
         function getHeartAsset(percent) {
             const health = Math.min(100, Math.max(0, Number(percent ?? 100)));
             if (health <= 0) {
@@ -1994,18 +3633,22 @@
         function renderSlotPreview(panel) {
             const container = document.getElementById(`${panel}SlotPreview`);
             container.innerHTML = '';
+            const editable = canEditLineup();
 
             state[panel].selected.forEach((slotData, index) => {
                 const slot = document.createElement('button');
                 slot.type = 'button';
                 slot.className = 'panel-slot';
+                slot.disabled = !editable;
                 if (index === state[panel].activeSlot) {
                     slot.classList.add('active');
                 }
-                slot.addEventListener('click', () => {
-                    state[panel].activeSlot = index;
-                    renderPanel(panel);
-                });
+                if (editable) {
+                    slot.addEventListener('click', () => {
+                        state[panel].activeSlot = index;
+                        renderPanel(panel);
+                    });
+                }
 
                 if (slotData.sprite) {
                     slot.innerHTML = buildPreviewLayers(slotData);
@@ -2020,28 +3663,58 @@
             document.getElementById(`${panel}AutoSaveToggle`).checked = !!state[panel].autoSaveEnabled;
         }
 
+        function resetAutoSavePlan(panel) {
+            autoSavePlans[panel].slotIndexes.clear();
+            autoSavePlans[panel].requiresFullSave = false;
+        }
+
+        function flushPanelAutoSave(panel) {
+            const slotIndexes = Array.from(autoSavePlans[panel].slotIndexes);
+            const requiresFullSave = autoSavePlans[panel].requiresFullSave;
+            resetAutoSavePlan(panel);
+
+            if (requiresFullSave || slotIndexes.length !== 1) {
+                savePanel(panel, { auto: true, preserveUi: true });
+                return;
+            }
+
+            savePanelSlot(panel, slotIndexes[0], { auto: true, preserveUi: true });
+        }
+
         function schedulePanelAutoSave(panel, immediate = false) {
             clearTimeout(autoSaveTimers[panel]);
             const delay = immediate ? 0 : 600;
             autoSaveTimers[panel] = setTimeout(() => {
-                savePanel(panel, { auto: true, preserveUi: true });
+                flushPanelAutoSave(panel);
             }, delay);
         }
 
+        function queuePanelAutoSave(panel, options = {}) {
+            const { slotIndex = null, fullSave = false, immediate = false } = options;
+            if (fullSave || !Number.isInteger(slotIndex)) {
+                autoSavePlans[panel].requiresFullSave = true;
+            } else {
+                autoSavePlans[panel].slotIndexes.add(slotIndex);
+            }
+            schedulePanelAutoSave(panel, immediate);
+        }
+
         function handlePanelMutation(panel, options = {}) {
-            const { clearStatusBeforeRender = true, autoSave = true } = options;
+            const { clearStatusBeforeRender = true, autoSave = true, slotIndex = null, fullSave = false } = options;
+            markPanelDirty(panel);
             if (clearStatusBeforeRender) {
                 clearStatus(`${panel}Status`);
             }
             renderPanel(panel);
             if (autoSave && state[panel].autoSaveEnabled) {
-                schedulePanelAutoSave(panel);
+                queuePanelAutoSave(panel, { slotIndex, fullSave });
             }
         }
 
         function renderQuickFillVariants(panel) {
             const container = document.getElementById(`${panel}QuickFillVariants`);
             const matches = Array.isArray(state[panel].quickFillMatches) ? state[panel].quickFillMatches : [];
+            const editable = canEditLineup();
             container.innerHTML = '';
 
             const groups = matches.filter(match => match && match.matched && Array.isArray(match.candidates) && match.candidates.length > 1);
@@ -2068,6 +3741,7 @@
                     const card = document.createElement('button');
                     card.type = 'button';
                     card.className = 'quick-fill-variant-card';
+                    card.disabled = !editable;
                     const currentSpriteId = state[panel].selected[match.slot] && state[panel].selected[match.slot].sprite
                         ? state[panel].selected[match.slot].sprite.id
                         : null;
@@ -2078,14 +3752,16 @@
                         <img src="${candidate.path}" alt="${getSpriteDisplayName(candidate)}">
                         <div class="name">${getSpriteDisplayName(candidate)}</div>
                     `;
-                    card.addEventListener('click', () => {
-                        const slot = state[panel].selected[match.slot];
-                        slot.sprite = candidate;
-                        slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
-                        match.sprite = candidate;
-                        state[panel].activeSlot = match.slot;
-                        handlePanelMutation(panel);
-                    });
+                    if (editable) {
+                        card.addEventListener('click', () => {
+                            const slot = state[panel].selected[match.slot];
+                            slot.sprite = candidate;
+                            slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
+                            match.sprite = candidate;
+                            state[panel].activeSlot = match.slot;
+                            handlePanelMutation(panel, { slotIndex: match.slot });
+                        });
+                    }
                     options.appendChild(card);
                 });
 
@@ -2099,6 +3775,7 @@
             const keyword = document.getElementById(`${panel}Search`).value.trim().toLowerCase();
             const activeSlot = currentSlot(panel);
             const activeSpriteId = activeSlot && activeSlot.sprite ? activeSlot.sprite.id : null;
+            const editable = canEditLineup();
 
             const filtered = state.sprites.filter(sprite => {
                 if (!keyword) {
@@ -2121,6 +3798,7 @@
                 const card = document.createElement('button');
                 card.type = 'button';
                 card.className = 'sprite-card';
+                card.disabled = !editable;
                 if (activeSpriteId === sprite.id) {
                     card.classList.add('selected');
                 }
@@ -2128,17 +3806,39 @@
                     <img src="${sprite.path}" alt="${getSpriteDisplayName(sprite)}">
                     <div class="name">${getSpriteDisplayName(sprite)}</div>
                 `;
-                card.addEventListener('click', () => {
-                    const slot = currentSlot(panel);
-                    slot.sprite = sprite;
-                    slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
-                    const nextEmpty = state[panel].selected.findIndex(item => !item.sprite);
-                    if (nextEmpty !== -1) {
-                        state[panel].activeSlot = nextEmpty;
-                    }
-                    handlePanelMutation(panel);
-                });
+                if (editable) {
+                    card.addEventListener('click', () => {
+                        const changedSlotIndex = state[panel].activeSlot;
+                        const slot = currentSlot(panel);
+                        slot.sprite = sprite;
+                        slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
+                        const nextEmpty = state[panel].selected.findIndex(item => !item.sprite);
+                        if (nextEmpty !== -1) {
+                            state[panel].activeSlot = nextEmpty;
+                        }
+                        handlePanelMutation(panel, { slotIndex: changedSlotIndex });
+                    });
+                }
                 grid.appendChild(card);
+            });
+        }
+
+        function syncPanelEditability(panel) {
+            const editable = canEditLineup();
+            [
+                `${panel}AutoSaveToggle`,
+                `${panel}QuickFillInput`,
+                `${panel}QuickFillBtn`,
+                `${panel}SaveBtn`,
+                `${panel}ClearSlotBtn`,
+                `${panel}ClearBtn`,
+                `${panel}DeleteBtn`,
+                `${panel}Search`
+            ].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.disabled = !editable;
+                }
             });
         }
 
@@ -2147,6 +3847,7 @@
             const opacityPercent = Math.round(slot.opacity * 100);
             const saturationPercent = Math.round(slot.saturation * 100);
             const healthPercent = Math.round(getHealthLevel(slot));
+            const editable = canEditLineup();
             document.getElementById(`${panel}ActiveSlotLabel`).textContent = String(state[panel].activeSlot + 1);
             document.getElementById(`${panel}OpacityEnabled`).checked = slot.opacityEnabled;
             document.getElementById(`${panel}ProtectionEnabled`).checked = !!slot.healthEnabled;
@@ -2162,15 +3863,15 @@
                 ? `血量 ${healthPercent}% 会保留当前槽位的正常显示，其余部分会使用弱化层表现。`
                 : '关闭后会按透明度模式展示当前槽位。';
 
-            const opacityDisabled = !slot.sprite || slot.healthEnabled;
-            document.getElementById(`${panel}OpacityEnabled`).disabled = !slot.sprite;
+            const opacityDisabled = !editable || !slot.sprite || slot.healthEnabled;
+            document.getElementById(`${panel}OpacityEnabled`).disabled = !editable || !slot.sprite;
             document.getElementById(`${panel}OpacityRange`).disabled = opacityDisabled || !slot.opacityEnabled;
             document.getElementById(`${panel}OpacityNumber`).disabled = opacityDisabled || !slot.opacityEnabled;
             document.getElementById(`${panel}SaturationRange`).disabled = opacityDisabled || !slot.opacityEnabled;
             document.getElementById(`${panel}SaturationNumber`).disabled = opacityDisabled || !slot.opacityEnabled;
 
-            const protectionDisabled = !slot.sprite || slot.opacityEnabled;
-            document.getElementById(`${panel}ProtectionEnabled`).disabled = !slot.sprite;
+            const protectionDisabled = !editable || !slot.sprite || slot.opacityEnabled;
+            document.getElementById(`${panel}ProtectionEnabled`).disabled = !editable || !slot.sprite;
             document.getElementById(`${panel}ProtectionRange`).disabled = protectionDisabled || !slot.healthEnabled;
             document.getElementById(`${panel}ProtectionNumber`).disabled = protectionDisabled || !slot.healthEnabled;
             document.getElementById(`${panel}EnergyRange`).disabled = protectionDisabled || !slot.healthEnabled;
@@ -2178,6 +3879,7 @@
         }
 
         function renderPanel(panel) {
+            syncPanelEditability(panel);
             updateCounter(panel);
             syncAutoSaveToggle(panel);
             syncOpacityInputs(panel);
@@ -2187,17 +3889,23 @@
         }
 
         function clearCurrentSlot(panel) {
+            if (!canEditLineup()) {
+                return;
+            }
             const index = state[panel].activeSlot;
             state[panel].selected[index] = createEmptySlot(index);
             state[panel].quickFillMatches = (state[panel].quickFillMatches || []).filter(match => Number(match.slot) !== index);
-            handlePanelMutation(panel);
+            handlePanelMutation(panel, { slotIndex: index });
         }
 
         function clearSelection(panel) {
+            if (!canEditLineup()) {
+                return;
+            }
             state[panel].selected = Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index));
             state[panel].activeSlot = 0;
             state[panel].quickFillMatches = [];
-            handlePanelMutation(panel);
+            handlePanelMutation(panel, { fullSave: true });
         }
 
         function applyQuickFillMatches(panel, matches) {
@@ -2235,12 +3943,15 @@
                         : []
                 }))
                 : [];
-            handlePanelMutation(panel, { clearStatusBeforeRender: false });
+            handlePanelMutation(panel, { clearStatusBeforeRender: false, fullSave: true });
         }
 
         function updatePanelFromApi(panelState, options = {}) {
             const panel = panelState.position;
             const preserveUi = !!options.preserveUi;
+            if (hasUnsyncedPanelMutations(panel)) {
+                return;
+            }
             const selected = Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index));
 
             (panelState.selected || []).slice(0, MAX_SELECTION).forEach((slotData, index) => {
@@ -2292,6 +4003,7 @@
 
                     if (sprites.length > 0) {
                         state.sprites = sprites;
+                        renderMatchWorkspace();
                         renderPanel('left');
                         renderPanel('right');
                         return;
@@ -2299,6 +4011,7 @@
 
                     return loadSpritesFromStaticIndex().then(fallbackSprites => {
                         state.sprites = fallbackSprites;
+                        renderMatchWorkspace();
                         renderPanel('left');
                         renderPanel('right');
                     });
@@ -2307,6 +4020,7 @@
                     return loadSpritesFromStaticIndex()
                         .then(fallbackSprites => {
                             state.sprites = fallbackSprites;
+                            renderMatchWorkspace();
                             renderPanel('left');
                             renderPanel('right');
                             if (!fallbackSprites.length) {
@@ -2332,27 +4046,317 @@
                 });
         }
 
+        function loadMatches() {
+            return fetch('api/matches')
+                .then(response => response.json())
+                .then(data => {
+                    updateMatchesFromApi(data);
+                });
+        }
+
+        function applyMatchResponse(data) {
+            if (data && Array.isArray(data.panels)) {
+                data.panels.forEach(panelState => updatePanelFromApi(panelState, { preserveUi: true }));
+            }
+            if (data && data.scoreboard) {
+                updateScoreboardFromApi(data.scoreboard);
+            }
+            if (data && data.matches) {
+                updateMatchesFromApi(data.matches);
+            }
+        }
+
+        function openCreateMatchModal(prefill = null) {
+            const modal = document.getElementById('createMatchModal');
+            document.getElementById('createMatchLeftPlayerInput').value = prefill && prefill.leftPlayer ? prefill.leftPlayer : '';
+            document.getElementById('createMatchRightPlayerInput').value = prefill && prefill.rightPlayer ? prefill.rightPlayer : '';
+            document.getElementById('createMatchBestOfInput').value = String(prefill && prefill.bestOf ? prefill.bestOf : 3);
+            modal.hidden = false;
+        }
+
+        function closeCreateMatchModal() {
+            document.getElementById('createMatchModal').hidden = true;
+        }
+
+        function createMatchFromModal() {
+            clearStatus('matchStatus');
+            const payload = {
+                leftPlayer: document.getElementById('createMatchLeftPlayerInput').value,
+                rightPlayer: document.getElementById('createMatchRightPlayerInput').value,
+                bestOf: document.getElementById('createMatchBestOfInput').value
+            };
+
+            fetch('api/matches', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '创建比赛失败');
+                }
+                applyMatchResponse(data);
+                closeCreateMatchModal();
+                showStatus('matchStatus', '比赛已创建，请先配置双方阵容并开始本局', true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
+        function selectMatch(matchId, options = {}) {
+            if (!matchId) {
+                return;
+            }
+            const {
+                nextView = null,
+                successMessage = `已切换到比赛 ${matchId}`,
+                statusId = 'matchStatus'
+            } = options;
+            clearStatus(statusId);
+            fetch(`api/matches/${encodeURIComponent(matchId)}/select`, {
+                method: 'POST'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '切换比赛失败');
+                }
+                applyMatchResponse(data);
+                if (nextView) {
+                    state.currentView = nextView;
+                    renderView();
+                }
+                showStatus(statusId, successMessage, true);
+            })
+            .catch(error => {
+                showStatus(statusId, error.message, false);
+            });
+        }
+
+        function deleteHistoryMatches(matchIds) {
+            if (!Array.isArray(matchIds) || !matchIds.length) {
+                return;
+            }
+
+            const matchLabels = state.matchStore.matches
+                .filter(item => matchIds.includes(item.id))
+                .map(item => `${item.leftPlayer || '左侧'} vs ${item.rightPlayer || '右侧'}`);
+            const summary = matchLabels.length === 1
+                ? `赛事“${matchLabels[0]}”`
+                : `${matchLabels.length} 条赛事记录`;
+
+            if (!window.confirm(`确认删除${summary}吗？历史页最多只能撤回最近 3 次删除操作。`)) {
+                return;
+            }
+
+            clearStatus('historyStatus');
+            fetch('api/matches/history/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ matchIds })
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '删除赛事失败');
+                }
+                matchIds.forEach(currentMatchId => {
+                    state.historyUi.expandedMatchIds.delete(currentMatchId);
+                    state.historyUi.selectedMatchIds.delete(currentMatchId);
+                });
+                applyMatchResponse(data);
+                showStatus('historyStatus', `已删除${summary}`, true);
+            })
+            .catch(error => {
+                showStatus('historyStatus', error.message, false);
+            });
+        }
+
+        function deleteHistoryMatch(matchId) {
+            if (!matchId) {
+                return;
+            }
+            deleteHistoryMatches([matchId]);
+        }
+
+        function deleteSelectedHistoryMatches() {
+            const matchIds = getSelectedHistoryMatchIds();
+            if (!matchIds.length) {
+                showStatus('historyStatus', '请先选择要删除的赛事', false);
+                return;
+            }
+            deleteHistoryMatches(matchIds);
+        }
+
+        function undoDeletedHistoryMatches() {
+            clearStatus('historyStatus');
+            fetch('api/matches/history/undo-delete', {
+                method: 'POST'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '撤回删除失败');
+                }
+                applyMatchResponse(data);
+                showStatus('historyStatus', '已恢复最近一次删除的赛事记录', true);
+            })
+            .catch(error => {
+                showStatus('historyStatus', error.message, false);
+            });
+        }
+
+        function saveActiveMatchMeta() {
+            const match = getActiveMatch();
+            if (!match) {
+                showStatus('matchStatus', '请先创建比赛', false);
+                return;
+            }
+
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(match.id)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    leftPlayer: document.getElementById('matchLeftPlayerInput').value,
+                    rightPlayer: document.getElementById('matchRightPlayerInput').value,
+                    bestOf: document.getElementById('matchBestOfInput').value
+                })
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '保存比赛信息失败');
+                }
+                applyMatchResponse(data);
+                showStatus('matchStatus', '比赛信息已保存', true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
+        function recordWinner(side) {
+            const match = getActiveMatch();
+            if (!match) {
+                showStatus('matchStatus', '请先创建比赛', false);
+                return;
+            }
+
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(match.id)}/winner`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ winner: side })
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '小局结算失败');
+                }
+                applyMatchResponse(data);
+                const nextMatch = getActiveMatch();
+                const message = nextMatch && nextMatch.status === 'completed'
+                    ? `比赛已结束，${side === 'left' ? '左侧' : '右侧'}拿下系列赛`
+                    : `已记录${side === 'left' ? '左侧' : '右侧'}本局获胜，下一局等待开始`;
+                showStatus('matchStatus', message, true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
+        function startCurrentGame() {
+            const match = getActiveMatch();
+            if (!match) {
+                showStatus('matchStatus', '请先创建比赛', false);
+                return;
+            }
+
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(match.id)}/start`, {
+                method: 'POST'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '开始本局失败');
+                }
+                applyMatchResponse(data);
+                showStatus('matchStatus', '本局已开始，后续仍可继续编辑阵容、血量与能量值', true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
+        function undoMatchStep() {
+            const match = getActiveMatch();
+            if (!match) {
+                showStatus('matchStatus', '当前没有可撤回的比赛', false);
+                return;
+            }
+
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(match.id)}/undo`, {
+                method: 'POST'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '撤回失败');
+                }
+                applyMatchResponse(data);
+                showStatus('matchStatus', '已撤回上一步操作', true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
+        function redoMatchStep() {
+            const match = getActiveMatch();
+            if (!match) {
+                showStatus('matchStatus', '当前没有可取消撤回的比赛', false);
+                return;
+            }
+
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(match.id)}/redo`, {
+                method: 'POST'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '取消撤回失败');
+                }
+                applyMatchResponse(data);
+                showStatus('matchStatus', '已恢复刚刚撤回的操作', true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
         function savePanel(panel, options = {}) {
+            if (!canEditLineup()) {
+                return;
+            }
             const { auto = false, preserveUi = true } = options;
             clearTimeout(autoSaveTimers[panel]);
+            resetAutoSavePlan(panel);
             if (!auto) {
                 clearStatus(`${panel}Status`);
             }
+            const mutationVersion = panelMutationVersions[panel];
             const requestVersion = ++saveRequestVersions[panel];
             fetch(`api/panels/${panel}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    selected: state[panel].selected.map(slot => ({
-                        slot: slot.slot,
-                        sprite: slot.sprite ? slot.sprite.id : null,
-                        opacityEnabled: slot.opacityEnabled,
-                        opacity: slot.opacity,
-                        saturation: slot.saturation,
-                        healthEnabled: !slot.opacityEnabled && !!slot.healthEnabled,
-                        healthPercent: getHealthLevel(slot),
-                        energyValue: getEnergyLevel(slot)
-                    }))
+                    selected: state[panel].selected.map(serializePanelSlot)
                 })
             })
             .then(async response => {
@@ -2360,16 +4364,75 @@
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || '保存失败');
                 }
-                if (requestVersion < appliedSaveVersions[panel]) {
+                if (requestVersion !== saveRequestVersions[panel] || mutationVersion !== panelMutationVersions[panel]) {
                     return;
                 }
-                appliedSaveVersions[panel] = requestVersion;
-                updatePanelFromApi(data.panel, { preserveUi });
+                markPanelSynced(panel, mutationVersion);
+                if (data.panel) {
+                    updatePanelFromApi(data.panel, { preserveUi });
+                }
+                if (data.matches) {
+                    updateMatchesFromApi(data.matches);
+                }
+                const currentGame = getCurrentGame(getActiveMatch());
                 showStatus(
                     `${panel}Status`,
                     auto
-                        ? `${panel === 'left' ? '左侧' : '右侧'}已自动保存`
-                        : `${panel === 'left' ? '左侧' : '右侧'}面板配置已同步`,
+                        ? `${panel === 'left' ? '左侧' : '右侧'}阵容草稿已自动保存`
+                        : currentGame && currentGame.status === 'in_progress'
+                            ? `${panel === 'left' ? '左侧' : '右侧'}阵容已同步到当前对局与推流页面`
+                            : `${panel === 'left' ? '左侧' : '右侧'}阵容草稿已保存，等待开始本局后同步前端`,
+                    true
+                );
+            })
+            .catch(error => {
+                showStatus(`${panel}Status`, error.message, false);
+            });
+        }
+
+        function savePanelSlot(panel, slotIndex, options = {}) {
+            if (!canEditLineup()) {
+                return;
+            }
+            if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= MAX_SELECTION) {
+                savePanel(panel, options);
+                return;
+            }
+
+            const { auto = false, preserveUi = true } = options;
+            clearTimeout(autoSaveTimers[panel]);
+            if (!auto) {
+                clearStatus(`${panel}Status`);
+            }
+            const mutationVersion = panelMutationVersions[panel];
+            const requestVersion = ++saveRequestVersions[panel];
+            fetch(`api/panels/${panel}/slots/${slotIndex}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    slot: serializePanelSlot(state[panel].selected[slotIndex])
+                })
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '保存失败');
+                }
+                if (requestVersion !== saveRequestVersions[panel] || mutationVersion !== panelMutationVersions[panel]) {
+                    return;
+                }
+                markPanelSynced(panel, mutationVersion);
+                if (data.panel) {
+                    updatePanelFromApi(data.panel, { preserveUi });
+                }
+                if (data.matches) {
+                    updateMatchesFromApi(data.matches);
+                }
+                showStatus(
+                    `${panel}Status`,
+                    auto
+                        ? `${panel === 'left' ? '左侧' : '右侧'}当前槽位已自动保存`
+                        : `${panel === 'left' ? '左侧' : '右侧'}当前槽位已保存`,
                     true
                 );
             })
@@ -2379,6 +4442,10 @@
         }
 
         function quickFillPanel(panel) {
+            if (!canEditLineup()) {
+                showStatus(`${panel}Status`, '请先开始一个未结束的比赛，再编辑阵容', false);
+                return;
+            }
             const input = document.getElementById(`${panel}QuickFillInput`).value;
             clearStatus(`${panel}Status`);
 
@@ -2429,6 +4496,9 @@
         }
 
         function deletePanel(panel) {
+            if (!canEditLineup()) {
+                return;
+            }
             fetch(`api/panels/${panel}`, { method: 'DELETE' })
                 .then(async response => {
                     const data = await response.json();
@@ -2441,6 +4511,9 @@
                         quickFillMatches: [],
                         autoSaveEnabled: state[panel].autoSaveEnabled
                     };
+                    if (data.matches) {
+                        updateMatchesFromApi(data.matches);
+                    }
                     renderPanel(panel);
                     showStatus(`${panel}Status`, `${panel === 'left' ? '左侧' : '右侧'}配置已删除`, true);
                 })
@@ -2460,14 +4533,16 @@
                 state[panel].autoSaveEnabled = event.target.checked;
                 if (state[panel].autoSaveEnabled) {
                     showStatus(`${panel}Status`, `${panel === 'left' ? '左侧' : '右侧'}自动保存已开启`, true);
-                    schedulePanelAutoSave(panel, true);
+                    queuePanelAutoSave(panel, { fullSave: true, immediate: true });
                     return;
                 }
                 clearTimeout(autoSaveTimers[panel]);
+                resetAutoSavePlan(panel);
                 showStatus(`${panel}Status`, `${panel === 'left' ? '左侧' : '右侧'}自动保存已关闭，请手动保存修改`, false);
             });
 
             document.getElementById(`${panel}OpacityEnabled`).addEventListener('change', event => {
+                const slotIndex = state[panel].activeSlot;
                 const slot = currentSlot(panel);
                 slot.opacityEnabled = event.target.checked;
                 if (slot.opacityEnabled) {
@@ -2482,10 +4557,11 @@
                     slot.saturation = 1;
                 }
                 slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
-                handlePanelMutation(panel);
+                handlePanelMutation(panel, { slotIndex });
             });
 
             document.getElementById(`${panel}ProtectionEnabled`).addEventListener('change', event => {
+                const slotIndex = state[panel].activeSlot;
                 const slot = currentSlot(panel);
                 slot.healthEnabled = event.target.checked;
                 if (slot.healthEnabled) {
@@ -2499,7 +4575,7 @@
                 } else {
                     slot.healthPercent = 100;
                 }
-                handlePanelMutation(panel);
+                handlePanelMutation(panel, { slotIndex });
             });
 
             [`${panel}ProtectionRange`, `${panel}ProtectionNumber`].forEach(id => {
@@ -2515,7 +4591,7 @@
                         return;
                     }
                     slot.healthPercent = value;
-                    handlePanelMutation(panel);
+                    handlePanelMutation(panel, { slotIndex: state[panel].activeSlot });
                 });
             });
 
@@ -2529,7 +4605,7 @@
                     const slot = currentSlot(panel);
                     slot.opacity = value / 100;
                     slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
-                    handlePanelMutation(panel);
+                    handlePanelMutation(panel, { slotIndex: state[panel].activeSlot });
                 });
             });
 
@@ -2542,7 +4618,7 @@
                     value = Math.min(300, Math.max(0, value));
                     const slot = currentSlot(panel);
                     slot.saturation = value / 100;
-                    handlePanelMutation(panel);
+                    handlePanelMutation(panel, { slotIndex: state[panel].activeSlot });
                 });
             });
 
@@ -2555,7 +4631,7 @@
                     value = Math.min(10, Math.max(0, Math.round(value)));
                     const slot = currentSlot(panel);
                     slot.energyValue = value;
-                    handlePanelMutation(panel);
+                    handlePanelMutation(panel, { slotIndex: state[panel].activeSlot });
                 });
             });
         }
@@ -2602,11 +4678,74 @@
                 });
         }
 
+        function renderAvatarPreview(side, avatar) {
+            const preview = document.getElementById(`${side}AvatarPreview`);
+            const empty = document.getElementById(`${side}AvatarEmpty`);
+            const defaultPath = side === 'left' ? '/assets/ui/left-avatar.png' : '/assets/ui/right-avatar.png';
+            if (avatar && avatar.exists && avatar.path) {
+                preview.src = `${avatar.path}?t=${Math.floor(avatar.mtime || Date.now())}`;
+                preview.style.display = 'block';
+                empty.style.display = 'none';
+            } else {
+                preview.src = defaultPath;
+                preview.style.display = 'block';
+                empty.style.display = 'none';
+            }
+        }
+
+        function loadAvatars() {
+            return fetch('api/avatars')
+                .then(response => response.json())
+                .then(data => {
+                    renderAvatarPreview('left', data.left);
+                    renderAvatarPreview('right', data.right);
+                });
+        }
+
+        function uploadAvatar(side, file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch(`api/upload/avatar/${side}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '头像上传失败');
+                }
+                renderAvatarPreview(side, data.avatar);
+                showStatus('scoreboardStatus', `${side === 'left' ? '左侧' : '右侧'}头像已更新`, true);
+            })
+            .catch(error => {
+                showStatus('scoreboardStatus', error.message, false);
+            });
+        }
+
+        function deleteAvatar(side) {
+            fetch(`api/delete/avatar/${side}`, { method: 'DELETE' })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.error || '删除头像失败');
+                    }
+                    renderAvatarPreview(side, data.avatar);
+                    showStatus('scoreboardStatus', `${side === 'left' ? '左侧' : '右侧'}头像已删除`, true);
+                })
+                .catch(error => {
+                    showStatus('scoreboardStatus', error.message, false);
+                });
+        }
+
         function applySnapshot(payload) {
             const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
             panels.forEach(panelState => updatePanelFromApi(panelState, { preserveUi: true }));
             if (payload && payload.scoreboard) {
                 updateScoreboardFromApi(payload.scoreboard);
+            }
+            if (payload && payload.matches) {
+                updateMatchesFromApi(payload.matches);
             }
             if (payload && payload.background) {
                 const preview = document.getElementById('bgPreview');
@@ -2621,6 +4760,10 @@
                     preview.style.display = 'none';
                     empty.style.display = 'block';
                 }
+            }
+            if (payload && payload.avatars) {
+                renderAvatarPreview('left', payload.avatars.left);
+                renderAvatarPreview('right', payload.avatars.right);
             }
         }
 
@@ -2649,8 +4792,18 @@
                 }
             });
 
+            socket.on('matches:update', payload => {
+                if (payload && payload.matches) {
+                    updateMatchesFromApi(payload.matches);
+                }
+            });
+
             socket.on('background:update', payload => {
                 applySnapshot({ background: payload ? payload.background : null });
+            });
+
+            socket.on('avatar:update', payload => {
+                applySnapshot({ avatars: payload ? payload.avatars : null });
             });
         }
 
@@ -2675,11 +4828,11 @@
         function saveScoreboard() {
             clearStatus('scoreboardStatus');
             const payload = {
-                leftName: document.getElementById('leftPlayerNameInput').value,
-                leftScore: document.getElementById('leftPlayerScoreInput').value,
-                rightName: document.getElementById('rightPlayerNameInput').value,
-                rightScore: document.getElementById('rightPlayerScoreInput').value,
-                bestOf: document.getElementById('bestOfInput').value,
+                leftName: state.scoreboard.leftName,
+                leftScore: state.scoreboard.leftScore,
+                rightName: state.scoreboard.rightName,
+                rightScore: state.scoreboard.rightScore,
+                bestOf: state.scoreboard.bestOf,
                 scoreboardEnabled: document.getElementById('scoreboardEnabledInput').checked,
                 healthBadgeEnabled: document.getElementById('healthBadgeEnabledInput').checked,
                 abilityBadgeEnabled: document.getElementById('abilityBadgeEnabledInput').checked,
@@ -2707,6 +4860,20 @@
             })
             .catch(error => {
                 showStatus('scoreboardStatus', error.message, false);
+            });
+        }
+
+        function setupAvatarUpload(side) {
+            const input = document.getElementById(`${side}AvatarFileInput`);
+            document.getElementById(`${side}AvatarUploadBtn`).addEventListener('click', () => input.click());
+            document.getElementById(`${side}AvatarDeleteBtn`).addEventListener('click', () => deleteAvatar(side));
+            input.addEventListener('change', event => {
+                const file = event.target.files && event.target.files[0];
+                if (!file) {
+                    return;
+                }
+                uploadAvatar(side, file);
+                event.target.value = '';
             });
         }
 
@@ -2747,7 +4914,7 @@
             document.querySelectorAll('.nav-item').forEach(button => {
                 button.addEventListener('click', () => {
                     if (button.dataset.view === 'live') {
-                        window.open('/live-control.html', '_blank', 'noopener,noreferrer');
+                        openLiveControlWindow();
                         return;
                     }
                     state.currentView = button.dataset.view || 'roster';
@@ -2775,9 +4942,83 @@
             });
         }
 
+        function setupMatchControls() {
+            document.getElementById('openCreateMatchBtn').addEventListener('click', () => openCreateMatchModal());
+            document.getElementById('createMatchCancelBtn').addEventListener('click', closeCreateMatchModal);
+            document.getElementById('createMatchConfirmBtn').addEventListener('click', createMatchFromModal);
+            document.getElementById('leftWinBtn').addEventListener('click', () => recordWinner('left'));
+            document.getElementById('rightWinBtn').addEventListener('click', () => recordWinner('right'));
+            document.getElementById('undoMatchBtn').addEventListener('click', undoMatchStep);
+            document.getElementById('redoMatchBtn').addEventListener('click', redoMatchStep);
+            document.getElementById('saveMatchMetaBtn').addEventListener('click', saveActiveMatchMeta);
+            document.getElementById('rematchBtn').addEventListener('click', startCurrentGame);
+            document.getElementById('createMatchModal').addEventListener('click', event => {
+                if (event.target.id === 'createMatchModal') {
+                    closeCreateMatchModal();
+                }
+            });
+        }
+
+        function setupMatchHistoryControls() {
+            const container = document.getElementById('matchHistoryList');
+            document.getElementById('deleteSelectedHistoryBtn').addEventListener('click', deleteSelectedHistoryMatches);
+            document.getElementById('undoDeletedHistoryBtn').addEventListener('click', undoDeletedHistoryMatches);
+
+            container.addEventListener('click', event => {
+                const target = event.target instanceof Element ? event.target : null;
+                if (!target) {
+                    return;
+                }
+
+                const selectButton = target.closest('[data-history-select-id]');
+                if (selectButton) {
+                    toggleHistorySelection(selectButton.dataset.historySelectId);
+                    return;
+                }
+
+                const manageButton = target.closest('[data-history-match-id]');
+                if (manageButton) {
+                    selectMatch(manageButton.dataset.historyMatchId, {
+                        nextView: 'roster',
+                        statusId: 'matchStatus',
+                        successMessage: `已切换到赛事 ${manageButton.dataset.historyMatchId}`
+                    });
+                    return;
+                }
+
+                const deleteButton = target.closest('[data-history-delete-id]');
+                if (deleteButton) {
+                    deleteHistoryMatch(deleteButton.dataset.historyDeleteId);
+                    return;
+                }
+
+                const toggle = target.closest('[data-history-toggle-id]');
+                if (toggle) {
+                    toggleHistoryMatch(toggle.dataset.historyToggleId);
+                }
+            });
+
+            container.addEventListener('keydown', event => {
+                const target = event.target instanceof Element ? event.target : null;
+                if (target && target.closest('button')) {
+                    return;
+                }
+                const toggle = target ? target.closest('[data-history-toggle-id]') : null;
+                if (!toggle) {
+                    return;
+                }
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    toggleHistoryMatch(toggle.dataset.historyToggleId);
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             renderPortalLinks();
             setupNavigation();
+            setupMatchControls();
+            setupMatchHistoryControls();
             renderView();
             setupPanelControls('left');
             setupPanelControls('right');
@@ -2790,12 +5031,26 @@
                 document.getElementById('eventTitleInput').disabled = !event.target.checked;
             });
             setupBackgroundUpload();
+            setupAvatarUpload('left');
+            setupAvatarUpload('right');
             renderPanel('left');
             renderPanel('right');
             renderScoreboardInputs();
+            renderMatchWorkspace();
+            window.addEventListener('resize', syncMatchSidebarHeight);
+            if (typeof ResizeObserver === 'function') {
+                const focusPanel = document.getElementById('matchFocusPanel');
+                if (focusPanel) {
+                    new ResizeObserver(() => syncMatchSidebarHeight()).observe(focusPanel);
+                }
+            }
 
-            Promise.all([loadSprites(), loadPanels(), loadScoreboard()])
-                .then(loadBackground)
+            Promise.all([loadSprites(), loadPanels(), loadScoreboard(), loadMatches()])
+                .then(() => {
+                    syncLocalPanelsFromMatchStore();
+                    renderMatchWorkspace();
+                    return Promise.all([loadBackground(), loadAvatars()]);
+                })
                 .then(() => {
                     connectSocket();
                 })

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { DEFAULT_PORT } from '../shared/constants.js';
 import { createLocalServer } from './socket-server.js';
+import type { AuthConfig } from './socket-server.js';
 import { createAppPaths } from './services/path-service.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,8 +27,17 @@ async function main(): Promise<void> {
   const userDataDir = process.env.ROCO_DATA_DIR || path.join(projectRoot, 'LuokePVPWebui');
   const paths = createAppPaths(projectRoot, userDataDir);
 
-  const localServer = await createLocalServer(paths, port, host);
-  console.log(`Roco PVP WebUI server started at http://${host}:${localServer.port}`);
+  const authConfig: AuthConfig = {
+    username: process.env.ADMIN_USER || 'admin',
+    password: process.env.ADMIN_PASS || 'admin123',
+  };
+  const defaultPass = !process.env.ADMIN_PASS;
+
+  const localServer = await createLocalServer(paths, port, host, authConfig);
+  console.log(
+    `Roco PVP WebUI server started at http://${host}:${localServer.port}` +
+    ` (认证已启用${defaultPass ? '，默认密码: admin123' : ''})`,
+  );
 
   const shutdown = async () => {
     await localServer.close().catch((error) => {

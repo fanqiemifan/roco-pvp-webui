@@ -12,4 +12,6 @@ services:
       - ./LuokePVPWebui:/app/LuokePVPWebui
     environment:
       NODE_ENV: production
+      ADMIN_USER: admin
+      ADMIN_PASS: admin123
     restart: unless-stopped

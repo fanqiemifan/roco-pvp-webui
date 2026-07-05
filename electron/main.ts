@@ -20,6 +20,7 @@ let localServer: Awaited<ReturnType<typeof createLocalServer>> | null = null;
 let appTray: Tray | null = null;
 let isQuitting = false;
 let closePromptPending = false;
+const childWindows = new Map<string, BrowserWindow>();
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 
 type WindowPreset = {
@@ -56,12 +57,25 @@ function showMainWindow(): void {
     return;
   }
 
-  if (mainWindow.isMinimized()) {
-    mainWindow.restore();
+  focusWindow(mainWindow);
+}
+
+function focusWindow(targetWindow: BrowserWindow): void {
+  if (targetWindow.isMinimized()) {
+    targetWindow.restore();
   }
 
-  mainWindow.show();
-  mainWindow.focus();
+  targetWindow.show();
+  targetWindow.focus();
+}
+
+function getChildWindowKey(targetUrl: string): string {
+  try {
+    const parsedUrl = new URL(targetUrl);
+    return `${parsedUrl.origin}${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+  } catch {
+    return targetUrl;
+  }
 }
 
 function getWindowPreset(targetUrl: string): WindowPreset {
@@ -77,7 +91,12 @@ function getWindowPreset(targetUrl: string): WindowPreset {
     };
   }
 
-  if (targetUrl.endsWith('/roco-pvp.html') || targetUrl.endsWith('/')) {
+  if (
+    targetUrl.endsWith('/live-standby-demo.html')
+    || targetUrl.endsWith('/roco-pvp.html')
+    || targetUrl.endsWith('/roco-pvp-page3.html')
+    || targetUrl.endsWith('/')
+  ) {
     return {
       width: 1920,
       height: 1080,
@@ -101,6 +120,13 @@ function getWindowPreset(targetUrl: string): WindowPreset {
 
 function configureWindowOpenHandler(window: BrowserWindow): void {
   window.webContents.setWindowOpenHandler(({ url }) => {
+    const childWindowKey = getChildWindowKey(url);
+    const existingChildWindow = childWindows.get(childWindowKey);
+    if (existingChildWindow && !existingChildWindow.isDestroyed()) {
+      focusWindow(existingChildWindow);
+      return { action: 'deny' };
+    }
+
     const preset = getWindowPreset(url);
     const childWindow = new BrowserWindow({
       useContentSize: true,
@@ -118,8 +144,14 @@ function configureWindowOpenHandler(window: BrowserWindow): void {
       },
     });
 
+    childWindows.set(childWindowKey, childWindow);
     childWindow.removeMenu();
     registerWindowIpc();
+    childWindow.on('closed', () => {
+      if (childWindows.get(childWindowKey) === childWindow) {
+        childWindows.delete(childWindowKey);
+      }
+    });
     childWindow.webContents.on('did-finish-load', () => {
       if (preset.zoomFactor) {
         childWindow.webContents.setZoomFactor(preset.zoomFactor);
