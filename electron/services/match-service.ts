@@ -6,14 +6,28 @@ import type {
   MatchRecord,
   MatchSlotSnapshot,
   MatchStoreState,
-  PanelState,
-  SlotState,
 } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
 import { ensureRuntimeDirs } from './image-service.js';
 import { getPanelState, getScoreboardState, savePanelState, saveScoreboardState } from './state-service.js';
 
 const PLAYER_NAME_MAX_LENGTH = 32;
+const MAX_GAME_SLOTS = 6;
+const HISTORY_LIMIT = 50;
+
+interface MatchStoreSnapshot {
+  activeMatchId: string | null;
+  matches: MatchRecord[];
+}
+
+interface MatchStoreFile extends MatchStoreSnapshot {
+  undoStack: MatchStoreSnapshot[];
+  redoStack: MatchStoreSnapshot[];
+}
+
+function cloneValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
 
 function normalizePlayerName(value: unknown): string {
   return String(value ?? '').trim().slice(0, PLAYER_NAME_MAX_LENGTH);
@@ -49,16 +63,16 @@ function sanitizeLineup(lineup: unknown): string[] {
   return lineup
     .map((item) => (typeof item === 'string' ? item.trim() : ''))
     .filter(Boolean)
-    .slice(0, 6);
+    .slice(0, MAX_GAME_SLOTS);
 }
 
 function sanitizeSlotSnapshots(slots: unknown): MatchSlotSnapshot[] {
-  const normalized = Array.from({ length: 6 }, (_, index) => createEmptySlotSnapshot(index));
+  const normalized = Array.from({ length: MAX_GAME_SLOTS }, (_, index) => createEmptySlotSnapshot(index));
   if (!Array.isArray(slots)) {
     return normalized;
   }
 
-  slots.slice(0, 6).forEach((item, index) => {
+  slots.slice(0, MAX_GAME_SLOTS).forEach((item, index) => {
     if (!item || typeof item !== 'object') {
       return;
     }
@@ -79,31 +93,21 @@ function sanitizeSlotSnapshots(slots: unknown): MatchSlotSnapshot[] {
   return normalized;
 }
 
-function buildSlotSnapshots(slots: SlotState[]): MatchSlotSnapshot[] {
-  const snapshots = Array.from({ length: 6 }, (_, index) => createEmptySlotSnapshot(index));
-
-  slots.slice(0, 6).forEach((slot, index) => {
-    snapshots[index] = {
-      slot: index,
-      spriteId: slot.sprite?.id ?? null,
-      opacityEnabled: Boolean(slot.opacityEnabled),
-      opacity: Number(slot.opacity ?? 0.5),
-      saturation: Number(slot.saturation ?? 1),
-      healthEnabled: slot.healthEnabled !== false,
-      healthPercent: Number(slot.healthPercent ?? 100),
-      energyValue: Number(slot.energyValue ?? 10),
-    };
-  });
-
-  return snapshots;
-}
-
 function lineupFromSlots(slots: MatchSlotSnapshot[]): string[] {
   return slots.map((slot) => slot.spriteId).filter((spriteId): spriteId is string => Boolean(spriteId));
 }
 
-function capturePanelSnapshot(panel: PanelState): MatchSlotSnapshot[] {
-  return buildSlotSnapshots(panel.selected || []);
+function capturePanelSnapshot(paths: AppPaths, position: 'left' | 'right'): MatchSlotSnapshot[] {
+  return getPanelState(paths, position).selected.slice(0, MAX_GAME_SLOTS).map((slot, index) => ({
+    slot: index,
+    spriteId: slot.sprite?.id ?? null,
+    opacityEnabled: Boolean(slot.opacityEnabled),
+    opacity: Number(slot.opacity ?? 0.5),
+    saturation: Number(slot.saturation ?? 1),
+    healthEnabled: slot.healthEnabled !== false,
+    healthPercent: Number(slot.healthPercent ?? 100),
+    energyValue: Number(slot.energyValue ?? 10),
+  }));
 }
 
 function createGameRecord(gameNumber: number, leftSlots: MatchSlotSnapshot[], rightSlots: MatchSlotSnapshot[]): GameRecord {
@@ -118,6 +122,10 @@ function createGameRecord(gameNumber: number, leftSlots: MatchSlotSnapshot[], ri
   };
 }
 
+function createEmptyGameRecord(gameNumber: number): GameRecord {
+  return createGameRecord(gameNumber, sanitizeSlotSnapshots([]), sanitizeSlotSnapshots([]));
+}
+
 function getDatePrefix(date = new Date()): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -129,13 +137,12 @@ function computeMatchProgress(match: MatchRecord): MatchRecord {
   const leftScore = match.games.filter((game) => game.winner === 'left').length;
   const rightScore = match.games.filter((game) => game.winner === 'right').length;
   const needed = winsNeeded(match.bestOf);
-  const nextStatus =
-    leftScore >= needed || rightScore >= needed
-      ? 'completed'
-      : match.games.some((game) => game.status === 'completed')
-        ? 'in_progress'
-        : 'pending';
   const winner = leftScore >= needed ? 'left' : rightScore >= needed ? 'right' : null;
+  const nextStatus = winner
+    ? 'completed'
+    : match.games.some((game) => game.status === 'in_progress' || game.status === 'completed')
+      ? 'in_progress'
+      : 'pending';
 
   return {
     ...match,
@@ -143,18 +150,22 @@ function computeMatchProgress(match: MatchRecord): MatchRecord {
     rightScore,
     status: nextStatus,
     winner,
-    completedAt: nextStatus === 'completed' ? match.completedAt ?? new Date().toISOString() : null,
+    completedAt: winner ? match.completedAt ?? new Date().toISOString() : null,
   };
 }
 
 function normalizeGameRecord(game: unknown, index: number): GameRecord {
   if (!game || typeof game !== 'object') {
-    return createGameRecord(index + 1, sanitizeSlotSnapshots([]), sanitizeSlotSnapshots([]));
+    return createEmptyGameRecord(index + 1);
   }
 
   const raw = game as Record<string, unknown>;
   const leftSlots = sanitizeSlotSnapshots(raw.leftSlots);
   const rightSlots = sanitizeSlotSnapshots(raw.rightSlots);
+  const status =
+    raw.status === 'in_progress' || raw.status === 'completed'
+      ? raw.status
+      : 'pending';
 
   return {
     gameNumber: Number.isFinite(Number(raw.gameNumber)) ? Number(raw.gameNumber) : index + 1,
@@ -163,7 +174,7 @@ function normalizeGameRecord(game: unknown, index: number): GameRecord {
     leftSlots,
     rightSlots,
     winner: raw.winner === 'left' || raw.winner === 'right' ? raw.winner : null,
-    status: raw.status === 'completed' ? 'completed' : 'pending',
+    status,
   };
 }
 
@@ -175,9 +186,7 @@ function normalizeMatchRecord(match: unknown): MatchRecord | null {
   const raw = match as Record<string, unknown>;
   const bestOf = normalizeBestOf(raw.bestOf);
   const games = Array.isArray(raw.games) ? raw.games.map(normalizeGameRecord) : [];
-  const normalizedGames = games.length
-    ? games
-    : [createGameRecord(1, sanitizeSlotSnapshots([]), sanitizeSlotSnapshots([]))];
+  const normalizedGames = games.length ? games : [createEmptyGameRecord(1)];
 
   return computeMatchProgress({
     id: String(raw.id || '').trim(),
@@ -195,45 +204,96 @@ function normalizeMatchRecord(match: unknown): MatchRecord | null {
   });
 }
 
-function normalizeStoreState(raw: unknown, mtime: number | null): MatchStoreState {
-  if (!raw || typeof raw !== 'object') {
-    return { activeMatchId: null, matches: [], mtime };
-  }
-
-  const data = raw as Record<string, unknown>;
-  const matches = Array.isArray(data.matches)
-    ? data.matches.map(normalizeMatchRecord).filter((match): match is MatchRecord => Boolean(match && match.id))
-    : [];
-  const activeMatchId = typeof data.activeMatchId === 'string' && data.activeMatchId.trim()
-    ? data.activeMatchId.trim()
-    : null;
-
+function defaultStoreFile(): MatchStoreFile {
   return {
-    activeMatchId: activeMatchId && matches.some((match) => match.id === activeMatchId) ? activeMatchId : null,
-    matches,
+    activeMatchId: null,
+    matches: [],
+    undoStack: [],
+    redoStack: [],
+  };
+}
+
+function snapshotOfStore(store: MatchStoreFile): MatchStoreSnapshot {
+  return {
+    activeMatchId: store.activeMatchId,
+    matches: cloneValue(store.matches),
+  };
+}
+
+function toPublicStore(store: MatchStoreFile, mtime: number | null): MatchStoreState {
+  return {
+    activeMatchId: store.activeMatchId,
+    matches: store.matches,
+    history: {
+      canUndo: store.undoStack.length > 0,
+      canRedo: store.redoStack.length > 0,
+    },
     mtime,
   };
 }
 
-function writeStore(paths: AppPaths, store: MatchStoreState): MatchStoreState {
-  ensureRuntimeDirs(paths);
-  fs.writeFileSync(
-    paths.matchesFile,
-    JSON.stringify(
-      {
-        activeMatchId: store.activeMatchId,
-        matches: store.matches,
-      },
-      null,
-      2,
-    ),
-    'utf-8',
-  );
+function readStoreFile(paths: AppPaths): { store: MatchStoreFile; mtime: number | null } {
+  if (!fs.existsSync(paths.matchesFile)) {
+    return { store: defaultStoreFile(), mtime: null };
+  }
 
+  try {
+    const raw = JSON.parse(fs.readFileSync(paths.matchesFile, 'utf-8')) as Record<string, unknown>;
+    const stat = fs.statSync(paths.matchesFile);
+    const matches = Array.isArray(raw.matches)
+      ? raw.matches.map(normalizeMatchRecord).filter((match): match is MatchRecord => Boolean(match && match.id))
+      : [];
+    const activeMatchId = typeof raw.activeMatchId === 'string' && raw.activeMatchId.trim()
+      ? raw.activeMatchId.trim()
+      : null;
+    const normalizeSnapshotArray = (value: unknown): MatchStoreSnapshot[] => {
+      if (!Array.isArray(value)) {
+        return [];
+      }
+      return value.map((snapshot) => {
+        const source = snapshot && typeof snapshot === 'object'
+          ? (snapshot as Record<string, unknown>)
+          : {};
+        const snapshotMatches = Array.isArray(source.matches)
+          ? source.matches.map(normalizeMatchRecord).filter((match): match is MatchRecord => Boolean(match && match.id))
+          : [];
+        return {
+          activeMatchId: typeof source.activeMatchId === 'string' ? source.activeMatchId : null,
+          matches: snapshotMatches,
+        };
+      });
+    };
+
+    return {
+      mtime: stat.mtimeMs,
+      store: {
+        activeMatchId: activeMatchId && matches.some((match) => match.id === activeMatchId) ? activeMatchId : null,
+        matches,
+        undoStack: normalizeSnapshotArray(raw.undoStack),
+        redoStack: normalizeSnapshotArray(raw.redoStack),
+      },
+    };
+  } catch {
+    return { store: defaultStoreFile(), mtime: null };
+  }
+}
+
+function writeStoreFile(paths: AppPaths, store: MatchStoreFile): MatchStoreState {
+  ensureRuntimeDirs(paths);
+  fs.writeFileSync(paths.matchesFile, JSON.stringify(store, null, 2), 'utf-8');
   return getMatchStore(paths);
 }
 
+function pushUndoState(store: MatchStoreFile): void {
+  store.undoStack.push(snapshotOfStore(store));
+  if (store.undoStack.length > HISTORY_LIMIT) {
+    store.undoStack = store.undoStack.slice(store.undoStack.length - HISTORY_LIMIT);
+  }
+  store.redoStack = [];
+}
+
 function restorePanelFromSlots(paths: AppPaths, position: 'left' | 'right', slots: MatchSlotSnapshot[]): void {
+  ensureRuntimeDirs(paths);
   const selected = sanitizeSlotSnapshots(slots).map((slot) => ({
     slot: slot.slot,
     sprite: slot.spriteId,
@@ -245,7 +305,11 @@ function restorePanelFromSlots(paths: AppPaths, position: 'left' | 'right', slot
     energyValue: slot.energyValue,
   }));
 
-  savePanelState(paths, position, selected);
+  fs.writeFileSync(
+    paths.panelStatePath(position),
+    JSON.stringify({ position, selected }, null, 2),
+    'utf-8',
+  );
 }
 
 function syncScoreboardFromMatch(paths: AppPaths, match: MatchRecord): void {
@@ -260,33 +324,100 @@ function syncScoreboardFromMatch(paths: AppPaths, match: MatchRecord): void {
   });
 }
 
-function getPendingGame(match: MatchRecord): GameRecord | null {
-  return match.games.find((game) => game.status === 'pending') ?? null;
-}
-
-function getDisplayGame(match: MatchRecord): GameRecord {
-  return getPendingGame(match) ?? match.games[match.games.length - 1];
+function getCurrentGame(match: MatchRecord): GameRecord {
+  return (
+    match.games.find((game) => game.status === 'in_progress')
+    ?? match.games.find((game) => game.status === 'pending')
+    ?? match.games[match.games.length - 1]
+  );
 }
 
 function syncMatchToPanelsAndScoreboard(paths: AppPaths, match: MatchRecord): void {
-  const displayGame = getDisplayGame(match);
-  restorePanelFromSlots(paths, 'left', displayGame.leftSlots);
-  restorePanelFromSlots(paths, 'right', displayGame.rightSlots);
+  const currentGame = getCurrentGame(match);
+
+  if (match.status === 'completed' || currentGame.status !== 'in_progress') {
+    restorePanelFromSlots(paths, 'left', sanitizeSlotSnapshots([]));
+    restorePanelFromSlots(paths, 'right', sanitizeSlotSnapshots([]));
+    syncScoreboardFromMatch(paths, match);
+    return;
+  }
+
+  restorePanelFromSlots(paths, 'left', currentGame.leftSlots);
+  restorePanelFromSlots(paths, 'right', currentGame.rightSlots);
   syncScoreboardFromMatch(paths, match);
 }
 
-export function getMatchStore(paths: AppPaths): MatchStoreState {
-  if (!fs.existsSync(paths.matchesFile)) {
-    return { activeMatchId: null, matches: [], mtime: null };
+function syncAfterStoreChange(paths: AppPaths, publicStore: MatchStoreState): void {
+  const activeMatch = publicStore.matches.find((match) => match.id === publicStore.activeMatchId);
+  if (activeMatch) {
+    syncMatchToPanelsAndScoreboard(paths, activeMatch);
+  }
+}
+
+function parseSelectedSlots(selectedSlots: unknown): MatchSlotSnapshot[] {
+  if (!Array.isArray(selectedSlots)) {
+    throw new Error('selected must be a list');
   }
 
-  try {
-    const raw = JSON.parse(fs.readFileSync(paths.matchesFile, 'utf-8')) as unknown;
-    const stat = fs.statSync(paths.matchesFile);
-    return normalizeStoreState(raw, stat.mtimeMs);
-  } catch {
-    return { activeMatchId: null, matches: [], mtime: null };
+  const nextSlots = Array.from({ length: MAX_GAME_SLOTS }, (_, index) => createEmptySlotSnapshot(index));
+
+  selectedSlots.slice(0, MAX_GAME_SLOTS).forEach((item, index) => {
+    if (item === null || item === undefined) {
+      return;
+    }
+    if (!item || typeof item !== 'object') {
+      throw new Error('slot must be an object or null');
+    }
+
+    const raw = item as Record<string, unknown>;
+    const rawSprite = raw.sprite;
+    const spriteId =
+      rawSprite && typeof rawSprite === 'object' && typeof (rawSprite as Record<string, unknown>).id === 'string'
+        ? (rawSprite as Record<string, unknown>).id
+        : rawSprite;
+
+    nextSlots[index] = {
+      slot: index,
+      spriteId: typeof spriteId === 'string' && spriteId.trim() ? spriteId.trim() : null,
+      opacityEnabled: Boolean(raw.opacityEnabled),
+      opacity: Number.isFinite(Number(raw.opacity)) ? Number(raw.opacity) : 0.5,
+      saturation: Number.isFinite(Number(raw.saturation)) ? Number(raw.saturation) : 1,
+      healthEnabled:
+        typeof raw.healthEnabled === 'boolean'
+          ? raw.healthEnabled
+          : !Boolean(raw.opacityEnabled),
+      healthPercent: Number.isFinite(Number(raw.healthPercent)) ? Number(raw.healthPercent) : 100,
+      energyValue: Number.isFinite(Number(raw.energyValue)) ? Number(raw.energyValue) : 10,
+    };
+  });
+
+  return nextSlots;
+}
+
+function validateUndoRedoBestOf(currentMatch: MatchRecord | undefined, targetMatch: MatchRecord | undefined): void {
+  if (!currentMatch || !targetMatch) {
+    return;
   }
+
+  const enteredSecondGame = currentMatch.games.length > 1;
+  if (enteredSecondGame && currentMatch.bestOf !== targetMatch.bestOf) {
+    throw new Error('已经进入第二个回合，不能通过撤回修改 BO 赛制');
+  }
+}
+
+function pruneBestOfHistory(store: MatchStoreFile, matchId: string, bestOf: number): void {
+  const keepSnapshot = (snapshot: MatchStoreSnapshot): boolean => {
+    const targetMatch = snapshot.matches.find((match) => match.id === matchId);
+    return !targetMatch || targetMatch.bestOf === bestOf;
+  };
+
+  store.undoStack = store.undoStack.filter(keepSnapshot);
+  store.redoStack = store.redoStack.filter(keepSnapshot);
+}
+
+export function getMatchStore(paths: AppPaths): MatchStoreState {
+  const { store, mtime } = readStoreFile(paths);
+  return toPublicStore(store, mtime);
 }
 
 export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState {
@@ -303,7 +434,9 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
     throw new Error('请输入左右两侧选手名称');
   }
 
-  const store = getMatchStore(paths);
+  const { store } = readStoreFile(paths);
+  pushUndoState(store);
+
   const datePrefix = getDatePrefix();
   const sameDayIds = store.matches
     .map((match) => match.id)
@@ -312,8 +445,6 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
     .filter((value) => Number.isFinite(value));
   const nextIndex = sameDayIds.length ? Math.max(...sameDayIds) + 1 : 1;
   const now = new Date().toISOString();
-  const leftSlots = capturePanelSnapshot(getPanelState(paths, 'left'));
-  const rightSlots = capturePanelSnapshot(getPanelState(paths, 'right'));
   const match: MatchRecord = {
     id: `${datePrefix}_${String(nextIndex).padStart(3, '0')}`,
     createdAt: now,
@@ -322,22 +453,17 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
     leftPlayer,
     rightPlayer,
     bestOf,
-    games: [createGameRecord(1, leftSlots, rightSlots)],
+    games: [createEmptyGameRecord(1)],
     leftScore: 0,
     rightScore: 0,
     winner: null,
     completedAt: null,
   };
 
-  const nextStore = writeStore(paths, {
-    activeMatchId: match.id,
-    matches: [match, ...store.matches],
-    mtime: store.mtime,
-  });
-  const activeMatch = nextStore.matches.find((item) => item.id === nextStore.activeMatchId);
-  if (activeMatch) {
-    syncMatchToPanelsAndScoreboard(paths, activeMatch);
-  }
+  store.activeMatchId = match.id;
+  store.matches = [match, ...store.matches];
+  const publicStore = writeStoreFile(paths, store);
+  syncAfterStoreChange(paths, publicStore);
   return getMatchStore(paths);
 }
 
@@ -346,13 +472,14 @@ export function updateMatch(paths: AppPaths, matchId: string, payload: unknown):
     throw new Error('match payload must be an object');
   }
 
-  const store = getMatchStore(paths);
+  const { store } = readStoreFile(paths);
   const index = store.matches.findIndex((match) => match.id === matchId);
   if (index === -1) {
     throw new Error('比赛不存在');
   }
 
   const current = store.matches[index];
+  const currentGame = getCurrentGame(current);
   const raw = payload as Record<string, unknown>;
   const leftPlayer = raw.leftPlayer === undefined ? current.leftPlayer : normalizePlayerName(raw.leftPlayer);
   const rightPlayer = raw.rightPlayer === undefined ? current.rightPlayer : normalizePlayerName(raw.rightPlayer);
@@ -366,84 +493,118 @@ export function updateMatch(paths: AppPaths, matchId: string, payload: unknown):
     throw new Error('已完成的比赛不能修改赛制');
   }
 
+  const canEditBestOf = currentGame.status === 'pending' && current.games.length === 1;
+  if (raw.bestOf !== undefined && nextBestOf !== current.bestOf && !canEditBestOf) {
+    throw new Error('当前阶段不能修改 BO 赛制');
+  }
+
   const maxScore = Math.max(current.leftScore, current.rightScore);
   if (winsNeeded(nextBestOf) < maxScore) {
     throw new Error('当前比分已经超过新赛制可容纳的胜局数');
   }
 
-  const updated = computeMatchProgress({
+  pushUndoState(store);
+  store.matches[index] = computeMatchProgress({
     ...current,
     leftPlayer,
     rightPlayer,
     bestOf: nextBestOf,
     updatedAt: new Date().toISOString(),
   });
-  const nextMatches = [...store.matches];
-  nextMatches[index] = updated;
-  const nextStore = writeStore(paths, { ...store, matches: nextMatches });
 
-  if (nextStore.activeMatchId === updated.id) {
-    syncScoreboardFromMatch(paths, updated);
-  }
-
+  const publicStore = writeStoreFile(paths, store);
+  syncAfterStoreChange(paths, publicStore);
   return getMatchStore(paths);
 }
 
 export function setActiveMatch(paths: AppPaths, matchId: string): MatchStoreState {
-  const store = getMatchStore(paths);
+  const { store } = readStoreFile(paths);
   const match = store.matches.find((item) => item.id === matchId);
   if (!match) {
     throw new Error('比赛不存在');
   }
 
-  const nextStore = writeStore(paths, { ...store, activeMatchId: matchId });
-  const activeMatch = nextStore.matches.find((item) => item.id === matchId);
-  if (activeMatch) {
-    syncMatchToPanelsAndScoreboard(paths, activeMatch);
-  }
+  store.activeMatchId = matchId;
+  const publicStore = writeStoreFile(paths, store);
+  syncAfterStoreChange(paths, publicStore);
   return getMatchStore(paths);
 }
 
-export function syncActiveMatchLineupsFromPanels(paths: AppPaths): MatchStoreState {
-  const store = getMatchStore(paths);
+export function saveDraftPanelStateForActiveMatch(
+  paths: AppPaths,
+  position: 'left' | 'right',
+  selectedSlots: unknown,
+): MatchStoreState {
+  const { store } = readStoreFile(paths);
   if (!store.activeMatchId) {
-    return store;
+    throw new Error('当前没有活动比赛');
   }
 
   const index = store.matches.findIndex((match) => match.id === store.activeMatchId);
   if (index === -1) {
-    return store;
+    throw new Error('比赛不存在');
   }
 
   const current = store.matches[index];
-  if (current.status === 'completed') {
-    return store;
+  const currentGame = getCurrentGame(current);
+  if (currentGame.status !== 'pending') {
+    throw new Error('当前小局已开始，不能继续修改阵容');
   }
 
-  const pendingGameIndex = current.games.findIndex((game) => game.status === 'pending');
-  if (pendingGameIndex === -1) {
-    return store;
-  }
-
-  const leftSlots = capturePanelSnapshot(getPanelState(paths, 'left'));
-  const rightSlots = capturePanelSnapshot(getPanelState(paths, 'right'));
+  const nextSlots = parseSelectedSlots(selectedSlots);
   const nextGames = [...current.games];
-  nextGames[pendingGameIndex] = {
-    ...nextGames[pendingGameIndex],
-    leftSlots,
-    rightSlots,
-    leftLineup: lineupFromSlots(leftSlots),
-    rightLineup: lineupFromSlots(rightSlots),
+  const gameIndex = nextGames.findIndex((game) => game.gameNumber === currentGame.gameNumber);
+  nextGames[gameIndex] = {
+    ...currentGame,
+    leftSlots: position === 'left' ? nextSlots : currentGame.leftSlots,
+    rightSlots: position === 'right' ? nextSlots : currentGame.rightSlots,
+    leftLineup: position === 'left' ? lineupFromSlots(nextSlots) : currentGame.leftLineup,
+    rightLineup: position === 'right' ? lineupFromSlots(nextSlots) : currentGame.rightLineup,
   };
 
-  const nextMatches = [...store.matches];
-  nextMatches[index] = {
+  store.matches[index] = {
     ...current,
     games: nextGames,
     updatedAt: new Date().toISOString(),
   };
 
-  return writeStore(paths, { ...store, matches: nextMatches });
+  return writeStoreFile(paths, store);
+}
+
+export function startCurrentGame(paths: AppPaths, matchId: string): MatchStoreState {
+  const { store } = readStoreFile(paths);
+  const index = store.matches.findIndex((match) => match.id === matchId);
+  if (index === -1) {
+    throw new Error('比赛不存在');
+  }
+
+  const current = store.matches[index];
+  const pendingGameIndex = current.games.findIndex((game) => game.status === 'pending');
+  if (pendingGameIndex === -1) {
+    throw new Error('当前没有待开始的小局');
+  }
+
+  const pendingGame = current.games[pendingGameIndex];
+  if (!pendingGame.leftLineup.length || !pendingGame.rightLineup.length) {
+    throw new Error('请先为双方选择阵容，再开始本局');
+  }
+
+  pushUndoState(store);
+  const nextGames = [...current.games];
+  nextGames[pendingGameIndex] = {
+    ...pendingGame,
+    status: 'in_progress',
+  };
+
+  store.matches[index] = computeMatchProgress({
+    ...current,
+    games: nextGames,
+    updatedAt: new Date().toISOString(),
+  });
+
+  const publicStore = writeStoreFile(paths, store);
+  syncAfterStoreChange(paths, publicStore);
+  return getMatchStore(paths);
 }
 
 export function recordMatchWinner(
@@ -451,7 +612,7 @@ export function recordMatchWinner(
   matchId: string,
   winner: 'left' | 'right',
 ): MatchStoreState {
-  const store = getMatchStore(paths);
+  const { store } = readStoreFile(paths);
   const index = store.matches.findIndex((match) => match.id === matchId);
   if (index === -1) {
     throw new Error('比赛不存在');
@@ -462,24 +623,19 @@ export function recordMatchWinner(
     throw new Error('该比赛已结束');
   }
 
-  const pendingGameIndex = current.games.findIndex((game) => game.status === 'pending');
-  if (pendingGameIndex === -1) {
-    throw new Error('当前没有可结算的小局');
+  const inProgressGameIndex = current.games.findIndex((game) => game.status === 'in_progress');
+  if (inProgressGameIndex === -1) {
+    throw new Error('请先开始当前小局，再记录胜负');
   }
 
-  const leftSlots = capturePanelSnapshot(getPanelState(paths, 'left'));
-  const rightSlots = capturePanelSnapshot(getPanelState(paths, 'right'));
+  pushUndoState(store);
   const completedGame = {
-    ...current.games[pendingGameIndex],
-    leftSlots,
-    rightSlots,
-    leftLineup: lineupFromSlots(leftSlots),
-    rightLineup: lineupFromSlots(rightSlots),
+    ...current.games[inProgressGameIndex],
     winner,
     status: 'completed' as const,
   };
   const nextGames = [...current.games];
-  nextGames[pendingGameIndex] = completedGame;
+  nextGames[inProgressGameIndex] = completedGame;
 
   let nextMatch = computeMatchProgress({
     ...current,
@@ -488,20 +644,100 @@ export function recordMatchWinner(
   });
 
   if (nextMatch.status !== 'completed') {
-    const nextGameNumber = nextGames.length + 1;
     nextMatch = {
       ...nextMatch,
-      games: [...nextGames, createGameRecord(nextGameNumber, leftSlots, rightSlots)],
+      games: [...nextGames, createEmptyGameRecord(nextGames.length + 1)],
       updatedAt: new Date().toISOString(),
     };
+    if (nextMatch.games.length > 1) {
+      pruneBestOfHistory(store, nextMatch.id, nextMatch.bestOf);
+    }
   }
 
-  const nextMatches = [...store.matches];
-  nextMatches[index] = nextMatch;
-  const nextStore = writeStore(paths, { ...store, matches: nextMatches, activeMatchId: matchId });
-  const activeMatch = nextStore.matches.find((match) => match.id === matchId);
-  if (activeMatch) {
-    syncMatchToPanelsAndScoreboard(paths, activeMatch);
-  }
+  store.matches[index] = nextMatch;
+  const publicStore = writeStoreFile(paths, store);
+  syncAfterStoreChange(paths, publicStore);
   return getMatchStore(paths);
+}
+
+export function undoMatchAction(paths: AppPaths): MatchStoreState {
+  const { store } = readStoreFile(paths);
+  const previousSnapshot = store.undoStack[store.undoStack.length - 1];
+  if (!previousSnapshot) {
+    throw new Error('没有可撤回的操作');
+  }
+
+  const currentMatch = store.matches.find((match) => match.id === store.activeMatchId);
+  const previousMatch = previousSnapshot.matches.find((match) => match.id === previousSnapshot.activeMatchId);
+  validateUndoRedoBestOf(currentMatch, previousMatch);
+
+  const currentSnapshot = snapshotOfStore(store);
+  store.undoStack = store.undoStack.slice(0, -1);
+  store.redoStack.push(currentSnapshot);
+  store.activeMatchId = previousSnapshot.activeMatchId;
+  store.matches = cloneValue(previousSnapshot.matches);
+
+  const publicStore = writeStoreFile(paths, store);
+  syncAfterStoreChange(paths, publicStore);
+  return getMatchStore(paths);
+}
+
+export function redoMatchAction(paths: AppPaths): MatchStoreState {
+  const { store } = readStoreFile(paths);
+  const nextSnapshot = store.redoStack[store.redoStack.length - 1];
+  if (!nextSnapshot) {
+    throw new Error('没有可取消撤回的操作');
+  }
+
+  const currentMatch = store.matches.find((match) => match.id === store.activeMatchId);
+  const nextMatch = nextSnapshot.matches.find((match) => match.id === nextSnapshot.activeMatchId);
+  validateUndoRedoBestOf(currentMatch, nextMatch);
+
+  const currentSnapshot = snapshotOfStore(store);
+  store.redoStack = store.redoStack.slice(0, -1);
+  store.undoStack.push(currentSnapshot);
+  store.activeMatchId = nextSnapshot.activeMatchId;
+  store.matches = cloneValue(nextSnapshot.matches);
+
+  const publicStore = writeStoreFile(paths, store);
+  syncAfterStoreChange(paths, publicStore);
+  return getMatchStore(paths);
+}
+
+export function syncActiveMatchLineupsFromPanels(paths: AppPaths): MatchStoreState {
+  const { store } = readStoreFile(paths);
+  if (!store.activeMatchId) {
+    return getMatchStore(paths);
+  }
+
+  const index = store.matches.findIndex((match) => match.id === store.activeMatchId);
+  if (index === -1) {
+    return getMatchStore(paths);
+  }
+
+  const current = store.matches[index];
+  const currentGame = getCurrentGame(current);
+  if (currentGame.status !== 'pending') {
+    return getMatchStore(paths);
+  }
+
+  const leftSlots = capturePanelSnapshot(paths, 'left');
+  const rightSlots = capturePanelSnapshot(paths, 'right');
+  const nextGames = [...current.games];
+  const gameIndex = nextGames.findIndex((game) => game.gameNumber === currentGame.gameNumber);
+  nextGames[gameIndex] = {
+    ...currentGame,
+    leftSlots,
+    rightSlots,
+    leftLineup: lineupFromSlots(leftSlots),
+    rightLineup: lineupFromSlots(rightSlots),
+  };
+
+  store.matches[index] = {
+    ...current,
+    games: nextGames,
+    updatedAt: new Date().toISOString(),
+  };
+
+  return writeStoreFile(paths, store);
 }

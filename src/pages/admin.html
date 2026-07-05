@@ -873,27 +873,50 @@
             display: grid;
             grid-template-columns: 320px minmax(0, 1fr);
             gap: 20px;
-            align-items: start;
+            align-items: stretch;
         }
 
         .match-sidebar-card,
-        .match-focus-panel {
+        .match-focus-panel,
+        .match-history-page {
             background: rgba(255, 252, 248, 0.86);
         }
 
         .match-main-stack,
         .match-history-list,
         .match-list,
-        .match-hero,
-        .lineup-chip-row {
+        .match-hero {
             display: grid;
             gap: 14px;
         }
 
+        .match-sidebar-card {
+            min-height: 0;
+        }
+
+        .match-sidebar-card {
+            display: grid;
+            grid-template-rows: auto auto minmax(0, 1fr);
+            overflow: hidden;
+        }
+
         .match-list {
-            max-height: 420px;
             overflow-y: auto;
             padding-right: 4px;
+            min-height: 0;
+        }
+
+        .match-list,
+        .match-history-list {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .match-list::-webkit-scrollbar,
+        .match-history-list::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            display: none;
         }
 
         .match-item {
@@ -986,10 +1009,65 @@
             margin-bottom: 8px;
         }
 
+        .match-hero-score-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            align-items: center;
+            gap: 16px;
+        }
+
         .match-hero-score {
             font: 800 42px/1 var(--font-display);
             color: var(--accent-deep);
             letter-spacing: 0.04em;
+        }
+
+        .match-hero-score-block {
+            display: grid;
+            justify-items: center;
+            gap: 10px;
+            text-align: center;
+        }
+
+        .match-hero-side {
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(109, 79, 54, 0.1);
+        }
+
+        .match-hero-side.right {
+            text-align: right;
+        }
+
+        .match-hero-side-label {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .match-hero-lineup-text {
+            color: var(--muted-strong);
+            font-size: 13px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+
+        .match-hero-meta-inline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            color: var(--muted-strong);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .match-hero-meta-inline span {
+            white-space: nowrap;
         }
 
         .lineup-chip-group {
@@ -1028,9 +1106,20 @@
             gap: 12px;
         }
 
+        .match-history-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
         .match-history-games {
             display: grid;
             gap: 10px;
+        }
+
+        .match-history-list {
+            overflow-y: auto;
+            min-height: 0;
+            padding-right: 4px;
         }
 
         .match-history-game {
@@ -1324,6 +1413,17 @@
                 grid-template-columns: 1fr;
             }
 
+            .match-hero-score-row {
+                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
+
+            .match-hero-side.right,
+            .match-hero-score-block {
+                text-align: left;
+                justify-items: start;
+            }
+
             .slot-preview {
                 margin: 0 auto;
             }
@@ -1408,6 +1508,16 @@
                         </div>
                         <span class="nav-badge">Edit</span>
                     </button>
+                    <button class="nav-item" type="button" data-view="history">
+                        <div class="nav-meta">
+                            <div class="nav-item-icon">📚</div>
+                            <div>
+                                <strong>比赛历史</strong>
+                                <span>独立查看系列赛与每局阵容快照</span>
+                            </div>
+                        </div>
+                        <span class="nav-badge">Log</span>
+                    </button>
                     <button class="nav-item" type="button" data-view="background">
                         <div class="nav-meta">
                             <div class="nav-item-icon">🎨</div>
@@ -1441,6 +1551,17 @@
                 </div>
             </div>
 
+            <section class="info-box">
+                <h3>赛事说明</h3>
+                <p class="muted">
+                    阵容编辑、选手名字、比分和 BO 都统一收口到赛事管理。保存阵容时只会写入当前小局草稿，点击“开始本次对局”后才会同步到推流页面。
+                </p>
+                <h3>素材来源</h3>
+                <p class="muted">
+                    所有精灵图均来自洛克王国世界 WIKI，图片来源：<a href="https://wiki.biligame.com/rocom/" target="_blank">https://wiki.biligame.com/rocom/</a>。转载规范：<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</a>。
+                </p>
+            </section>
+
             <div class="sidebar-footer">
                 <p>可自行选择推流页面1或页面2</p>
             </div>
@@ -1463,7 +1584,7 @@
             <section class="content-view active" data-view="roster">
                 <div class="container page-stack">
                     <section class="match-workspace">
-                        <aside class="panel match-sidebar-card">
+                        <aside class="panel match-sidebar-card" id="matchSidebarCard">
                             <div class="panel-header">
                                 <div>
                                     <small>Match Queue</small>
@@ -1476,7 +1597,7 @@
                         </aside>
 
                         <div class="match-main-stack">
-                            <section class="panel match-focus-panel">
+                            <section class="panel match-focus-panel" id="matchFocusPanel">
                                 <div class="panel-header">
                                     <div>
                                         <small>Match Focus</small>
@@ -1525,17 +1646,15 @@
                                             <button class="btn btn-warning" type="button" id="rightWinBtn">右侧赢了</button>
                                         </div>
                                         <div class="btn-row">
+                                            <button class="btn btn-secondary" type="button" id="undoMatchBtn">撤回上一步</button>
+                                            <button class="btn btn-secondary" type="button" id="redoMatchBtn">取消撤回</button>
+                                        </div>
+                                        <div class="btn-row">
                                             <button class="btn btn-primary" type="button" id="saveMatchMetaBtn">保存比赛信息</button>
-                                            <button class="btn btn-secondary" type="button" id="rematchBtn">再开一局</button>
+                                            <button class="btn btn-primary" type="button" id="rematchBtn">开始本次对局</button>
                                         </div>
                                     </div>
                                 </div>
-                            </section>
-
-                            <section class="info-box">
-                                <h3>比赛历史</h3>
-                                <p class="muted">每一局都会记录当时的左右阵容快照，方便回看系列赛中的换阵过程。</p>
-                                <div class="match-history-list" id="matchHistoryList"></div>
                             </section>
                         </div>
                     </section>
@@ -1708,16 +1827,20 @@
                         </section>
                     </div>
 
-                    <section class="info-box">
-                        <h3>使用说明</h3>
-                        <p class="muted">
-                            左右两侧从 <code>img</code> 目录读取精灵图，名称和编号索引从 <code>json/sprites.json</code> 读取。每侧固定 6 个槽位，点击槽位后再点击精灵即可填充。
-                            当存在当前比赛时，保存阵容会自动同步到“当前小局”的阵容快照，结算胜负时会冻结这一局的 lineup 记录。
-                        </p>
-                        <h3>图片来源</h3>
-                        <p class="muted">
-                            所有精灵图均来自洛克王国世界WIKI，版权归洛克王国世界所有，图片来源地址：<a href="https://wiki.biligame.com/rocom/" target="_blank">https://wiki.biligame.com/rocom/</a>其他声明：<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">规范转载需注明来源链接，感谢您的理解与配合。自动授权协议：CC BY-NC-SA 4.0（署名-非商业性使用-相同方式共享）</a>
-                        </p>
+                </div>
+            </section>
+
+            <section class="content-view" data-view="history">
+                <div class="portal-page">
+                    <section class="portal-card match-history-page">
+                        <div class="panel-header">
+                            <div>
+                                <small>History Archive</small>
+                                <h2>比赛历史</h2>
+                                <p>独立查看每场系列赛的比分、赛制，以及每一局对应的左右阵容快照。</p>
+                            </div>
+                        </div>
+                        <div class="match-history-list" id="matchHistoryList"></div>
                     </section>
                 </div>
             </section>
@@ -1934,6 +2057,10 @@
             matchStore: {
                 activeMatchId: null,
                 matches: [],
+                history: {
+                    canUndo: false,
+                    canRedo: false
+                },
                 mtime: null
             },
             scoreboard: {
@@ -2116,7 +2243,7 @@
                 leftSlots: Array.isArray(game && game.leftSlots) ? game.leftSlots : [],
                 rightSlots: Array.isArray(game && game.rightSlots) ? game.rightSlots : [],
                 winner: game && (game.winner === 'left' || game.winner === 'right') ? game.winner : null,
-                status: game && game.status === 'completed' ? 'completed' : 'pending'
+                status: game && (game.status === 'completed' || game.status === 'in_progress') ? game.status : 'pending'
             };
         }
 
@@ -2147,8 +2274,13 @@
                 matches: Array.isArray(payload && payload.matches)
                     ? payload.matches.map(normalizeMatchRecord).filter(match => match.id)
                     : [],
+                history: {
+                    canUndo: !!(payload && payload.history && payload.history.canUndo),
+                    canRedo: !!(payload && payload.history && payload.history.canRedo)
+                },
                 mtime: payload && payload.mtime ? payload.mtime : null
             };
+            syncLocalPanelsFromMatchStore();
             renderMatchWorkspace();
         }
 
@@ -2156,18 +2288,88 @@
             return state.matchStore.matches.find(match => match.id === state.matchStore.activeMatchId) || null;
         }
 
-        function getPendingGame(match) {
+        function getCurrentGame(match) {
             if (!match) {
                 return null;
             }
-            return match.games.find(game => game.status === 'pending') || null;
+            return match.games.find(game => game.status === 'in_progress')
+                || match.games.find(game => game.status === 'pending')
+                || null;
         }
 
         function getDisplayGame(match) {
             if (!match || !Array.isArray(match.games) || !match.games.length) {
                 return null;
             }
-            return getPendingGame(match) || match.games[match.games.length - 1];
+            return getCurrentGame(match) || match.games[match.games.length - 1];
+        }
+
+        function canEditLineup() {
+            const match = getActiveMatch();
+            const game = getCurrentGame(match);
+            return !!match && !!game && game.status === 'pending';
+        }
+
+        function canStartCurrentGame() {
+            const match = getActiveMatch();
+            const game = getCurrentGame(match);
+            return !!match && !!game && game.status === 'pending'
+                && Array.isArray(game.leftLineup) && game.leftLineup.length > 0
+                && Array.isArray(game.rightLineup) && game.rightLineup.length > 0;
+        }
+
+        function canRecordWinner() {
+            const match = getActiveMatch();
+            const game = getCurrentGame(match);
+            return !!match && !!game && game.status === 'in_progress';
+        }
+
+        function applySlotsToLocalPanel(panel, slots) {
+            const selected = Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index));
+
+            (Array.isArray(slots) ? slots : []).slice(0, MAX_SELECTION).forEach((slotData, index) => {
+                const spriteId = slotData && slotData.spriteId ? slotData.spriteId : null;
+                selected[index] = {
+                    slot: index,
+                    sprite: spriteId ? spriteById(spriteId) || { id: spriteId, displayName: spriteId, chineseName: spriteId, name: spriteId, filename: spriteId, path: '', aliases: [], number: null, variant: 0 } : null,
+                    opacityEnabled: !!(slotData && slotData.opacityEnabled),
+                    opacity: typeof (slotData && slotData.opacity) === 'number' ? slotData.opacity : 0.5,
+                    effectiveOpacity: slotData && slotData.opacityEnabled ? (typeof slotData.opacity === 'number' ? slotData.opacity : 0.5) : 1,
+                    saturation: typeof (slotData && slotData.saturation) === 'number' ? slotData.saturation : 1,
+                    healthEnabled: slotData ? slotData.healthEnabled !== false : true,
+                    healthPercent: typeof (slotData && slotData.healthPercent) === 'number' ? slotData.healthPercent : 100,
+                    energyValue: typeof (slotData && slotData.energyValue) === 'number' ? slotData.energyValue : 10
+                };
+            });
+
+            state[panel].selected = selected;
+            state[panel].activeSlot = Math.min(state[panel].activeSlot, MAX_SELECTION - 1);
+        }
+
+        function syncLocalPanelsFromMatchStore() {
+            const match = getActiveMatch();
+            const game = getCurrentGame(match);
+
+            if (!match) {
+                return;
+            }
+
+            if (match.status === 'completed') {
+                applySlotsToLocalPanel('left', []);
+                applySlotsToLocalPanel('right', []);
+                renderPanel('left');
+                renderPanel('right');
+                return;
+            }
+
+            if (!game) {
+                return;
+            }
+
+            applySlotsToLocalPanel('left', game.leftSlots || []);
+            applySlotsToLocalPanel('right', game.rightSlots || []);
+            renderPanel('left');
+            renderPanel('right');
         }
 
         function getWinsNeeded(bestOf) {
@@ -2204,6 +2406,9 @@
             if (!game) {
                 return '待开始';
             }
+            if (game.status === 'in_progress') {
+                return '进行中';
+            }
             if (game.status !== 'completed' || !game.winner) {
                 return '待结算';
             }
@@ -2219,6 +2424,16 @@
                 const label = sprite ? getSpriteDisplayName(sprite) : spriteId;
                 return `<span class="lineup-tag">${escapeHtml(label)}</span>`;
             }).join('');
+        }
+
+        function formatLineupSummary(lineup) {
+            if (!Array.isArray(lineup) || !lineup.length) {
+                return '待设置';
+            }
+            return lineup.map(spriteId => {
+                const sprite = spriteById(spriteId);
+                return sprite ? getSpriteDisplayName(sprite) : spriteId;
+            }).join(' / ');
         }
 
         function renderMatchList() {
@@ -2251,8 +2466,9 @@
             const hero = document.getElementById('matchHero');
             const match = getActiveMatch();
             const game = getDisplayGame(match);
+            const currentGame = getCurrentGame(match);
             const canEditMatch = !!match && match.status !== 'completed';
-            const canEditBestOf = !!match && match.status === 'pending';
+            const canEditBestOf = !!match && !!currentGame && currentGame.status === 'pending' && match.games.length === 1;
             const leftInput = document.getElementById('matchLeftPlayerInput');
             const rightInput = document.getElementById('matchRightPlayerInput');
             const bestOfInput = document.getElementById('matchBestOfInput');
@@ -2261,6 +2477,8 @@
             const rightWinBtn = document.getElementById('rightWinBtn');
             const saveMetaBtn = document.getElementById('saveMatchMetaBtn');
             const rematchBtn = document.getElementById('rematchBtn');
+            const undoBtn = document.getElementById('undoMatchBtn');
+            const redoBtn = document.getElementById('redoMatchBtn');
 
             if (!match) {
                 hero.innerHTML = `
@@ -2277,6 +2495,8 @@
                 rightWinBtn.disabled = true;
                 saveMetaBtn.disabled = true;
                 rematchBtn.disabled = true;
+                undoBtn.disabled = true;
+                redoBtn.disabled = true;
                 formatHint.textContent = '在创建比赛后，这里会显示当前 BO 与小局状态。';
                 return;
             }
@@ -2290,21 +2510,23 @@
                     </div>
                     <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
                 </div>
-                <div class="match-hero-score">${escapeHtml(String(match.leftScore))} : ${escapeHtml(String(match.rightScore))}</div>
-                <div class="lineup-chip-row">
-                    <div class="metric-pill">BO${escapeHtml(match.bestOf)}</div>
-                    <div class="metric-pill">先赢 ${escapeHtml(getWinsNeeded(match.bestOf))} 局</div>
-                    <div class="metric-pill">${game ? `第 ${game.gameNumber} 局` : '暂无小局'}</div>
-                    <div class="metric-pill">${completedGames} / ${escapeHtml(match.bestOf)} 已记录</div>
-                </div>
-                <div class="scoreboard-grid">
-                    <div class="lineup-chip-group">
-                        <strong>左侧本局阵容</strong>
-                        <div class="lineup-tags">${formatLineupNames(game ? game.leftLineup : [])}</div>
+                <div class="match-hero-score-row">
+                    <div class="match-hero-side">
+                        <span class="match-hero-side-label">左侧本局阵容</span>
+                        <div class="match-hero-lineup-text">${escapeHtml(formatLineupSummary(game ? game.leftLineup : []))}</div>
                     </div>
-                    <div class="lineup-chip-group">
-                        <strong>右侧本局阵容</strong>
-                        <div class="lineup-tags">${formatLineupNames(game ? game.rightLineup : [])}</div>
+                    <div class="match-hero-score-block">
+                        <div class="match-hero-score">${escapeHtml(String(match.leftScore))} : ${escapeHtml(String(match.rightScore))}</div>
+                        <div class="match-hero-meta-inline">
+                            <span>BO${escapeHtml(match.bestOf)}</span>
+                            <span>先赢 ${escapeHtml(getWinsNeeded(match.bestOf))} 局</span>
+                            <span>${game ? `第 ${game.gameNumber} 局` : '暂无小局'}</span>
+                            <span>${completedGames} / ${escapeHtml(match.bestOf)} 已记录</span>
+                        </div>
+                    </div>
+                    <div class="match-hero-side right">
+                        <span class="match-hero-side-label">右侧本局阵容</span>
+                        <div class="match-hero-lineup-text">${escapeHtml(formatLineupSummary(game ? game.rightLineup : []))}</div>
                     </div>
                 </div>
             `;
@@ -2315,15 +2537,23 @@
             leftInput.disabled = !canEditMatch;
             rightInput.disabled = !canEditMatch;
             bestOfInput.disabled = !canEditBestOf;
-            leftWinBtn.disabled = !canEditMatch;
-            rightWinBtn.disabled = !canEditMatch;
+            leftWinBtn.disabled = !canRecordWinner();
+            rightWinBtn.disabled = !canRecordWinner();
             saveMetaBtn.disabled = !canEditMatch;
-            rematchBtn.disabled = false;
-            formatHint.textContent = canEditBestOf
-                ? '当前比赛还未记分，可以修改 BO。'
-                : match.status === 'completed'
-                    ? `比赛已结束，胜者为${match.winner === 'left' ? '左侧' : '右侧'}。`
-                    : '比赛进行中，BO 已锁定，避免中途改赛制造成比分歧义。';
+            rematchBtn.disabled = !canStartCurrentGame();
+            undoBtn.disabled = !state.matchStore.history.canUndo;
+            redoBtn.disabled = !state.matchStore.history.canRedo;
+            if (canEditBestOf) {
+                formatHint.textContent = '当前比赛还未记分，可以修改 BO。';
+            } else if (currentGame && currentGame.status === 'pending') {
+                formatHint.textContent = '先完成双方阵容选择，再点击“开始本次对局”同步到推流页面。';
+            } else if (currentGame && currentGame.status === 'in_progress') {
+                formatHint.textContent = '本局已经开始，当前阵容已同步到推流页面，请记录胜负或使用撤回修正。';
+            } else if (match.status === 'completed') {
+                formatHint.textContent = `比赛已结束，胜者为${match.winner === 'left' ? '左侧' : '右侧'}。`;
+            } else {
+                formatHint.textContent = '比赛进行中，BO 已锁定，避免中途改赛制造成比分歧义。';
+            }
         }
 
         function renderMatchHistory() {
@@ -2342,6 +2572,9 @@
                         <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
                     </div>
                     <div class="match-history-meta">BO${escapeHtml(match.bestOf)} · ${escapeHtml(String(match.leftScore))}:${escapeHtml(String(match.rightScore))}${match.winner ? ` · ${match.winner === 'left' ? '左侧' : '右侧'}获胜` : ''}</div>
+                    <div class="match-history-actions">
+                        <button class="btn btn-secondary" type="button" data-history-match-id="${escapeHtml(match.id)}">进入赛事管理</button>
+                    </div>
                     <div class="match-history-games">
                         ${match.games.map(game => `
                             <div class="match-history-game">
@@ -2362,12 +2595,38 @@
                     </div>
                 </article>
             `).join('');
+
+            container.querySelectorAll('[data-history-match-id]').forEach(button => {
+                button.addEventListener('click', () => {
+                    selectMatch(button.dataset.historyMatchId, {
+                        nextView: 'roster',
+                        successMessage: `已从比赛历史切换到 ${button.dataset.historyMatchId}`
+                    });
+                });
+            });
         }
 
         function renderMatchWorkspace() {
             renderMatchList();
             renderMatchHero();
             renderMatchHistory();
+            syncMatchSidebarHeight();
+        }
+
+        function syncMatchSidebarHeight() {
+            const sidebarCard = document.getElementById('matchSidebarCard');
+            const focusPanel = document.getElementById('matchFocusPanel');
+            if (!sidebarCard || !focusPanel) {
+                return;
+            }
+
+            window.requestAnimationFrame(() => {
+                if (window.matchMedia('(max-width: 1560px)').matches) {
+                    sidebarCard.style.height = 'auto';
+                    return;
+                }
+                sidebarCard.style.height = `${focusPanel.offsetHeight}px`;
+            });
         }
 
         function renderScoreboardInputs() {
@@ -2612,18 +2871,22 @@
         function renderSlotPreview(panel) {
             const container = document.getElementById(`${panel}SlotPreview`);
             container.innerHTML = '';
+            const editable = canEditLineup();
 
             state[panel].selected.forEach((slotData, index) => {
                 const slot = document.createElement('button');
                 slot.type = 'button';
                 slot.className = 'panel-slot';
+                slot.disabled = !editable;
                 if (index === state[panel].activeSlot) {
                     slot.classList.add('active');
                 }
-                slot.addEventListener('click', () => {
-                    state[panel].activeSlot = index;
-                    renderPanel(panel);
-                });
+                if (editable) {
+                    slot.addEventListener('click', () => {
+                        state[panel].activeSlot = index;
+                        renderPanel(panel);
+                    });
+                }
 
                 if (slotData.sprite) {
                     slot.innerHTML = buildPreviewLayers(slotData);
@@ -2660,6 +2923,7 @@
         function renderQuickFillVariants(panel) {
             const container = document.getElementById(`${panel}QuickFillVariants`);
             const matches = Array.isArray(state[panel].quickFillMatches) ? state[panel].quickFillMatches : [];
+            const editable = canEditLineup();
             container.innerHTML = '';
 
             const groups = matches.filter(match => match && match.matched && Array.isArray(match.candidates) && match.candidates.length > 1);
@@ -2686,6 +2950,7 @@
                     const card = document.createElement('button');
                     card.type = 'button';
                     card.className = 'quick-fill-variant-card';
+                    card.disabled = !editable;
                     const currentSpriteId = state[panel].selected[match.slot] && state[panel].selected[match.slot].sprite
                         ? state[panel].selected[match.slot].sprite.id
                         : null;
@@ -2696,14 +2961,16 @@
                         <img src="${candidate.path}" alt="${getSpriteDisplayName(candidate)}">
                         <div class="name">${getSpriteDisplayName(candidate)}</div>
                     `;
-                    card.addEventListener('click', () => {
-                        const slot = state[panel].selected[match.slot];
-                        slot.sprite = candidate;
-                        slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
-                        match.sprite = candidate;
-                        state[panel].activeSlot = match.slot;
-                        handlePanelMutation(panel);
-                    });
+                    if (editable) {
+                        card.addEventListener('click', () => {
+                            const slot = state[panel].selected[match.slot];
+                            slot.sprite = candidate;
+                            slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
+                            match.sprite = candidate;
+                            state[panel].activeSlot = match.slot;
+                            handlePanelMutation(panel);
+                        });
+                    }
                     options.appendChild(card);
                 });
 
@@ -2717,6 +2984,7 @@
             const keyword = document.getElementById(`${panel}Search`).value.trim().toLowerCase();
             const activeSlot = currentSlot(panel);
             const activeSpriteId = activeSlot && activeSlot.sprite ? activeSlot.sprite.id : null;
+            const editable = canEditLineup();
 
             const filtered = state.sprites.filter(sprite => {
                 if (!keyword) {
@@ -2739,6 +3007,7 @@
                 const card = document.createElement('button');
                 card.type = 'button';
                 card.className = 'sprite-card';
+                card.disabled = !editable;
                 if (activeSpriteId === sprite.id) {
                     card.classList.add('selected');
                 }
@@ -2746,17 +3015,38 @@
                     <img src="${sprite.path}" alt="${getSpriteDisplayName(sprite)}">
                     <div class="name">${getSpriteDisplayName(sprite)}</div>
                 `;
-                card.addEventListener('click', () => {
-                    const slot = currentSlot(panel);
-                    slot.sprite = sprite;
-                    slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
-                    const nextEmpty = state[panel].selected.findIndex(item => !item.sprite);
-                    if (nextEmpty !== -1) {
-                        state[panel].activeSlot = nextEmpty;
-                    }
-                    handlePanelMutation(panel);
-                });
+                if (editable) {
+                    card.addEventListener('click', () => {
+                        const slot = currentSlot(panel);
+                        slot.sprite = sprite;
+                        slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;
+                        const nextEmpty = state[panel].selected.findIndex(item => !item.sprite);
+                        if (nextEmpty !== -1) {
+                            state[panel].activeSlot = nextEmpty;
+                        }
+                        handlePanelMutation(panel);
+                    });
+                }
                 grid.appendChild(card);
+            });
+        }
+
+        function syncPanelEditability(panel) {
+            const editable = canEditLineup();
+            [
+                `${panel}AutoSaveToggle`,
+                `${panel}QuickFillInput`,
+                `${panel}QuickFillBtn`,
+                `${panel}SaveBtn`,
+                `${panel}ClearSlotBtn`,
+                `${panel}ClearBtn`,
+                `${panel}DeleteBtn`,
+                `${panel}Search`
+            ].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.disabled = !editable;
+                }
             });
         }
 
@@ -2765,6 +3055,7 @@
             const opacityPercent = Math.round(slot.opacity * 100);
             const saturationPercent = Math.round(slot.saturation * 100);
             const healthPercent = Math.round(getHealthLevel(slot));
+            const editable = canEditLineup();
             document.getElementById(`${panel}ActiveSlotLabel`).textContent = String(state[panel].activeSlot + 1);
             document.getElementById(`${panel}OpacityEnabled`).checked = slot.opacityEnabled;
             document.getElementById(`${panel}ProtectionEnabled`).checked = !!slot.healthEnabled;
@@ -2780,15 +3071,15 @@
                 ? `血量 ${healthPercent}% 会保留当前槽位的正常显示，其余部分会使用弱化层表现。`
                 : '关闭后会按透明度模式展示当前槽位。';
 
-            const opacityDisabled = !slot.sprite || slot.healthEnabled;
-            document.getElementById(`${panel}OpacityEnabled`).disabled = !slot.sprite;
+            const opacityDisabled = !editable || !slot.sprite || slot.healthEnabled;
+            document.getElementById(`${panel}OpacityEnabled`).disabled = !editable || !slot.sprite;
             document.getElementById(`${panel}OpacityRange`).disabled = opacityDisabled || !slot.opacityEnabled;
             document.getElementById(`${panel}OpacityNumber`).disabled = opacityDisabled || !slot.opacityEnabled;
             document.getElementById(`${panel}SaturationRange`).disabled = opacityDisabled || !slot.opacityEnabled;
             document.getElementById(`${panel}SaturationNumber`).disabled = opacityDisabled || !slot.opacityEnabled;
 
-            const protectionDisabled = !slot.sprite || slot.opacityEnabled;
-            document.getElementById(`${panel}ProtectionEnabled`).disabled = !slot.sprite;
+            const protectionDisabled = !editable || !slot.sprite || slot.opacityEnabled;
+            document.getElementById(`${panel}ProtectionEnabled`).disabled = !editable || !slot.sprite;
             document.getElementById(`${panel}ProtectionRange`).disabled = protectionDisabled || !slot.healthEnabled;
             document.getElementById(`${panel}ProtectionNumber`).disabled = protectionDisabled || !slot.healthEnabled;
             document.getElementById(`${panel}EnergyRange`).disabled = protectionDisabled || !slot.healthEnabled;
@@ -2796,6 +3087,7 @@
         }
 
         function renderPanel(panel) {
+            syncPanelEditability(panel);
             updateCounter(panel);
             syncAutoSaveToggle(panel);
             syncOpacityInputs(panel);
@@ -2805,6 +3097,9 @@
         }
 
         function clearCurrentSlot(panel) {
+            if (!canEditLineup()) {
+                return;
+            }
             const index = state[panel].activeSlot;
             state[panel].selected[index] = createEmptySlot(index);
             state[panel].quickFillMatches = (state[panel].quickFillMatches || []).filter(match => Number(match.slot) !== index);
@@ -2812,6 +3107,9 @@
         }
 
         function clearSelection(panel) {
+            if (!canEditLineup()) {
+                return;
+            }
             state[panel].selected = Array.from({ length: MAX_SELECTION }, (_, index) => createEmptySlot(index));
             state[panel].activeSlot = 0;
             state[panel].quickFillMatches = [];
@@ -2962,14 +3260,14 @@
         }
 
         function applyMatchResponse(data) {
-            if (data && data.matches) {
-                updateMatchesFromApi(data.matches);
+            if (data && Array.isArray(data.panels)) {
+                data.panels.forEach(panelState => updatePanelFromApi(panelState, { preserveUi: true }));
             }
             if (data && data.scoreboard) {
                 updateScoreboardFromApi(data.scoreboard);
             }
-            if (data && Array.isArray(data.panels)) {
-                data.panels.forEach(panelState => updatePanelFromApi(panelState, { preserveUi: true }));
+            if (data && data.matches) {
+                updateMatchesFromApi(data.matches);
             }
         }
 
@@ -3005,17 +3303,21 @@
                 }
                 applyMatchResponse(data);
                 closeCreateMatchModal();
-                showStatus('matchStatus', '比赛已创建并进入第 1 局', true);
+                showStatus('matchStatus', '比赛已创建，请先配置双方阵容并开始本局', true);
             })
             .catch(error => {
                 showStatus('matchStatus', error.message, false);
             });
         }
 
-        function selectMatch(matchId) {
+        function selectMatch(matchId, options = {}) {
             if (!matchId) {
                 return;
             }
+            const {
+                nextView = null,
+                successMessage = `已切换到比赛 ${matchId}`
+            } = options;
             clearStatus('matchStatus');
             fetch(`api/matches/${encodeURIComponent(matchId)}/select`, {
                 method: 'POST'
@@ -3026,7 +3328,11 @@
                     throw new Error(data.error || '切换比赛失败');
                 }
                 applyMatchResponse(data);
-                showStatus('matchStatus', `已切换到比赛 ${matchId}`, true);
+                if (nextView) {
+                    state.currentView = nextView;
+                    renderView();
+                }
+                showStatus('matchStatus', successMessage, true);
             })
             .catch(error => {
                 showStatus('matchStatus', error.message, false);
@@ -3085,7 +3391,7 @@
                 const nextMatch = getActiveMatch();
                 const message = nextMatch && nextMatch.status === 'completed'
                     ? `比赛已结束，${side === 'left' ? '左侧' : '右侧'}拿下系列赛`
-                    : `已记录${side === 'left' ? '左侧' : '右侧'}本局获胜，下一局已就绪`;
+                    : `已记录${side === 'left' ? '左侧' : '右侧'}本局获胜，下一局等待开始`;
                 showStatus('matchStatus', message, true);
             })
             .catch(error => {
@@ -3093,7 +3399,82 @@
             });
         }
 
+        function startCurrentGame() {
+            const match = getActiveMatch();
+            if (!match) {
+                showStatus('matchStatus', '请先创建比赛', false);
+                return;
+            }
+
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(match.id)}/start`, {
+                method: 'POST'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '开始本局失败');
+                }
+                applyMatchResponse(data);
+                showStatus('matchStatus', '本局已开始，阵容已同步到推流页面', true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
+        function undoMatchStep() {
+            const match = getActiveMatch();
+            if (!match) {
+                showStatus('matchStatus', '当前没有可撤回的比赛', false);
+                return;
+            }
+
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(match.id)}/undo`, {
+                method: 'POST'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '撤回失败');
+                }
+                applyMatchResponse(data);
+                showStatus('matchStatus', '已撤回上一步操作', true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
+        function redoMatchStep() {
+            const match = getActiveMatch();
+            if (!match) {
+                showStatus('matchStatus', '当前没有可取消撤回的比赛', false);
+                return;
+            }
+
+            clearStatus('matchStatus');
+            fetch(`api/matches/${encodeURIComponent(match.id)}/redo`, {
+                method: 'POST'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || '取消撤回失败');
+                }
+                applyMatchResponse(data);
+                showStatus('matchStatus', '已恢复刚刚撤回的操作', true);
+            })
+            .catch(error => {
+                showStatus('matchStatus', error.message, false);
+            });
+        }
+
         function savePanel(panel, options = {}) {
+            if (!canEditLineup()) {
+                return;
+            }
             const { auto = false, preserveUi = true } = options;
             clearTimeout(autoSaveTimers[panel]);
             if (!auto) {
@@ -3125,15 +3506,17 @@
                     return;
                 }
                 appliedSaveVersions[panel] = requestVersion;
-                updatePanelFromApi(data.panel, { preserveUi });
+                if (data.panel) {
+                    updatePanelFromApi(data.panel, { preserveUi });
+                }
                 if (data.matches) {
                     updateMatchesFromApi(data.matches);
                 }
                 showStatus(
                     `${panel}Status`,
                     auto
-                        ? `${panel === 'left' ? '左侧' : '右侧'}已自动保存`
-                        : `${panel === 'left' ? '左侧' : '右侧'}面板配置已同步`,
+                        ? `${panel === 'left' ? '左侧' : '右侧'}阵容草稿已自动保存`
+                        : `${panel === 'left' ? '左侧' : '右侧'}阵容草稿已保存，等待开始本局后同步前端`,
                     true
                 );
             })
@@ -3143,6 +3526,10 @@
         }
 
         function quickFillPanel(panel) {
+            if (!canEditLineup()) {
+                showStatus(`${panel}Status`, '请先开始一个未结束的比赛，再编辑阵容', false);
+                return;
+            }
             const input = document.getElementById(`${panel}QuickFillInput`).value;
             clearStatus(`${panel}Status`);
 
@@ -3193,6 +3580,9 @@
         }
 
         function deletePanel(panel) {
+            if (!canEditLineup()) {
+                return;
+            }
             fetch(`api/panels/${panel}`, { method: 'DELETE' })
                 .then(async response => {
                     const data = await response.json();
@@ -3557,15 +3947,10 @@
             document.getElementById('createMatchConfirmBtn').addEventListener('click', createMatchFromModal);
             document.getElementById('leftWinBtn').addEventListener('click', () => recordWinner('left'));
             document.getElementById('rightWinBtn').addEventListener('click', () => recordWinner('right'));
+            document.getElementById('undoMatchBtn').addEventListener('click', undoMatchStep);
+            document.getElementById('redoMatchBtn').addEventListener('click', redoMatchStep);
             document.getElementById('saveMatchMetaBtn').addEventListener('click', saveActiveMatchMeta);
-            document.getElementById('rematchBtn').addEventListener('click', () => {
-                const match = getActiveMatch();
-                openCreateMatchModal(match ? {
-                    leftPlayer: match.leftPlayer,
-                    rightPlayer: match.rightPlayer,
-                    bestOf: match.bestOf
-                } : null);
-            });
+            document.getElementById('rematchBtn').addEventListener('click', startCurrentGame);
             document.getElementById('createMatchModal').addEventListener('click', event => {
                 if (event.target.id === 'createMatchModal') {
                     closeCreateMatchModal();
@@ -3593,9 +3978,20 @@
             renderPanel('right');
             renderScoreboardInputs();
             renderMatchWorkspace();
+            window.addEventListener('resize', syncMatchSidebarHeight);
+            if (typeof ResizeObserver === 'function') {
+                const focusPanel = document.getElementById('matchFocusPanel');
+                if (focusPanel) {
+                    new ResizeObserver(() => syncMatchSidebarHeight()).observe(focusPanel);
+                }
+            }
 
             Promise.all([loadSprites(), loadPanels(), loadScoreboard(), loadMatches()])
-                .then(loadBackground)
+                .then(() => {
+                    syncLocalPanelsFromMatchStore();
+                    renderMatchWorkspace();
+                    return loadBackground();
+                })
                 .then(() => {
                     connectSocket();
                 })

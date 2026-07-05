@@ -15,8 +15,12 @@ import {
   createMatch,
   getMatchStore,
   recordMatchWinner,
+  redoMatchAction,
+  saveDraftPanelStateForActiveMatch,
   setActiveMatch,
+  startCurrentGame,
   syncActiveMatchLineupsFromPanels,
+  undoMatchAction,
   updateMatch,
 } from './services/match-service.js';
 import {
@@ -160,6 +164,48 @@ export async function createLocalServer(
     }
   });
 
+  app.post('/api/matches/:matchId/start', (request, response) => {
+    try {
+      const matches = startCurrentGame(paths, request.params.matchId);
+      const scoreboard = getScoreboardState(paths);
+      const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
+      panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
+      response.json({ success: true, matches, scoreboard, panels });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/matches/:matchId/undo', (_request, response) => {
+    try {
+      const matches = undoMatchAction(paths);
+      const scoreboard = getScoreboardState(paths);
+      const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
+      panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
+      response.json({ success: true, matches, scoreboard, panels });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/matches/:matchId/redo', (_request, response) => {
+    try {
+      const matches = redoMatchAction(paths);
+      const scoreboard = getScoreboardState(paths);
+      const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
+      panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
+      response.json({ success: true, matches, scoreboard, panels });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
   app.post('/api/scoreboard', (request, response) => {
     try {
       const scoreboard = saveScoreboardState(paths, request.body ?? {});
@@ -194,6 +240,20 @@ export async function createLocalServer(
     }
 
     try {
+      const activeStore = getMatchStore(paths);
+      const activeMatch = activeStore.matches.find((match) => match.id === activeStore.activeMatchId);
+      const activeGame =
+        activeMatch?.games.find((game) => game.status === 'in_progress')
+        ?? activeMatch?.games.find((game) => game.status === 'pending')
+        ?? null;
+
+      if (activeMatch && activeGame?.status === 'pending') {
+        const matches = saveDraftPanelStateForActiveMatch(paths, position, request.body?.selected ?? []);
+        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+        response.json({ success: true, matches });
+        return;
+      }
+
       const panel = savePanelState(paths, position, request.body?.selected ?? []);
       const matches = syncActiveMatchLineupsFromPanels(paths);
       io.emit(SOCKET_EVENTS.panelUpdate, { panel });
@@ -212,12 +272,30 @@ export async function createLocalServer(
       return;
     }
 
-    clearPanelState(paths, position);
-    const panel = getPanelState(paths, position);
-    const matches = syncActiveMatchLineupsFromPanels(paths);
-    io.emit(SOCKET_EVENTS.panelUpdate, { panel });
-    io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
-    response.json({ success: true, position, panel, matches });
+    try {
+      const activeStore = getMatchStore(paths);
+      const activeMatch = activeStore.matches.find((match) => match.id === activeStore.activeMatchId);
+      const activeGame =
+        activeMatch?.games.find((game) => game.status === 'in_progress')
+        ?? activeMatch?.games.find((game) => game.status === 'pending')
+        ?? null;
+
+      if (activeMatch && activeGame?.status === 'pending') {
+        const matches = saveDraftPanelStateForActiveMatch(paths, position, []);
+        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+        response.json({ success: true, position, matches });
+        return;
+      }
+
+      clearPanelState(paths, position);
+      const panel = getPanelState(paths, position);
+      const matches = syncActiveMatchLineupsFromPanels(paths);
+      io.emit(SOCKET_EVENTS.panelUpdate, { panel });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      response.json({ success: true, position, panel, matches });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
   });
 
   app.post('/api/quick-fill', (request, response) => {

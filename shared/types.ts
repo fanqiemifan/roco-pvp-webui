@@ -66,7 +66,7 @@ export interface GameRecord {
   leftSlots: MatchSlotSnapshot[];
   rightSlots: MatchSlotSnapshot[];
   winner: 'left' | 'right' | null;
-  status: 'pending' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed';
 }
 
 export interface MatchRecord {
@@ -87,6 +87,10 @@ export interface MatchRecord {
 export interface MatchStoreState {
   activeMatchId: string | null;
   matches: MatchRecord[];
+  history: {
+    canUndo: boolean;
+    canRedo: boolean;
+  };
   mtime: number | null;
 }
 
