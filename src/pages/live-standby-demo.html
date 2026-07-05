@@ -11,20 +11,8 @@
         <div class="texture texture-left" aria-hidden="true"></div>
         <div class="texture texture-right" aria-hidden="true"></div>
 
-        <header class="topbar">
-            <div>
-                <div class="eyebrow">ROCO PVP STANDBY</div>
-                <h1>等待开始比赛</h1>
-            </div>
-            <div class="topbar-badge" id="topbarBadge">主舞台等待页</div>
-        </header>
-
         <section class="content-layout">
             <article class="stage-card">
-                <div class="card-label">主舞台</div>
-                <h2>当前已选精灵</h2>
-                <p class="card-desc" id="stageDescription">后台已经完成本局左右阵容选择，等待开始本次对局。</p>
-
                 <div class="match-headline">
                     <div class="player-title">
                         <span class="player-side">LEFT</span>
@@ -41,20 +29,18 @@
                 </div>
 
                 <div class="lineup-showcase">
-                    <section class="roster-card">
-                        <div class="roster-title">左侧已选精灵</div>
-                        <div class="roster-grid" id="leftRosterGrid"></div>
-                    </section>
-
                     <section class="pending-state" aria-label="系列赛状态">
                         <div class="pending-chip" id="statusChip">MATCH PENDING</div>
                         <div class="pending-copy" id="statusText">等待开始本次对局</div>
                         <div class="game-track" id="gameTrack"></div>
                     </section>
 
-                    <section class="roster-card roster-card-right">
-                        <div class="roster-title">右侧已选精灵</div>
-                        <div class="roster-grid" id="rightRosterGrid"></div>
+                    <section class="battle-overview-card" aria-label="本次对局战况">
+                        <div class="recent-games-header">
+                            <div class="roster-title">本次对局战况</div>
+                            <div class="recent-games-note">按小局展示胜负与当前状态</div>
+                        </div>
+                        <div class="series-games-list" id="seriesGamesList"></div>
                     </section>
                 </div>
 
@@ -68,14 +54,9 @@
             </article>
 
             <aside class="history-panel">
-                <div class="section-header">
-                    <div>
-                        <div class="eyebrow">MATCH HISTORY</div>
-                        <h2>历史对局结果</h2>
-                    </div>
-                    <div class="section-note" id="historyCountText">暂无已完赛记录</div>
+                <div class="history-list-viewport" id="historyListViewport">
+                    <div class="history-list" id="historyList"></div>
                 </div>
-                <div class="history-list" id="historyList"></div>
             </aside>
         </section>
     </main>
