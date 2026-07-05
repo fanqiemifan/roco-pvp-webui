@@ -336,6 +336,11 @@ img {
 .recent-games-list {
     display: grid;
     gap: 12px;
+    transition: transform 0.65s ease;
+}
+
+.recent-games-viewport {
+    overflow: hidden;
 }
 
 .recent-game-card {
