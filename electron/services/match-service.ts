@@ -156,6 +156,91 @@ function createEmptyGameRecord(gameNumber: number): GameRecord {
   return createGameRecord(gameNumber, sanitizeSlotSnapshots([]), sanitizeSlotSnapshots([]));
 }
 
+function summarizeSeries(games: GameRecord[], bestOf: number): {
+  leftScore: number;
+  rightScore: number;
+  winner: MatchRecord['winner'];
+} {
+  const needed = winsNeeded(bestOf);
+  let leftScore = 0;
+  let rightScore = 0;
+
+  for (const game of games) {
+    if (game.status !== 'completed' || (game.winner !== 'left' && game.winner !== 'right')) {
+      continue;
+    }
+
+    if (game.winner === 'left') {
+      leftScore += 1;
+    } else {
+      rightScore += 1;
+    }
+
+    if (leftScore >= needed || rightScore >= needed) {
+      return {
+        leftScore,
+        rightScore,
+        winner: game.winner,
+      };
+    }
+  }
+
+  return {
+    leftScore,
+    rightScore,
+    winner: null,
+  };
+}
+
+function alignGamesToBestOf(games: GameRecord[], bestOf: number): GameRecord[] {
+  const needed = winsNeeded(bestOf);
+  const nextGames: GameRecord[] = [];
+  let leftScore = 0;
+  let rightScore = 0;
+  let keptUnresolvedGame = false;
+
+  for (const sourceGame of games) {
+    if (leftScore >= needed || rightScore >= needed) {
+      break;
+    }
+
+    const game = cloneValue(sourceGame);
+    const isCompleted = game.status === 'completed' && (game.winner === 'left' || game.winner === 'right');
+    if (isCompleted) {
+      nextGames.push(game);
+      if (game.winner === 'left') {
+        leftScore += 1;
+      } else {
+        rightScore += 1;
+      }
+      continue;
+    }
+
+    if (!keptUnresolvedGame) {
+      nextGames.push({
+        ...game,
+        winner: null,
+        status: game.status === 'in_progress' ? 'in_progress' : 'pending',
+      });
+      keptUnresolvedGame = true;
+    }
+  }
+
+  if (leftScore >= needed || rightScore >= needed) {
+    return nextGames.filter((game) => game.status === 'completed' && (game.winner === 'left' || game.winner === 'right'));
+  }
+
+  if (!nextGames.length) {
+    return [createEmptyGameRecord(1)];
+  }
+
+  if (!nextGames.some((game) => game.status !== 'completed')) {
+    return [...nextGames, createEmptyGameRecord(nextGames.length + 1)];
+  }
+
+  return nextGames;
+}
+
 function getDatePrefix(date = new Date()): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -164,18 +249,17 @@ function getDatePrefix(date = new Date()): string {
 }
 
 function computeMatchProgress(match: MatchRecord): MatchRecord {
-  const leftScore = match.games.filter((game) => game.winner === 'left').length;
-  const rightScore = match.games.filter((game) => game.winner === 'right').length;
-  const needed = winsNeeded(match.bestOf);
-  const winner = leftScore >= needed ? 'left' : rightScore >= needed ? 'right' : null;
+  const games = alignGamesToBestOf(match.games, match.bestOf);
+  const { leftScore, rightScore, winner } = summarizeSeries(games, match.bestOf);
   const nextStatus = winner
     ? 'completed'
-    : match.games.some((game) => game.status === 'in_progress' || game.status === 'completed')
+    : games.some((game) => game.status === 'in_progress' || game.status === 'completed')
       ? 'in_progress'
       : 'pending';
 
   return {
     ...match,
+    games,
     leftScore,
     rightScore,
     status: nextStatus,
@@ -670,16 +754,6 @@ export function updateMatch(paths: AppPaths, matchId: string, payload: unknown):
 
   if (current.status === 'completed' && raw.bestOf !== undefined && nextBestOf !== current.bestOf) {
     throw new Error('已完成的比赛不能修改赛制');
-  }
-
-  const canEditBestOf = currentGame.status === 'pending' && current.games.length === 1;
-  if (raw.bestOf !== undefined && nextBestOf !== current.bestOf && !canEditBestOf) {
-    throw new Error('当前阶段不能修改 BO 赛制');
-  }
-
-  const maxScore = Math.max(current.leftScore, current.rightScore);
-  if (winsNeeded(nextBestOf) < maxScore) {
-    throw new Error('当前比分已经超过新赛制可容纳的胜局数');
   }
 
   if (raw.bestOf !== undefined && nextBestOf !== current.bestOf) {

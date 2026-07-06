@@ -957,10 +957,14 @@
 
         .match-item-subtitle,
         .match-history-meta,
-        .match-hero-subtitle,
         .lineup-empty {
             color: var(--muted);
             font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .match-hero-subtitle {
+            font-size: 24px;
             line-height: 1.6;
         }
 
@@ -1068,6 +1072,74 @@
 
         .match-hero-meta-inline span {
             white-space: nowrap;
+        }
+
+        .match-progress {
+            display: grid;
+            gap: 12px;
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.76);
+            border: 1px solid rgba(109, 79, 54, 0.1);
+        }
+
+        .match-progress-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .match-progress-header strong {
+            font-size: 14px;
+            color: var(--muted-strong);
+        }
+
+        .match-progress-header span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .match-progress-track {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .match-progress-step {
+            position: relative;
+            min-width: 0;
+            padding-top: 16px;
+            color: var(--muted-strong);
+            font-size: 12px;
+            line-height: 1.5;
+            opacity: 0.32;
+            transition: opacity 0.18s ease, color 0.18s ease, transform 0.18s ease;
+        }
+
+        .match-progress-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            border-radius: 999px;
+            background: rgba(109, 79, 54, 0.14);
+        }
+
+        .match-progress-step.is-active {
+            opacity: 1;
+            color: var(--accent-deep);
+            font-weight: 700;
+            transform: translateY(-1px);
+        }
+
+        .match-progress-step.is-active::before {
+            background: linear-gradient(135deg, rgba(199, 99, 47, 0.88), rgba(228, 150, 86, 0.88));
+            box-shadow: 0 6px 14px rgba(199, 99, 47, 0.2);
         }
 
         .lineup-chip-group {
@@ -1814,6 +1886,10 @@
                 align-items: stretch;
             }
 
+            .match-progress-track {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
             .match-hero-side.right,
             .match-hero-score-block {
                 text-align: left;
@@ -1863,6 +1939,10 @@
             .portal-actions a,
             .portal-actions button {
                 width: 100%;
+            }
+
+            .match-progress-track {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .live-panel-sections {
@@ -2578,6 +2658,20 @@
         </div>
     </div>
 
+    <div class="modal-backdrop" id="matchWarningModal" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="matchWarningTitle">
+            <div>
+                <small>Series Warning</small>
+                <h2 id="matchWarningTitle">修改 BO 会直接结束本场比赛</h2>
+                <p class="muted" id="matchWarningMessage">当前修改会让本场比赛直接分出胜负，请确认是否继续。</p>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" type="button" id="matchWarningConfirmBtn">确认修改</button>
+                <button class="btn btn-secondary" type="button" id="matchWarningCancelBtn">取消</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const MAX_SELECTION = 6;
@@ -2668,6 +2762,7 @@
         const LIVE_CONTROL_WINDOW_NAME = 'roco-live-control-window';
         let socket = null;
         let liveControlWindow = null;
+        let pendingMatchWarningAction = null;
 
         function getPreviewOrigin() {
             return `${window.location.protocol}//${window.location.host}`;
@@ -2987,6 +3082,122 @@
             return Math.floor((Number(bestOf) || 1) / 2) + 1;
         }
 
+        function summarizeSeriesForBestOf(match, bestOf) {
+            const needed = getWinsNeeded(bestOf);
+            const games = Array.isArray(match && match.games) ? match.games : [];
+            let leftScore = 0;
+            let rightScore = 0;
+            let completedGameCount = 0;
+            let winner = null;
+
+            for (const game of games) {
+                if (!game || game.status !== 'completed' || (game.winner !== 'left' && game.winner !== 'right')) {
+                    continue;
+                }
+
+                completedGameCount += 1;
+                if (game.winner === 'left') {
+                    leftScore += 1;
+                } else {
+                    rightScore += 1;
+                }
+
+                if (leftScore >= needed || rightScore >= needed) {
+                    winner = game.winner;
+                    break;
+                }
+            }
+
+            return {
+                leftScore,
+                rightScore,
+                completedGameCount,
+                winner
+            };
+        }
+
+        function isGameReadyToStart(game) {
+            return !!game
+                && Array.isArray(game.leftLineup) && game.leftLineup.length > 0
+                && Array.isArray(game.rightLineup) && game.rightLineup.length > 0;
+        }
+
+        function getMatchProgressState(match) {
+            const completedGames = Array.isArray(match && match.games)
+                ? match.games.filter(game => game.status === 'completed').length
+                : 0;
+            const currentGame = getCurrentGame(match);
+            const currentGameNumber = currentGame && Number.isFinite(Number(currentGame.gameNumber))
+                ? Number(currentGame.gameNumber)
+                : Math.max(completedGames + (match && match.status === 'completed' ? 0 : 1), 1);
+            const currentLabel = currentGameNumber === 1 ? '第一局' : `对局${currentGameNumber}`;
+            const readyToStart = isGameReadyToStart(currentGame);
+            const labels = [
+                currentGameNumber === 1 ? '第一局选择阵容' : `${currentLabel}选择阵容`,
+                currentGameNumber === 1 ? '确认阵容开始对局同步推流' : `确认${currentLabel}阵容并同步推流`,
+                `等待录入${currentLabel}的结果`,
+                currentGameNumber === 1 ? '等待下一局阵容录入' : `等待${currentLabel}阵容录入`,
+                `确认${currentLabel}阵容并同步推流`,
+                '对局结束'
+            ];
+
+            let activeIndex = 0;
+            if (match && match.status === 'completed') {
+                activeIndex = 5;
+            } else if (currentGame && currentGame.status === 'in_progress') {
+                activeIndex = 2;
+            } else if (completedGames === 0) {
+                activeIndex = readyToStart ? 1 : 0;
+            } else {
+                activeIndex = readyToStart ? 4 : 3;
+            }
+
+            return {
+                activeIndex,
+                currentLabel,
+                labels
+            };
+        }
+
+        function renderMatchProgress(match) {
+            const progress = getMatchProgressState(match);
+            return `
+                <div class="match-progress">
+                    <div class="match-progress-header">
+                        <strong>对局状态</strong>
+                        <span>当前进行到：${escapeHtml(progress.labels[progress.activeIndex] || progress.currentLabel)}</span>
+                    </div>
+                    <div class="match-progress-track">
+                        ${progress.labels.map((label, index) => `
+                            <div class="match-progress-step${index === progress.activeIndex ? ' is-active' : ''}">${escapeHtml(label)}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function openMatchWarningModal(options = {}) {
+            const modal = document.getElementById('matchWarningModal');
+            document.getElementById('matchWarningTitle').textContent = options.title || '修改 BO 会直接结束本场比赛';
+            document.getElementById('matchWarningMessage').textContent = options.message || '当前修改会让本场比赛直接分出胜负，请确认是否继续。';
+            document.getElementById('matchWarningConfirmBtn').textContent = options.confirmText || '确认修改';
+            pendingMatchWarningAction = typeof options.onConfirm === 'function' ? options.onConfirm : null;
+            modal.hidden = false;
+        }
+
+        function closeMatchWarningModal() {
+            pendingMatchWarningAction = null;
+            document.getElementById('matchWarningModal').hidden = true;
+        }
+
+        function confirmMatchWarningModal() {
+            const action = pendingMatchWarningAction;
+            closeMatchWarningModal();
+            if (typeof action === 'function') {
+                action();
+            }
+        }
+
         function getMatchStatusClass(match) {
             if (!match) {
                 return 'pending';
@@ -3214,7 +3425,7 @@
             const game = getDisplayGame(match);
             const currentGame = getCurrentGame(match);
             const canEditMatch = !!match && match.status !== 'completed';
-            const canEditBestOf = !!match && !!currentGame && currentGame.status === 'pending' && match.games.length === 1;
+            const canEditBestOf = !!match && match.status !== 'completed';
             const leftInput = document.getElementById('matchLeftPlayerInput');
             const rightInput = document.getElementById('matchRightPlayerInput');
             const bestOfInput = document.getElementById('matchBestOfInput');
@@ -3275,6 +3486,7 @@
                         <div class="match-hero-lineup-text">${escapeHtml(formatLineupSummary(game ? game.rightLineup : []))}</div>
                     </div>
                 </div>
+                ${renderMatchProgress(match)}
             `;
 
             leftInput.value = match.leftPlayer || '';
@@ -3289,16 +3501,14 @@
             rematchBtn.disabled = !canStartCurrentGame();
             undoBtn.disabled = !state.matchStore.history.canUndo;
             redoBtn.disabled = !state.matchStore.history.canRedo;
-            if (canEditBestOf) {
-                formatHint.textContent = '当前比赛还未记分，可以修改 BO。';
-            } else if (currentGame && currentGame.status === 'pending') {
-                formatHint.textContent = '先完成双方阵容选择，再点击“开始本次对局”同步到推流页面。';
-            } else if (currentGame && currentGame.status === 'in_progress') {
-                formatHint.textContent = '本局已经开始，仍可继续编辑阵容、血量和能量值，修改会同步到当前对局与推流页面。';
-            } else if (match.status === 'completed') {
+            if (match.status === 'completed') {
                 formatHint.textContent = `比赛已结束，胜者为${match.winner === 'left' ? '左侧' : '右侧'}。`;
+            } else if (currentGame && currentGame.status === 'in_progress') {
+                formatHint.textContent = '本局已经开始，仍可继续编辑阵容、血量和能量值；比赛未结束前也可以调整 BO，如会直接分出胜负会先弹窗确认。';
+            } else if (currentGame && isGameReadyToStart(currentGame)) {
+                formatHint.textContent = '当前阵容已就绪，点击“开始本次对局”会同步推流页面；比赛未结束前可继续调整 BO。';
             } else {
-                formatHint.textContent = '比赛进行中，BO 已锁定，避免中途改赛制造成比分歧义。';
+                formatHint.textContent = '请先完成双方阵容选择；比赛未结束前可随时调整 BO，如当前战绩在新 BO 下足以分出胜负会先提示确认。';
             }
         }
 
@@ -4215,27 +4425,66 @@
                 return;
             }
 
-            clearStatus('matchStatus');
-            fetch(`api/matches/${encodeURIComponent(match.id)}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    leftPlayer: document.getElementById('matchLeftPlayerInput').value,
-                    rightPlayer: document.getElementById('matchRightPlayerInput').value,
-                    bestOf: document.getElementById('matchBestOfInput').value
+            const nextLeftPlayer = document.getElementById('matchLeftPlayerInput').value;
+            const nextRightPlayer = document.getElementById('matchRightPlayerInput').value;
+            const nextBestOf = Number(document.getElementById('matchBestOfInput').value) || match.bestOf;
+            const bestOfChanged = nextBestOf !== match.bestOf;
+            const projection = bestOfChanged ? summarizeSeriesForBestOf(match, nextBestOf) : null;
+            const endsMatchAfterBestOfChange = !!(projection && projection.winner && match.status !== 'completed');
+
+            const doSave = () => {
+                clearStatus('matchStatus');
+                fetch(`api/matches/${encodeURIComponent(match.id)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        leftPlayer: nextLeftPlayer,
+                        rightPlayer: nextRightPlayer,
+                        bestOf: document.getElementById('matchBestOfInput').value
+                    })
                 })
-            })
-            .then(async response => {
-                const data = await response.json();
-                if (!response.ok || !data.success) {
-                    throw new Error(data.error || '保存比赛信息失败');
-                }
-                applyMatchResponse(data);
-                showStatus('matchStatus', '比赛信息已保存', true);
-            })
-            .catch(error => {
-                showStatus('matchStatus', error.message, false);
-            });
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.error || '保存比赛信息失败');
+                    }
+                    applyMatchResponse(data);
+                    if (endsMatchAfterBestOfChange && projection) {
+                        const winnerText = projection.winner === 'left'
+                            ? (nextLeftPlayer || '左侧')
+                            : (nextRightPlayer || '右侧');
+                        showStatus(
+                            'matchStatus',
+                            `BO 已改为 BO${nextBestOf}，本场比赛按已录入结果直接结束，${winnerText} 以 ${projection.leftScore}:${projection.rightScore} 获胜`,
+                            true
+                        );
+                        return;
+                    }
+                    if (bestOfChanged) {
+                        showStatus('matchStatus', `比赛信息已保存，BO 已更新为 BO${nextBestOf}`, true);
+                        return;
+                    }
+                    showStatus('matchStatus', '比赛信息已保存', true);
+                })
+                .catch(error => {
+                    showStatus('matchStatus', error.message, false);
+                });
+            };
+
+            if (endsMatchAfterBestOfChange && projection) {
+                const winnerText = projection.winner === 'left'
+                    ? (nextLeftPlayer || '左侧')
+                    : (nextRightPlayer || '右侧');
+                openMatchWarningModal({
+                    title: '修改 BO 会直接结束本场比赛',
+                    message: `当前已录入的战绩在 BO${nextBestOf} 下已经足以分出胜负。继续后会立即结束本场比赛，并按前 ${projection.completedGameCount} 局结算为 ${winnerText} ${projection.leftScore}:${projection.rightScore} 获胜。`,
+                    confirmText: '确认并结束比赛',
+                    onConfirm: doSave
+                });
+                return;
+            }
+
+            doSave();
         }
 
         function recordWinner(side) {
@@ -4946,6 +5195,8 @@
             document.getElementById('openCreateMatchBtn').addEventListener('click', () => openCreateMatchModal());
             document.getElementById('createMatchCancelBtn').addEventListener('click', closeCreateMatchModal);
             document.getElementById('createMatchConfirmBtn').addEventListener('click', createMatchFromModal);
+            document.getElementById('matchWarningCancelBtn').addEventListener('click', closeMatchWarningModal);
+            document.getElementById('matchWarningConfirmBtn').addEventListener('click', confirmMatchWarningModal);
             document.getElementById('leftWinBtn').addEventListener('click', () => recordWinner('left'));
             document.getElementById('rightWinBtn').addEventListener('click', () => recordWinner('right'));
             document.getElementById('undoMatchBtn').addEventListener('click', undoMatchStep);
@@ -4955,6 +5206,11 @@
             document.getElementById('createMatchModal').addEventListener('click', event => {
                 if (event.target.id === 'createMatchModal') {
                     closeCreateMatchModal();
+                }
+            });
+            document.getElementById('matchWarningModal').addEventListener('click', event => {
+                if (event.target.id === 'matchWarningModal') {
+                    closeMatchWarningModal();
                 }
             });
         }
