@@ -904,6 +904,7 @@
             overflow-y: auto;
             padding-right: 4px;
             min-height: 0;
+            max-height: none;
         }
 
         .match-list,
@@ -964,8 +965,10 @@
         }
 
         .match-hero-subtitle {
+            color: var(--muted);
             font-size: 24px;
             line-height: 1.6;
+            font-weight: bold;
         }
 
         .match-status-chip,
@@ -3122,6 +3125,15 @@
                 && Array.isArray(game.rightLineup) && game.rightLineup.length > 0;
         }
 
+        function isCurrentGamePotentialFinal(match, currentGame) {
+            if (!match || !currentGame || match.status === 'completed') {
+                return false;
+            }
+
+            const needed = getWinsNeeded(match.bestOf);
+            return (Number(match.leftScore) + 1 >= needed) || (Number(match.rightScore) + 1 >= needed);
+        }
+
         function getMatchProgressState(match) {
             const completedGames = Array.isArray(match && match.games)
                 ? match.games.filter(game => game.status === 'completed').length
@@ -3131,25 +3143,33 @@
                 ? Number(currentGame.gameNumber)
                 : Math.max(completedGames + (match && match.status === 'completed' ? 0 : 1), 1);
             const currentLabel = currentGameNumber === 1 ? '第一局' : `对局${currentGameNumber}`;
+            const currentShortLabel = `对局${currentGameNumber}`;
+            const nextGameNumber = currentGameNumber + 1;
+            const nextShortLabel = `对局${nextGameNumber}`;
             const readyToStart = isGameReadyToStart(currentGame);
+            const endingBranch = !!(match && match.status === 'completed')
+                || isCurrentGamePotentialFinal(match, currentGame);
             const labels = [
-                currentGameNumber === 1 ? '第一局选择阵容' : `${currentLabel}选择阵容`,
-                currentGameNumber === 1 ? '确认阵容开始对局同步推流' : `确认${currentLabel}阵容并同步推流`,
-                `等待录入${currentLabel}的结果`,
-                currentGameNumber === 1 ? '等待下一局阵容录入' : `等待${currentLabel}阵容录入`,
-                `确认${currentLabel}阵容并同步推流`,
-                '对局结束'
+                currentGameNumber === 1 ? '第一局选择阵容' : `${currentShortLabel}选择阵容`,
+                currentGameNumber === 1 ? '确认第一局阵容并同步推流' : `确认${currentShortLabel}阵容并同步推流`,
+                `等待录入${currentShortLabel}的结果`,
+                endingBranch
+                    ? '等待对局结束'
+                    : `等待${nextShortLabel}阵容录入`,
+                endingBranch
+                    ? '对局结束'
+                    : `确认${nextShortLabel}阵容并同步推流`,
             ];
 
             let activeIndex = 0;
             if (match && match.status === 'completed') {
-                activeIndex = 5;
+                activeIndex = 4;
             } else if (currentGame && currentGame.status === 'in_progress') {
                 activeIndex = 2;
-            } else if (completedGames === 0) {
+            } else if (completedGames === 0 || currentGameNumber === 1) {
                 activeIndex = readyToStart ? 1 : 0;
             } else {
-                activeIndex = readyToStart ? 4 : 3;
+                activeIndex = readyToStart ? 1 : 0;
             }
 
             return {
@@ -3157,6 +3177,26 @@
                 currentLabel,
                 labels
             };
+        }
+
+        function syncMatchListViewport() {
+            const container = document.getElementById('matchList');
+            if (!container) {
+                return;
+            }
+
+            const items = Array.from(container.querySelectorAll('.match-item'));
+            if (!items.length) {
+                container.style.maxHeight = 'none';
+                return;
+            }
+
+            const visibleItems = items.slice(0, 6);
+            const totalHeight = visibleItems.reduce((sum, item) => sum + item.offsetHeight, 0);
+            const styles = window.getComputedStyle(container);
+            const gap = Number.parseFloat(styles.rowGap || styles.gap || '0') || 0;
+            const maxHeight = totalHeight + Math.max(visibleItems.length - 1, 0) * gap;
+            container.style.maxHeight = `${Math.ceil(maxHeight)}px`;
         }
 
         function renderMatchProgress(match) {
@@ -3400,6 +3440,7 @@
 
             if (!matches.length) {
                 container.innerHTML = '<div class="empty-preview">当前还没有比赛，点击“开一局”创建赛事。</div>';
+                syncMatchListViewport();
                 return;
             }
 
@@ -3417,6 +3458,7 @@
             container.querySelectorAll('[data-match-id]').forEach(button => {
                 button.addEventListener('click', () => selectMatch(button.dataset.matchId));
             });
+            syncMatchListViewport();
         }
 
         function renderMatchHero() {
@@ -3439,8 +3481,8 @@
 
             if (!match) {
                 hero.innerHTML = `
-                    <h3>还没有当前比赛</h3>
                     <div class="match-hero-subtitle">先创建一场赛事，系统会自动生成第 1 局并把当前比分栏绑定到该比赛。</div>
+                    <P>还没有当前比赛</p>
                 `;
                 leftInput.value = '';
                 rightInput.value = '';
@@ -3462,8 +3504,8 @@
             hero.innerHTML = `
                 <div class="match-hero-metrics">
                     <div>
-                        <h3>${escapeHtml(match.id)}</h3>
-                        <div class="match-hero-subtitle">${escapeHtml(match.leftPlayer)} vs ${escapeHtml(match.rightPlayer)} · ${escapeHtml(getMatchStatusText(match))}</div>
+                        <div class="match-hero-subtitle">${escapeHtml(match.leftPlayer)} vs ${escapeHtml(match.rightPlayer)}</div>
+                        <p>${escapeHtml(match.id)}</p>
                     </div>
                     <span class="match-status-chip ${getMatchStatusClass(match)}">${escapeHtml(getMatchStatusText(match))}</span>
                 </div>
@@ -5279,6 +5321,7 @@
             setupPanelControls('left');
             setupPanelControls('right');
             document.getElementById('bgDeleteBtn').addEventListener('click', deleteBackground);
+            window.addEventListener('resize', syncMatchListViewport);
             document.getElementById('scoreboardSaveBtn').addEventListener('click', saveScoreboard);
             document.getElementById('centerAreaEnabledInput').addEventListener('change', event => {
                 document.getElementById('centerAreaColorInput').disabled = !event.target.checked;
