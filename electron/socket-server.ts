@@ -36,6 +36,7 @@ import {
   undoDeletedMatches,
   undoMatchAction,
   updateMatch,
+  updateMatchTags,
 } from './services/match-service.js';
 import {
   clearPanelState,
@@ -266,6 +267,16 @@ export async function createLocalServer(
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       response.json({ success: true, matches, scoreboard });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.patch('/api/matches/:matchId/tags', (request, response) => {
+    try {
+      const matches = updateMatchTags(paths, request.params.matchId, request.body ?? {});
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      response.json({ success: true, matches });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
