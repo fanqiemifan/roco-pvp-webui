@@ -82,6 +82,7 @@ export interface MatchRecord {
   rightScore: number;
   winner: 'left' | 'right' | null;
   completedAt: string | null;
+  tags: string[];
 }
 
 export interface MatchStoreState {

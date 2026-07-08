@@ -68,6 +68,16 @@ function normalizeBestOf(value: unknown): number {
   return SUPPORTED_BEST_OF.has(bestOf) ? bestOf : DEFAULT_BEST_OF;
 }
 
+function normalizeTags(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean)
+    .slice(0, 10);
+}
+
 function winsNeeded(bestOf: number): number {
   return Math.floor(bestOf / 2) + 1;
 }
@@ -315,6 +325,7 @@ function normalizeMatchRecord(match: unknown): MatchRecord | null {
     rightScore: Number(raw.rightScore) || 0,
     winner: raw.winner === 'left' || raw.winner === 'right' ? raw.winner : null,
     completedAt: raw.completedAt ? String(raw.completedAt) : null,
+    tags: normalizeTags(raw.tags),
   });
 }
 
@@ -369,6 +380,7 @@ function normalizeFlowSnapshot(snapshot: unknown, fallbackMatchId: string): Matc
     rightScore: Number(raw.rightScore) || 0,
     winner: raw.winner === 'left' || raw.winner === 'right' ? raw.winner : null,
     completedAt: raw.completedAt ? String(raw.completedAt) : null,
+    tags: normalizeTags(raw.tags),
   });
 
   return {
@@ -721,6 +733,7 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
     rightScore: 0,
     winner: null,
     completedAt: null,
+    tags: [],
   };
 
   store.activeMatchId = match.id;
@@ -759,16 +772,43 @@ export function updateMatch(paths: AppPaths, matchId: string, payload: unknown):
   if (raw.bestOf !== undefined && nextBestOf !== current.bestOf) {
     pushMatchFlowUndo(store, current);
   }
+  const tags = raw.tags === undefined ? current.tags : normalizeTags(raw.tags);
   store.matches[index] = computeMatchProgress({
     ...current,
     leftPlayer,
     rightPlayer,
     bestOf: nextBestOf,
+    tags,
     updatedAt: new Date().toISOString(),
   });
 
   const publicStore = writeStoreFile(paths, store);
   syncAfterStoreChange(paths, publicStore);
+  return getMatchStore(paths);
+}
+
+export function updateMatchTags(paths: AppPaths, matchId: string, payload: unknown): MatchStoreState {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('tags payload must be an object');
+  }
+
+  const { store } = readStoreFile(paths);
+  const index = store.matches.findIndex((match) => match.id === matchId);
+  if (index === -1) {
+    throw new Error('比赛不存在');
+  }
+
+  const current = store.matches[index];
+  const raw = payload as Record<string, unknown>;
+  const tags = normalizeTags(raw.tags);
+
+  store.matches[index] = {
+    ...current,
+    tags,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const publicStore = writeStoreFile(paths, store);
   return getMatchStore(paths);
 }
 
