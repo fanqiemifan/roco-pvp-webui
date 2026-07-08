@@ -75,6 +75,52 @@ function sendPage(paths: AppPaths, response: Response, pageFile: string): void {
   response.sendFile(path.join(paths.pagesDir, pageFile));
 }
 
+function sendAdminAntdPage(paths: AppPaths, response: Response): void {
+  const builtPage = path.join(paths.rendererDistDir, 'src', 'pages', 'admin-antd.html');
+  if (fs.existsSync(builtPage)) {
+    response.sendFile(builtPage);
+    return;
+  }
+
+  response.status(503).type('html').send(`<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Antd 未构建</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #f7efe3 0%, #f0e0c7 100%);
+        color: #3f2b1d;
+        font: 16px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      main {
+        width: min(640px, calc(100vw - 32px));
+        padding: 32px;
+        border-radius: 24px;
+        background: rgba(255, 251, 245, 0.94);
+        box-shadow: 0 24px 60px rgba(90, 55, 26, 0.14);
+      }
+      code {
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(199, 99, 47, 0.12);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Admin Ant Design 验证页尚未构建</h1>
+      <p>请先运行 <code>npm run build:renderer</code> 或 <code>npm run build</code>，然后刷新本页。</p>
+    </main>
+  </body>
+</html>`);
+}
+
 export interface LocalServer {
   port: number;
   server: http.Server;
@@ -141,6 +187,7 @@ export async function createLocalServer(
   app.use('/scripts', express.static(paths.scriptsDir));
   app.use('/styles', express.static(paths.stylesDir));
   app.use('/assets', express.static(paths.assetsDir));
+  app.use('/antd-assets', express.static(path.join(paths.rendererDistDir, 'antd-assets')));
   app.use('/resources', express.static(paths.resourcesDir));
   app.use('/runtime', express.static(paths.cacheDir));
 
@@ -223,7 +270,9 @@ export async function createLocalServer(
   }
 
   // === Protected routes (auth required when authConfig is set) ===
-  app.get('/admin.html', (_request, response) => sendPage(paths, response, 'admin.html'));
+  app.get('/admin.html', (_request, response) => sendAdminAntdPage(paths, response));
+  app.get('/admin-antd.html', (_request, response) => sendAdminAntdPage(paths, response));
+  app.get('/admin-legacy.html', (_request, response) => sendPage(paths, response, 'admin.html'));
   app.get('/live-control.html', (_request, response) => sendPage(paths, response, 'live-control.html'));
 
   app.get('/api/images', (_request, response) => {

@@ -6,7 +6,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
 COPY . .
-RUN npm run build:electron
+RUN npm run build
 
 FROM nikolaik/python-nodejs:python3.11-nodejs20 AS runtime
 
@@ -18,6 +18,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 COPY --from=build /app/dist-electron ./dist-electron
+COPY --from=build /app/dist ./dist
 COPY --from=build /app/src ./src
 COPY --from=build /app/resources ./resources
 COPY --from=build /app/shared ./shared

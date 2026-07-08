@@ -3,6 +3,7 @@ import path from 'node:path';
 export interface AppPaths {
   projectRoot: string;
   pagesDir: string;
+  rendererDistDir: string;
   scriptsDir: string;
   stylesDir: string;
   assetsDir: string;
@@ -30,6 +31,7 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
   return {
     projectRoot,
     pagesDir: path.join(projectRoot, 'src', 'pages'),
+    rendererDistDir: path.join(projectRoot, 'dist'),
     scriptsDir: path.join(projectRoot, 'src', 'scripts'),
     stylesDir: path.join(projectRoot, 'src', 'styles'),
     assetsDir: path.join(projectRoot, 'src', 'assets'),
