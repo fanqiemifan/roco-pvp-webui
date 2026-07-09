@@ -1,3 +1,6 @@
+/*
+This project uses Ant Design (https://ant.design), licensed under the MIT License.
+*/
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
