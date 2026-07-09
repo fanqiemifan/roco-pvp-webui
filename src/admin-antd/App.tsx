@@ -697,12 +697,15 @@ function Dashboard() {
   });
   const [sprites, setSprites] = useState<SpriteRecord[]>([]);
   const [createMatchOpen, setCreateMatchOpen] = useState(false);
-  const [tagEditorOpen, setTagEditorOpen] = useState(false);
-  const [tagEditorMatchId, setTagEditorMatchId] = useState<string | null>(null);
+  const [editingHistoryTagMatchId, setEditingHistoryTagMatchId] = useState<string | null>(null);
+  const [editingHistoryTagValues, setEditingHistoryTagValues] = useState<string[]>([]);
+  const [savingHistoryTagMatchId, setSavingHistoryTagMatchId] = useState<string | null>(null);
   const [selectedHistoryKeys, setSelectedHistoryKeys] = useState<React.Key[]>([]);
   const [expandedHistoryKeys, setExpandedHistoryKeys] = useState<React.Key[]>([]);
   const [historyTagFilter, setHistoryTagFilter] = useState<string | null>(null);
   const [previewSlot, setPreviewSlot] = useState<PreviewSlotKey>('page1');
+  const [previewScale, setPreviewScale] = useState(1);
+  const [previewShellSize, setPreviewShellSize] = useState({ width: 960, height: 540 });
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
   const [historyNotice, setHistoryNotice] = useState<NoticeState>(null);
   const [liveNotice, setLiveNotice] = useState<NoticeState>(null);
@@ -714,12 +717,12 @@ function Dashboard() {
   const [scoreboardForm] = Form.useForm<ScoreboardFormValues>();
   const [matchForm] = Form.useForm<MatchFormValues>();
   const [createMatchForm] = Form.useForm<CreateMatchValues>();
-  const [tagForm] = Form.useForm<{ tags: string }>();
 
   const liveApplyRef = useRef(false);
   const liveWriteRef = useRef(false);
   const liveSaveTimerRef = useRef<number | null>(null);
   const livePollTimerRef = useRef<number | null>(null);
+  const previewFrameShellRef = useRef<HTMLDivElement | null>(null);
 
   const spriteMap = new Map(sprites.map((sprite) => [sprite.id, sprite]));
   const activeMatch = getActiveMatch(matchStore);
@@ -1304,46 +1307,51 @@ function Dashboard() {
     }
   }
 
-  async function saveTags(values: { tags: string }) {
-    if (!tagEditorMatchId) {
-      return;
-    }
+  async function saveMatchTags(matchId: string, tags: string[]) {
+    const nextTags = Array.from(new Set(tags.map((item) => item.trim()).filter(Boolean))).slice(0, 10);
 
-    const tags = values.tags
-      .split(/[,，]/)
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .slice(0, 10);
-
+    setSavingHistoryTagMatchId(matchId);
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState }>(`/api/matches/${encodeURIComponent(tagEditorMatchId)}/tags`, {
+      const data = await requestJson<{ success: boolean; matches?: MatchStoreState }>(`/api/matches/${encodeURIComponent(matchId)}/tags`, {
         method: 'PATCH',
-        json: { tags },
+        json: { tags: nextTags },
       });
       applyServerState({ matches: data.matches });
-      setTagEditorOpen(false);
-      setTagEditorMatchId(null);
+      setEditingHistoryTagMatchId(null);
+      setEditingHistoryTagValues([]);
       setHistoryNotice({ tone: 'success', text: '标签已更新' });
       message.success('标签已保存');
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSavingHistoryTagMatchId(null);
     }
+  }
+
+  function beginInlineTagEdit(match: MatchRecord) {
+    setEditingHistoryTagMatchId(match.id);
+    setEditingHistoryTagValues(match.tags ?? []);
+  }
+
+  function cancelInlineTagEdit() {
+    setEditingHistoryTagMatchId(null);
+    setEditingHistoryTagValues([]);
+  }
+
+  async function commitInlineTagEdit(matchId: string) {
+    if (savingHistoryTagMatchId === matchId) {
+      return;
+    }
+
+    await saveMatchTags(matchId, editingHistoryTagValues);
   }
 
   async function removeMatchTag(record: MatchRecord, tagValue: string) {
     const tags = (record.tags ?? []).filter((tag) => tag !== tagValue);
 
-    try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState }>(`/api/matches/${encodeURIComponent(record.id)}/tags`, {
-        method: 'PATCH',
-        json: { tags },
-      });
-      applyServerState({ matches: data.matches });
-      setHistoryNotice({ tone: 'success', text: `已从 ${record.id} 删除标签“${tagValue}”` });
-      message.success('标签已删除');
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : String(error));
-    }
+    await saveMatchTags(record.id, tags);
+    setHistoryNotice({ tone: 'success', text: `已从 ${record.id} 删除标签“${tagValue}”` });
+    message.success('标签已删除');
   }
 
   async function uploadBackgroundFile(file: File) {
@@ -1390,12 +1398,6 @@ function Dashboard() {
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
     }
-  }
-
-  function openTagEditor(match: MatchRecord) {
-    setTagEditorMatchId(match.id);
-    tagForm.setFieldsValue({ tags: (match.tags ?? []).join(', ') });
-    setTagEditorOpen(true);
   }
 
   async function handleCopyLocalAddress() {
@@ -1790,6 +1792,40 @@ function Dashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    const shell = previewFrameShellRef.current;
+    if (!shell || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    const updatePreviewLayout = () => {
+      const rect = shell.getBoundingClientRect();
+      const availableHeight = Math.max(320, Math.floor(window.innerHeight - rect.top - 24));
+      const availableWidth = shell.clientWidth;
+
+      if (!availableWidth || !availableHeight) {
+        return;
+      }
+
+      const nextScale = Math.min(availableWidth / 1920, availableHeight / 1080, 1);
+      const nextWidth = Math.floor(1920 * nextScale);
+      const nextHeight = Math.floor(1080 * nextScale);
+
+      setPreviewShellSize({ width: nextWidth, height: nextHeight });
+      setPreviewScale(nextScale > 0 ? nextScale : 1);
+    };
+
+    updatePreviewLayout();
+    const observer = new ResizeObserver(() => updatePreviewLayout());
+    observer.observe(shell);
+
+    window.addEventListener('resize', updatePreviewLayout);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updatePreviewLayout);
+    };
+  }, [previewSlot]);
+
   if (loading) {
     return (
       <div className="admin-antd-loading">
@@ -1811,14 +1847,10 @@ function Dashboard() {
 
   const historyColumns: ColumnsType<MatchRecord> = [
     {
-      title: '对阵',
-      key: 'players',
-      render: (_: unknown, record: MatchRecord) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record.leftPlayer || '左侧'}</Text>
-          <Text type="secondary">vs {record.rightPlayer || '右侧'}</Text>
-        </Space>
-      ),
+      title: '左侧选手',
+      dataIndex: 'leftPlayer',
+      key: 'leftPlayer',
+      render: (value: MatchRecord['leftPlayer']) => <Text strong>{value || '左侧'}</Text>,
     },
     {
       title: '比分',
@@ -1826,6 +1858,12 @@ function Dashboard() {
       render: (_: unknown, record: MatchRecord) => (
         <Text strong>{record.leftScore} : {record.rightScore}</Text>
       ),
+    },
+    {
+      title: '右侧选手',
+      dataIndex: 'rightPlayer',
+      key: 'rightPlayer',
+      render: (value: MatchRecord['rightPlayer']) => <Text strong>{value || '右侧'}</Text>,
     },
     {
       title: '赛制',
@@ -1838,23 +1876,47 @@ function Dashboard() {
       dataIndex: 'tags',
       key: 'tags',
       render: (tags: string[], record: MatchRecord) => (
-        <Space wrap>
-          {tags?.length ? tags.map((tag) => (
-            <Tag
-              key={`${record.id}-${tag}`}
-              color={historyTagFilter === tag ? 'processing' : DEFAULT_TAGS.includes(tag) ? 'gold' : 'default'}
-              closable
-              onClick={() => setHistoryTagFilter(tag)}
-              onClose={(event) => {
-                event.preventDefault();
-                void removeMatchTag(record, tag);
-              }}
-            >
-              {tag}
-            </Tag>
-          )) : <Text type="secondary">无</Text>}
-          <Button size="small" type="link" onClick={() => openTagEditor(record)}>编辑</Button>
-        </Space>
+        editingHistoryTagMatchId === record.id ? (
+          <Select
+            mode="multiple"
+            autoFocus
+            value={editingHistoryTagValues}
+            options={allHistoryTags.map((tag) => ({ value: tag, label: tag }))}
+            placeholder="选择标签"
+            className="history-tag-select"
+            open
+            loading={savingHistoryTagMatchId === record.id}
+            onChange={(values) => setEditingHistoryTagValues(values)}
+            onBlur={() => void commitInlineTagEdit(record.id)}
+            onDropdownVisibleChange={(open) => {
+              if (!open) {
+                void commitInlineTagEdit(record.id);
+              }
+            }}
+          />
+        ) : (
+          <div className="history-tag-cell" onClick={() => beginInlineTagEdit(record)} role="button" tabIndex={0} onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              beginInlineTagEdit(record);
+            }
+          }}>
+            <Space wrap>
+              {tags?.length ? tags.map((tag) => (
+                <Tag
+                  key={`${record.id}-${tag}`}
+                  color={historyTagFilter === tag ? 'processing' : DEFAULT_TAGS.includes(tag) ? 'gold' : 'default'}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setHistoryTagFilter(tag);
+                  }}
+                >
+                  {tag}
+                </Tag>
+              )) : <Text type="secondary">点击选择标签</Text>}
+            </Space>
+          </div>
+        )
       ),
     },
     {
@@ -1875,7 +1937,6 @@ function Dashboard() {
       render: (_: unknown, record: MatchRecord) => (
         <Space wrap>
           <Button size="small" onClick={() => void selectMatch(record.id)}>进入管理</Button>
-          <Button size="small" onClick={() => openTagEditor(record)}>编辑标签</Button>
           <Button
             size="small"
             danger
@@ -1914,6 +1975,7 @@ function Dashboard() {
 
     return (
       <Card
+        className="panel-editor-card"
         title={`${side === 'left' ? '左侧' : '右侧'}当前阵容`}
         extra={(
           <Space wrap>
@@ -2348,7 +2410,6 @@ function Dashboard() {
                   <Space wrap>
                     <Button onClick={() => void loadInitialData(true)}>重新加载</Button>
                     <Button onClick={() => void handleExportLiveConfig()}>配置导出</Button>
-                    {liveConfigEnabled ? <Button danger onClick={handleLiveConfigWatchToggle}>关闭监听</Button> : null}
                   </Space>
                 )}
               >
@@ -2362,28 +2423,6 @@ function Dashboard() {
                       onClose={() => setLiveNotice(null)}
                     />
                   ) : null}
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24} lg={10}>
-                      <Card size="small" className="subtle-card live-watch-card">
-                        <Space direction="vertical" size={14} className="control-stack">
-                          <div>
-                            <Text type="secondary">监听目标 JSON</Text>
-                            <Title level={5}>{liveConfigEnabled ? '监听中' : '未监听'}</Title>
-                            <Text type="secondary">{liveFileName || '点击或拖拽选择要监听的 JSON 文件'}</Text>
-                          </div>
-                          <Upload.Dragger
-                            accept=".json,application/json"
-                            showUploadList={false}
-                            className="live-watch-uploader"
-                            beforeUpload={(file) => handleLiveConfigUpload(file as File & { path?: string })}
-                          >
-                            <p className="ant-upload-text">选择或拖拽监听 JSON</p>
-                            <p className="ant-upload-hint">监听开启后，后台会持续读取这个本地文件并回写当前数值。</p>
-                          </Upload.Dragger>
-                        </Space>
-                      </Card>
-                    </Col>
-                  </Row>
                   <Row gutter={[18, 18]}>
                     {(['left', 'right'] as PanelSide[]).map((side) => (
                       <Col key={side} xs={24} xl={12}>
@@ -2430,6 +2469,33 @@ function Dashboard() {
                         </Card>
                       </Col>
                     ))}
+                  </Row>
+                  <Row gutter={[16, 16]}>
+                    <Col xs={24}>
+                      <Card size="small" className="subtle-card live-watch-card">
+                        <Space direction="vertical" size={14} className="control-stack">
+                          <Space align="start" className="live-watch-header">
+                            <div>
+                              <Text type="secondary">监听目标 JSON</Text>
+                              <Title level={5}>{liveConfigEnabled ? '监听中' : '未监听'}</Title>
+                              <Text type="secondary">{liveFileName || '点击或拖拽选择要监听的 JSON 文件'}</Text>
+                            </div>
+                            <Button type={liveConfigEnabled ? 'default' : 'primary'} danger={liveConfigEnabled} onClick={handleLiveConfigWatchToggle}>
+                              {liveConfigEnabled ? '关闭监听' : '开启实时监听'}
+                            </Button>
+                          </Space>
+                          <Upload.Dragger
+                            accept=".json,application/json"
+                            showUploadList={false}
+                            className="live-watch-uploader"
+                            beforeUpload={(file) => handleLiveConfigUpload(file as File & { path?: string })}
+                          >
+                            <p className="ant-upload-text">选择或拖拽监听 JSON</p>
+                            <p className="ant-upload-hint">监听开启后，后台会持续读取这个本地文件并回写当前数值。</p>
+                          </Upload.Dragger>
+                        </Space>
+                      </Card>
+                    </Col>
                   </Row>
                 </Space>
               </Card>
@@ -2577,6 +2643,7 @@ function Dashboard() {
           {view === 'preview' ? (
             <Space direction="vertical" size={18} className="page-stack">
               <Card
+                className="preview-page-card"
                 title={getPreviewPage(previewSlot).title}
                 extra={<Button type="primary" href={buildPreviewUrl(previewSlot)} target="_blank">新窗口打开</Button>}
               >
@@ -2593,22 +2660,29 @@ function Dashboard() {
                   />
                   <Row gutter={[16, 16]}>
                     <Col xs={24} md={12}>
-                      <Card size="small" className="subtle-card">
+                      <Card size="small" className="subtle-card preview-info-card">
                         <Statistic title="本地部署地址" value={getLocalAddressText(previewSlot)} />
                         <Divider />
                         <Button block onClick={() => void handleCopyLocalAddress()}>复制地址</Button>
                       </Card>
                     </Col>
                     <Col xs={24} md={12}>
-                      <Card size="small" className="subtle-card">
+                      <Card size="small" className="subtle-card preview-info-card">
                         <Statistic title="完整预览链接" value={buildPreviewUrl(previewSlot)} />
                         <Divider />
                         <Button block onClick={() => void handleCopyPreviewLink()}>复制链接</Button>
                       </Card>
                     </Col>
                   </Row>
-                  <div className="preview-frame-shell">
-                    <iframe title="preview" className="preview-frame" src={buildPreviewUrl(previewSlot)} />
+                  <div className="preview-frame-shell" ref={previewFrameShellRef}>
+                    <div
+                      className="preview-frame-viewport"
+                      style={{ width: `${previewShellSize.width}px`, height: `${previewShellSize.height}px` }}
+                    >
+                      <div className="preview-frame-stage" style={{ transform: `scale(${previewScale})` }}>
+                      <iframe title="preview" className="preview-frame" src={buildPreviewUrl(previewSlot)} />
+                      </div>
+                    </div>
                   </div>
                 </Space>
               </Card>
@@ -2655,6 +2729,7 @@ function Dashboard() {
                   <Card>
                     <Space direction="vertical" size={12} className="page-stack">
                       <Title level={4}>项目链接</Title>
+                      <Link href="/login.html" target="_blank">登录页入口</Link>
                       <Link href="/admin.html" target="_blank">当前后台入口</Link>
                       <Link href="/roco-pvp.html" target="_blank">推流页面 2</Link>
                       <Link href="https://wiki.biligame.com/rocom/" target="_blank">精灵图素材来源</Link>
@@ -2697,21 +2772,6 @@ function Dashboard() {
                 { value: 7, label: 'BO7' },
               ]}
             />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
-        title="编辑赛事标签"
-        open={tagEditorOpen}
-        onCancel={() => setTagEditorOpen(false)}
-        onOk={() => tagForm.submit()}
-        okText="保存标签"
-        cancelText="取消"
-      >
-        <Form form={tagForm} layout="vertical" onFinish={(values) => void saveTags(values)}>
-          <Form.Item label="标签（逗号分隔，最多 10 个）" name="tags">
-            <Input placeholder="例如：淘汰赛, 决赛, 焦点战" />
           </Form.Item>
         </Form>
       </Modal>

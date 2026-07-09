@@ -14,6 +14,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         'admin-antd': path.resolve(__dirname, 'src/pages/admin-antd.html'),
+        login: path.resolve(__dirname, 'src/pages/login.html'),
       },
     },
   },

@@ -121,6 +121,52 @@ function sendAdminAntdPage(paths: AppPaths, response: Response): void {
 </html>`);
 }
 
+function sendLoginPage(paths: AppPaths, response: Response): void {
+  const builtPage = path.join(paths.rendererDistDir, 'src', 'pages', 'login.html');
+  if (fs.existsSync(builtPage)) {
+    response.sendFile(builtPage);
+    return;
+  }
+
+  response.status(503).type('html').send(`<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login 未构建</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #f7efe3 0%, #f0e0c7 100%);
+        color: #3f2b1d;
+        font: 16px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      main {
+        width: min(640px, calc(100vw - 32px));
+        padding: 32px;
+        border-radius: 24px;
+        background: rgba(255, 251, 245, 0.94);
+        box-shadow: 0 24px 60px rgba(90, 55, 26, 0.14);
+      }
+      code {
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(199, 99, 47, 0.12);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>登录页尚未构建</h1>
+      <p>请先运行 <code>npm run build:renderer</code> 或 <code>npm run build</code>，然后刷新本页。</p>
+    </main>
+  </body>
+</html>`);
+}
+
 export interface LocalServer {
   port: number;
   server: http.Server;
@@ -199,7 +245,7 @@ export async function createLocalServer(
 
   // === Public routes (no auth required) ===
   app.get('/', (_request, response) => sendPage(paths, response, 'index.html'));
-  app.get('/login.html', (_request, response) => sendPage(paths, response, 'login.html'));
+  app.get('/login.html', (_request, response) => sendLoginPage(paths, response));
   app.get('/roco-pvp.html', (_request, response) => sendPage(paths, response, 'roco-pvp.html'));
   app.get('/roco-pvp-page3.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page3.html'));
   app.get('/live-standby-demo.html', (_request, response) => sendPage(paths, response, 'live-standby-demo.html'));
