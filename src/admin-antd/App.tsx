@@ -2185,19 +2185,28 @@ function Dashboard() {
                       .filter((match) => match.candidates.length > 1)
                       .map((match) => (
                         <div key={`${side}-quick-${match.slot}`} className="quick-fill-group">
-                          <Text>槽位 {match.slot + 1}：{match.input}</Text>
-                          <Space wrap>
+                          <Text>槽位 {match.slot + 1}</Text>
+                          <div className="quick-fill-candidate-grid">
                             {match.candidates.map((candidate) => (
                               <Button
                                 key={candidate.id}
                                 size="small"
+                                className="quick-fill-candidate-button"
                                 disabled={panelLocked}
+                                title={candidate.displayName}
+                                aria-label={`选择 ${candidate.displayName}`}
                                 onClick={() => chooseQuickFillCandidate(side, match.slot, candidate)}
                               >
-                                {candidate.displayName}
+                                <Image
+                                  preview={false}
+                                  src={candidate.path}
+                                  alt={candidate.displayName}
+                                  className="quick-fill-candidate-image"
+                                  fallback="/assets/ui/back.png"
+                                />
                               </Button>
                             ))}
-                          </Space>
+                          </div>
                         </div>
                       ))}
                   </Space>
@@ -2405,33 +2414,47 @@ function Dashboard() {
                   >
                     {activeMatch ? (
                       <Space direction="vertical" size={18} className="page-stack">
-                        <Row gutter={[16, 16]} className="match-summary-grid">
-                          <Col xs={24} md={8} className="match-summary-col">
-                            <Card size="small" className="subtle-card match-summary-card">
-                              <Text type="secondary">左侧选手</Text>
-                              <Text strong className="match-summary-player-name">{activeMatch.leftPlayer || '未设置'}</Text>
-                            </Card>
-                          </Col>
-                          <Col xs={24} md={8} className="match-summary-col">
-                            <Card size="small" className="subtle-card match-summary-card match-summary-score">
-                              <Text type="secondary">当前比分</Text>
-                              <div className="match-summary-scoreline" aria-label={`当前比分 ${activeMatch.leftScore} 比 ${activeMatch.rightScore}`}>
-                                <span className="match-summary-score-value">{activeMatch.leftScore}</span>
-                                <span className="match-summary-score-separator">:</span>
-                                <span className="match-summary-score-value">{activeMatch.rightScore}</span>
+                        <div className="current-match-overview">
+                          <div className="current-match-player current-match-player-left">
+                            <Text type="secondary" className="current-match-player-label">左侧选手</Text>
+                            <Text strong className="current-match-player-name current-match-player-name-left">
+                              {activeMatch.leftPlayer || '未设置'}
+                            </Text>
+                          </div>
+                          <div className="current-match-score-block">
+                            <Text type="secondary" className="current-match-score-label">当前比分</Text>
+
+                            <div
+                              className="current-match-score-card"
+                              aria-label={`当前比分 ${activeMatch.leftScore} 比 ${activeMatch.rightScore}`}
+                            >
+                              <div className="current-match-scoreline">
+                                <span className="current-match-score-value">{activeMatch.leftScore}</span>
+                                <span className="current-match-score-separator">:</span>
+                                <span className="current-match-score-value">{activeMatch.rightScore}</span>
                               </div>
-                              <Text type="secondary" className="match-summary-meta">BO{activeMatch.bestOf} · {currentGame ? `第 ${currentGame.gameNumber} 局` : '暂无对局'}</Text>
-                            </Card>
-                          </Col>
-                          <Col xs={24} md={8} className="match-summary-col">
-                            <Card size="small" className="subtle-card match-summary-card">
-                              <Text type="secondary">右侧选手</Text>
-                              <Text strong className="match-summary-player-name">{activeMatch.rightPlayer || '未设置'}</Text>
-                            </Card>
-                          </Col>
-                        </Row>
-                        <Steps current={progress.current} items={progress.items} responsive />
-                        <Form form={matchForm} layout="vertical" onFinish={(values) => void saveMatchMeta(values)}>
+                              
+                            </div>
+                            <Text type="secondary" className="current-match-meta">
+                              BO{activeMatch.bestOf} · {currentGame ? `第 ${currentGame.gameNumber} 局` : '暂无对局'}
+                            </Text>
+                          </div>
+                          <div className="current-match-player current-match-player-right">
+                            <Text type="secondary" className="current-match-player-label">右侧选手</Text>
+                            <Text strong className="current-match-player-name current-match-player-name-right">
+                              {activeMatch.rightPlayer || '未设置'}
+                            </Text>
+                          </div>
+                        </div>
+                        <div className="current-match-statusbar">
+                          <Steps current={progress.current} items={progress.items} responsive />
+                        </div>
+                        <Form
+                          form={matchForm}
+                          layout="vertical"
+                          className="current-match-form"
+                          onFinish={(values) => void saveMatchMeta(values)}
+                        >
                           <Row gutter={[16, 16]}>
                             <Col xs={24} md={8}>
                               <Form.Item label="左侧选手" name="leftPlayer">
@@ -2456,23 +2479,27 @@ function Dashboard() {
                               </Form.Item>
                             </Col>
                           </Row>
-                          <Space wrap>
-                            <Button type="primary" htmlType="submit">保存比赛信息</Button>
-                            <Button
-                              onClick={() => void runMatchAction('start')}
-                              disabled={!currentGame || currentGame.status !== 'pending' || !currentGame.leftLineup.length || !currentGame.rightLineup.length}
-                            >
-                              开始本次对局
-                            </Button>
-                            <Button type="dashed" onClick={() => void runMatchAction('winner', { winner: 'left' })} disabled={currentGame?.status !== 'in_progress'}>
-                              左侧赢了
-                            </Button>
-                            <Button type="dashed" onClick={() => void runMatchAction('winner', { winner: 'right' })} disabled={currentGame?.status !== 'in_progress'}>
-                              右侧赢了
-                            </Button>
-                            <Button onClick={() => void runMatchAction('undo')} disabled={!matchStore.history.canUndo}>撤回上一步</Button>
-                            <Button onClick={() => void runMatchAction('redo')} disabled={!matchStore.history.canRedo}>取消撤回</Button>
-                          </Space>
+                          <div className="current-match-action-row">
+                            <Space wrap size={12} className="current-match-action-group">
+                              <Button type="primary" htmlType="submit">保存比赛信息</Button>
+                              <Button
+                                onClick={() => void runMatchAction('start')}
+                                disabled={!currentGame || currentGame.status !== 'pending' || !currentGame.leftLineup.length || !currentGame.rightLineup.length}
+                              >
+                                开始本次对局
+                              </Button>
+                            </Space>
+                            <Space wrap size={12} className="current-match-action-group current-match-action-group-right">
+                              <Button type="dashed" onClick={() => void runMatchAction('winner', { winner: 'left' })} disabled={currentGame?.status !== 'in_progress'}>
+                                左侧赢了
+                              </Button>
+                              <Button type="dashed" onClick={() => void runMatchAction('winner', { winner: 'right' })} disabled={currentGame?.status !== 'in_progress'}>
+                                右侧赢了
+                              </Button>
+                              <Button onClick={() => void runMatchAction('undo')} disabled={!matchStore.history.canUndo}>撤回上一步</Button>
+                              <Button onClick={() => void runMatchAction('redo')} disabled={!matchStore.history.canRedo}>取消撤回</Button>
+                            </Space>
+                          </div>
                         </Form>
                       </Space>
                     ) : (
