@@ -272,8 +272,6 @@ export async function createLocalServer(
   // === Protected routes (auth required when authConfig is set) ===
   app.get('/admin.html', (_request, response) => sendAdminAntdPage(paths, response));
   app.get('/admin-antd.html', (_request, response) => sendAdminAntdPage(paths, response));
-  app.get('/admin-legacy.html', (_request, response) => sendPage(paths, response, 'admin.html'));
-  app.get('/live-control.html', (_request, response) => sendPage(paths, response, 'live-control.html'));
 
   app.get('/api/images', (_request, response) => {
     response.json({ images: [getPanelState(paths, 'left'), getPanelState(paths, 'right')] });

@@ -93,6 +93,11 @@ a {
   backdrop-filter: blur(18px);
 }
 
+.admin-content .ant-card .ant-card-body,
+.workspace-card .ant-card-body {
+  border-radius: 12px;
+}
+
 .subtle-card {
   background: rgba(255, 252, 248, 0.94) !important;
 }
@@ -103,66 +108,207 @@ a {
   width: 100%;
 }
 
-.field-row,
-.slider-row {
-  display: grid;
-  gap: 12px;
-  align-items: center;
-}
-
-.field-row {
-  grid-template-columns: 1fr auto;
-}
-
-.slider-row {
-  grid-template-columns: 72px minmax(0, 1fr) 100px;
-}
-
 .panel-slot-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
 }
 
 .slot-button {
   height: auto;
-  min-height: 168px;
-  padding: 12px;
+  min-height: 96px;
+  padding: 10px 12px;
+  border-radius: 12px;
 }
 
-.slot-button-inner,
+.slot-button-inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.slot-meta {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
 .sprite-card-inner {
   width: 100%;
   align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
 .slot-image,
 .sprite-card-image,
 .avatar-preview-image {
-  width: 88px;
-  height: 88px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
 }
 
 .slot-placeholder {
-  width: 88px;
-  height: 88px;
-  border-radius: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
   background: rgba(199, 99, 47, 0.08);
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 12px;
   color: #7d624e;
 }
 
-.slot-name {
-  max-width: 100%;
+.slot-index {
+  font-size: 13px;
+  color: #6b5645;
 }
 
 .sprite-card-button {
   width: 100%;
   height: auto;
-  padding: 12px 10px;
+  min-height: 132px;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+.sprite-card-button .ant-image {
+  display: flex;
+}
+
+.sprite-picker-card .ant-card-body {
+  padding: 16px;
+}
+
+.sprite-picker-scroll {
+  max-height: 460px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.sprite-picker-scroll .ant-list-items,
+.sprite-picker-scroll .ant-row {
+  width: 100%;
+}
+
+.sprite-picker-scroll .ant-list-item {
+  display: flex;
+}
+
+.sprite-picker-scroll .ant-list-item > * {
+  width: 100%;
+}
+
+.sprite-picker-scroll .ant-col {
+  display: flex;
+}
+
+.sprite-card-image {
+  width: 100px;
+  height: 100px;
+}
+
+.match-list-scroll {
+  max-height: 492px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.match-list-scroll .ant-list-item {
+  min-height: 72px;
+}
+
+.match-summary-card .ant-card-body {
+  display: grid;
+  gap: 6px;
+}
+
+.match-summary-card .ant-typography {
+  margin-bottom: 0;
+}
+
+.match-summary-score {
+  text-align: center;
+}
+
+.live-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.live-slot-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(91, 67, 43, 0.12);
+  background: rgba(255, 253, 249, 0.98);
+}
+
+.live-slot-preview {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.live-slot-index {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(199, 99, 47, 0.14);
+  color: #8f4323;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.live-slot-image {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+}
+
+.live-slot-empty {
+  width: 84px;
+  height: 84px;
+  border-radius: 12px;
+  background: rgba(199, 99, 47, 0.08);
+  color: #7d624e;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+
+.live-slot-name {
+  text-align: center;
+}
+
+.live-slot-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.live-input-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.live-input-number {
+  width: 100%;
 }
 
 .quick-fill-group {
@@ -217,7 +363,7 @@ a {
 .history-slot-fallback {
   width: 72px;
   height: 72px;
-  border-radius: 18px;
+  border-radius: 12px;
   background: rgba(199, 99, 47, 0.08);
   display: grid;
   place-items: center;
@@ -233,12 +379,12 @@ a {
   width: 100%;
   max-height: 420px;
   object-fit: cover;
-  border-radius: 18px;
+  border-radius: 12px;
 }
 
 .preview-frame-shell {
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: 16px;
   border: 1px solid rgba(91, 67, 43, 0.12);
   background: rgba(255, 252, 248, 0.94);
 }
@@ -277,11 +423,11 @@ a {
     padding-right: 18px;
   }
 
-  .slider-row {
-    grid-template-columns: 1fr;
+  .panel-slot-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .panel-slot-grid {
+  .live-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -291,5 +437,9 @@ a {
 
   .preview-frame {
     min-height: 520px;
+  }
+
+  .live-grid {
+    grid-template-columns: 1fr;
   }
 }

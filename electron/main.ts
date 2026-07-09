@@ -79,18 +79,6 @@ function getChildWindowKey(targetUrl: string): string {
 }
 
 function getWindowPreset(targetUrl: string): WindowPreset {
-  if (targetUrl.endsWith('/live-control.html')) {
-    return {
-      width: 880,
-      height: 400,
-      minWidth: 480,
-      minHeight: 300,
-      zoomFactor: 1,
-      autoHideMenuBar: true,
-      title: '洛克王国 PVP WebUI - 实时控制',
-    };
-  }
-
   if (
     targetUrl.endsWith('/live-standby-demo.html')
     || targetUrl.endsWith('/roco-pvp.html')

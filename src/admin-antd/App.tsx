@@ -1,4 +1,4 @@
-import React, { startTransition, useDeferredValue, useEffect, useState } from 'react';
+import React, { startTransition, useDeferredValue, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   App,
@@ -7,9 +7,7 @@ import {
   Button,
   Card,
   Col,
-  Collapse,
   ConfigProvider,
-  Descriptions,
   Divider,
   Empty,
   Form,
@@ -20,11 +18,9 @@ import {
   List,
   Menu,
   Modal,
-  Progress,
   Row,
   Segmented,
   Select,
-  Slider,
   Space,
   Spin,
   Statistic,
@@ -58,7 +54,7 @@ const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
 
 type PanelSide = 'left' | 'right';
-type ViewKey = 'roster' | 'history' | 'scoreboard' | 'background' | 'preview' | 'about';
+type ViewKey = 'roster' | 'live' | 'history' | 'scoreboard' | 'background' | 'preview' | 'about';
 
 type PreviewSlotKey = 'page1' | 'page2' | 'page3' | 'standby';
 
@@ -111,11 +107,25 @@ type NoticeState = {
   text: string;
 } | null;
 
+type LiveField = 'healthPercent' | 'energyValue';
+
+type LiveConfigPayload = {
+  left: Array<{ name: string; HP: number; value: number }>;
+  right: Array<{ name: string; HP: number; value: number }>;
+};
+
 declare global {
   interface Window {
     rocoDesktop?: {
       copyText?: (text: string) => Promise<void>;
+      showOpenDialog?: () => Promise<string | null>;
+      showSaveDialog?: () => Promise<string | null>;
+      readTextFile?: (filePath: string) => Promise<string>;
+      writeTextFile?: (filePath: string, text: string) => Promise<boolean>;
+      statFile?: (filePath: string) => Promise<{ mtimeMs: number; size: number }>;
     };
+    showOpenFilePicker?: (options?: unknown) => Promise<Array<{ getFile: () => Promise<File>; queryPermission?: (options?: unknown) => Promise<string>; requestPermission?: (options?: unknown) => Promise<string>; createWritable?: () => Promise<{ write: (text: string) => Promise<void>; close: () => Promise<void> }> }>>;
+    showSaveFilePicker?: (options?: unknown) => Promise<{ getFile: () => Promise<File>; queryPermission?: (options?: unknown) => Promise<string>; requestPermission?: (options?: unknown) => Promise<string>; createWritable: () => Promise<{ write: (text: string) => Promise<void>; close: () => Promise<void> }> }>;
   }
 }
 
@@ -154,8 +164,8 @@ const theme = {
     colorBgBase: '#f6efe6',
     colorTextBase: '#2f2418',
     colorBorder: 'rgba(91, 67, 43, 0.14)',
-    borderRadius: 18,
-    borderRadiusLG: 24,
+    borderRadius: 12,
+    borderRadiusLG: 16,
     controlHeight: 42,
     fontFamily: '"Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif',
   },
@@ -166,23 +176,23 @@ const theme = {
       headerBg: 'transparent',
     },
     Card: {
-      borderRadiusLG: 24,
+      borderRadiusLG: 16,
     },
     Button: {
-      borderRadius: 999,
+      borderRadius: 12,
       controlHeight: 42,
     },
     Input: {
-      borderRadius: 16,
+      borderRadius: 12,
     },
     InputNumber: {
-      borderRadius: 16,
+      borderRadius: 12,
     },
     Select: {
-      borderRadius: 16,
+      borderRadius: 12,
     },
     Collapse: {
-      borderRadiusLG: 20,
+      borderRadiusLG: 14,
     },
     Upload: {
       colorFillAlter: 'rgba(255, 250, 245, 0.9)',
@@ -492,10 +502,6 @@ async function copyText(text: string): Promise<void> {
   document.body.removeChild(textarea);
 }
 
-function openLiveControlWindow(): void {
-  window.open('/live-control.html', 'roco-live-control-window', 'popup=yes,width=880,height=400');
-}
-
 function buildHistoryTags(matches: MatchStoreState['matches']): string[] {
   const tagSet = new Set<string>();
   for (const tag of DEFAULT_TAGS) {
@@ -550,6 +556,107 @@ function buildProgressItems(match: MatchRecord | null) {
   };
 }
 
+function cleanSpriteName(value: string | null | undefined): string {
+  return String(value ?? '')
+    .trim()
+    .replace(/\.(png|jpe?g|webp)$/i, '')
+    .replace(/^NO\.\d+_/i, '')
+    .replace(/[-_]\d+$/u, '');
+}
+
+function getSlotName(slot: SlotState | null | undefined): string {
+  const sprite = slot?.sprite;
+  if (!sprite) {
+    return '';
+  }
+  return cleanSpriteName(sprite.displayName || sprite.chineseName || sprite.name || sprite.filename || sprite.id);
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getHealthLevel(slot: SlotState | null | undefined): number {
+  if (!slot || !slot.healthEnabled || typeof slot.healthPercent !== 'number') {
+    return 100;
+  }
+  return clampNumber(slot.healthPercent, 0, 100);
+}
+
+function getEnergyLevel(slot: SlotState | null | undefined): number {
+  if (!slot || typeof slot.energyValue !== 'number') {
+    return 10;
+  }
+  return clampNumber(Math.round(slot.energyValue), 0, 10);
+}
+
+function buildLiveConfigPayload(panels: Record<PanelSide, PanelEditorState>): LiveConfigPayload {
+  const mapSlot = (slot: SlotState) => ({
+    name: getSlotName(slot),
+    HP: clampNumber(Math.round(Number(slot.healthPercent) || 0), 0, 100),
+    value: clampNumber(Math.round(Number(slot.energyValue) || 0), 0, 10),
+  });
+
+  return {
+    left: panels.left.selected.filter((slot) => slot.sprite).map(mapSlot),
+    right: panels.right.selected.filter((slot) => slot.sprite).map(mapSlot),
+  };
+}
+
+function stringifyLiveConfig(panels: Record<PanelSide, PanelEditorState>): string {
+  return JSON.stringify(buildLiveConfigPayload(panels), null, 2);
+}
+
+function extractLiveConfigPanel(payload: Record<string, unknown>, panel: PanelSide) {
+  const direct = payload[panel];
+  if (Array.isArray(direct)) {
+    return direct;
+  }
+  if (direct && typeof direct === 'object' && Array.isArray((direct as { selected?: unknown[] }).selected)) {
+    return (direct as { selected: unknown[] }).selected;
+  }
+  const panels = payload.panels;
+  if (panels && typeof panels === 'object') {
+    const nested = (panels as Record<string, unknown>)[panel];
+    if (Array.isArray(nested)) {
+      return nested;
+    }
+  }
+  return null;
+}
+
+function readNumberField(item: Record<string, unknown>, names: string[], min: number, max: number) {
+  for (const name of names) {
+    const value = item[name];
+    if (value !== undefined && value !== null && value !== '') {
+      const numeric = Number(value);
+      if (!Number.isNaN(numeric)) {
+        return clampNumber(Math.round(numeric), min, max);
+      }
+    }
+  }
+  return null;
+}
+
+function findConfigTargetIndex(
+  panel: PanelSide,
+  item: Record<string, unknown>,
+  fallbackIndex: number,
+  usedIndexes: Set<number>,
+  panels: Record<PanelSide, PanelEditorState>,
+) {
+  const expectedName = cleanSpriteName(typeof item.name === 'string' ? item.name : '');
+  if (expectedName) {
+    const matchIndex = panels[panel].selected.findIndex((slot, index) => {
+      return !usedIndexes.has(index) && getSlotName(slot) === expectedName;
+    });
+    if (matchIndex >= 0) {
+      return matchIndex;
+    }
+  }
+  return fallbackIndex;
+}
+
 function Dashboard() {
   const { message, modal } = App.useApp();
   const [view, setView] = useState<ViewKey>('roster');
@@ -586,10 +693,21 @@ function Dashboard() {
   const [previewSlot, setPreviewSlot] = useState<PreviewSlotKey>('page1');
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
   const [historyNotice, setHistoryNotice] = useState<NoticeState>(null);
+  const [liveNotice, setLiveNotice] = useState<NoticeState>(null);
+  const [liveFilePath, setLiveFilePath] = useState<string | null>(null);
+  const [liveFileName, setLiveFileName] = useState('');
+  const [liveConfigEnabled, setLiveConfigEnabled] = useState(false);
+  const [liveConfigLastModified, setLiveConfigLastModified] = useState<number | null>(null);
+  const [liveConfigLastContent, setLiveConfigLastContent] = useState('');
   const [scoreboardForm] = Form.useForm<ScoreboardFormValues>();
   const [matchForm] = Form.useForm<MatchFormValues>();
   const [createMatchForm] = Form.useForm<CreateMatchValues>();
   const [tagForm] = Form.useForm<{ tags: string }>();
+
+  const liveApplyRef = useRef(false);
+  const liveWriteRef = useRef(false);
+  const liveSaveTimerRef = useRef<number | null>(null);
+  const livePollTimerRef = useRef<number | null>(null);
 
   const spriteMap = new Map(sprites.map((sprite) => [sprite.id, sprite]));
   const activeMatch = getActiveMatch(matchStore);
@@ -1286,6 +1404,346 @@ function Dashboard() {
     }
   }
 
+  function clearLivePollTimer() {
+    if (livePollTimerRef.current !== null) {
+      window.clearInterval(livePollTimerRef.current);
+      livePollTimerRef.current = null;
+    }
+  }
+
+  function clearLiveSaveTimer() {
+    if (liveSaveTimerRef.current !== null) {
+      window.clearTimeout(liveSaveTimerRef.current);
+      liveSaveTimerRef.current = null;
+    }
+  }
+
+  async function verifyFilePermission(fileHandle: {
+    queryPermission?: (options?: unknown) => Promise<string>;
+    requestPermission?: (options?: unknown) => Promise<string>;
+  }, mode: 'read' | 'readwrite' = 'read') {
+    if (!fileHandle || typeof fileHandle.queryPermission !== 'function') {
+      return true;
+    }
+
+    const options = { mode };
+    if ((await fileHandle.queryPermission(options)) === 'granted') {
+      return true;
+    }
+    if (typeof fileHandle.requestPermission !== 'function') {
+      return false;
+    }
+    return (await fileHandle.requestPermission(options)) === 'granted';
+  }
+
+  function downloadLiveConfig(text: string) {
+    const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'roco-live-config.json';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function getLiveConfigFileName(filePath: string) {
+    return String(filePath || '').split(/[\\/]/).pop() || 'roco-live-config.json';
+  }
+
+  async function writeLiveConfigToPath(filePath: string, text: string, notice?: string) {
+    if (!window.rocoDesktop?.writeTextFile || !window.rocoDesktop?.statFile) {
+      throw new Error('当前环境不支持写入监听文件');
+    }
+
+    liveWriteRef.current = true;
+    try {
+      await window.rocoDesktop.writeTextFile(filePath, text);
+      const stat = await window.rocoDesktop.statFile(filePath);
+      setLiveConfigLastModified(stat.mtimeMs);
+      setLiveConfigLastContent(text);
+      if (notice) {
+        setLiveNotice({ tone: 'success', text: notice });
+      }
+    } finally {
+      liveWriteRef.current = false;
+    }
+  }
+
+  async function saveLivePanelsSilently(nextPanels: Record<PanelSide, PanelEditorState>) {
+    const [leftData, rightData] = await Promise.all([
+      requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>('/api/panels/left', {
+        method: 'POST',
+        json: { selected: buildPanelRequest(nextPanels.left.selected) },
+      }),
+      requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>('/api/panels/right', {
+        method: 'POST',
+        json: { selected: buildPanelRequest(nextPanels.right.selected) },
+      }),
+    ]);
+
+    applyServerState({
+      panel: rightData.panel,
+      panels: [leftData.panel, rightData.panel].filter(Boolean) as PanelState[],
+      matches: rightData.matches ?? leftData.matches,
+    });
+  }
+
+  async function applyLiveConfigText(text: string, source = '监听文件') {
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      throw new Error(`${source} JSON 格式错误`);
+    }
+
+    liveApplyRef.current = true;
+    try {
+      let changed = false;
+      const nextPanels: Record<PanelSide, PanelEditorState> = {
+        left: { ...panels.left, selected: cloneSelected(panels.left.selected) },
+        right: { ...panels.right, selected: cloneSelected(panels.right.selected) },
+      };
+
+      (['left', 'right'] as PanelSide[]).forEach((panel) => {
+        const panelItems = extractLiveConfigPanel(payload, panel);
+        if (!Array.isArray(panelItems)) {
+          return;
+        }
+
+        const usedIndexes = new Set<number>();
+        panelItems.slice(0, 6).forEach((rawItem, fallbackIndex) => {
+          if (!rawItem || typeof rawItem !== 'object') {
+            return;
+          }
+
+          const item = rawItem as Record<string, unknown>;
+          const targetIndex = findConfigTargetIndex(panel, item, fallbackIndex, usedIndexes, nextPanels);
+          if (targetIndex < 0 || targetIndex >= 6) {
+            return;
+          }
+          usedIndexes.add(targetIndex);
+
+          const slot = { ...nextPanels[panel].selected[targetIndex] };
+          const hp = readNumberField(item, ['HP', 'hp', 'healthPercent', 'health'], 0, 100);
+          const value = readNumberField(item, ['value', 'energyValue', 'energy'], 0, 10);
+
+          if (hp !== null && slot.healthPercent !== hp) {
+            slot.healthPercent = hp;
+            changed = true;
+          }
+          if (value !== null && slot.energyValue !== value) {
+            slot.energyValue = value;
+            changed = true;
+          }
+
+          nextPanels[panel].selected[targetIndex] = slot;
+        });
+      });
+
+      if (!changed) {
+        setLiveNotice({ tone: 'info', text: `${source}无变化` });
+        return;
+      }
+
+      startTransition(() => {
+        setPanels(nextPanels);
+      });
+      await saveLivePanelsSilently(nextPanels);
+      setLiveNotice({ tone: 'success', text: `已根据${source}更新` });
+    } finally {
+      liveApplyRef.current = false;
+    }
+  }
+
+  async function pollLiveConfigFile() {
+    if (!liveConfigEnabled || !liveFilePath || liveWriteRef.current) {
+      return;
+    }
+    if (!window.rocoDesktop?.readTextFile || !window.rocoDesktop?.statFile) {
+      return;
+    }
+
+    try {
+      const [text, stat] = await Promise.all([
+        window.rocoDesktop.readTextFile(liveFilePath),
+        window.rocoDesktop.statFile(liveFilePath),
+      ]);
+      if (text === liveConfigLastContent || stat.mtimeMs === liveConfigLastModified) {
+        return;
+      }
+      setLiveConfigLastModified(stat.mtimeMs);
+      setLiveConfigLastContent(text);
+      await applyLiveConfigText(text, '监听文件');
+    } catch (error) {
+      setLiveNotice({ tone: 'error', text: error instanceof Error ? error.message : '监听文件读取失败' });
+    }
+  }
+
+  async function handleExportLiveConfig() {
+    const text = stringifyLiveConfig(panels);
+
+    try {
+      if (typeof window.showSaveFilePicker === 'function') {
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: 'roco-live-config.json',
+          types: [{ description: 'JSON 文件', accept: { 'application/json': ['.json'] } }],
+        });
+        if (!(await verifyFilePermission(fileHandle, 'readwrite'))) {
+          throw new Error('没有导出文件的写入权限');
+        }
+        const writable = await fileHandle.createWritable();
+        await writable.write(text);
+        await writable.close();
+        setLiveNotice({ tone: 'success', text: '配置导出成功' });
+        return;
+      }
+
+      if (window.rocoDesktop?.showSaveDialog && window.rocoDesktop?.writeTextFile) {
+        const filePath = await window.rocoDesktop.showSaveDialog();
+        if (!filePath) {
+          setLiveNotice({ tone: 'info', text: '已取消配置导出' });
+          return;
+        }
+        await window.rocoDesktop.writeTextFile(filePath, text);
+        setLiveNotice({ tone: 'success', text: '配置导出成功' });
+        return;
+      }
+
+      downloadLiveConfig(text);
+      setLiveNotice({ tone: 'success', text: '配置已下载' });
+    } catch (error) {
+      if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
+        setLiveNotice({ tone: 'info', text: '已取消配置导出' });
+        return;
+      }
+      setLiveNotice({ tone: 'error', text: error instanceof Error ? error.message : '配置导出失败' });
+    }
+  }
+
+  async function startLiveConfigWatch() {
+    try {
+      let filePath: string | null = null;
+
+      if (window.rocoDesktop?.showOpenDialog) {
+        filePath = await window.rocoDesktop.showOpenDialog();
+      }
+
+      if (!filePath) {
+        setLiveNotice({ tone: 'info', text: '已取消实时监听' });
+        return;
+      }
+      if (!window.rocoDesktop?.readTextFile || !window.rocoDesktop?.statFile) {
+        throw new Error('当前环境不支持实时监听');
+      }
+
+      const [text, stat] = await Promise.all([
+        window.rocoDesktop.readTextFile(filePath),
+        window.rocoDesktop.statFile(filePath),
+      ]);
+
+      setLiveFilePath(filePath);
+      setLiveFileName(getLiveConfigFileName(filePath));
+      setLiveConfigEnabled(true);
+      setLiveConfigLastModified(stat.mtimeMs);
+      setLiveConfigLastContent(text);
+
+      if (text.trim()) {
+        await applyLiveConfigText(text, '监听文件');
+      } else {
+        await writeLiveConfigToPath(filePath, stringifyLiveConfig(panels), `监听中：${getLiveConfigFileName(filePath)}`);
+      }
+
+      clearLivePollTimer();
+      livePollTimerRef.current = window.setInterval(() => {
+        void pollLiveConfigFile();
+      }, 1000);
+      setLiveNotice({ tone: 'success', text: `实时监听已开启：${getLiveConfigFileName(filePath)}` });
+    } catch (error) {
+      stopLiveConfigWatch(false);
+      setLiveNotice({ tone: 'error', text: error instanceof Error ? error.message : '实时监听开启失败' });
+    }
+  }
+
+  function stopLiveConfigWatch(shouldResetNotice = true) {
+    clearLivePollTimer();
+    clearLiveSaveTimer();
+    liveApplyRef.current = false;
+    liveWriteRef.current = false;
+    setLiveConfigEnabled(false);
+    setLiveFilePath(null);
+    setLiveFileName('');
+    setLiveConfigLastModified(null);
+    setLiveConfigLastContent('');
+    if (shouldResetNotice) {
+      setLiveNotice({ tone: 'info', text: '实时监听已关闭' });
+    }
+  }
+
+  function scheduleLiveConfigWrite(reason = '已同步到监听文件') {
+    if (!liveConfigEnabled || !liveFilePath || liveApplyRef.current) {
+      return;
+    }
+    clearLiveSaveTimer();
+    liveSaveTimerRef.current = window.setTimeout(() => {
+      void writeLiveConfigToPath(liveFilePath, stringifyLiveConfig(panels), reason).catch((error) => {
+        setLiveNotice({ tone: 'error', text: error instanceof Error ? error.message : '监听文件写入失败' });
+      });
+    }, 250);
+  }
+
+  function handleLiveConfigWatchToggle() {
+    if (liveConfigEnabled) {
+      stopLiveConfigWatch(true);
+      return;
+    }
+    void startLiveConfigWatch();
+  }
+
+  async function saveLiveField(side: PanelSide, slotIndex: number, field: LiveField, value: number) {
+    const selected = cloneSelected(panels[side].selected);
+    const target = { ...selected[slotIndex] };
+    if (field === 'healthPercent') {
+      target.healthPercent = clampNumber(Math.round(value), 0, 100);
+    } else {
+      target.energyValue = clampNumber(Math.round(value), 0, 10);
+    }
+    selected[slotIndex] = target;
+
+    const nextPanels = {
+      ...panels,
+      [side]: {
+        ...panels[side],
+        selected,
+      },
+    };
+
+    startTransition(() => {
+      setPanels(nextPanels);
+    });
+
+    try {
+      await requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>(`/api/panels/${side}/slots/${slotIndex}`, {
+        method: 'PATCH',
+        json: {
+          slot: buildPanelRequest(selected)[slotIndex],
+        },
+      });
+      scheduleLiveConfigWrite();
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+      void loadInitialData();
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      clearLivePollTimer();
+      clearLiveSaveTimer();
+    };
+  }, []);
+
   if (loading) {
     return (
       <div className="admin-antd-loading">
@@ -1297,6 +1755,7 @@ function Dashboard() {
 
   const menuItems: MenuProps['items'] = [
     { key: 'roster', label: '赛事面板' },
+    { key: 'live', label: '实时控制' },
     { key: 'history', label: '比赛历史' },
     { key: 'scoreboard', label: '显示设置' },
     { key: 'background', label: '背景素材' },
@@ -1391,7 +1850,6 @@ function Dashboard() {
 
   function renderPanelEditor(side: PanelSide) {
     const panel = panels[side];
-    const activeSlot = panel.selected[panel.activeSlot] ?? createEmptySlot(panel.activeSlot);
     const searchValue = side === 'left' ? deferredLeftSearch : deferredRightSearch;
     const filteredSprites = sprites.filter((sprite) => {
       const keyword = searchValue.trim().toLowerCase();
@@ -1425,7 +1883,7 @@ function Dashboard() {
         )}
       >
         <Row gutter={[16, 16]}>
-          <Col xs={24} xl={9}>
+          <Col xs={24} xl={8}>
             <div className="panel-slot-grid">
               {panel.selected.map((slot, index) => (
                 <Button
@@ -1434,7 +1892,7 @@ function Dashboard() {
                   className="slot-button"
                   onClick={() => mutatePanel(side, (prev) => ({ ...prev, activeSlot: index }))}
                 >
-                  <Space direction="vertical" size={4} className="slot-button-inner">
+                  <div className="slot-button-inner">
                     {slot.sprite?.path ? (
                       <Image
                         preview={false}
@@ -1446,125 +1904,16 @@ function Dashboard() {
                     ) : (
                       <div className="slot-placeholder">槽位 {index + 1}</div>
                     )}
-                    <Text ellipsis className="slot-name">
-                      {slot.sprite?.displayName ?? `槽位 ${index + 1}`}
-                    </Text>
-                    <Space size={4} wrap>
-                      <Tag bordered={false} color="blue">HP {slot.healthPercent}</Tag>
-                      <Tag bordered={false} color="gold">能量 {slot.energyValue}</Tag>
-                    </Space>
-                  </Space>
+                    <div className="slot-meta">
+                      <Text className="slot-index">槽位 {index + 1}</Text>
+                    </div>
+                  </div>
                 </Button>
               ))}
             </div>
           </Col>
-          <Col xs={24} xl={15}>
+          <Col xs={24} xl={16}>
             <Space direction="vertical" size={16} className="panel-editor-stack">
-              <Card size="small" className="subtle-card">
-                <Descriptions column={2} size="small">
-                  <Descriptions.Item label="当前槽位">#{panel.activeSlot + 1}</Descriptions.Item>
-                  <Descriptions.Item label="当前精灵">{activeSlot.sprite?.displayName ?? '未选择'}</Descriptions.Item>
-                  <Descriptions.Item label="血量">{activeSlot.healthPercent}%</Descriptions.Item>
-                  <Descriptions.Item label="能力值">{activeSlot.energyValue}</Descriptions.Item>
-                </Descriptions>
-                <Progress percent={activeSlot.healthPercent} size="small" strokeColor="#c7632f" />
-              </Card>
-
-              <Collapse
-                items={[
-                  {
-                    key: 'battle',
-                    label: '当前槽位血量与能力值',
-                    children: (
-                      <Space direction="vertical" size={16} className="control-stack">
-                        <div className="field-row">
-                          <Text>启用血量效果</Text>
-                          <Switch
-                            checked={activeSlot.healthEnabled}
-                            onChange={(checked) => updateSlot(side, (slot) => ({ ...slot, healthEnabled: checked }))}
-                          />
-                        </div>
-                        <div className="slider-row">
-                          <Text>血量</Text>
-                          <Slider
-                            min={0}
-                            max={100}
-                            value={activeSlot.healthPercent}
-                            onChange={(value: number) => updateSlot(side, (slot) => ({ ...slot, healthPercent: Number(value) }))}
-                          />
-                          <InputNumber
-                            min={0}
-                            max={100}
-                            value={activeSlot.healthPercent}
-                            onChange={(value) => updateSlot(side, (slot) => ({ ...slot, healthPercent: Number(value ?? 100) }))}
-                          />
-                        </div>
-                        <div className="slider-row">
-                          <Text>能力值</Text>
-                          <Slider
-                            min={0}
-                            max={10}
-                            value={activeSlot.energyValue}
-                            onChange={(value: number) => updateSlot(side, (slot) => ({ ...slot, energyValue: Number(value) }))}
-                          />
-                          <InputNumber
-                            min={0}
-                            max={10}
-                            value={activeSlot.energyValue}
-                            onChange={(value) => updateSlot(side, (slot) => ({ ...slot, energyValue: Number(value ?? 10) }))}
-                          />
-                        </div>
-                      </Space>
-                    ),
-                  },
-                  {
-                    key: 'visual',
-                    label: '透明度与饱和度',
-                    children: (
-                      <Space direction="vertical" size={16} className="control-stack">
-                        <div className="field-row">
-                          <Text>启用透明度效果</Text>
-                          <Switch
-                            checked={activeSlot.opacityEnabled}
-                            onChange={(checked) => updateSlot(side, (slot) => ({ ...slot, opacityEnabled: checked }))}
-                          />
-                        </div>
-                        <div className="slider-row">
-                          <Text>透明度</Text>
-                          <Slider
-                            min={0}
-                            max={100}
-                            value={Math.round(activeSlot.opacity * 100)}
-                            onChange={(value: number) => updateSlot(side, (slot) => ({ ...slot, opacity: Number(value) / 100 }))}
-                          />
-                          <InputNumber
-                            min={0}
-                            max={100}
-                            value={Math.round(activeSlot.opacity * 100)}
-                            onChange={(value) => updateSlot(side, (slot) => ({ ...slot, opacity: Number(value ?? 50) / 100 }))}
-                          />
-                        </div>
-                        <div className="slider-row">
-                          <Text>饱和度</Text>
-                          <Slider
-                            min={0}
-                            max={300}
-                            value={Math.round(activeSlot.saturation * 100)}
-                            onChange={(value: number) => updateSlot(side, (slot) => ({ ...slot, saturation: Number(value) / 100 }))}
-                          />
-                          <InputNumber
-                            min={0}
-                            max={300}
-                            value={Math.round(activeSlot.saturation * 100)}
-                            onChange={(value) => updateSlot(side, (slot) => ({ ...slot, saturation: Number(value ?? 100) / 100 }))}
-                          />
-                        </div>
-                      </Space>
-                    ),
-                  },
-                ]}
-              />
-
               <Card size="small" className="subtle-card">
                 <Space direction="vertical" size={12} className="control-stack">
                   <div>
@@ -1613,33 +1962,34 @@ function Dashboard() {
                 </Card>
               ) : null}
 
-              <Card size="small" className="subtle-card">
+              <Card size="small" className="subtle-card sprite-picker-card">
                 <Space direction="vertical" size={12} className="control-stack">
                   <Input
                     value={panel.search}
                     onChange={(event) => mutatePanel(side, (prev) => ({ ...prev, search: event.target.value }))}
                     placeholder={`搜索${side === 'left' ? '左侧' : '右侧'}精灵名称`}
                   />
-                  <List
-                    grid={{ gutter: 12, xs: 2, sm: 3, md: 4 }}
-                    dataSource={filteredSprites.slice(0, 80)}
-                    locale={{ emptyText: '没有匹配到精灵' }}
-                    renderItem={(sprite) => (
-                      <List.Item>
-                        <Button className="sprite-card-button" onClick={() => applySprite(side, sprite)}>
-                          <Space direction="vertical" size={8} className="sprite-card-inner">
-                            <Image
-                              preview={false}
-                              src={sprite.path}
-                              alt={sprite.displayName}
-                              className="sprite-card-image"
-                            />
-                            <Text ellipsis>{sprite.displayName}</Text>
-                          </Space>
-                        </Button>
-                      </List.Item>
-                    )}
-                  />
+                  <div className="sprite-picker-scroll">
+                    <List
+                      grid={{ gutter: 10, xs: 2, sm: 3, md: 4, xl: 5 }}
+                      dataSource={filteredSprites}
+                      locale={{ emptyText: '没有匹配到精灵' }}
+                      renderItem={(sprite) => (
+                        <List.Item>
+                          <Button className="sprite-card-button" onClick={() => applySprite(side, sprite)}>
+                            <Space direction="vertical" size={0} className="sprite-card-inner">
+                              <Image
+                                preview={false}
+                                src={sprite.path}
+                                alt={sprite.displayName}
+                                className="sprite-card-image"
+                              />
+                            </Space>
+                          </Button>
+                        </List.Item>
+                      )}
+                    />
+                  </div>
                 </Space>
               </Card>
             </Space>
@@ -1655,13 +2005,10 @@ function Dashboard() {
         <div className="brand-block">
           <Text className="eyebrow">Control Room</Text>
           <Title level={3}>洛克王国 PVP 后台</Title>
-          <Paragraph type="secondary">
-            现在的 `admin` 已切到 React + Ant Design。圆角、间距、表单、列表和弹窗都以设计系统组件为基础。
-          </Paragraph>
           <Space wrap>
-            <Tag color="gold">TSX</Tag>
-            <Tag color="success">Ant Design</Tag>
-            <Tag color="processing">Admin Refactor</Tag>
+            <Tag color="gold">赛事管理</Tag>
+            <Tag color="success">阵容编辑</Tag>
+            <Tag color="processing">页面预览</Tag>
           </Space>
         </div>
         <Card size="small" className="workspace-card">
@@ -1671,11 +2018,8 @@ function Dashboard() {
             <Button block onClick={() => void handleCopyLocalAddress()}>
               复制当前地址
             </Button>
-            <Button block type="primary" onClick={openLiveControlWindow}>
-              打开实时控制页
-            </Button>
-            <Button block href="/admin-legacy.html" target="_blank">
-              打开旧后台备份
+            <Button block type="primary" onClick={() => setView('live')}>
+              打开实时控制
             </Button>
           </Space>
         </Card>
@@ -1691,13 +2035,10 @@ function Dashboard() {
       <Layout className="admin-main">
         <Header className="admin-header">
           <div>
-            <Text className="eyebrow">Admin Migration</Text>
+            <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'background' ? '背景素材' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'background' ? '背景素材' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
-            <Paragraph>
-              当前端口和预览链接都以本地服务为准。新的后台保留了旧版核心流程，同时改成了设计系统化的 TSX 结构。
-            </Paragraph>
           </div>
           <Space wrap>
             <Button href={buildPreviewUrl(previewSlot)} target="_blank">打开当前预览</Button>
@@ -1721,31 +2062,33 @@ function Dashboard() {
                     title="比赛列表"
                     extra={<Button type="primary" onClick={() => setCreateMatchOpen(true)}>开一局</Button>}
                   >
-                    <List
-                      dataSource={matchStore.matches}
-                      locale={{ emptyText: '暂无赛事，先创建一场比赛吧。' }}
-                      renderItem={(match) => (
-                        <List.Item
-                          actions={[
-                            <Button key="select" type={match.id === activeMatch?.id ? 'primary' : 'default'} onClick={() => void selectMatch(match.id)}>
-                              {match.id === activeMatch?.id ? '当前赛事' : '进入'}
-                            </Button>,
-                          ]}
-                        >
-                          <List.Item.Meta
-                            avatar={<Badge status={match.status === 'completed' ? 'success' : match.status === 'in_progress' ? 'processing' : 'default'} />}
-                            title={`${match.leftPlayer || '左侧'} vs ${match.rightPlayer || '右侧'}`}
-                            description={(
-                              <Space wrap>
-                                <Tag color="gold">BO{match.bestOf}</Tag>
-                                <Tag color={getMatchStatusColor(match.status)}>{getMatchStatusLabel(match.status)}</Tag>
-                                <Text type="secondary">{match.leftScore} : {match.rightScore}</Text>
-                              </Space>
-                            )}
-                          />
-                        </List.Item>
-                      )}
-                    />
+                    <div className="match-list-scroll">
+                      <List
+                        dataSource={matchStore.matches}
+                        locale={{ emptyText: '暂无赛事，先创建一场比赛吧。' }}
+                        renderItem={(match) => (
+                          <List.Item
+                            actions={[
+                              <Button key="select" type={match.id === activeMatch?.id ? 'primary' : 'default'} onClick={() => void selectMatch(match.id)}>
+                                {match.id === activeMatch?.id ? '当前赛事' : '进入'}
+                              </Button>,
+                            ]}
+                          >
+                            <List.Item.Meta
+                              avatar={<Badge status={match.status === 'completed' ? 'success' : match.status === 'in_progress' ? 'processing' : 'default'} />}
+                              title={`${match.leftPlayer || '左侧'} vs ${match.rightPlayer || '右侧'}`}
+                              description={(
+                                <Space wrap>
+                                  <Tag color="gold">BO{match.bestOf}</Tag>
+                                  <Tag color={getMatchStatusColor(match.status)}>{getMatchStatusLabel(match.status)}</Tag>
+                                  <Text type="secondary">{match.leftScore} : {match.rightScore}</Text>
+                                </Space>
+                              )}
+                            />
+                          </List.Item>
+                        )}
+                      />
+                    </div>
                   </Card>
                 </Col>
                 <Col xs={24} xl={17}>
@@ -1761,16 +2104,27 @@ function Dashboard() {
                             onClose={() => setRosterNotice(null)}
                           />
                         ) : null}
-                        <Descriptions column={3} bordered size="small">
-                          <Descriptions.Item label="左侧选手">{activeMatch.leftPlayer || '未设置'}</Descriptions.Item>
-                          <Descriptions.Item label="比分">
-                            <Text strong>{activeMatch.leftScore} : {activeMatch.rightScore}</Text>
-                          </Descriptions.Item>
-                          <Descriptions.Item label="右侧选手">{activeMatch.rightPlayer || '未设置'}</Descriptions.Item>
-                          <Descriptions.Item label="赛制">BO{activeMatch.bestOf}</Descriptions.Item>
-                          <Descriptions.Item label="胜者">{activeMatch.winner === 'left' ? '左侧' : activeMatch.winner === 'right' ? '右侧' : '未决'}</Descriptions.Item>
-                          <Descriptions.Item label="当前小局">{currentGame ? `第 ${currentGame.gameNumber} 局` : '暂无'}</Descriptions.Item>
-                        </Descriptions>
+                        <Row gutter={[16, 16]}>
+                          <Col xs={24} md={8}>
+                            <Card size="small" className="subtle-card match-summary-card">
+                              <Text type="secondary">左侧选手</Text>
+                              <Title level={5}>{activeMatch.leftPlayer || '未设置'}</Title>
+                            </Card>
+                          </Col>
+                          <Col xs={24} md={8}>
+                            <Card size="small" className="subtle-card match-summary-card match-summary-score">
+                              <Text type="secondary">当前比分</Text>
+                              <Title level={3}>{activeMatch.leftScore} : {activeMatch.rightScore}</Title>
+                              <Text type="secondary">BO{activeMatch.bestOf} · {currentGame ? `第 ${currentGame.gameNumber} 局` : '暂无对局'}</Text>
+                            </Card>
+                          </Col>
+                          <Col xs={24} md={8}>
+                            <Card size="small" className="subtle-card match-summary-card">
+                              <Text type="secondary">右侧选手</Text>
+                              <Title level={5}>{activeMatch.rightPlayer || '未设置'}</Title>
+                            </Card>
+                          </Col>
+                        </Row>
                         <Steps current={progress.current} items={progress.items} responsive />
                         <Form form={matchForm} layout="vertical" onFinish={(values) => void saveMatchMeta(values)}>
                           <Row gutter={[16, 16]}>
@@ -1828,12 +2182,6 @@ function Dashboard() {
                           </Col>
                         </Row>
 
-                        <Alert
-                          type="info"
-                          showIcon
-                          message="迁移说明"
-                          description={`旧版 admin 的赛事流已经切到新的 TSX 后台。当前小局：${currentGame ? `第 ${currentGame.gameNumber} 局` : '未开始'}，双方阵容保存后即可直接沿用原有接口同步到推流页。比赛开始后，阵容微调会继续走原有后端接口。`}
-                        />
                       </Space>
                     ) : (
                       <Empty description="先创建或选择一场赛事" />
@@ -1990,6 +2338,103 @@ function Dashboard() {
                   }}
                   locale={{ emptyText: '暂无历史赛事' }}
                 />
+              </Card>
+            </Space>
+          ) : null}
+
+          {view === 'live' ? (
+            <Space direction="vertical" size={18} className="page-stack">
+              <Card
+                title="实时控制"
+                extra={(
+                  <Space wrap>
+                    <Button onClick={() => void loadInitialData(true)}>重新加载</Button>
+                    <Button onClick={() => void handleExportLiveConfig()}>配置导出</Button>
+                    <Button type={liveConfigEnabled ? 'default' : 'primary'} danger={liveConfigEnabled} onClick={handleLiveConfigWatchToggle}>
+                      {liveConfigEnabled ? '关闭监听' : '实时监听'}
+                    </Button>
+                  </Space>
+                )}
+              >
+                <Space direction="vertical" size={16} className="page-stack">
+                  {liveNotice ? (
+                    <Alert
+                      showIcon
+                      closable
+                      type={liveNotice.tone}
+                      message={liveNotice.text}
+                      onClose={() => setLiveNotice(null)}
+                    />
+                  ) : null}
+                  <Row gutter={[16, 16]}>
+                    <Col xs={24} md={8}>
+                      <Card size="small" className="subtle-card match-summary-card">
+                        <Text type="secondary">监听状态</Text>
+                        <Title level={5}>{liveConfigEnabled ? '已开启' : '未开启'}</Title>
+                        <Text type="secondary">{liveFileName || '未绑定 JSON 文件'}</Text>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Card size="small" className="subtle-card match-summary-card match-summary-score">
+                        <Text type="secondary">左侧阵容</Text>
+                        <Title level={3}>{leftPanelSummary.selectedCount}</Title>
+                        <Text type="secondary">已选 / 6</Text>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Card size="small" className="subtle-card match-summary-card match-summary-score">
+                        <Text type="secondary">右侧阵容</Text>
+                        <Title level={3}>{rightPanelSummary.selectedCount}</Title>
+                        <Text type="secondary">已选 / 6</Text>
+                      </Card>
+                    </Col>
+                  </Row>
+                  <Row gutter={[18, 18]}>
+                    {(['left', 'right'] as PanelSide[]).map((side) => (
+                      <Col key={side} xs={24} xl={12}>
+                        <Card title={side === 'left' ? '左侧实时面板' : '右侧实时面板'}>
+                          <div className="live-grid">
+                            {panels[side].selected.map((slot, index) => (
+                              <div key={`live-${side}-${index}`} className="live-slot-card">
+                                <div className="live-slot-preview">
+                                  <span className="live-slot-index">{index + 1}</span>
+                                  {slot.sprite?.path ? (
+                                    <Image preview={false} src={slot.sprite.path} alt={slot.sprite.displayName} className="live-slot-image" fallback="/assets/ui/back.png" />
+                                  ) : (
+                                    <div className="live-slot-empty">空槽位</div>
+                                  )}
+                                  <Text ellipsis className="live-slot-name">{slot.sprite?.displayName ?? '未选择精灵'}</Text>
+                                </div>
+                                <div className="live-slot-controls">
+                                  <div className="live-input-row">
+                                    <Text type="secondary">HP</Text>
+                                    <InputNumber
+                                      min={0}
+                                      max={100}
+                                      value={getHealthLevel(slot)}
+                                      onChange={(value) => void saveLiveField(side, index, 'healthPercent', Number(value ?? 100))}
+                                      className="live-input-number"
+                                    />
+                                  </div>
+                                  <div className="live-input-row">
+                                    <Text type="secondary">能量</Text>
+                                    <InputNumber
+                                      min={0}
+                                      max={10}
+                                      value={getEnergyLevel(slot)}
+                                      onChange={(value) => void saveLiveField(side, index, 'energyValue', Number(value ?? 10))}
+                                      className="live-input-number"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </Space>
               </Card>
             </Space>
           ) : null}
@@ -2214,7 +2659,6 @@ function Dashboard() {
                     <Space direction="vertical" size={12} className="page-stack">
                       <Title level={4}>项目链接</Title>
                       <Link href="/admin.html" target="_blank">当前后台入口</Link>
-                      <Link href="/admin-legacy.html" target="_blank">旧后台备份</Link>
                       <Link href="/roco-pvp.html" target="_blank">推流页面 2</Link>
                       <Link href="https://wiki.biligame.com/rocom/" target="_blank">精灵图素材来源</Link>
                       <Link href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</Link>
