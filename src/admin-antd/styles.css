@@ -108,25 +108,71 @@ a {
   width: 100%;
 }
 
+.panel-editor-layout {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.panel-slot-rail {
+  min-width: 0;
+}
+
+.panel-editor-main {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.panel-editor-tools {
+  display: grid;
+  gap: 16px;
+}
+
 .panel-slot-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
 
+.panel-slot-grid-left {
+  justify-items: start;
+}
+
+.panel-slot-grid-right {
+  justify-items: end;
+}
+
 .slot-button {
+  width: 100%;
+  max-width: 112px;
   height: auto;
-  min-height: 96px;
-  padding: 10px 12px;
+  min-height: 104px;
+  padding: 8px;
   border-radius: 12px;
+}
+
+.slot-button-left {
+  justify-self: start;
+}
+
+.slot-button-right {
+  justify-self: end;
 }
 
 .slot-button-inner {
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
+  display: grid;
+  place-items: center;
+}
+
+.slot-button-inner-left {
+  justify-items: start;
+}
+
+.slot-button-inner-right {
+  justify-items: end;
 }
 
 .slot-meta {
@@ -146,14 +192,14 @@ a {
 .slot-image,
 .sprite-card-image,
 .avatar-preview-image {
-  width: 60px;
-  height: 60px;
+  width: 88px;
+  height: 88px;
   object-fit: contain;
 }
 
 .slot-placeholder {
-  width: 60px;
-  height: 60px;
+  width: 88px;
+  height: 88px;
   border-radius: 12px;
   background: rgba(199, 99, 47, 0.08);
   display: grid;
@@ -170,8 +216,8 @@ a {
 .sprite-card-button {
   width: 100%;
   height: auto;
-  min-height: 132px;
-  padding: 8px;
+  min-height: 96px;
+  padding: 6px;
   border-radius: 12px;
 }
 
@@ -183,6 +229,11 @@ a {
   padding: 16px;
 }
 
+.sprite-picker-shell {
+  display: grid;
+  gap: 12px;
+}
+
 .sprite-picker-scroll {
   max-height: 460px;
   overflow-y: auto;
@@ -190,26 +241,15 @@ a {
   padding-right: 4px;
 }
 
-.sprite-picker-scroll .ant-list-items,
-.sprite-picker-scroll .ant-row {
-  width: 100%;
-}
-
-.sprite-picker-scroll .ant-list-item {
-  display: flex;
-}
-
-.sprite-picker-scroll .ant-list-item > * {
-  width: 100%;
-}
-
-.sprite-picker-scroll .ant-col {
-  display: flex;
+.sprite-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .sprite-card-image {
-  width: 100px;
-  height: 100px;
+  width: 68px;
+  height: 68px;
 }
 
 .match-list-scroll {
@@ -236,16 +276,27 @@ a {
   text-align: center;
 }
 
+.live-watch-card .ant-card-body {
+  height: 100%;
+}
+
+.live-watch-uploader.ant-upload-wrapper .ant-upload-drag {
+  padding: 18px 16px;
+  border-radius: 12px;
+}
+
 .live-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .live-slot-card {
   display: grid;
-  gap: 10px;
-  padding: 12px;
+  grid-template-rows: auto 1fr;
+  align-items: stretch;
+  gap: 12px;
+  padding: 14px;
   border-radius: 12px;
   border: 1px solid rgba(91, 67, 43, 0.12);
   background: rgba(255, 253, 249, 0.98);
@@ -253,8 +304,9 @@ a {
 
 .live-slot-preview {
   display: grid;
-  justify-items: center;
-  gap: 8px;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
   position: relative;
 }
 
@@ -275,14 +327,14 @@ a {
 }
 
 .live-slot-image {
-  width: 84px;
-  height: 84px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
 }
 
 .live-slot-empty {
-  width: 84px;
-  height: 84px;
+  width: 56px;
+  height: 56px;
   border-radius: 12px;
   background: rgba(199, 99, 47, 0.08);
   color: #7d624e;
@@ -292,23 +344,34 @@ a {
 }
 
 .live-slot-name {
-  text-align: center;
+  text-align: left;
 }
 
 .live-slot-controls {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .live-input-row {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
   align-items: center;
+}
+
+.live-input-label {
+  font-size: 12px;
 }
 
 .live-input-number {
   width: 100%;
+}
+
+.live-input-slider {
+  width: 100%;
+  margin-inline: 0;
+  margin-block: 0;
 }
 
 .quick-fill-group {
@@ -328,16 +391,24 @@ a {
   width: 100%;
 }
 
-.history-team-grid {
+.history-battle-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .history-slot-card.ant-card {
-  min-height: 156px;
+  min-height: 106px;
   background: rgba(255, 253, 249, 0.98);
   transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.history-slot-card-left.ant-card {
+  border-color: rgba(199, 99, 47, 0.22);
+}
+
+.history-slot-card-right.ant-card {
+  border-color: rgba(45, 122, 88, 0.22);
 }
 
 .history-slot-card.is-lost.ant-card {
@@ -355,14 +426,19 @@ a {
 }
 
 .history-slot-image {
-  width: 72px;
-  height: 72px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
 }
 
+.history-slot-name {
+  max-width: 100%;
+  font-size: 11px;
+}
+
 .history-slot-fallback {
-  width: 72px;
-  height: 72px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
   background: rgba(199, 99, 47, 0.08);
   display: grid;
@@ -427,16 +503,36 @@ a {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .panel-editor-layout {
+    grid-template-columns: 112px minmax(0, 1fr);
+  }
+
   .live-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .history-team-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .history-battle-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .preview-frame {
     min-height: 520px;
+  }
+
+  .panel-editor-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-slot-rail {
+    order: 1;
+  }
+
+  .panel-editor-main {
+    order: 2;
+  }
+
+  .sprite-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .live-grid {

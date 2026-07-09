@@ -21,6 +21,7 @@ import {
   Row,
   Segmented,
   Select,
+  Slider,
   Space,
   Spin,
   Statistic,
@@ -437,6 +438,16 @@ function buildHistoryLineupEntries(
   return entries;
 }
 
+function buildHistoryBattleEntries(
+  game: GameRecord,
+  spriteMap: Map<string, SpriteRecord>,
+): Array<{ id: string; name: string; path: string; side: PanelSide } | null> {
+  return [
+    ...buildHistoryLineupEntries(game, 'left', spriteMap).map((entry) => (entry ? { ...entry, side: 'left' as const } : null)),
+    ...buildHistoryLineupEntries(game, 'right', spriteMap).map((entry) => (entry ? { ...entry, side: 'right' as const } : null)),
+  ];
+}
+
 function getVisibleGames(record: MatchRecord) {
   return record.games.filter((game) => (
     game.status !== 'pending'
@@ -689,6 +700,7 @@ function Dashboard() {
   const [tagEditorOpen, setTagEditorOpen] = useState(false);
   const [tagEditorMatchId, setTagEditorMatchId] = useState<string | null>(null);
   const [selectedHistoryKeys, setSelectedHistoryKeys] = useState<React.Key[]>([]);
+  const [expandedHistoryKeys, setExpandedHistoryKeys] = useState<React.Key[]>([]);
   const [historyTagFilter, setHistoryTagFilter] = useState<string | null>(null);
   const [previewSlot, setPreviewSlot] = useState<PreviewSlotKey>('page1');
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
@@ -1634,35 +1646,69 @@ function Dashboard() {
         setLiveNotice({ tone: 'info', text: '已取消实时监听' });
         return;
       }
-      if (!window.rocoDesktop?.readTextFile || !window.rocoDesktop?.statFile) {
-        throw new Error('当前环境不支持实时监听');
-      }
-
-      const [text, stat] = await Promise.all([
-        window.rocoDesktop.readTextFile(filePath),
-        window.rocoDesktop.statFile(filePath),
-      ]);
-
-      setLiveFilePath(filePath);
-      setLiveFileName(getLiveConfigFileName(filePath));
-      setLiveConfigEnabled(true);
-      setLiveConfigLastModified(stat.mtimeMs);
-      setLiveConfigLastContent(text);
-
-      if (text.trim()) {
-        await applyLiveConfigText(text, '监听文件');
-      } else {
-        await writeLiveConfigToPath(filePath, stringifyLiveConfig(panels), `监听中：${getLiveConfigFileName(filePath)}`);
-      }
-
-      clearLivePollTimer();
-      livePollTimerRef.current = window.setInterval(() => {
-        void pollLiveConfigFile();
-      }, 1000);
-      setLiveNotice({ tone: 'success', text: `实时监听已开启：${getLiveConfigFileName(filePath)}` });
+      await startLiveConfigWatchFromPath(filePath);
     } catch (error) {
       stopLiveConfigWatch(false);
       setLiveNotice({ tone: 'error', text: error instanceof Error ? error.message : '实时监听开启失败' });
+    }
+  }
+
+  async function startLiveConfigWatchFromPath(filePath: string) {
+    if (!window.rocoDesktop?.readTextFile || !window.rocoDesktop?.statFile) {
+      throw new Error('当前环境不支持实时监听');
+    }
+
+    const [text, stat] = await Promise.all([
+      window.rocoDesktop.readTextFile(filePath),
+      window.rocoDesktop.statFile(filePath),
+    ]);
+
+    setLiveFilePath(filePath);
+    setLiveFileName(getLiveConfigFileName(filePath));
+    setLiveConfigEnabled(true);
+    setLiveConfigLastModified(stat.mtimeMs);
+    setLiveConfigLastContent(text);
+
+    if (text.trim()) {
+      await applyLiveConfigText(text, '监听文件');
+    } else {
+      await writeLiveConfigToPath(filePath, stringifyLiveConfig(panels), `监听中：${getLiveConfigFileName(filePath)}`);
+    }
+
+    clearLivePollTimer();
+    livePollTimerRef.current = window.setInterval(() => {
+      void pollLiveConfigFile();
+    }, 1000);
+    setLiveNotice({ tone: 'success', text: `实时监听已开启：${getLiveConfigFileName(filePath)}` });
+  }
+
+  async function handleLiveConfigUpload(file: File & { path?: string }) {
+    try {
+      const uploadPath = typeof file.path === 'string' && file.path.trim() ? file.path.trim() : null;
+
+      if (uploadPath) {
+        await startLiveConfigWatchFromPath(uploadPath);
+        return false;
+      }
+
+      if (window.rocoDesktop?.showOpenDialog) {
+        const filePath = await window.rocoDesktop.showOpenDialog();
+        if (!filePath) {
+          setLiveNotice({ tone: 'info', text: '已取消实时监听' });
+          return false;
+        }
+        await startLiveConfigWatchFromPath(filePath);
+        return false;
+      }
+
+      const text = await file.text();
+      await applyLiveConfigText(text, '上传文件');
+      setLiveNotice({ tone: 'warning', text: '当前环境仅应用了上传内容，无法持续监听该文件' });
+      return false;
+    } catch (error) {
+      stopLiveConfigWatch(false);
+      setLiveNotice({ tone: 'error', text: error instanceof Error ? error.message : '实时监听开启失败' });
+      return false;
     }
   }
 
@@ -1882,17 +1928,17 @@ function Dashboard() {
           </Space>
         )}
       >
-        <Row gutter={[16, 16]}>
-          <Col xs={24} xl={8}>
-            <div className="panel-slot-grid">
+        <div className={`panel-editor-layout panel-editor-layout-${side}`}>
+          <div className={`panel-slot-rail panel-slot-rail-${side}`}>
+            <div className={`panel-slot-grid panel-slot-grid-${side}`}>
               {panel.selected.map((slot, index) => (
                 <Button
                   key={`${side}-${index}`}
                   type={index === panel.activeSlot ? 'primary' : 'default'}
-                  className="slot-button"
+                  className={`slot-button slot-button-${side}`}
                   onClick={() => mutatePanel(side, (prev) => ({ ...prev, activeSlot: index }))}
                 >
-                  <div className="slot-button-inner">
+                  <div className={`slot-button-inner slot-button-inner-${side}`}>
                     {slot.sprite?.path ? (
                       <Image
                         preview={false}
@@ -1902,18 +1948,16 @@ function Dashboard() {
                         fallback="/assets/ui/back.png"
                       />
                     ) : (
-                      <div className="slot-placeholder">槽位 {index + 1}</div>
+                      <div className="slot-placeholder">{index + 1}</div>
                     )}
-                    <div className="slot-meta">
-                      <Text className="slot-index">槽位 {index + 1}</Text>
-                    </div>
                   </div>
                 </Button>
               ))}
             </div>
-          </Col>
-          <Col xs={24} xl={16}>
-            <Space direction="vertical" size={16} className="panel-editor-stack">
+          </div>
+
+          <div className="panel-editor-main">
+            <div className="panel-editor-tools">
               <Card size="small" className="subtle-card">
                 <Space direction="vertical" size={12} className="control-stack">
                   <div>
@@ -1961,40 +2005,39 @@ function Dashboard() {
                   </Space>
                 </Card>
               ) : null}
+            </div>
 
-              <Card size="small" className="subtle-card sprite-picker-card">
-                <Space direction="vertical" size={12} className="control-stack">
-                  <Input
-                    value={panel.search}
-                    onChange={(event) => mutatePanel(side, (prev) => ({ ...prev, search: event.target.value }))}
-                    placeholder={`搜索${side === 'left' ? '左侧' : '右侧'}精灵名称`}
-                  />
-                  <div className="sprite-picker-scroll">
-                    <List
-                      grid={{ gutter: 10, xs: 2, sm: 3, md: 4, xl: 5 }}
-                      dataSource={filteredSprites}
-                      locale={{ emptyText: '没有匹配到精灵' }}
-                      renderItem={(sprite) => (
-                        <List.Item>
-                          <Button className="sprite-card-button" onClick={() => applySprite(side, sprite)}>
-                            <Space direction="vertical" size={0} className="sprite-card-inner">
-                              <Image
-                                preview={false}
-                                src={sprite.path}
-                                alt={sprite.displayName}
-                                className="sprite-card-image"
-                              />
-                            </Space>
-                          </Button>
-                        </List.Item>
-                      )}
-                    />
-                  </div>
-                </Space>
-              </Card>
-            </Space>
-          </Col>
-        </Row>
+            <Card size="small" className="subtle-card sprite-picker-card">
+              <div className="sprite-picker-shell">
+                <Input
+                  value={panel.search}
+                  onChange={(event) => mutatePanel(side, (prev) => ({ ...prev, search: event.target.value }))}
+                  placeholder={`搜索${side === 'left' ? '左侧' : '右侧'}精灵名称`}
+                />
+                <div className="sprite-picker-scroll">
+                  {filteredSprites.length ? (
+                    <div className="sprite-picker-grid">
+                      {filteredSprites.map((sprite) => (
+                        <Button key={`${side}-${sprite.id}`} className="sprite-card-button" onClick={() => applySprite(side, sprite)}>
+                          <Space direction="vertical" size={0} className="sprite-card-inner">
+                            <Image
+                              preview={false}
+                              src={sprite.path}
+                              alt={sprite.displayName}
+                              className="sprite-card-image"
+                            />
+                          </Space>
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有匹配到精灵" />
+                  )}
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
       </Card>
     );
   }
@@ -2011,18 +2054,6 @@ function Dashboard() {
             <Tag color="processing">页面预览</Tag>
           </Space>
         </div>
-        <Card size="small" className="workspace-card">
-          <Space direction="vertical" size={10}>
-            <Text type="secondary">本地地址</Text>
-            <Text strong>{getLocalAddressText(previewSlot)}</Text>
-            <Button block onClick={() => void handleCopyLocalAddress()}>
-              复制当前地址
-            </Button>
-            <Button block type="primary" onClick={() => setView('live')}>
-              打开实时控制
-            </Button>
-          </Space>
-        </Card>
         <Menu
           mode="inline"
           selectedKeys={[view]}
@@ -2246,8 +2277,7 @@ function Dashboard() {
                           {record.completedAt ? ` · 完成于 ${formatDateTime(record.completedAt)}` : ''}
                         </Text>
                         {getVisibleGames(record).map((game) => {
-                          const leftEntries = buildHistoryLineupEntries(game, 'left', spriteMap);
-                          const rightEntries = buildHistoryLineupEntries(game, 'right', spriteMap);
+                          const battleEntries = buildHistoryBattleEntries(game, spriteMap);
                           const leftLost = game.winner === 'right';
                           const rightLost = game.winner === 'left';
 
@@ -2262,79 +2292,47 @@ function Dashboard() {
                                 <Tag color={game.winner === 'left' ? 'success' : game.winner === 'right' ? 'volcano' : 'default'}>
                                   {getGameResultLabel(game)}
                                 </Tag>
+                                <Text type="secondary">左侧 1-6 · 右侧 7-12</Text>
                               </Space>
-                              <Row gutter={[16, 16]}>
-                                <Col xs={24} xl={12}>
-                                  <Space direction="vertical" size={10} className="control-stack">
-                                    <Space wrap>
-                                      <Text strong>左侧阵容</Text>
-                                      {leftLost ? <Tag color="default">本局失利</Tag> : null}
-                                    </Space>
-                                    <div className="history-team-grid">
-                                      {leftEntries.map((entry, index) => (
-                                        <Card
-                                          key={`${record.id}-${game.gameNumber}-left-${index}`}
-                                          size="small"
-                                          className={`history-slot-card${leftLost ? ' is-lost' : ''}${!entry ? ' is-empty' : ''}`}
-                                        >
-                                          <Space direction="vertical" size={8} className="history-slot-stack">
-                                            {entry?.path ? (
-                                              <Image
-                                                preview={false}
-                                                src={entry.path}
-                                                alt={entry.name}
-                                                className="history-slot-image"
-                                                fallback="/assets/ui/back.png"
-                                              />
-                                            ) : (
-                                              <div className="history-slot-fallback">未上阵</div>
-                                            )}
-                                            <Text ellipsis>{entry?.name ?? '未上阵'}</Text>
-                                          </Space>
-                                        </Card>
-                                      ))}
-                                    </div>
-                                  </Space>
-                                </Col>
-                                <Col xs={24} xl={12}>
-                                  <Space direction="vertical" size={10} className="control-stack">
-                                    <Space wrap>
-                                      <Text strong>右侧阵容</Text>
-                                      {rightLost ? <Tag color="default">本局失利</Tag> : null}
-                                    </Space>
-                                    <div className="history-team-grid">
-                                      {rightEntries.map((entry, index) => (
-                                        <Card
-                                          key={`${record.id}-${game.gameNumber}-right-${index}`}
-                                          size="small"
-                                          className={`history-slot-card${rightLost ? ' is-lost' : ''}${!entry ? ' is-empty' : ''}`}
-                                        >
-                                          <Space direction="vertical" size={8} className="history-slot-stack">
-                                            {entry?.path ? (
-                                              <Image
-                                                preview={false}
-                                                src={entry.path}
-                                                alt={entry.name}
-                                                className="history-slot-image"
-                                                fallback="/assets/ui/back.png"
-                                              />
-                                            ) : (
-                                              <div className="history-slot-fallback">未上阵</div>
-                                            )}
-                                            <Text ellipsis>{entry?.name ?? '未上阵'}</Text>
-                                          </Space>
-                                        </Card>
-                                      ))}
-                                    </div>
-                                  </Space>
-                                </Col>
-                              </Row>
+                              <div className="history-battle-grid">
+                                {battleEntries.map((entry, index) => {
+                                  const isLeft = index < 6;
+                                  const lost = isLeft ? leftLost : rightLost;
+
+                                  return (
+                                    <Card
+                                      key={`${record.id}-${game.gameNumber}-${isLeft ? 'left' : 'right'}-${index}`}
+                                      size="small"
+                                      className={`history-slot-card history-slot-card-${isLeft ? 'left' : 'right'}${lost ? ' is-lost' : ''}${!entry ? ' is-empty' : ''}`}
+                                    >
+                                      <Space direction="vertical" size={6} className="history-slot-stack">
+                                        {entry?.path ? (
+                                          <Image
+                                            preview={false}
+                                            src={entry.path}
+                                            alt={entry.name}
+                                            className="history-slot-image"
+                                            fallback="/assets/ui/back.png"
+                                          />
+                                        ) : (
+                                          <div className="history-slot-fallback">{index + 1}</div>
+                                        )}
+                                        <Text ellipsis className="history-slot-name">{entry?.name ?? `空位 ${index + 1}`}</Text>
+                                      </Space>
+                                    </Card>
+                                  );
+                                })}
+                              </div>
                             </Space>
                           </Card>
                           );
                         })}
                       </Space>
                     ),
+                    expandedRowKeys: expandedHistoryKeys,
+                    onExpand: (expanded, record) => {
+                      setExpandedHistoryKeys(expanded ? [record.id] : []);
+                    },
                   }}
                   locale={{ emptyText: '暂无历史赛事' }}
                 />
@@ -2350,9 +2348,7 @@ function Dashboard() {
                   <Space wrap>
                     <Button onClick={() => void loadInitialData(true)}>重新加载</Button>
                     <Button onClick={() => void handleExportLiveConfig()}>配置导出</Button>
-                    <Button type={liveConfigEnabled ? 'default' : 'primary'} danger={liveConfigEnabled} onClick={handleLiveConfigWatchToggle}>
-                      {liveConfigEnabled ? '关闭监听' : '实时监听'}
-                    </Button>
+                    {liveConfigEnabled ? <Button danger onClick={handleLiveConfigWatchToggle}>关闭监听</Button> : null}
                   </Space>
                 )}
               >
@@ -2367,25 +2363,24 @@ function Dashboard() {
                     />
                   ) : null}
                   <Row gutter={[16, 16]}>
-                    <Col xs={24} md={8}>
-                      <Card size="small" className="subtle-card match-summary-card">
-                        <Text type="secondary">监听状态</Text>
-                        <Title level={5}>{liveConfigEnabled ? '已开启' : '未开启'}</Title>
-                        <Text type="secondary">{liveFileName || '未绑定 JSON 文件'}</Text>
-                      </Card>
-                    </Col>
-                    <Col xs={24} md={8}>
-                      <Card size="small" className="subtle-card match-summary-card match-summary-score">
-                        <Text type="secondary">左侧阵容</Text>
-                        <Title level={3}>{leftPanelSummary.selectedCount}</Title>
-                        <Text type="secondary">已选 / 6</Text>
-                      </Card>
-                    </Col>
-                    <Col xs={24} md={8}>
-                      <Card size="small" className="subtle-card match-summary-card match-summary-score">
-                        <Text type="secondary">右侧阵容</Text>
-                        <Title level={3}>{rightPanelSummary.selectedCount}</Title>
-                        <Text type="secondary">已选 / 6</Text>
+                    <Col xs={24} lg={10}>
+                      <Card size="small" className="subtle-card live-watch-card">
+                        <Space direction="vertical" size={14} className="control-stack">
+                          <div>
+                            <Text type="secondary">监听目标 JSON</Text>
+                            <Title level={5}>{liveConfigEnabled ? '监听中' : '未监听'}</Title>
+                            <Text type="secondary">{liveFileName || '点击或拖拽选择要监听的 JSON 文件'}</Text>
+                          </div>
+                          <Upload.Dragger
+                            accept=".json,application/json"
+                            showUploadList={false}
+                            className="live-watch-uploader"
+                            beforeUpload={(file) => handleLiveConfigUpload(file as File & { path?: string })}
+                          >
+                            <p className="ant-upload-text">选择或拖拽监听 JSON</p>
+                            <p className="ant-upload-hint">监听开启后，后台会持续读取这个本地文件并回写当前数值。</p>
+                          </Upload.Dragger>
+                        </Space>
                       </Card>
                     </Col>
                   </Row>
@@ -2407,23 +2402,25 @@ function Dashboard() {
                                 </div>
                                 <div className="live-slot-controls">
                                   <div className="live-input-row">
-                                    <Text type="secondary">HP</Text>
-                                    <InputNumber
+                                    <Text strong className="live-input-label">HP</Text>
+                                    <Slider
                                       min={0}
                                       max={100}
                                       value={getHealthLevel(slot)}
-                                      onChange={(value) => void saveLiveField(side, index, 'healthPercent', Number(value ?? 100))}
-                                      className="live-input-number"
+                                      onChange={(value) => void saveLiveField(side, index, 'healthPercent', Number(value))}
+                                      className="live-input-slider"
+                                      tooltip={{ formatter: (value) => `${value ?? 0}%` }}
                                     />
                                   </div>
                                   <div className="live-input-row">
-                                    <Text type="secondary">能量</Text>
-                                    <InputNumber
+                                    <Text strong className="live-input-label">能量</Text>
+                                    <Slider
                                       min={0}
                                       max={10}
+                                      step={1}
                                       value={getEnergyLevel(slot)}
-                                      onChange={(value) => void saveLiveField(side, index, 'energyValue', Number(value ?? 10))}
-                                      className="live-input-number"
+                                      onChange={(value) => void saveLiveField(side, index, 'energyValue', Number(value))}
+                                      className="live-input-slider"
                                     />
                                   </div>
                                 </div>
