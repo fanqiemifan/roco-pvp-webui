@@ -560,9 +560,9 @@ function buildProgressItems(match: MatchRecord | null) {
 
   let current = 1;
   if (currentGame?.status === 'in_progress') {
-    current = 2;
+    current = 3;
   } else if (readyToStart) {
-    current = 1;
+    current = 2;
   }
   if (match.status === 'completed') {
     current = 4;
@@ -740,6 +740,7 @@ function Dashboard() {
   const spriteMap = new Map(sprites.map((sprite) => [sprite.id, sprite]));
   const activeMatch = getActiveMatch(matchStore);
   const currentGame = getCurrentGame(activeMatch);
+  const lineupLocked = activeMatch?.status === 'completed';
   const progress = buildProgressItems(activeMatch);
   const allHistoryTags = buildHistoryTags(matchStore.matches);
   const filteredMatches = historyTagFilter
@@ -956,6 +957,15 @@ function Dashboard() {
   }, [panels.right]);
 
   async function savePanel(side: PanelSide, silent = false) {
+    if (lineupLocked) {
+      const nextText = '当前赛事已完赛，不能编辑阵容';
+      setRosterNotice({ tone: 'warning', text: nextText });
+      if (!silent) {
+        message.warning(nextText);
+      }
+      return;
+    }
+
     const current = panels[side];
     mutatePanel(side, (panel) => ({ ...panel, saving: true }));
     try {
@@ -1174,8 +1184,17 @@ function Dashboard() {
         panels: data.panels,
       });
       setView('roster');
-      setRosterNotice({ tone: 'success', text: `已切换到赛事 ${matchId}` });
-      message.success(`已切换到赛事 ${matchId}`);
+      const nextStore = data.matches ?? matchStore;
+      const nextActiveMatch = getActiveMatch(nextStore);
+      const nextText = nextActiveMatch?.status === 'completed'
+        ? `已切换到赛事 ${matchId}，比赛已完成，阵容不可编辑`
+        : `已切换到赛事 ${matchId}`;
+      setRosterNotice({ tone: nextActiveMatch?.status === 'completed' ? 'warning' : 'success', text: nextText });
+      if (nextActiveMatch?.status === 'completed') {
+        message.warning(nextText);
+      } else {
+        message.success(nextText);
+      }
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
     }
@@ -1968,6 +1987,7 @@ function Dashboard() {
 
   function renderPanelEditor(side: PanelSide) {
     const panel = panels[side];
+    const panelLocked = lineupLocked;
     const searchValue = side === 'left' ? deferredLeftSearch : deferredRightSearch;
     const filteredSprites = sprites.filter((sprite) => {
       const keyword = searchValue.trim().toLowerCase();
@@ -1995,9 +2015,11 @@ function Dashboard() {
               checked={panel.autoSaveEnabled}
               checkedChildren="自动保存"
               unCheckedChildren="手动保存"
+              disabled={panelLocked}
               onChange={(checked) => mutatePanel(side, (prev) => ({ ...prev, autoSaveEnabled: checked }))}
             />
             {panel.saving ? <Tag color="processing">保存中</Tag> : null}
+            {panelLocked ? <Tag color="warning">已锁定</Tag> : null}
           </Space>
         )}
       >
@@ -2009,6 +2031,7 @@ function Dashboard() {
                   key={`${side}-${index}`}
                   type={index === panel.activeSlot ? 'primary' : 'default'}
                   className={`slot-button slot-button-${side}`}
+                  disabled={panelLocked}
                   onClick={() => mutatePanel(side, (prev) => ({ ...prev, activeSlot: index }))}
                 >
                   <div className={`slot-button-inner slot-button-inner-${side}`}>
@@ -2033,22 +2056,29 @@ function Dashboard() {
             <div className="panel-editor-tools">
               <Card size="small" className="subtle-card">
                 <Space direction="vertical" size={12} className="control-stack">
+                  {panelLocked ? (
+                    <Alert
+                      showIcon
+                      type="warning"
+                      message="当前赛事已完成，阵容编辑已锁定"
+                    />
+                  ) : null}
                   <div>
                     <Text strong>快速文本填充</Text>
                     <Paragraph type="secondary">一行一个精灵名，先生成本地草稿，再保存到阵容。</Paragraph>
                   </div>
                   <TextArea
+                    disabled={panelLocked}
                     rows={4}
                     value={panel.quickFillInput}
                     onChange={(event) => mutatePanel(side, (prev) => ({ ...prev, quickFillInput: event.target.value }))}
                     placeholder={'暮星辰\n怖哭菇\n龙息帕尔'}
                   />
                   <Space wrap>
-                    <Button onClick={() => void runQuickFill(side)}>快速填充</Button>
-                    <Button type="primary" onClick={() => void savePanel(side)}>保存到{side === 'left' ? '左侧' : '右侧'}</Button>
-                    <Button onClick={() => clearCurrentSlot(side)}>清空当前槽位</Button>
-                    <Button onClick={() => clearPanel(side)}>清空全部草稿</Button>
-                    <Button danger onClick={() => void deletePanel(side)}>删除已存配置</Button>
+                    <Button disabled={panelLocked} onClick={() => void runQuickFill(side)}>快速填充</Button>
+                    <Button disabled={panelLocked} type="primary" onClick={() => void savePanel(side)}>保存到{side === 'left' ? '左侧' : '右侧'}</Button>
+                    <Button disabled={panelLocked} onClick={() => clearCurrentSlot(side)}>选中清除</Button>
+                    <Button disabled={panelLocked} onClick={() => clearPanel(side)}>清除全部</Button>
                   </Space>
                 </Space>
               </Card>
@@ -2067,6 +2097,7 @@ function Dashboard() {
                               <Button
                                 key={candidate.id}
                                 size="small"
+                                disabled={panelLocked}
                                 onClick={() => chooseQuickFillCandidate(side, match.slot, candidate)}
                               >
                                 {candidate.displayName}
@@ -2083,6 +2114,7 @@ function Dashboard() {
             <Card size="small" className="subtle-card sprite-picker-card">
               <div className="sprite-picker-shell">
                 <Input
+                  disabled={panelLocked}
                   value={panel.search}
                   onChange={(event) => mutatePanel(side, (prev) => ({ ...prev, search: event.target.value }))}
                   placeholder={`搜索${side === 'left' ? '左侧' : '右侧'}精灵名称`}
@@ -2091,7 +2123,12 @@ function Dashboard() {
                   {filteredSprites.length ? (
                     <div className="sprite-picker-grid">
                       {filteredSprites.map((sprite) => (
-                        <Button key={`${side}-${sprite.id}`} className="sprite-card-button" onClick={() => applySprite(side, sprite)}>
+                        <Button
+                          key={`${side}-${sprite.id}`}
+                          className="sprite-card-button"
+                          disabled={panelLocked}
+                          onClick={() => applySprite(side, sprite)}
+                        >
                           <Space direction="vertical" size={0} className="sprite-card-inner">
                             <Image
                               preview={false}

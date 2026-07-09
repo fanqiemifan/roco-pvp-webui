@@ -527,6 +527,10 @@ export async function createLocalServer(
     try {
       const activeStore = getMatchStore(paths);
       const activeMatch = activeStore.matches.find((match) => match.id === activeStore.activeMatchId);
+      if (activeMatch?.status === 'completed') {
+        throw new Error('当前赛事已完赛，不能编辑阵容');
+      }
+
       const activeGame =
         activeMatch?.games.find((game) => game.status === 'in_progress')
         ?? activeMatch?.games.find((game) => game.status === 'pending')
@@ -574,6 +578,10 @@ export async function createLocalServer(
     try {
       const activeStore = getMatchStore(paths);
       const activeMatch = activeStore.matches.find((match) => match.id === activeStore.activeMatchId);
+      if (activeMatch?.status === 'completed') {
+        throw new Error('当前赛事已完赛，不能编辑阵容');
+      }
+
       const activeGame =
         activeMatch?.games.find((game) => game.status === 'in_progress')
         ?? activeMatch?.games.find((game) => game.status === 'pending')
@@ -616,6 +624,10 @@ export async function createLocalServer(
     try {
       const activeStore = getMatchStore(paths);
       const activeMatch = activeStore.matches.find((match) => match.id === activeStore.activeMatchId);
+      if (activeMatch?.status === 'completed') {
+        throw new Error('当前赛事已完赛，不能编辑阵容');
+      }
+
       const activeGame =
         activeMatch?.games.find((game) => game.status === 'in_progress')
         ?? activeMatch?.games.find((game) => game.status === 'pending')

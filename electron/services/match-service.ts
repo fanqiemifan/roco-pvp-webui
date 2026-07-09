@@ -764,6 +764,16 @@ function getCurrentGame(match: MatchRecord): GameRecord {
   );
 }
 
+function assertMatchLineupEditable(match: MatchRecord, currentGame: GameRecord): void {
+  if (match.status === 'completed') {
+    throw new Error('当前赛事已完赛，不能编辑阵容');
+  }
+
+  if (currentGame.status === 'completed') {
+    throw new Error('当前小局已结束，不能继续修改阵容');
+  }
+}
+
 function syncMatchToPanelsAndScoreboard(paths: AppPaths, match: MatchRecord): void {
   const currentGame = getCurrentGame(match);
 
@@ -1078,9 +1088,7 @@ export function saveDraftPanelStateForActiveMatch(
 
   const current = store.matches[index];
   const currentGame = getCurrentGame(current);
-  if (currentGame.status === 'completed') {
-    throw new Error('当前小局已结束，不能继续修改阵容');
-  }
+  assertMatchLineupEditable(current, currentGame);
 
   const nextSlots = parseSelectedSlots(selectedSlots);
   const nextGames = [...current.games];
@@ -1120,9 +1128,7 @@ export function saveDraftPanelSlotStateForActiveMatch(
 
   const current = store.matches[index];
   const currentGame = getCurrentGame(current);
-  if (currentGame.status === 'completed') {
-    throw new Error('当前小局已结束，不能继续修改阵容');
-  }
+  assertMatchLineupEditable(current, currentGame);
 
   const nextSlot = parseSelectedSlot(slotIndex, slotData);
   const nextGames = [...current.games];
@@ -1305,6 +1311,7 @@ export function syncActiveMatchLineupsFromPanels(paths: AppPaths): MatchStoreSta
 
   const current = store.matches[index];
   const currentGame = getCurrentGame(current);
+  assertMatchLineupEditable(current, currentGame);
   if (currentGame.status !== 'pending') {
     return getMatchStore(paths);
   }
