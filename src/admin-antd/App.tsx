@@ -2368,7 +2368,7 @@ function Dashboard() {
                             className="match-list-item"
                             actions={[
                               <Button key="select" type={match.id === activeMatch?.id ? 'primary' : 'default'} onClick={() => void selectMatch(match.id)}>
-                                {match.id === activeMatch?.id ? '当前赛事' : '进入'}
+                                {match.id === activeMatch?.id ? '当前' : '选择'}
                               </Button>,
                             ]}
                           >
@@ -2669,10 +2669,11 @@ function Dashboard() {
                                   <div className="live-input-row">
                                     <Text strong className="live-input-label">HP</Text>
                                     <Slider
+                                      key={`live-health-${side}-${index}-${slot.sprite?.id ?? 'empty'}-${slot.healthEnabled ? 'on' : 'off'}-${getHealthLevel(slot)}`}
                                       min={0}
                                       max={100}
-                                      value={getHealthLevel(slot)}
-                                      onChange={(value) => void saveLiveField(side, index, 'healthPercent', Number(value))}
+                                      defaultValue={getHealthLevel(slot)}
+                                      onChangeComplete={(value) => void saveLiveField(side, index, 'healthPercent', Number(value))}
                                       className="live-input-slider"
                                       tooltip={{ formatter: (value) => `${value ?? 0}%` }}
                                     />
@@ -2680,11 +2681,12 @@ function Dashboard() {
                                   <div className="live-input-row">
                                     <Text strong className="live-input-label">能量</Text>
                                     <Slider
+                                      key={`live-energy-${side}-${index}-${slot.sprite?.id ?? 'empty'}-${getEnergyLevel(slot)}`}
                                       min={0}
                                       max={10}
                                       step={1}
-                                      value={getEnergyLevel(slot)}
-                                      onChange={(value) => void saveLiveField(side, index, 'energyValue', Number(value))}
+                                      defaultValue={getEnergyLevel(slot)}
+                                      onChangeComplete={(value) => void saveLiveField(side, index, 'energyValue', Number(value))}
                                       className="live-input-slider"
                                     />
                                   </div>
