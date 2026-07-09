@@ -385,6 +385,19 @@ function getMatchStatusLabel(status: MatchRecord['status']): string {
   return '待开始';
 }
 
+function getNoticeTagColor(tone: NoticeTone): string {
+  if (tone === 'success') {
+    return 'success';
+  }
+  if (tone === 'warning') {
+    return 'warning';
+  }
+  if (tone === 'error') {
+    return 'error';
+  }
+  return 'processing';
+}
+
 function getGameStatusLabel(status: GameRecord['status']): string {
   if (status === 'completed') {
     return '已完成';
@@ -728,8 +741,6 @@ function Dashboard() {
   const activeMatch = getActiveMatch(matchStore);
   const currentGame = getCurrentGame(activeMatch);
   const progress = buildProgressItems(activeMatch);
-  const leftPanelSummary = summarizePanelSlots(panels.left.selected);
-  const rightPanelSummary = summarizePanelSlots(panels.right.selected);
   const allHistoryTags = buildHistoryTags(matchStore.matches);
   const filteredMatches = historyTagFilter
     ? matchStore.matches.filter((match) => (match.tags ?? []).includes(historyTagFilter))
@@ -2149,9 +2160,10 @@ function Dashboard() {
 
           {view === 'roster' ? (
             <Space direction="vertical" size={18} className="page-stack">
-              <Row gutter={[18, 18]}>
-                <Col xs={24} xl={7}>
+              <Row gutter={[18, 18]} className="roster-overview-row">
+                <Col xs={24} xl={7} className="roster-overview-col">
                   <Card
+                    className="roster-overview-card roster-match-list-card"
                     title="比赛列表"
                     extra={<Button type="primary" onClick={() => setCreateMatchOpen(true)}>开一局</Button>}
                   >
@@ -2184,37 +2196,53 @@ function Dashboard() {
                     </div>
                   </Card>
                 </Col>
-                <Col xs={24} xl={17}>
-                  <Card title="当前比赛" extra={<Tag color={activeMatch ? getMatchStatusColor(activeMatch.status) : 'default'}>{activeMatch ? getMatchStatusLabel(activeMatch.status) : '未创建'}</Tag>}>
+                <Col xs={24} xl={17} className="roster-overview-col">
+                  <Card
+                    className="roster-overview-card roster-current-card"
+                    title="当前比赛"
+                    extra={(
+                      <Space wrap size={8} className="roster-card-head-extra">
+                        {rosterNotice ? (
+                          <Tag
+                            closable
+                            bordered={false}
+                            color={getNoticeTagColor(rosterNotice.tone)}
+                            className="roster-notice-tag"
+                            onClose={() => setRosterNotice(null)}
+                          >
+                            {rosterNotice.text}
+                          </Tag>
+                        ) : null}
+                        <Tag color={activeMatch ? getMatchStatusColor(activeMatch.status) : 'default'}>
+                          {activeMatch ? getMatchStatusLabel(activeMatch.status) : '未创建'}
+                        </Tag>
+                      </Space>
+                    )}
+                  >
                     {activeMatch ? (
                       <Space direction="vertical" size={18} className="page-stack">
-                        {rosterNotice ? (
-                          <Alert
-                            showIcon
-                            closable
-                            type={rosterNotice.tone}
-                            message={rosterNotice.text}
-                            onClose={() => setRosterNotice(null)}
-                          />
-                        ) : null}
-                        <Row gutter={[16, 16]}>
-                          <Col xs={24} md={8}>
+                        <Row gutter={[16, 16]} className="match-summary-grid">
+                          <Col xs={24} md={8} className="match-summary-col">
                             <Card size="small" className="subtle-card match-summary-card">
                               <Text type="secondary">左侧选手</Text>
-                              <Title level={5}>{activeMatch.leftPlayer || '未设置'}</Title>
+                              <Title level={4} className="match-summary-player-name">{activeMatch.leftPlayer || '未设置'}</Title>
                             </Card>
                           </Col>
-                          <Col xs={24} md={8}>
+                          <Col xs={24} md={8} className="match-summary-col">
                             <Card size="small" className="subtle-card match-summary-card match-summary-score">
                               <Text type="secondary">当前比分</Text>
-                              <Title level={3}>{activeMatch.leftScore} : {activeMatch.rightScore}</Title>
+                              <div className="match-summary-scoreline" aria-label={`当前比分 ${activeMatch.leftScore} 比 ${activeMatch.rightScore}`}>
+                                <span className="match-summary-score-value">{activeMatch.leftScore}</span>
+                                <span className="match-summary-score-separator">:</span>
+                                <span className="match-summary-score-value">{activeMatch.rightScore}</span>
+                              </div>
                               <Text type="secondary">BO{activeMatch.bestOf} · {currentGame ? `第 ${currentGame.gameNumber} 局` : '暂无对局'}</Text>
                             </Card>
                           </Col>
-                          <Col xs={24} md={8}>
+                          <Col xs={24} md={8} className="match-summary-col">
                             <Card size="small" className="subtle-card match-summary-card">
                               <Text type="secondary">右侧选手</Text>
-                              <Title level={5}>{activeMatch.rightPlayer || '未设置'}</Title>
+                              <Title level={4} className="match-summary-player-name">{activeMatch.rightPlayer || '未设置'}</Title>
                             </Card>
                           </Col>
                         </Row>
@@ -2262,19 +2290,6 @@ function Dashboard() {
                             <Button onClick={() => void runMatchAction('redo')} disabled={!matchStore.history.canRedo}>取消撤回</Button>
                           </Space>
                         </Form>
-
-                        <Row gutter={[16, 16]}>
-                          <Col xs={24} md={8}>
-                            <Statistic title="先赢局数" value={winsNeeded(activeMatch.bestOf)} />
-                          </Col>
-                          <Col xs={24} md={8}>
-                            <Statistic title="左侧已选精灵" value={leftPanelSummary.selectedCount} suffix="/ 6" />
-                          </Col>
-                          <Col xs={24} md={8}>
-                            <Statistic title="右侧已选精灵" value={rightPanelSummary.selectedCount} suffix="/ 6" />
-                          </Col>
-                        </Row>
-
                       </Space>
                     ) : (
                       <Empty description="先创建或选择一场赛事" />

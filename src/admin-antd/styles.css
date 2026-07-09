@@ -303,27 +303,131 @@ a {
 }
 
 .match-list-scroll {
-  max-height: 492px;
+  height: calc((72px * 6) + (12px * 5));
+  max-height: calc((72px * 6) + (12px * 5));
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 4px;
+}
+
+.roster-overview-row > .ant-col,
+.roster-overview-col {
+  display: flex;
+}
+
+.roster-overview-card.ant-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.roster-overview-card > .ant-card-head {
+  flex-shrink: 0;
+}
+
+.roster-overview-card > .ant-card-head .ant-card-head-wrapper {
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.roster-overview-card > .ant-card-head .ant-card-extra {
+  margin-inline-start: auto;
+  padding: 0;
+}
+
+.roster-overview-card > .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.roster-card-head-extra {
+  justify-content: flex-end;
+}
+
+.roster-notice-tag.ant-tag {
+  margin-inline-end: 0;
+  padding-inline: 12px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.roster-current-card > .ant-card-body .page-stack {
+  flex: 1;
 }
 
 .match-list-scroll .ant-list-item {
   min-height: 72px;
 }
 
+.match-summary-grid > .ant-col,
+.match-summary-col {
+  display: flex;
+}
+
+.match-summary-card.ant-card {
+  width: 100%;
+  border: 1px solid rgba(116, 82, 51, 0.12);
+  background:
+    radial-gradient(circle at top right, rgba(214, 140, 79, 0.1), transparent 42%),
+    linear-gradient(180deg, rgba(255, 253, 250, 0.98), rgba(250, 244, 236, 0.96));
+  box-shadow: 0 14px 32px rgba(77, 48, 25, 0.08);
+}
+
 .match-summary-card .ant-card-body {
+  min-height: 124px;
   display: grid;
-  gap: 6px;
+  align-content: center;
+  gap: 12px;
+  padding: 18px 20px;
 }
 
 .match-summary-card .ant-typography {
   margin-bottom: 0;
 }
 
+.match-summary-player-name.ant-typography {
+  font-size: 24px;
+  line-height: 1.2;
+  text-align: center;
+}
+
 .match-summary-score {
   text-align: center;
+}
+
+.match-summary-scoreline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.match-summary-score-value {
+  min-width: 44px;
+  font-size: clamp(28px, 2.8vw, 40px);
+  font-weight: 800;
+  line-height: 1;
+  color: #8f4323;
+}
+
+.match-summary-score-separator {
+  font-size: 26px;
+  font-weight: 700;
+  color: #b8894c;
+}
+
+@media (max-width: 992px) {
+  .match-summary-card .ant-card-body {
+    min-height: 112px;
+  }
+
+  .match-summary-player-name.ant-typography {
+    font-size: 20px;
+  }
 }
 
 .live-watch-card .ant-card-body {
