@@ -1,9 +1,5 @@
 :root {
   color-scheme: light;
-  background:
-    radial-gradient(circle at top left, rgba(225, 167, 103, 0.28), transparent 26%),
-    radial-gradient(circle at bottom right, rgba(143, 67, 35, 0.14), transparent 24%),
-    linear-gradient(135deg, #efe3d2 0%, #f8f3ec 48%, #eadcca 100%);
 }
 
 * {
@@ -17,9 +13,24 @@ body,
 }
 
 body {
+  position: relative;
   margin: 0;
   color: #2f2418;
   font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background-color: #f4ede4;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top left, rgba(225, 167, 103, 0.24), transparent 28%),
+    radial-gradient(circle at 85% 18%, rgba(197, 121, 78, 0.12), transparent 22%),
+    radial-gradient(circle at bottom right, rgba(143, 67, 35, 0.1), transparent 26%),
+    linear-gradient(180deg, #efe4d4 0%, #f7f1e9 42%, #f2ebe2 100%);
 }
 
 a {
@@ -52,6 +63,7 @@ a {
 
 .admin-main {
   background: transparent;
+  position: relative;
 }
 
 .admin-header {
@@ -83,6 +95,7 @@ a {
   padding: 0 32px 32px;
   display: grid;
   gap: 18px;
+  position: relative;
 }
 
 .admin-content .ant-card,
@@ -783,10 +796,6 @@ a {
   place-content: center;
   gap: 16px;
   justify-items: center;
-  background:
-    radial-gradient(circle at top left, rgba(225, 167, 103, 0.28), transparent 26%),
-    radial-gradient(circle at bottom right, rgba(143, 67, 35, 0.14), transparent 24%),
-    linear-gradient(135deg, #efe3d2 0%, #f8f3ec 48%, #eadcca 100%);
 }
 
 @media (max-width: 768px) {
