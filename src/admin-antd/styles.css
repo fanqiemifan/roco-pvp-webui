@@ -264,7 +264,7 @@ a {
 .sprite-card-button {
   width: 100%;
   height: auto;
-  min-height: 96px;
+  min-height: 84px;
   padding: 6px;
   border-radius: 12px;
 }
@@ -280,12 +280,12 @@ a {
 
 .sprite-picker-shell {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   gap: 12px;
 }
 
 .sprite-picker-scroll {
-  max-height: calc((96px * 4) + (10px * 3));
+  max-height: calc((126px * 4) + (10px * 3));
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 4px;
@@ -293,13 +293,76 @@ a {
 
 .sprite-picker-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
 .sprite-card-image {
-  width: 68px;
-  height: 68px;
+  width: 60px;
+  height: 60px;
+}
+
+.sprite-card-inner {
+  width: 100%;
+  align-items: center;
+  text-align: center;
+}
+
+.sprite-filter-panel {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(116, 82, 51, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 248, 240, 0.88);
+}
+
+.sprite-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sprite-filter-group {
+  display: grid;
+  gap: 4px;
+}
+
+.sprite-filter-label.ant-typography {
+  font-size: 11px;
+}
+
+.attribute-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.attribute-filter-chip {
+  min-width: 0;
+  height: 26px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.attribute-filter-chip-inner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.attribute-filter-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.form-filter-chip {
+  border-radius: 999px;
 }
 
 .match-list-scroll {
@@ -327,7 +390,7 @@ a {
 }
 
 .roster-overview-card > .ant-card-head .ant-card-head-wrapper {
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -363,6 +426,37 @@ a {
   min-height: 72px;
 }
 
+
+.match-list .ant-list-items {
+  display: grid;
+  gap: 12px;
+}
+
+.match-list-item.ant-list-item {
+  align-items: center;
+}
+
+.match-list-item .ant-list-item-meta {
+  align-items: center;
+}
+
+.match-list-item .ant-list-item-meta-content {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  text-align: left;
+}
+
+.match-list-item .ant-list-item-meta-title,
+.match-list-item .ant-list-item-meta-description {
+  margin-bottom: 0 !important;
+  text-align: left;
+}
+
+.match-list-item .ant-space {
+  justify-content: flex-start;
+}
+
 .match-summary-grid > .ant-col,
 .match-summary-col {
   display: flex;
@@ -371,18 +465,14 @@ a {
 .match-summary-card.ant-card {
   width: 100%;
   border: 1px solid rgba(116, 82, 51, 0.12);
-  background:
-    radial-gradient(circle at top right, rgba(214, 140, 79, 0.1), transparent 42%),
-    linear-gradient(180deg, rgba(255, 253, 250, 0.98), rgba(250, 244, 236, 0.96));
-  box-shadow: 0 14px 32px rgba(77, 48, 25, 0.08);
 }
 
 .match-summary-card .ant-card-body {
-  min-height: 124px;
+  min-height: 112px;
   display: grid;
   align-content: center;
-  gap: 12px;
-  padding: 18px 20px;
+  gap: 10px;
+  padding: 16px 18px;
 }
 
 .match-summary-card .ant-typography {
@@ -390,9 +480,9 @@ a {
 }
 
 .match-summary-player-name.ant-typography {
-  font-size: 24px;
-  line-height: 1.2;
-  text-align: center;
+  font-size: 18px;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .match-summary-score {
@@ -420,13 +510,18 @@ a {
   color: #b8894c;
 }
 
+.match-summary-meta.ant-typography {
+  font-size: 13px;
+}
+
 @media (max-width: 992px) {
   .match-summary-card .ant-card-body {
     min-height: 112px;
+    padding: 16px;
   }
 
   .match-summary-player-name.ant-typography {
-    font-size: 20px;
+    font-size: 17px;
   }
 }
 

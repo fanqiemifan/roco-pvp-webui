@@ -35,6 +35,7 @@ import {
 import type { MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { io } from 'socket.io-client';
+import attributeMapping from '../../resources/data/attribute_mapping.json';
 
 import { SOCKET_EVENTS } from '../../shared/events';
 import type {
@@ -67,6 +68,7 @@ type MatchFormValues = {
   leftPlayer: string;
   rightPlayer: string;
   bestOf: number;
+  tags?: string[];
 };
 
 type CreateMatchValues = MatchFormValues;
@@ -93,6 +95,17 @@ type PanelEditorState = {
   autoSaveEnabled: boolean;
   dirty: boolean;
   saving: boolean;
+};
+
+type SpriteFilterState = {
+  selectedAttributes: string[];
+  selectedForms: string[];
+};
+
+type AttributeOption = {
+  code: string;
+  label: string;
+  iconPath: string;
 };
 
 type PreviewConfig = {
@@ -154,6 +167,12 @@ const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     path: '/live-standby-demo.html',
   },
 };
+
+const ATTRIBUTE_OPTIONS: AttributeOption[] = (attributeMapping as Array<{ 编号: string; 属性: string }>).map((item) => ({
+  code: item.编号,
+  label: item.属性,
+  iconPath: `/resources/attribute/${item.编号}.png`,
+}));
 
 const theme = {
   token: {
@@ -229,6 +248,13 @@ function createPanelEditorState(): PanelEditorState {
     autoSaveEnabled: true,
     dirty: false,
     saving: false,
+  };
+}
+
+function createSpriteFilterState(): SpriteFilterState {
+  return {
+    selectedAttributes: [],
+    selectedForms: [],
   };
 }
 
@@ -422,6 +448,13 @@ function summarizePanelSlots(selected: SlotState[]) {
   const selectedCount = selected.filter((slot) => slot.sprite).length;
   const aliveCount = selected.filter((slot) => slot.sprite && slot.healthPercent > 0).length;
   return { selectedCount, aliveCount };
+}
+
+function splitSpriteAttributes(value: string | null | undefined): string[] {
+  return String(value ?? '')
+    .split(/[、/,，\s]+/u)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function buildHistoryLineupEntries(
@@ -708,6 +741,10 @@ function Dashboard() {
     left: createPanelEditorState(),
     right: createPanelEditorState(),
   });
+  const [spriteFilters, setSpriteFilters] = useState<Record<PanelSide, SpriteFilterState>>({
+    left: createSpriteFilterState(),
+    right: createSpriteFilterState(),
+  });
   const [sprites, setSprites] = useState<SpriteRecord[]>([]);
   const [createMatchOpen, setCreateMatchOpen] = useState(false);
   const [editingHistoryTagMatchId, setEditingHistoryTagMatchId] = useState<string | null>(null);
@@ -749,6 +786,11 @@ function Dashboard() {
 
   const deferredLeftSearch = useDeferredValue(panels.left.search);
   const deferredRightSearch = useDeferredValue(panels.right.search);
+  const spriteFormOptions = Array.from(new Set(
+    sprites
+      .map((sprite) => sprite.form.trim())
+      .filter(Boolean),
+  ));
 
   function setPanelState(side: PanelSide, nextState: PanelEditorState) {
     setPanels((prev) => ({
@@ -759,6 +801,13 @@ function Dashboard() {
 
   function mutatePanel(side: PanelSide, updater: (panel: PanelEditorState) => PanelEditorState) {
     setPanels((prev) => ({
+      ...prev,
+      [side]: updater(prev[side]),
+    }));
+  }
+
+  function mutateSpriteFilter(side: PanelSide, updater: (filter: SpriteFilterState) => SpriteFilterState) {
+    setSpriteFilters((prev) => ({
       ...prev,
       [side]: updater(prev[side]),
     }));
@@ -1111,6 +1160,39 @@ function Dashboard() {
     }));
   }
 
+  function toggleAttributeFilter(side: PanelSide, attribute: string) {
+    const current = spriteFilters[side].selectedAttributes;
+    const isActive = current.includes(attribute);
+
+    if (!isActive && current.length >= 2) {
+      message.warning('精灵属性最多只能选择两个');
+      return;
+    }
+
+    mutateSpriteFilter(side, (filter) => ({
+      ...filter,
+      selectedAttributes: isActive
+        ? filter.selectedAttributes.filter((item) => item !== attribute)
+        : [...filter.selectedAttributes, attribute],
+    }));
+  }
+
+  function toggleFormFilter(side: PanelSide, form: string) {
+    mutateSpriteFilter(side, (filter) => ({
+      ...filter,
+      selectedForms: filter.selectedForms.includes(form)
+        ? filter.selectedForms.filter((item) => item !== form)
+        : [...filter.selectedForms, form],
+    }));
+  }
+
+  function clearSpriteFilters(side: PanelSide) {
+    setSpriteFilters((prev) => ({
+      ...prev,
+      [side]: createSpriteFilterState(),
+    }));
+  }
+
   async function saveMatchMeta(values: MatchFormValues) {
     if (!activeMatch) {
       return;
@@ -1204,7 +1286,10 @@ function Dashboard() {
     try {
       const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches', {
         method: 'POST',
-        json: values,
+        json: {
+          ...values,
+          tags: values.tags ?? [],
+        },
       });
       applyServerState({
         matches: data.matches,
@@ -1987,13 +2072,11 @@ function Dashboard() {
 
   function renderPanelEditor(side: PanelSide) {
     const panel = panels[side];
+    const filter = spriteFilters[side];
     const panelLocked = lineupLocked;
     const searchValue = side === 'left' ? deferredLeftSearch : deferredRightSearch;
     const filteredSprites = sprites.filter((sprite) => {
       const keyword = searchValue.trim().toLowerCase();
-      if (!keyword) {
-        return true;
-      }
       const values = [
         sprite.displayName,
         sprite.name,
@@ -2001,8 +2084,16 @@ function Dashboard() {
         sprite.filename,
         ...(sprite.aliases ?? []),
       ];
-      return values.some((value) => String(value ?? '').toLowerCase().includes(keyword));
+      const matchesKeyword = !keyword || values.some((value) => String(value ?? '').toLowerCase().includes(keyword));
+      const spriteAttributes = splitSpriteAttributes(sprite.attribute);
+      const matchesAttributes = !filter.selectedAttributes.length
+        || filter.selectedAttributes.every((attribute) => spriteAttributes.includes(attribute));
+      const matchesForms = !filter.selectedForms.length
+        || filter.selectedForms.includes(sprite.form);
+
+      return matchesKeyword && matchesAttributes && matchesForms;
     });
+    const hasFilter = filter.selectedAttributes.length > 0 || filter.selectedForms.length > 0;
 
     return (
       <Card
@@ -2113,8 +2204,59 @@ function Dashboard() {
 
             <Card size="small" className="subtle-card sprite-picker-card">
               <div className="sprite-picker-shell">
+                <div className="sprite-filter-panel">
+                  <div className="sprite-filter-header">
+                    <Text strong>筛选精灵</Text>
+                    {hasFilter ? (
+                      <Button size="small" type="link" onClick={() => clearSpriteFilters(side)}>
+                        清空筛选
+                      </Button>
+                    ) : null}
+                  </div>
+                  <div className="sprite-filter-group">
+                    <Text type="secondary" className="sprite-filter-label">精灵属性（最多 2 个）</Text>
+                    <div className="attribute-filter-grid">
+                      {ATTRIBUTE_OPTIONS.map((option) => {
+                        const active = filter.selectedAttributes.includes(option.label);
+                        return (
+                          <Button
+                            key={`${side}-attr-${option.code}`}
+                            type={active ? 'primary' : 'default'}
+                            className={`attribute-filter-chip${active ? ' is-active' : ''}`}
+                            title={option.label}
+                            aria-label={option.label}
+                            onClick={() => toggleAttributeFilter(side, option.label)}
+                          >
+                            <span className="attribute-filter-chip-inner">
+                              <img
+                                src={option.iconPath}
+                                alt=""
+                                className="attribute-filter-icon"
+                              />
+                            </span>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="sprite-filter-group">
+                    <Text type="secondary" className="sprite-filter-label">精灵形态</Text>
+                    <Space wrap size={[8, 8]}>
+                      {spriteFormOptions.map((form) => (
+                        <Button
+                          key={`${side}-form-${form}`}
+                          size="small"
+                          type={filter.selectedForms.includes(form) ? 'primary' : 'default'}
+                          className="form-filter-chip"
+                          onClick={() => toggleFormFilter(side, form)}
+                        >
+                          {form}
+                        </Button>
+                      ))}
+                    </Space>
+                  </div>
+                </div>
                 <Input
-                  disabled={panelLocked}
                   value={panel.search}
                   onChange={(event) => mutatePanel(side, (prev) => ({ ...prev, search: event.target.value }))}
                   placeholder={`搜索${side === 'left' ? '左侧' : '右侧'}精灵名称`}
@@ -2207,9 +2349,11 @@ function Dashboard() {
                     <div className="match-list-scroll">
                       <List
                         dataSource={matchStore.matches}
+                        className="match-list"
                         locale={{ emptyText: '暂无赛事，先创建一场比赛吧。' }}
                         renderItem={(match) => (
                           <List.Item
+                            className="match-list-item"
                             actions={[
                               <Button key="select" type={match.id === activeMatch?.id ? 'primary' : 'default'} onClick={() => void selectMatch(match.id)}>
                                 {match.id === activeMatch?.id ? '当前赛事' : '进入'}
@@ -2262,7 +2406,7 @@ function Dashboard() {
                           <Col xs={24} md={8} className="match-summary-col">
                             <Card size="small" className="subtle-card match-summary-card">
                               <Text type="secondary">左侧选手</Text>
-                              <Title level={4} className="match-summary-player-name">{activeMatch.leftPlayer || '未设置'}</Title>
+                              <Text strong className="match-summary-player-name">{activeMatch.leftPlayer || '未设置'}</Text>
                             </Card>
                           </Col>
                           <Col xs={24} md={8} className="match-summary-col">
@@ -2273,13 +2417,13 @@ function Dashboard() {
                                 <span className="match-summary-score-separator">:</span>
                                 <span className="match-summary-score-value">{activeMatch.rightScore}</span>
                               </div>
-                              <Text type="secondary">BO{activeMatch.bestOf} · {currentGame ? `第 ${currentGame.gameNumber} 局` : '暂无对局'}</Text>
+                              <Text type="secondary" className="match-summary-meta">BO{activeMatch.bestOf} · {currentGame ? `第 ${currentGame.gameNumber} 局` : '暂无对局'}</Text>
                             </Card>
                           </Col>
                           <Col xs={24} md={8} className="match-summary-col">
                             <Card size="small" className="subtle-card match-summary-card">
                               <Text type="secondary">右侧选手</Text>
-                              <Title level={4} className="match-summary-player-name">{activeMatch.rightPlayer || '未设置'}</Title>
+                              <Text strong className="match-summary-player-name">{activeMatch.rightPlayer || '未设置'}</Text>
                             </Card>
                           </Col>
                         </Row>
@@ -2806,7 +2950,7 @@ function Dashboard() {
         <Form
           form={createMatchForm}
           layout="vertical"
-          initialValues={{ bestOf: 3 }}
+          initialValues={{ bestOf: 3, tags: [] }}
           onFinish={(values) => void createMatch(values)}
         >
           <Form.Item label="左侧选手" name="leftPlayer" rules={[{ required: true, message: '请输入左侧选手名' }]}>
@@ -2823,6 +2967,14 @@ function Dashboard() {
                 { value: 5, label: 'BO5' },
                 { value: 7, label: 'BO7' },
               ]}
+            />
+          </Form.Item>
+          <Form.Item label="赛事标签" name="tags">
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder="可选，选择赛事标签"
+              options={allHistoryTags.map((tag) => ({ value: tag, label: tag }))}
             />
           </Form.Item>
         </Form>

@@ -8,6 +8,8 @@ export interface SpriteRecord {
   aliases: string[];
   number: number | null;
   variant: number;
+  attribute: string;
+  form: string;
 }
 
 export interface SlotState {

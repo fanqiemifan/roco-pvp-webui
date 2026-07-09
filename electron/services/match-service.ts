@@ -865,6 +865,7 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
   const leftPlayer = normalizePlayerName(raw.leftPlayer);
   const rightPlayer = normalizePlayerName(raw.rightPlayer);
   const bestOf = normalizeBestOf(raw.bestOf);
+  const tags = normalizeTags(raw.tags);
 
   if (!leftPlayer || !rightPlayer) {
     throw new Error('请输入左右两侧选手名称');
@@ -891,7 +892,7 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
     rightScore: 0,
     winner: null,
     completedAt: null,
-    tags: [],
+    tags,
   };
 
   store.activeMatchId = match.id;
