@@ -5,6 +5,19 @@ import { MAX_SELECTION_COUNT, SUPPORTED_IMAGE_EXTENSIONS } from '../../shared/co
 import type { QuickFillPreview, SpriteRecord } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
 
+function normalizeSpriteAttributes(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item ?? '').trim())
+      .filter(Boolean);
+  }
+
+  return String(value ?? '')
+    .split(/[、/,，\s]+/u)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function spriteNumberFromFilename(filename: string): number | null {
   const match = /^NO\.(\d+)_/.exec(filename || '');
   return match ? Number(match[1]) : null;
@@ -60,6 +73,8 @@ function buildSpriteEntry(filename: string): SpriteRecord {
     aliases: [filename, stem],
     number: spriteNumberFromFilename(filename),
     variant: spriteVariantFromFilename(filename),
+    attribute: '',
+    form: '',
   };
 }
 
@@ -121,6 +136,8 @@ function normalizeSpriteRecord(record: unknown): SpriteRecord | null {
     aliases,
     number,
     variant: typeof item.variant === 'number' ? item.variant : spriteVariantFromFilename(filename),
+    attribute: normalizeSpriteAttributes(item.attribute ?? item['精灵属性']).join('、'),
+    form: String(item.form ?? item['精灵形态'] ?? '').trim(),
   };
 }
 

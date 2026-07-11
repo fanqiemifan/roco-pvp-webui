@@ -258,6 +258,69 @@ function getDatePrefix(date = new Date()): string {
   return `${year}${month}${day}`;
 }
 
+function resolveMatchDatePrefix(matchId: string, createdAt?: string): string {
+  const idMatch = matchId.match(/^(\d{8})_\d+$/);
+  if (idMatch) {
+    return idMatch[1];
+  }
+
+  if (createdAt) {
+    const createdDate = new Date(createdAt);
+    if (!Number.isNaN(createdDate.getTime())) {
+      return getDatePrefix(createdDate);
+    }
+  }
+
+  return getDatePrefix();
+}
+
+function resolveMatchNumericIndex(matchId: string): number | null {
+  const idMatch = matchId.match(/^\d{8}_(\d+)$/);
+  if (!idMatch) {
+    return null;
+  }
+
+  const nextIndex = Number.parseInt(idMatch[1], 10);
+  return Number.isFinite(nextIndex) ? nextIndex : null;
+}
+
+function collectNextMatchIndexes(store: MatchStoreFile): Map<string, number> {
+  const nextIndexByDate = new Map<string, number>();
+
+  const register = (match: MatchRecord) => {
+    const datePrefix = resolveMatchDatePrefix(match.id, match.createdAt);
+    const numericIndex = resolveMatchNumericIndex(match.id);
+    const nextValue = numericIndex ? numericIndex + 1 : 1;
+    const currentValue = nextIndexByDate.get(datePrefix) ?? 1;
+    nextIndexByDate.set(datePrefix, Math.max(currentValue, nextValue));
+  };
+
+  store.matches.forEach(register);
+  store.deletedHistory.forEach((batch) => {
+    batch.entries.forEach((entry) => register(entry.match));
+  });
+
+  return nextIndexByDate;
+}
+
+function allocateUniqueMatchId(
+  usedIds: Set<string>,
+  nextIndexByDate: Map<string, number>,
+  preferredDatePrefix: string,
+): string {
+  let nextIndex = nextIndexByDate.get(preferredDatePrefix) ?? 1;
+  let candidate = `${preferredDatePrefix}_${String(nextIndex).padStart(3, '0')}`;
+
+  while (usedIds.has(candidate)) {
+    nextIndex += 1;
+    candidate = `${preferredDatePrefix}_${String(nextIndex).padStart(3, '0')}`;
+  }
+
+  nextIndexByDate.set(preferredDatePrefix, nextIndex + 1);
+  usedIds.add(candidate);
+  return candidate;
+}
+
 function computeMatchProgress(match: MatchRecord): MatchRecord {
   const games = alignGamesToBestOf(match.games, match.bestOf);
   const { leftScore, rightScore, winner } = summarizeSeries(games, match.bestOf);
@@ -475,6 +538,90 @@ function normalizeDeletedHistory(value: unknown): DeletedMatchBatch[] {
     .slice(-DELETE_HISTORY_LIMIT);
 }
 
+function normalizeStoreIdentifiers(store: MatchStoreFile): MatchStoreFile {
+  const usedIds = new Set<string>();
+  const nextIndexByDate = new Map<string, number>();
+  const renamedIds = new Map<string, string>();
+
+  const normalizeMatch = (match: MatchRecord): MatchRecord => {
+    const preferredDatePrefix = resolveMatchDatePrefix(match.id, match.createdAt);
+    const desiredId = typeof match.id === 'string' ? match.id.trim() : '';
+    const canReuseDesiredId = desiredId && !usedIds.has(desiredId);
+    const nextId = canReuseDesiredId
+      ? (() => {
+        usedIds.add(desiredId);
+        const numericIndex = resolveMatchNumericIndex(desiredId);
+        const nextValue = numericIndex ? numericIndex + 1 : 1;
+        const currentValue = nextIndexByDate.get(preferredDatePrefix) ?? 1;
+        nextIndexByDate.set(preferredDatePrefix, Math.max(currentValue, nextValue));
+        return desiredId;
+      })()
+      : allocateUniqueMatchId(usedIds, nextIndexByDate, preferredDatePrefix);
+
+    if (desiredId && desiredId !== nextId) {
+      renamedIds.set(desiredId, nextId);
+    }
+
+    return nextId === match.id
+      ? match
+      : { ...match, id: nextId };
+  };
+
+  const matches = store.matches.map(normalizeMatch);
+  const flowHistory: Record<string, MatchFlowHistory> = {};
+
+  Object.entries(store.flowHistory).forEach(([matchId, history]) => {
+    const nextMatchId = renamedIds.get(matchId) ?? matchId;
+    flowHistory[nextMatchId] = history;
+  });
+
+  matches.forEach((match) => {
+    if (!flowHistory[match.id]) {
+      flowHistory[match.id] = { undoStack: [], redoStack: [] };
+    }
+  });
+
+  const deletedHistory = store.deletedHistory.map((batch) => ({
+    ...batch,
+    previousActiveMatchId: batch.previousActiveMatchId,
+    entries: batch.entries.map((entry) => {
+      const normalizedMatch = normalizeMatch(entry.match);
+      const nextMatchId = normalizedMatch.id;
+      const entryFlowHistory = entry.flowHistory;
+      flowHistory[nextMatchId] = flowHistory[nextMatchId] ?? entryFlowHistory;
+
+      return {
+        ...entry,
+        match: normalizedMatch,
+        flowHistory: flowHistory[nextMatchId] ?? entryFlowHistory,
+      };
+    }),
+  })).map((batch) => ({
+    ...batch,
+    previousActiveMatchId: batch.previousActiveMatchId && batch.entries.some((entry) => entry.match.id === batch.previousActiveMatchId)
+      ? batch.previousActiveMatchId
+      : batch.previousActiveMatchId
+        ? (renamedIds.get(batch.previousActiveMatchId) ?? batch.previousActiveMatchId)
+        : null,
+  }));
+
+  const requestedActiveMatchId = store.activeMatchId && matches.some((match) => match.id === store.activeMatchId)
+    ? store.activeMatchId
+    : store.activeMatchId
+      ? (renamedIds.get(store.activeMatchId) ?? store.activeMatchId)
+      : null;
+  const activeMatchId = requestedActiveMatchId && matches.some((match) => match.id === requestedActiveMatchId)
+    ? requestedActiveMatchId
+    : matches[0]?.id ?? null;
+
+  return {
+    activeMatchId,
+    matches,
+    flowHistory,
+    deletedHistory,
+  };
+}
+
 function ensureFlowHistory(store: MatchStoreFile, matchId: string): MatchFlowHistory {
   if (!store.flowHistory[matchId]) {
     store.flowHistory[matchId] = {
@@ -539,14 +686,16 @@ function readStoreFile(paths: AppPaths): { store: MatchStoreFile; mtime: number 
       ? raw.activeMatchId.trim()
       : null;
 
+    const store = normalizeStoreIdentifiers({
+      activeMatchId: activeMatchId && matches.some((match) => match.id === activeMatchId) ? activeMatchId : null,
+      matches,
+      flowHistory: normalizeFlowHistoryMap(raw.flowHistory),
+      deletedHistory: normalizeDeletedHistory(raw.deletedHistory),
+    });
+
     return {
       mtime: stat.mtimeMs,
-      store: {
-        activeMatchId: activeMatchId && matches.some((match) => match.id === activeMatchId) ? activeMatchId : null,
-        matches,
-        flowHistory: normalizeFlowHistoryMap(raw.flowHistory),
-        deletedHistory: normalizeDeletedHistory(raw.deletedHistory),
-      },
+      store,
     };
   } catch {
     return { store: defaultStoreFile(), mtime: null };
@@ -555,7 +704,8 @@ function readStoreFile(paths: AppPaths): { store: MatchStoreFile; mtime: number 
 
 function writeStoreFile(paths: AppPaths, store: MatchStoreFile): MatchStoreState {
   ensureRuntimeDirs(paths);
-  fs.writeFileSync(paths.matchesFile, JSON.stringify(store, null, 2), 'utf-8');
+  const normalizedStore = normalizeStoreIdentifiers(store);
+  fs.writeFileSync(paths.matchesFile, JSON.stringify(normalizedStore, null, 2), 'utf-8');
   return getMatchStore(paths);
 }
 
@@ -612,6 +762,16 @@ function getCurrentGame(match: MatchRecord): GameRecord {
     ?? match.games.find((game) => game.status === 'pending')
     ?? match.games[match.games.length - 1]
   );
+}
+
+function assertMatchLineupEditable(match: MatchRecord, currentGame: GameRecord): void {
+  if (match.status === 'completed') {
+    throw new Error('当前赛事已完赛，不能编辑阵容');
+  }
+
+  if (currentGame.status === 'completed') {
+    throw new Error('当前小局已结束，不能继续修改阵容');
+  }
 }
 
 function syncMatchToPanelsAndScoreboard(paths: AppPaths, match: MatchRecord): void {
@@ -705,23 +865,22 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
   const leftPlayer = normalizePlayerName(raw.leftPlayer);
   const rightPlayer = normalizePlayerName(raw.rightPlayer);
   const bestOf = normalizeBestOf(raw.bestOf);
+  const tags = normalizeTags(raw.tags);
 
   if (!leftPlayer || !rightPlayer) {
     throw new Error('请输入左右两侧选手名称');
   }
 
   const { store } = readStoreFile(paths);
-
-  const datePrefix = getDatePrefix();
-  const sameDayIds = store.matches
-    .map((match) => match.id)
-    .filter((id) => id.startsWith(`${datePrefix}_`))
-    .map((id) => Number.parseInt(id.slice(datePrefix.length + 1), 10))
-    .filter((value) => Number.isFinite(value));
-  const nextIndex = sameDayIds.length ? Math.max(...sameDayIds) + 1 : 1;
   const now = new Date().toISOString();
+  const datePrefix = getDatePrefix(new Date(now));
+  const nextMatchId = allocateUniqueMatchId(
+    new Set<string>(),
+    collectNextMatchIndexes(store),
+    datePrefix,
+  );
   const match: MatchRecord = {
-    id: `${datePrefix}_${String(nextIndex).padStart(3, '0')}`,
+    id: nextMatchId,
     createdAt: now,
     updatedAt: now,
     status: 'pending',
@@ -733,7 +892,7 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
     rightScore: 0,
     winner: null,
     completedAt: null,
-    tags: [],
+    tags,
   };
 
   store.activeMatchId = match.id;
@@ -930,9 +1089,7 @@ export function saveDraftPanelStateForActiveMatch(
 
   const current = store.matches[index];
   const currentGame = getCurrentGame(current);
-  if (currentGame.status === 'completed') {
-    throw new Error('当前小局已结束，不能继续修改阵容');
-  }
+  assertMatchLineupEditable(current, currentGame);
 
   const nextSlots = parseSelectedSlots(selectedSlots);
   const nextGames = [...current.games];
@@ -972,9 +1129,7 @@ export function saveDraftPanelSlotStateForActiveMatch(
 
   const current = store.matches[index];
   const currentGame = getCurrentGame(current);
-  if (currentGame.status === 'completed') {
-    throw new Error('当前小局已结束，不能继续修改阵容');
-  }
+  assertMatchLineupEditable(current, currentGame);
 
   const nextSlot = parseSelectedSlot(slotIndex, slotData);
   const nextGames = [...current.games];
@@ -1157,6 +1312,7 @@ export function syncActiveMatchLineupsFromPanels(paths: AppPaths): MatchStoreSta
 
   const current = store.matches[index];
   const currentGame = getCurrentGame(current);
+  assertMatchLineupEditable(current, currentGame);
   if (currentGame.status !== 'pending') {
     return getMatchStore(paths);
   }
