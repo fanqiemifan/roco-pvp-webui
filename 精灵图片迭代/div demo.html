@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精灵图鉴</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500&display=swap');
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .PETSdiv {
+            position: relative;
+            width: 96px;
+            height: 96px;
+        }
+
+        .pet-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 96px;
+            height: 96px;
+            background-image: url('img/pets-background.png');
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            z-index: 1;
+        }
+
+        .pet-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+            z-index: 2;
+        }
+
+        .name-bg {
+            position: absolute;
+            width: 60px;
+            height: 14px;
+            left: 18px;
+            top: 73px;
+            background-color: #3E3E3E;
+            border-radius: 40px;
+            z-index: 3;
+        }
+
+        .attr-icon-1 {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 16px;
+            top: 71px;
+            z-index: 4;
+        }
+
+        .circle {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            left: 6px;
+            top: 64px;
+            background-color: #3E3E3E;
+            border-radius: 50%;
+            z-index: 5;
+        }
+
+        .attr-icon-2 {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 4px;
+            top: 62px;
+            z-index: 6;
+        }
+
+        .pet-name {
+            position: absolute;
+            font-size: 8px;
+            font-weight: 500;
+            color: #ffffff;
+            top: 73.5px;
+            z-index: 7;
+            white-space: nowrap;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container" id="pet-container"></div>
+
+    <script>
+        function cleanPetName(name) {
+            return name.replace(/-[0-9]+$/g, '');
+        }
+
+        function getPetNameXOffset(nameLength) {
+            switch (nameLength) {
+                case 2: return 44;
+                case 3: return 40;
+                case 4: return 37;
+                case 5: return 34;
+                default: return 37;
+            }
+        }
+
+        function createPetCard(pet) {
+            const card = document.createElement('div');
+            card.className = 'PETSdiv';
+            const cleanName = cleanPetName(pet['精灵名字2']);
+
+            card.innerHTML = `
+                <div class="pet-bg"></div>
+                ${pet['精灵属性图标2'] ? `<div class="circle"></div>` : ''}
+                <img class="pet-image" src="${pet['精灵图片']}" alt="${pet['精灵名称']}" onerror="this.style.display='none'">
+                <img class="attr-icon-1" src="${pet['精灵属性图标1']}" alt="属性1" onerror="this.style.display='none'">
+                ${pet['精灵属性图标2'] ? `<img class="attr-icon-2" src="${pet['精灵属性图标2']}" alt="属性2" onerror="this.style.display='none'">` : ''}
+                <div class="name-bg"></div>
+                <span class="pet-name" style="left: ${getPetNameXOffset(cleanName.length)}px">${cleanName}</span>
+            `;
+
+            return card;
+        }
+
+        async function loadPets() {
+            try {
+                const response = await fetch('index_v3.json');
+                const pets = await response.json();
+                
+                const container = document.getElementById('pet-container');
+                pets.forEach(pet => {
+                    const card = createPetCard(pet);
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('加载精灵数据失败:', error);
+            }
+        }
+
+        loadPets();
+    </script>
+</body>
+</html>
