@@ -5,6 +5,8 @@ import { MAX_SELECTION_COUNT, SUPPORTED_IMAGE_EXTENSIONS } from '../../shared/co
 import type { QuickFillPreview, SpriteRecord } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
 
+const SPRITE_RESOURCE_BASE = '/resources/sprites-img';
+
 function normalizeSpriteAttributes(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value
@@ -69,11 +71,15 @@ function buildSpriteEntry(filename: string): SpriteRecord {
     displayName,
     name: displayName,
     chineseName: displayName,
-    path: `/resources/sprites/${filename}`,
+    cardName: stripVariantSuffix(displayName),
+    path: `${SPRITE_RESOURCE_BASE}/${filename}`,
     aliases: [filename, stem],
     number: spriteNumberFromFilename(filename),
     variant: spriteVariantFromFilename(filename),
     attribute: '',
+    attributeCodes: [],
+    attributeIcon1: '',
+    attributeIcon2: '',
     form: '',
   };
 }
@@ -127,16 +133,24 @@ function normalizeSpriteRecord(record: unknown): SpriteRecord | null {
   }
 
   return {
-    id: filename,
+    id: typeof item.id === 'string' && item.id.trim() ? item.id.trim() : filename,
     filename,
     displayName,
-    name: displayName,
-    chineseName: displayName,
-    path: `/resources/sprites/${filename}`,
+    name: String(item.name ?? displayName).trim() || displayName,
+    chineseName: String(item.chineseName ?? displayName).trim() || displayName,
+    cardName: String(item.cardName ?? stripVariantSuffix(displayName)).trim() || stripVariantSuffix(displayName),
+    path: typeof item.path === 'string' && item.path.trim()
+      ? item.path.trim()
+      : `${SPRITE_RESOURCE_BASE}/${filename}`,
     aliases,
     number,
     variant: typeof item.variant === 'number' ? item.variant : spriteVariantFromFilename(filename),
     attribute: normalizeSpriteAttributes(item.attribute ?? item['精灵属性']).join('、'),
+    attributeCodes: Array.isArray(item.attributeCodes)
+      ? item.attributeCodes.filter((code): code is string => typeof code === 'string' && code.trim().length > 0)
+      : [],
+    attributeIcon1: typeof item.attributeIcon1 === 'string' ? item.attributeIcon1 : '',
+    attributeIcon2: typeof item.attributeIcon2 === 'string' ? item.attributeIcon2 : '',
     form: String(item.form ?? item['精灵形态'] ?? '').trim(),
   };
 }

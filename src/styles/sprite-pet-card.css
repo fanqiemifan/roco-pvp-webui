@@ -1,0 +1,90 @@
+.sprite-pet-card {
+  --pet-card-size: 96px;
+  --pet-name-left: 37;
+  position: relative;
+  width: var(--pet-card-size);
+  height: var(--pet-card-size);
+  flex: none;
+}
+
+.sprite-pet-card-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image: url("/resources/sprites-icon/pets-background.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.sprite-pet-card-sprite {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: calc(var(--pet-card-size) * 96 / 96);
+  height: calc(var(--pet-card-size) * 96 / 96);
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+}
+
+.sprite-pet-card-name-bg {
+  position: absolute;
+  left: calc(var(--pet-card-size) * 18 / 96);
+  top: calc(var(--pet-card-size) * 73 / 96);
+  z-index: 3;
+  width: calc(var(--pet-card-size) * 60 / 96);
+  height: calc(var(--pet-card-size) * 14 / 96);
+  border-radius: 40px;
+  background: #3e3e3e;
+}
+
+.sprite-pet-card-attr {
+  position: absolute;
+  z-index: 4;
+  width: calc(var(--pet-card-size) * 18 / 96);
+  height: calc(var(--pet-card-size) * 18 / 96);
+  object-fit: contain;
+}
+
+.sprite-pet-card-attr-1 {
+  left: calc(var(--pet-card-size) * 16 / 96);
+  top: calc(var(--pet-card-size) * 71 / 96);
+}
+
+.sprite-pet-card-attr-circle {
+  display: none;
+  position: absolute;
+  left: calc(var(--pet-card-size) * 6 / 96);
+  top: calc(var(--pet-card-size) * 64 / 96);
+  z-index: 5;
+  width: calc(var(--pet-card-size) * 14 / 96);
+  height: calc(var(--pet-card-size) * 14 / 96);
+  border-radius: 50%;
+  background: #3e3e3e;
+}
+
+.sprite-pet-card-attr-2 {
+  display: none;
+  left: calc(var(--pet-card-size) * 4 / 96);
+  top: calc(var(--pet-card-size) * 62 / 96);
+  z-index: 6;
+}
+
+.sprite-pet-card-name {
+  position: absolute;
+  left: calc(var(--pet-card-size) * var(--pet-name-left) / 96);
+  top: calc(var(--pet-card-size) * 73.5 / 96);
+  z-index: 7;
+  color: #fff;
+  font-family: "Alibaba PuHuiTi 2.0", "Alibaba PuHuiTi", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: calc(var(--pet-card-size) * 8 / 96);
+  font-weight: 500;
+  line-height: calc(var(--pet-card-size) * 14 / 96);
+  white-space: nowrap;
+}
+
+.sprite-pet-card-has-attr2 .sprite-pet-card-attr-circle,
+.sprite-pet-card-has-attr2 .sprite-pet-card-attr-2 {
+  display: block;
+}

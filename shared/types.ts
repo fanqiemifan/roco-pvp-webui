@@ -4,11 +4,15 @@ export interface SpriteRecord {
   displayName: string;
   name: string;
   chineseName: string;
+  cardName: string;
   path: string;
   aliases: string[];
   number: number | null;
   variant: number;
   attribute: string;
+  attributeCodes: string[];
+  attributeIcon1: string;
+  attributeIcon2: string;
   form: string;
 }
 

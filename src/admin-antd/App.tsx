@@ -177,6 +177,8 @@ const ATTRIBUTE_OPTIONS: AttributeOption[] = (attributeMapping as Array<{ 编号
   iconPath: `/resources/attribute/${item.编号}.png`,
 }));
 
+const ATTRIBUTE_ICON_BY_LABEL = new Map(ATTRIBUTE_OPTIONS.map((option) => [option.label, option.iconPath]));
+
 const theme = {
   token: {
     colorPrimary: '#c7632f',
@@ -458,6 +460,83 @@ function splitSpriteAttributes(value: string | null | undefined): string[] {
     .split(/[、/,，\s]+/u)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function cleanSpriteCardName(value: string | null | undefined): string {
+  return String(value ?? '').trim().replace(/[-_－—]\d+$/u, '');
+}
+
+function getSpriteCardNameLeft(nameLength: number): number {
+  switch (nameLength) {
+    case 2:
+      return 44;
+    case 3:
+      return 40;
+    case 4:
+      return 37;
+    case 5:
+      return 34;
+    default:
+      return nameLength <= 2 ? 44 : 37;
+  }
+}
+
+function resolveSpriteAttributeIcons(sprite: SpriteRecord): string[] {
+  const directIcons = [sprite.attributeIcon1, sprite.attributeIcon2].filter(Boolean);
+  if (directIcons.length > 0) {
+    return directIcons;
+  }
+
+  const directCodes = (sprite.attributeCodes ?? [])
+    .map((code) => code.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((code) => `/resources/attribute/${code}.png`);
+
+  if (directCodes.length > 0) {
+    return directCodes;
+  }
+
+  return splitSpriteAttributes(sprite.attribute)
+    .map((attribute) => ATTRIBUTE_ICON_BY_LABEL.get(attribute) ?? '')
+    .filter(Boolean)
+    .slice(0, 2);
+}
+
+type SpritePetCardProps = {
+  sprite: SpriteRecord;
+  size?: number;
+  className?: string;
+};
+
+function SpritePetCard({ sprite, size = 96, className }: SpritePetCardProps) {
+  const cardName = cleanSpriteCardName(sprite.cardName || sprite.displayName || sprite.chineseName || sprite.name);
+  const attributeIcons = resolveSpriteAttributeIcons(sprite);
+  const attributeIcon1 = attributeIcons[0] ?? '';
+  const attributeIcon2 = attributeIcons[1] ?? '';
+  const style = {
+    '--pet-card-size': `${size}px`,
+    '--pet-name-left': String(getSpriteCardNameLeft(cardName.length)),
+  } as React.CSSProperties;
+
+  return (
+    <div
+      className={`sprite-pet-card${attributeIcon2 ? ' sprite-pet-card-has-attr2' : ''}${className ? ` ${className}` : ''}`}
+      style={style}
+    >
+      <div className="sprite-pet-card-bg" />
+      {attributeIcon2 ? <div className="sprite-pet-card-attr-circle" /> : null}
+      <img className="sprite-pet-card-sprite" src={sprite.path} alt={sprite.displayName} />
+      {attributeIcon1 ? (
+        <img className="sprite-pet-card-attr sprite-pet-card-attr-1" src={attributeIcon1} alt="" />
+      ) : null}
+      {attributeIcon2 ? (
+        <img className="sprite-pet-card-attr sprite-pet-card-attr-2" src={attributeIcon2} alt="" />
+      ) : null}
+      <div className="sprite-pet-card-name-bg" />
+      <span className="sprite-pet-card-name">{cardName}</span>
+    </div>
+  );
 }
 
 function buildHistoryLineupEntries(
@@ -2130,13 +2209,7 @@ function Dashboard() {
                 >
                   <div className={`slot-button-inner slot-button-inner-${side}`}>
                     {slot.sprite?.path ? (
-                      <Image
-                        preview={false}
-                        src={slot.sprite.path}
-                        alt={slot.sprite.displayName}
-                        className="slot-image"
-                        fallback="/assets/ui/back.png"
-                      />
+                      <SpritePetCard sprite={slot.sprite} size={96} />
                     ) : (
                       <div className="slot-placeholder">{index + 1}</div>
                     )}
@@ -2197,13 +2270,7 @@ function Dashboard() {
                                 aria-label={`选择 ${candidate.displayName}`}
                                 onClick={() => chooseQuickFillCandidate(side, match.slot, candidate)}
                               >
-                                <Image
-                                  preview={false}
-                                  src={candidate.path}
-                                  alt={candidate.displayName}
-                                  className="quick-fill-candidate-image"
-                                  fallback="/assets/ui/back.png"
-                                />
+                                <SpritePetCard sprite={candidate} size={64} className="quick-fill-candidate-card" />
                               </Button>
                             ))}
                           </div>
@@ -2283,14 +2350,9 @@ function Dashboard() {
                           disabled={panelLocked}
                           onClick={() => applySprite(side, sprite)}
                         >
-                          <Space direction="vertical" size={0} className="sprite-card-inner">
-                            <Image
-                              preview={false}
-                              src={sprite.path}
-                              alt={sprite.displayName}
-                              className="sprite-card-image"
-                            />
-                          </Space>
+                          <div className="sprite-card-inner">
+                            <SpritePetCard sprite={sprite} size={96} />
+                          </div>
                         </Button>
                       ))}
                     </div>

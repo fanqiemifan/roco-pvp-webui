@@ -41,7 +41,7 @@
             return '';
         }
         return normalizeDisplayName(
-            sprite.displayName || sprite.chineseName || sprite.name || sprite.filename || ''
+            sprite.cardName || sprite.displayName || sprite.chineseName || sprite.name || sprite.filename || ''
         );
     }
 
@@ -68,10 +68,72 @@
         return text[0].toUpperCase();
     }
 
-    function buildSlot(slotEl) {
-        slotEl.innerHTML = `
-            <img class="page3-spirit-image" alt="">
+    function getSpriteAttributeIcons(sprite) {
+        const icons = [];
+
+        if (sprite && sprite.attributeIcon1) {
+            icons.push(sprite.attributeIcon1);
+        }
+        if (sprite && sprite.attributeIcon2) {
+            icons.push(sprite.attributeIcon2);
+        }
+
+        return icons;
+    }
+
+    function getSpriteCardNameLeft(nameLength) {
+        switch (nameLength) {
+            case 2:
+                return 44;
+            case 3:
+                return 40;
+            case 4:
+                return 37;
+            case 5:
+                return 34;
+            default:
+                return nameLength <= 2 ? 44 : 37;
+        }
+    }
+
+    function buildSlotCard(slotEl, sprite, spiritName, imageSrc) {
+        const attributeIcons = getSpriteAttributeIcons(sprite);
+        const attributeIcon1 = attributeIcons[0] || '';
+        const attributeIcon2 = attributeIcons[1] || '';
+        const card = document.createElement('div');
+        card.className = `sprite-pet-card${attributeIcon2 ? ' sprite-pet-card-has-attr2' : ''}`;
+        card.style.setProperty('--pet-card-size', `${slotEl.clientWidth || 108}px`);
+        card.style.setProperty('--pet-name-left', String(getSpriteCardNameLeft(spiritName.length)));
+
+        card.innerHTML = `
+            <div class="sprite-pet-card-bg"></div>
+            ${attributeIcon2 ? '<div class="sprite-pet-card-attr-circle"></div>' : ''}
+            <img class="sprite-pet-card-sprite" alt="">
+            ${attributeIcon1 ? '<img class="sprite-pet-card-attr sprite-pet-card-attr-1" alt="">' : ''}
+            ${attributeIcon2 ? '<img class="sprite-pet-card-attr sprite-pet-card-attr-2" alt="">' : ''}
+            <div class="sprite-pet-card-name-bg"></div>
+            <span class="sprite-pet-card-name"></span>
         `;
+
+        const spriteImage = card.querySelector('.sprite-pet-card-sprite');
+        spriteImage.src = imageSrc;
+        spriteImage.alt = spiritName;
+
+        if (attributeIcon1) {
+            const attr1 = card.querySelector('.sprite-pet-card-attr-1');
+            attr1.src = attributeIcon1;
+        }
+
+        if (attributeIcon2) {
+            const attr2 = card.querySelector('.sprite-pet-card-attr-2');
+            attr2.src = attributeIcon2;
+        }
+
+        const nameEl = card.querySelector('.sprite-pet-card-name');
+        nameEl.textContent = spiritName;
+
+        slotEl.innerHTML = '';
+        slotEl.appendChild(card);
     }
 
     function renderEmptySlot(slotEl) {
@@ -86,10 +148,6 @@
             return;
         }
 
-        if (!slotEl.querySelector('.page3-spirit-image')) {
-            buildSlot(slotEl);
-        }
-
         const spiritName = getSpriteDisplayName(sprite);
         const healthPercent = clamp(slotData && slotData.healthPercent, 0, 100, 100);
         const healthEnabled = !!(slotData && slotData.healthEnabled);
@@ -98,12 +156,7 @@
         const imageSrc = `${sprite.path}${sprite.path.includes('?') ? '&' : '?'}t=${cacheBuster}`;
 
         slotEl.className = `page3-spirit-slot is-active${isDone ? ' is-done' : ''}`;
-
-        const imageEl = slotEl.querySelector('.page3-spirit-image');
-        imageEl.src = imageSrc;
-        imageEl.alt = spiritName;
-        imageEl.style.opacity = '1';
-        imageEl.style.filter = '';
+        buildSlotCard(slotEl, sprite, spiritName, imageSrc);
     }
 
     function renderPanel(position, panelData) {

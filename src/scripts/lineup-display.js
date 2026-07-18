@@ -2,7 +2,7 @@
     'use strict';
 
     const MAX_SLOTS = 6;
-    const SPIRIT_INDEX_URL = '/resources/data/spirits_data_final.json';
+    const SPIRIT_INDEX_URL = '/resources/data/sprites.json';
     const DEFAULT_EVENT_TITLE = 'S2洛克联赛';
     const DEFAULT_BEST_OF = 7;
     const ROUND_BOX_WIDTH = 32;
