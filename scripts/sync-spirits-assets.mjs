@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '..');
-const sourceIndexFile = path.join(projectRoot, '精灵图片迭代', 'spirits_index.json');
+const sourceIndexFile = path.join(projectRoot, '热补丁索引', 'spirits_index.json');
 const outputIndexFile = path.join(projectRoot, 'resources', 'data', 'sprites.json');
 const spriteImageDir = path.join(projectRoot, 'resources', 'sprites-img');
 
