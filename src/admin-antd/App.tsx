@@ -379,6 +379,36 @@ function formatLineupSummary(lineup: string[], spriteMap: Map<string, SpriteReco
     .join(' / ');
 }
 
+function basename(value: string | null | undefined): string {
+  return String(value ?? '').split('/').filter(Boolean).pop() ?? '';
+}
+
+function buildSpriteLookup(records: SpriteRecord[]): Map<string, SpriteRecord> {
+  const lookup = new Map<string, SpriteRecord>();
+
+  records.forEach((sprite) => {
+    const keys = new Set<string>([
+      sprite.id,
+      sprite.filename,
+      sprite.displayName,
+      sprite.name,
+      sprite.chineseName,
+      basename(sprite.id),
+      basename(sprite.filename),
+      basename(sprite.path),
+      ...(Array.isArray(sprite.aliases) ? sprite.aliases : []),
+    ]);
+
+    keys.forEach((key) => {
+      if (typeof key === 'string' && key.trim()) {
+        lookup.set(key.trim(), sprite);
+      }
+    });
+  });
+
+  return lookup;
+}
+
 function formatDateTime(value: string | null): string {
   if (!value) {
     return '-';
@@ -856,7 +886,7 @@ function Dashboard() {
   const livePollTimerRef = useRef<number | null>(null);
   const previewFrameShellRef = useRef<HTMLDivElement | null>(null);
 
-  const spriteMap = new Map(sprites.map((sprite) => [sprite.id, sprite]));
+  const spriteMap = buildSpriteLookup(sprites);
   const activeMatch = getActiveMatch(matchStore);
   const currentGame = getCurrentGame(activeMatch);
   const lineupLocked = activeMatch?.status === 'completed';
