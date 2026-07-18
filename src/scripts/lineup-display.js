@@ -86,8 +86,14 @@
 
         const rawPath = typeof record.path === 'string' ? record.path : '';
         const filename = getFilename(rawPath);
-        const displayName = String(record.displayName || record.name || filename.replace(/\.[^.]+$/, '')).trim();
-        const number = normalizeNumber(record.number);
+        const displayName = String(
+            record.displayName
+            || record['精灵名字2']
+            || record['精灵名称']
+            || record.name
+            || filename.replace(/\.[^.]+$/, '')
+        ).trim();
+        const number = normalizeNumber(record.number || record['精灵编号']);
 
         if (!filename || !displayName) {
             return null;

@@ -6,6 +6,9 @@ import type { QuickFillPreview, SpriteRecord } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
 
 const SPRITE_RESOURCE_BASE = '/resources/sprites-img';
+const ATTRIBUTE_ICON_BASE = '/resources/attribute';
+
+let cachedAttributeCodeByName: Map<string, string> | null = null;
 
 function normalizeSpriteAttributes(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -28,6 +31,11 @@ function spriteNumberFromFilename(filename: string): number | null {
 function spriteVariantFromFilename(filename: string): number {
   const match = /-(\d+)$/.exec(path.parse(filename || '').name);
   return match ? Number(match[1]) : 0;
+}
+
+function spriteNumberFromValue(value: unknown): number | null {
+  const match = /(\d+)/.exec(String(value ?? '').trim());
+  return match ? Number(match[1]) : null;
 }
 
 function normalizeSearchName(value: unknown): string {
@@ -84,7 +92,32 @@ function buildSpriteEntry(filename: string): SpriteRecord {
   };
 }
 
-function normalizeSpriteRecord(record: unknown): SpriteRecord | null {
+function loadAttributeCodeByName(paths: AppPaths): Map<string, string> {
+  if (cachedAttributeCodeByName) {
+    return cachedAttributeCodeByName;
+  }
+
+  const mappingFile = path.join(paths.dataDir, 'attribute_mapping.json');
+  const lookup = new Map<string, string>();
+
+  try {
+    const payload = JSON.parse(fs.readFileSync(mappingFile, 'utf-8')) as Array<{ 编号?: string; 属性?: string }>;
+    for (const item of payload) {
+      const name = String(item?.属性 ?? '').trim();
+      const code = String(item?.编号 ?? '').trim();
+      if (name && code) {
+        lookup.set(name, code);
+      }
+    }
+  } catch {
+    // Best effort only; consumers can still fall back to text attributes.
+  }
+
+  cachedAttributeCodeByName = lookup;
+  return lookup;
+}
+
+function normalizeSpriteRecord(record: unknown, paths: AppPaths): SpriteRecord | null {
   if (!record || typeof record !== 'object') {
     return null;
   }
@@ -105,16 +138,27 @@ function normalizeSpriteRecord(record: unknown): SpriteRecord | null {
   }
 
   const filename = path.basename(filenameValue);
+  const rawDisplayName =
+    item.displayName
+    ?? item['精灵名字2']
+    ?? item['精灵名称']
+    ?? item.chineseName
+    ?? item.name
+    ?? path.parse(filename).name;
   const displayName = String(
-    item.displayName ?? item.chineseName ?? item.name ?? path.parse(filename).name,
+    rawDisplayName,
   );
   const aliases: string[] = [];
 
   for (const alias of [
     ...(Array.isArray(item.aliases) ? item.aliases : []),
     displayName,
+    item['精灵名字2'],
+    item['精灵名称'],
+    item['精灵编号'],
     item.chineseName,
     item.name,
+    stripVariantSuffix(displayName),
     filename,
     path.parse(filename).name,
   ]) {
@@ -123,7 +167,10 @@ function normalizeSpriteRecord(record: unknown): SpriteRecord | null {
     }
   }
 
-  const number = typeof item.number === 'number' ? item.number : spriteNumberFromFilename(filename);
+  const number =
+    typeof item.number === 'number'
+      ? item.number
+      : spriteNumberFromValue(item['精灵编号']) ?? spriteNumberFromFilename(filename);
   if (typeof number === 'number') {
     for (const alias of [String(number), `${number}`.padStart(3, '0'), `NO.${`${number}`.padStart(3, '0')}`]) {
       if (!aliases.includes(alias)) {
@@ -132,12 +179,21 @@ function normalizeSpriteRecord(record: unknown): SpriteRecord | null {
     }
   }
 
+  const attribute = normalizeSpriteAttributes(item.attribute ?? item['精灵属性']).join('、');
+  const attributeLookup = loadAttributeCodeByName(paths);
+  const attributeCodes = Array.isArray(item.attributeCodes)
+    ? item.attributeCodes.filter((code): code is string => typeof code === 'string' && code.trim().length > 0)
+    : normalizeSpriteAttributes(item.attribute ?? item['精灵属性'])
+      .map((attributeName) => attributeLookup.get(attributeName) ?? '')
+      .filter(Boolean)
+      .slice(0, 2);
+
   return {
     id: typeof item.id === 'string' && item.id.trim() ? item.id.trim() : filename,
     filename,
     displayName,
-    name: String(item.name ?? displayName).trim() || displayName,
-    chineseName: String(item.chineseName ?? displayName).trim() || displayName,
+    name: String(item.name ?? item['精灵名称'] ?? displayName).trim() || displayName,
+    chineseName: String(item.chineseName ?? item['精灵名称'] ?? displayName).trim() || displayName,
     cardName: String(item.cardName ?? stripVariantSuffix(displayName)).trim() || stripVariantSuffix(displayName),
     path: typeof item.path === 'string' && item.path.trim()
       ? item.path.trim()
@@ -145,12 +201,20 @@ function normalizeSpriteRecord(record: unknown): SpriteRecord | null {
     aliases,
     number,
     variant: typeof item.variant === 'number' ? item.variant : spriteVariantFromFilename(filename),
-    attribute: normalizeSpriteAttributes(item.attribute ?? item['精灵属性']).join('、'),
-    attributeCodes: Array.isArray(item.attributeCodes)
-      ? item.attributeCodes.filter((code): code is string => typeof code === 'string' && code.trim().length > 0)
-      : [],
-    attributeIcon1: typeof item.attributeIcon1 === 'string' ? item.attributeIcon1 : '',
-    attributeIcon2: typeof item.attributeIcon2 === 'string' ? item.attributeIcon2 : '',
+    attribute,
+    attributeCodes,
+    attributeIcon1:
+      typeof item.attributeIcon1 === 'string' && item.attributeIcon1.trim()
+        ? item.attributeIcon1
+        : attributeCodes[0]
+          ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[0]}.png`
+          : '',
+    attributeIcon2:
+      typeof item.attributeIcon2 === 'string' && item.attributeIcon2.trim()
+        ? item.attributeIcon2
+        : attributeCodes[1]
+          ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[1]}.png`
+          : '',
     form: String(item.form ?? item['精灵形态'] ?? '').trim(),
   };
 }
@@ -167,7 +231,7 @@ export function loadSpriteIndex(paths: AppPaths): SpriteRecord[] {
       | unknown[];
     const sprites = Array.isArray(payload) ? payload : Array.isArray(payload.sprites) ? payload.sprites : [];
     const normalized = sprites
-      .map((item) => normalizeSpriteRecord(item))
+      .map((item) => normalizeSpriteRecord(item, paths))
       .filter((item): item is SpriteRecord => Boolean(item))
       .filter((item) => fs.existsSync(path.join(paths.spritesDir, item.filename)));
 

@@ -5,48 +5,10 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '..');
 const sourceIndexFile = path.join(projectRoot, '精灵图片迭代', 'spirits_index.json');
-const attributeMappingFile = path.join(projectRoot, 'resources', 'data', 'attribute_mapping.json');
 const outputIndexFile = path.join(projectRoot, 'resources', 'data', 'sprites.json');
 const spriteImageDir = path.join(projectRoot, 'resources', 'sprites-img');
 
 const shouldDownload = !process.argv.includes('--skip-download');
-
-function uniqueStrings(values) {
-  const seen = new Set();
-  const result = [];
-
-  for (const value of values) {
-    const text = String(value ?? '').trim();
-    if (!text || seen.has(text)) {
-      continue;
-    }
-    seen.add(text);
-    result.push(text);
-  }
-
-  return result;
-}
-
-function splitAttributes(value) {
-  return String(value ?? '')
-    .split(/[、/,，\s]+/u)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function cleanCardName(value) {
-  return String(value ?? '').trim().replace(/[-_－—]\d+$/u, '');
-}
-
-function parseNumber(value) {
-  const match = /(\d+)/.exec(String(value ?? ''));
-  return match ? Number(match[1]) : null;
-}
-
-function parseVariant(value) {
-  const match = /[-_－—](\d+)$/u.exec(String(value ?? '').trim());
-  return match ? Number(match[1]) : 0;
-}
 
 function sanitizeFilenameSegment(value, fallback) {
   const normalized = String(value ?? '')
@@ -96,61 +58,30 @@ async function downloadBuffer(url) {
 }
 
 async function main() {
-  const [sourceRaw, attributeRaw] = await Promise.all([
-    fs.readFile(sourceIndexFile, 'utf8'),
-    fs.readFile(attributeMappingFile, 'utf8'),
-  ]);
-
+  const sourceRaw = await fs.readFile(sourceIndexFile, 'utf8');
   const sourceRecords = JSON.parse(sourceRaw);
-  const attributeMapping = JSON.parse(attributeRaw);
 
   if (!Array.isArray(sourceRecords)) {
     throw new Error('spirits_index.json must be an array');
   }
 
-  const attributeCodeByName = new Map(
-    attributeMapping.map((item) => [String(item.属性).trim(), String(item.编号).trim()]),
-  );
-
   const filenameCounts = new Map();
-  const normalizedSprites = sourceRecords.map((record, index) => {
+  const spriteJobs = sourceRecords.map((record, index) => {
     const filename = buildFilename(record, index, filenameCounts);
-    const rawName = String(record['精灵名字2'] ?? record['精灵名称'] ?? '').trim();
-    const chineseName = String(record['精灵名称'] ?? rawName).trim() || rawName;
-    const cardName = cleanCardName(rawName);
-    const number = parseNumber(record['精灵编号']);
-    const attributes = splitAttributes(record['精灵属性']);
-    const attributeCodes = attributes
-      .map((attribute) => attributeCodeByName.get(attribute) ?? '')
-      .filter(Boolean)
-      .slice(0, 2);
+    const {
+      精灵图片: sourceImageUrl,
+      精灵属性图标1: _attributeIcon1,
+      精灵属性图标2: _attributeIcon2,
+      ...rest
+    } = record;
 
     return {
-      id: filename,
       filename,
-      displayName: rawName,
-      name: rawName,
-      chineseName,
-      cardName,
-      path: `/resources/sprites-img/${filename}`,
-      aliases: uniqueStrings([
-        rawName,
-        cardName,
-        chineseName,
-        record['精灵编号'],
-        number !== null ? String(number) : '',
-        number !== null ? String(number).padStart(3, '0') : '',
-        filename,
-        path.parse(filename).name,
-      ]),
-      number,
-      variant: parseVariant(rawName),
-      attribute: attributes.join('、'),
-      attributeCodes,
-      attributeIcon1: attributeCodes[0] ? `/resources/attribute/${attributeCodes[0]}.png` : '',
-      attributeIcon2: attributeCodes[1] ? `/resources/attribute/${attributeCodes[1]}.png` : '',
-      form: String(record['精灵形态'] ?? '').trim(),
-      sourceImageUrl: String(record['精灵图片'] ?? '').trim(),
+      sourceImageUrl: String(sourceImageUrl ?? '').trim(),
+      outputRecord: {
+        ...rest,
+        path: `/resources/sprites-img/${filename}`,
+      },
     };
   });
 
@@ -159,7 +90,7 @@ async function main() {
   if (shouldDownload) {
     const downloadedByUrl = new Map();
 
-    for (const sprite of normalizedSprites) {
+    for (const sprite of spriteJobs) {
       if (!sprite.sourceImageUrl) {
         continue;
       }
@@ -188,16 +119,10 @@ async function main() {
     }
   }
 
-  const payload = {
-    version: 2,
-    generatedAt: new Date().toISOString(),
-    sourceFile: '精灵图片迭代/spirits_index.json',
-    sprites: normalizedSprites,
-  };
-
+  const payload = spriteJobs.map((sprite) => sprite.outputRecord);
   await fs.writeFile(outputIndexFile, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
-  console.log(`sprites: ${normalizedSprites.length}`);
+  console.log(`sprites: ${spriteJobs.length}`);
   console.log(`download: ${shouldDownload ? 'enabled' : 'skipped'}`);
   console.log(`index: ${path.relative(projectRoot, outputIndexFile)}`);
   console.log(`images: ${path.relative(projectRoot, spriteImageDir)}`);
