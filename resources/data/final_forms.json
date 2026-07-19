@@ -1,1871 +1,4402 @@
 [
   {
-    "id": 3004,
-    "name": "迪莫",
+    "id": 3007,
+    "name": "魔力猫",
     "leader_potential": true,
-    "main_type": "光",
-    "sub_type": null
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3005,
     "name": "水灵",
     "leader_potential": true,
     "main_type": "水",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3006,
     "name": "火神",
     "leader_potential": true,
     "main_type": "火",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3007,
-    "name": "魔力猫",
-    "leader_potential": true,
-    "main_type": "草",
-    "sub_type": null
-  },
-  {
-    "id": 3011,
-    "name": "恶魔狼",
-    "leader_potential": true,
-    "main_type": "恶",
-    "sub_type": null
-  },
-  {
-    "id": 3012,
-    "name": "鸭吉吉",
-    "leader_potential": true,
-    "main_type": "普通",
-    "sub_type": null
-  },
-  {
-    "id": 3013,
-    "name": "铠甲虫",
-    "leader_potential": false,
-    "main_type": "虫",
-    "sub_type": null
-  },
-  {
-    "id": 3016,
-    "name": "罗隐",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": "恶"
-  },
-  {
-    "id": 3019,
-    "name": "蹦蹦花",
-    "leader_potential": true,
-    "main_type": "草",
-    "sub_type": "毒"
-  },
-  {
-    "id": 3022,
-    "name": "遁地鼠",
-    "leader_potential": false,
-    "main_type": "地",
-    "sub_type": null
-  },
-  {
-    "id": 3027,
-    "name": "蒲公英娃娃",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3031,
-    "name": "奇丽花",
-    "leader_potential": true,
-    "main_type": "草",
-    "sub_type": null
-  },
-  {
-    "id": 3035,
-    "name": "魔草巫灵",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": "幻"
-  },
-  {
-    "id": 3036,
-    "name": "鸭吉吉",
-    "leader_potential": true,
-    "main_type": "普通",
-    "sub_type": null
-  },
-  {
-    "id": 3037,
-    "name": "岚鸟",
-    "leader_potential": true,
-    "main_type": "翼",
-    "sub_type": null
-  },
-  {
-    "id": 3039,
-    "name": "叮叮恶魔",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": "恶"
-  },
-  {
-    "id": 3042,
-    "name": "卡瓦重",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": null
-  },
-  {
-    "id": 3044,
-    "name": "伊贝粉粉",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": null
-  },
-  {
-    "id": 3047,
-    "name": "花影羚羊",
-    "leader_potential": false,
-    "main_type": "幽",
-    "sub_type": "恶"
-  },
-  {
-    "id": 3048,
-    "name": "圣光迪莫",
-    "leader_potential": false,
-    "main_type": "光",
-    "sub_type": null
-  },
-  {
-    "id": 3050,
-    "name": "记忆石",
-    "leader_potential": false,
-    "main_type": "地",
-    "sub_type": null
-  },
-  {
-    "id": 3051,
-    "name": "圣草迪莫",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": "光"
-  },
-  {
-    "id": 3057,
-    "name": "水泡壳",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": null
-  },
-  {
-    "id": 3063,
-    "name": "白金独角兽",
+    "id": 3004,
+    "name": "迪莫",
     "leader_potential": true,
     "main_type": "光",
-    "sub_type": null
-  },
-  {
-    "id": 3064,
-    "name": "幽影树",
-    "leader_potential": true,
-    "main_type": "草",
-    "sub_type": "幽"
-  },
-  {
-    "id": 3066,
-    "name": "影狸",
-    "leader_potential": false,
-    "main_type": "毒",
-    "sub_type": "幽"
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3067,
     "name": "卷毛鸭",
     "leader_potential": false,
     "main_type": "草",
-    "sub_type": "武"
+    "sub_type": "武",
+    "implemented": true
   },
   {
-    "id": 3069,
-    "name": "锤头鹳",
+    "id": 3023,
+    "name": "火云斗鸡",
     "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "翼"
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
   },
   {
-    "id": 3071,
-    "name": "音速犬",
+    "id": 3039,
+    "name": "叮叮恶魔",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": "恶",
+    "implemented": true
+  },
+  {
+    "id": 3011,
+    "name": "恶魔狼",
     "leader_potential": true,
-    "main_type": "火",
-    "sub_type": null
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3074,
-    "name": "格兰球",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": null
-  },
-  {
-    "id": 3077,
-    "name": "尖嘴狐仙",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": "冰"
-  },
-  {
-    "id": 3080,
-    "name": "火羽",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": "翼"
-  },
-  {
-    "id": 3085,
-    "name": "火焰猿",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": null
-  },
-  {
-    "id": 3088,
-    "name": "绅士鸡",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": "武"
-  },
-  {
-    "id": 3089,
-    "name": "武者鸡",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": "武"
-  },
-  {
-    "id": 3092,
-    "name": "烈火守护",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": null
-  },
-  {
-    "id": 3095,
-    "name": "白发路路",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3100,
-    "name": "蹦床松鼠",
-    "leader_potential": false,
+    "id": 3012,
+    "name": "鸭吉吉",
+    "leader_potential": true,
     "main_type": "普通",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3016,
+    "name": "罗隐",
+    "leader_potential": true,
+    "main_type": "地",
+    "sub_type": "恶",
+    "implemented": true
+  },
+  {
+    "id": 3019,
+    "name": "蹦蹦花",
+    "leader_potential": true,
+    "main_type": "草",
+    "sub_type": "毒",
+    "implemented": true
+  },
+  {
+    "id": 3022,
+    "name": "遁地鼠",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3024,
+    "name": "伊丽莎白",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3035,
+    "name": "魔草巫灵",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "幻",
+    "implemented": true
+  },
+  {
+    "id": 3031,
+    "name": "奇丽花",
+    "leader_potential": true,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3027,
+    "name": "蒲公英娃娃",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3036,
+    "name": "鸭吉吉",
+    "leader_potential": true,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3013,
+    "name": "铠甲虫",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3042,
+    "name": "卡瓦重",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3044,
+    "name": "伊贝粉粉",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3047,
+    "name": "花影羚羊",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": "恶",
+    "implemented": true
+  },
+  {
+    "id": 3048,
+    "name": "圣光迪莫",
+    "leader_potential": false,
+    "main_type": "光",
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3102,
     "name": "瞌睡王",
     "leader_potential": false,
     "main_type": "普通",
-    "sub_type": "武"
+    "sub_type": "武",
+    "implemented": true
   },
   {
-    "id": 3105,
-    "name": "布克棱岩",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": null
-  },
-  {
-    "id": 3108,
-    "name": "石冠王蜥",
+    "id": 3050,
+    "name": "记忆石",
     "leader_potential": false,
     "main_type": "地",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3111,
-    "name": "仪式巨像",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": "幻"
-  },
-  {
-    "id": 3114,
-    "name": "卡洛儿",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3117,
-    "name": "彩蝶鲨",
-    "leader_potential": true,
-    "main_type": "水",
-    "sub_type": "翼"
-  },
-  {
-    "id": 3120,
-    "name": "琉璃水母",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "毒"
-  },
-  {
-    "id": 3123,
-    "name": "雪影娃娃",
-    "leader_potential": true,
-    "main_type": "冰",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3126,
-    "name": "圣代甜甜",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3129,
-    "name": "皇家狮鹫",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": null
-  },
-  {
-    "id": 3132,
-    "name": "芋香巨角蛛",
-    "leader_potential": false,
-    "main_type": "毒",
-    "sub_type": "虫"
-  },
-  {
-    "id": 3138,
-    "name": "化蝶",
-    "leader_potential": false,
-    "main_type": "虫",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3141,
-    "name": "花衣蝶",
+    "id": 3051,
+    "name": "圣草迪莫",
     "leader_potential": false,
     "main_type": "草",
-    "sub_type": "虫"
+    "sub_type": "光",
+    "implemented": true
   },
   {
-    "id": 3144,
-    "name": "朔夜伊芙",
+    "id": 3054,
+    "name": "蓝衣夜灵",
     "leader_potential": false,
-    "main_type": "恶",
-    "sub_type": null
+    "main_type": "普通",
+    "sub_type": "地",
+    "implemented": false
   },
   {
-    "id": 3147,
-    "name": "幻影灵菇",
+    "id": 3057,
+    "name": "水泡壳",
     "leader_potential": false,
-    "main_type": "草",
-    "sub_type": "幽"
-  },
-  {
-    "id": 3150,
-    "name": "夜枭",
-    "leader_potential": false,
-    "main_type": "幽",
-    "sub_type": null
-  },
-  {
-    "id": 3153,
-    "name": "古啦多",
-    "leader_potential": false,
-    "main_type": "地",
-    "sub_type": "毒"
-  },
-  {
-    "id": 3156,
-    "name": "裘卡",
-    "leader_potential": false,
-    "main_type": "毒",
-    "sub_type": null
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3157,
     "name": "花魁蜂后",
     "leader_potential": true,
     "main_type": "虫",
-    "sub_type": "翼"
-  },
-  {
-    "id": 3158,
-    "name": "武斗酷猫",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": null
-  },
-  {
-    "id": 3167,
-    "name": "巨噬针鼹",
-    "leader_potential": false,
-    "main_type": "普通",
-    "sub_type": null
-  },
-  {
-    "id": 3169,
-    "name": "超能阿布",
-    "leader_potential": false,
-    "main_type": "龙",
-    "sub_type": null
-  },
-  {
-    "id": 3171,
-    "name": "巨灵石",
-    "leader_potential": false,
-    "main_type": "地",
-    "sub_type": "幽"
-  },
-  {
-    "id": 3174,
-    "name": "雪巨人",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3177,
-    "name": "咔咔鸟",
-    "leader_potential": false,
-    "main_type": "普通",
-    "sub_type": "翼"
-  },
-  {
-    "id": 3179,
-    "name": "恶魔红钻",
-    "leader_potential": false,
-    "main_type": "虫",
-    "sub_type": "恶"
-  },
-  {
-    "id": 3182,
-    "name": "龙息帕尔",
-    "leader_potential": false,
-    "main_type": "恶",
-    "sub_type": null
-  },
-  {
-    "id": 3185,
-    "name": "邪眼巨魔",
-    "leader_potential": false,
-    "main_type": "虫",
-    "sub_type": "恶"
-  },
-  {
-    "id": 3189,
-    "name": "酷拉",
-    "leader_potential": false,
-    "main_type": "电",
-    "sub_type": null
-  },
-  {
-    "id": 3192,
-    "name": "电球咩咩",
-    "leader_potential": false,
-    "main_type": "电",
-    "sub_type": null
-  },
-  {
-    "id": 3194,
-    "name": "星光狮",
-    "leader_potential": false,
-    "main_type": "电",
-    "sub_type": null
-  },
-  {
-    "id": 3197,
-    "name": "荆棘电环",
-    "leader_potential": false,
-    "main_type": "电",
-    "sub_type": null
-  },
-  {
-    "id": 3199,
-    "name": "小皮球",
-    "leader_potential": false,
-    "main_type": "电",
-    "sub_type": "幻"
-  },
-  {
-    "id": 3202,
-    "name": "立方人",
-    "leader_potential": false,
-    "main_type": "机械",
-    "sub_type": null
-  },
-  {
-    "id": 3205,
-    "name": "贝古斯",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": "机械"
-  },
-  {
-    "id": 3208,
-    "name": "波多西",
-    "leader_potential": false,
-    "main_type": "地",
-    "sub_type": "机械"
-  },
-  {
-    "id": 3210,
-    "name": "翼龙",
-    "leader_potential": false,
-    "main_type": "龙",
-    "sub_type": "翼"
-  },
-  {
-    "id": 3216,
-    "name": "海豹船长",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "武"
-  },
-  {
-    "id": 3219,
-    "name": "健猫教练",
-    "leader_potential": false,
-    "main_type": "武",
-    "sub_type": null
-  },
-  {
-    "id": 3226,
-    "name": "寒音蛇",
-    "leader_potential": false,
-    "main_type": "毒",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3227,
-    "name": "菊花梨",
-    "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null
-  },
-  {
-    "id": 3235,
-    "name": "帅帅魔偶",
-    "leader_potential": false,
-    "main_type": "幻",
-    "sub_type": null
-  },
-  {
-    "id": 3236,
-    "name": "超能球球",
-    "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": "幻"
-  },
-  {
-    "id": 3238,
-    "name": "怒目怂猫",
-    "leader_potential": false,
-    "main_type": "武",
-    "sub_type": null
-  },
-  {
-    "id": 3241,
-    "name": "怖哭菇",
-    "leader_potential": false,
-    "main_type": "幻",
-    "sub_type": null
-  },
-  {
-    "id": 3246,
-    "name": "绒仙子",
-    "leader_potential": false,
-    "main_type": "光",
-    "sub_type": "虫"
-  },
-  {
-    "id": 3252,
-    "name": "高脚鹬",
-    "leader_potential": true,
-    "main_type": "翼",
-    "sub_type": null
-  },
-  {
-    "id": 3256,
-    "name": "流浪鼠",
-    "leader_potential": false,
-    "main_type": "地",
-    "sub_type": null
-  },
-  {
-    "id": 3259,
-    "name": "冰钻布鲁斯",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3263,
-    "name": "獠牙猪",
-    "leader_potential": false,
-    "main_type": "地",
-    "sub_type": "冰"
-  },
-  {
-    "id": 3265,
-    "name": "卡拉波斯",
-    "leader_potential": false,
-    "main_type": "恶",
-    "sub_type": null
-  },
-  {
-    "id": 3267,
-    "name": "闪电鳗鱼",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "电"
-  },
-  {
-    "id": 3269,
-    "name": "寂灭骨龙",
-    "leader_potential": false,
-    "main_type": "龙",
-    "sub_type": "幽"
-  },
-  {
-    "id": 3278,
-    "name": "魔眷鸟",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3285,
-    "name": "岚鸟",
-    "leader_potential": true,
-    "main_type": "翼",
-    "sub_type": null
-  },
-  {
-    "id": 3286,
-    "name": "岚鸟",
-    "leader_potential": true,
-    "main_type": "翼",
-    "sub_type": null
-  },
-  {
-    "id": 3287,
-    "name": "岚鸟",
-    "leader_potential": true,
-    "main_type": "翼",
-    "sub_type": null
-  },
-  {
-    "id": 3295,
-    "name": "卡瓦重",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": "地"
-  },
-  {
-    "id": 3296,
-    "name": "卡瓦重",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": "冰"
-  },
-  {
-    "id": 3303,
-    "name": "蹦蹦花",
-    "leader_potential": true,
-    "main_type": "草",
-    "sub_type": "毒"
-  },
-  {
-    "id": 3304,
-    "name": "蹦蹦花",
-    "leader_potential": true,
-    "main_type": "草",
-    "sub_type": "毒"
-  },
-  {
-    "id": 3305,
-    "name": "蹦蹦花",
-    "leader_potential": true,
-    "main_type": "草",
-    "sub_type": "毒"
-  },
-  {
-    "id": 3308,
-    "name": "晶石蜗",
-    "leader_potential": true,
-    "main_type": "光",
-    "sub_type": "地"
-  },
-  {
-    "id": 3311,
-    "name": "疾光千兽",
-    "leader_potential": false,
-    "main_type": "光",
-    "sub_type": null
-  },
-  {
-    "id": 3317,
-    "name": "卷胡巨獭",
-    "leader_potential": false,
-    "main_type": "普通",
-    "sub_type": "水"
-  },
-  {
-    "id": 3320,
-    "name": "粉耳星兔",
-    "leader_potential": false,
-    "main_type": "幻",
-    "sub_type": null
-  },
-  {
-    "id": 3332,
-    "name": "千棘盔",
-    "leader_potential": true,
-    "main_type": "水",
-    "sub_type": "毒"
-  },
-  {
-    "id": 3335,
-    "name": "雪灵",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3346,
-    "name": "翠顶夫人",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "翼"
-  },
-  {
-    "id": 3350,
-    "name": "红绒十字",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3359,
-    "name": "爵士鹿",
-    "leader_potential": true,
-    "main_type": "电",
-    "sub_type": null
-  },
-  {
-    "id": 3368,
-    "name": "嘟嘟锅",
-    "leader_potential": false,
-    "main_type": "毒",
-    "sub_type": null
-  },
-  {
-    "id": 3371,
-    "name": "暮星辰",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": "幻"
-  },
-  {
-    "id": 3372,
-    "name": "春花兔",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": null
-  },
-  {
-    "id": 3375,
-    "name": "梦想三三",
-    "leader_potential": true,
-    "main_type": "萌",
-    "sub_type": null
-  },
-  {
-    "id": 3377,
-    "name": "风滚暮虫",
-    "leader_potential": false,
-    "main_type": "普通",
-    "sub_type": "虫"
-  },
-  {
-    "id": 3380,
-    "name": "九幽菇",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": "地"
-  },
-  {
-    "id": 3381,
-    "name": "深蓝鲸",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": null
-  },
-  {
-    "id": 3383,
-    "name": "利灯鱼",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "电"
-  },
-  {
-    "id": 3386,
-    "name": "龙鱼",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "龙"
-  },
-  {
-    "id": 3394,
-    "name": "凡鹰",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": null
-  },
-  {
-    "id": 3397,
-    "name": "圣羽翼王",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": null
-  },
-  {
-    "id": 3400,
-    "name": "陨星虫",
-    "leader_potential": false,
-    "main_type": "虫",
-    "sub_type": null
+    "sub_type": "翼",
+    "implemented": true
   },
   {
     "id": 3405,
     "name": "幽冥眼",
     "leader_potential": false,
     "main_type": "幽",
-    "sub_type": null
-  },
-  {
-    "id": 3407,
-    "name": "声波缇塔",
-    "leader_potential": false,
-    "main_type": "机械",
-    "sub_type": null
-  },
-  {
-    "id": 3409,
-    "name": "机甲小子",
-    "leader_potential": false,
-    "main_type": "机械",
-    "sub_type": null
-  },
-  {
-    "id": 3411,
-    "name": "权杖-V",
-    "leader_potential": false,
-    "main_type": "机械",
-    "sub_type": null
-  },
-  {
-    "id": 3412,
-    "name": "伊兰亚龙",
-    "leader_potential": true,
-    "main_type": "龙",
-    "sub_type": null
-  },
-  {
-    "id": 3416,
-    "name": "格斗小五",
-    "leader_potential": false,
-    "main_type": "武",
-    "sub_type": null
-  },
-  {
-    "id": 3417,
-    "name": "格斗小六",
-    "leader_potential": false,
-    "main_type": "武",
-    "sub_type": null
-  },
-  {
-    "id": 3418,
-    "name": "格斗小八",
-    "leader_potential": false,
-    "main_type": "武",
-    "sub_type": null
-  },
-  {
-    "id": 3420,
-    "name": "厉毒修萝",
-    "leader_potential": false,
-    "main_type": "毒",
-    "sub_type": "恶"
-  },
-  {
-    "id": 3430,
-    "name": "海枝枝",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "幽"
-  },
-  {
-    "id": 3431,
-    "name": "海枝枝",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "幽"
-  },
-  {
-    "id": 3432,
-    "name": "海枝枝",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "幽"
-  },
-  {
-    "id": 3433,
-    "name": "海枝枝",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "幽"
-  },
-  {
-    "id": 3435,
-    "name": "电企鹅",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": "电"
-  },
-  {
-    "id": 3437,
-    "name": "燃薪虫",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": "火"
-  },
-  {
-    "id": 3439,
-    "name": "梦悠悠",
-    "leader_potential": false,
-    "main_type": "幽",
-    "sub_type": null
-  },
-  {
-    "id": 3441,
-    "name": "梦悠悠",
-    "leader_potential": false,
-    "main_type": "光",
-    "sub_type": "幽"
-  },
-  {
-    "id": 3443,
-    "name": "星光狮",
-    "leader_potential": false,
-    "main_type": "光",
-    "sub_type": "电"
-  },
-  {
-    "id": 3444,
-    "name": "噼啪鸟",
-    "leader_potential": false,
-    "main_type": "电",
-    "sub_type": "翼"
-  },
-  {
-    "id": 3448,
-    "name": "晶石蜗",
-    "leader_potential": true,
-    "main_type": "光",
-    "sub_type": "地"
-  },
-  {
-    "id": 3449,
-    "name": "晶石蜗",
-    "leader_potential": true,
-    "main_type": "光",
-    "sub_type": "地"
-  },
-  {
-    "id": 3450,
-    "name": "晶石蜗",
-    "leader_potential": true,
-    "main_type": "光",
-    "sub_type": "地"
-  },
-  {
-    "id": 3451,
-    "name": "晶石蜗",
-    "leader_potential": true,
-    "main_type": "光",
-    "sub_type": "地"
-  },
-  {
-    "id": 3452,
-    "name": "鸭吉吉",
-    "leader_potential": true,
-    "main_type": "普通",
-    "sub_type": null
-  },
-  {
-    "id": 3453,
-    "name": "鸭吉吉",
-    "leader_potential": true,
-    "main_type": "普通",
-    "sub_type": null
-  },
-  {
-    "id": 3456,
-    "name": "遁地鼠",
-    "leader_potential": false,
-    "main_type": "地",
-    "sub_type": null
-  },
-  {
-    "id": 3457,
-    "name": "月牙雪熊",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": "幻"
-  },
-  {
-    "id": 3458,
-    "name": "圣代甜甜",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3459,
-    "name": "圣代甜甜",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3460,
-    "name": "圣代甜甜",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3461,
-    "name": "圣代甜甜",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3462,
-    "name": "圣代甜甜",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3463,
-    "name": "圣代甜甜",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3464,
-    "name": "圣代甜甜",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3465,
-    "name": "圣代甜甜",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null
-  },
-  {
-    "id": 3466,
-    "name": "星云旅者",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": "幻"
-  },
-  {
-    "id": 3469,
-    "name": "皇家狮鹫",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": null
-  },
-  {
-    "id": 3470,
-    "name": "化蝶",
-    "leader_potential": false,
-    "main_type": "虫",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3471,
-    "name": "化蝶",
-    "leader_potential": false,
-    "main_type": "虫",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3472,
-    "name": "化蝶",
-    "leader_potential": false,
-    "main_type": "虫",
-    "sub_type": "萌"
-  },
-  {
-    "id": 3474,
-    "name": "上岸蛙",
-    "leader_potential": false,
-    "main_type": "幻",
-    "sub_type": null
-  },
-  {
-    "id": 3477,
-    "name": "千棘盔",
-    "leader_potential": true,
-    "main_type": "水",
-    "sub_type": "毒"
-  },
-  {
-    "id": 3480,
-    "name": "圣羽翼王",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3482,
     "name": "幽冥眼",
     "leader_potential": false,
     "main_type": "幽",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3485,
-    "name": "落陨星兔",
-    "leader_potential": false,
-    "main_type": "幽",
-    "sub_type": "幻"
-  },
-  {
-    "id": 3486,
-    "name": "晶石蜗",
+    "id": 3063,
+    "name": "白金独角兽",
     "leader_potential": true,
     "main_type": "光",
-    "sub_type": "地"
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3489,
-    "name": "小丑公爵",
+    "id": 3064,
+    "name": "幽影树",
+    "leader_potential": true,
+    "main_type": "草",
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 3066,
+    "name": "影狸",
     "leader_potential": false,
-    "main_type": "恶",
-    "sub_type": null
+    "main_type": "毒",
+    "sub_type": "幽",
+    "implemented": true
   },
   {
-    "id": 3491,
-    "name": "泥吼牙",
+    "id": 3069,
+    "name": "锤头鹳",
     "leader_potential": false,
-    "main_type": "地",
-    "sub_type": "翼"
+    "main_type": "水",
+    "sub_type": "翼",
+    "implemented": true
   },
   {
-    "id": 3492,
-    "name": "兽花蕾",
+    "id": 3071,
+    "name": "音速犬",
+    "leader_potential": true,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3074,
+    "name": "格兰球",
     "leader_potential": false,
     "main_type": "草",
-    "sub_type": "光"
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3495,
-    "name": "鸭吉吉",
+    "id": 3077,
+    "name": "尖嘴狐仙",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "冰",
+    "implemented": true
+  },
+  {
+    "id": 3080,
+    "name": "火羽",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "翼",
+    "implemented": true
+  },
+  {
+    "id": 3350,
+    "name": "红绒十字",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3085,
+    "name": "火焰猿",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3088,
+    "name": "绅士鸡",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3089,
+    "name": "武者鸡",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3092,
+    "name": "烈火守护",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3095,
+    "name": "白发路路",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3100,
+    "name": "蹦床松鼠",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3105,
+    "name": "布克棱岩",
     "leader_potential": true,
-    "main_type": "普通",
-    "sub_type": null
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3498,
-    "name": "风滚暮虫",
-    "leader_potential": false,
-    "main_type": "普通",
-    "sub_type": "虫"
-  },
-  {
-    "id": 3499,
-    "name": "公平鸽",
-    "leader_potential": false,
-    "main_type": "普通",
-    "sub_type": null
-  },
-  {
-    "id": 3502,
+    "id": 3108,
     "name": "石冠王蜥",
     "leader_potential": false,
     "main_type": "地",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3507,
-    "name": "鳗尾兽",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": "地"
+    "id": 3111,
+    "name": "仪式巨像",
+    "leader_potential": true,
+    "main_type": "地",
+    "sub_type": "幻",
+    "implemented": true
   },
   {
-    "id": 3510,
-    "name": "嗜波螺",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "地"
-  },
-  {
-    "id": 3513,
-    "name": "嗜波螺",
+    "id": 3114,
+    "name": "卡洛儿",
     "leader_potential": false,
     "main_type": "水",
-    "sub_type": "地"
+    "sub_type": "萌",
+    "implemented": true
   },
   {
-    "id": 3518,
-    "name": "水泡壳",
-    "leader_potential": false,
+    "id": 3117,
+    "name": "彩蝶鲨",
+    "leader_potential": true,
     "main_type": "水",
-    "sub_type": null
-  },
-  {
-    "id": 3521,
-    "name": "里拉鳐",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": null
+    "sub_type": "翼",
+    "implemented": true
   },
   {
     "id": 3526,
     "name": "抹茶布丁",
     "leader_potential": false,
     "main_type": "草",
-    "sub_type": "水"
+    "sub_type": "水",
+    "implemented": true
   },
   {
     "id": 3527,
     "name": "椰浆布丁",
     "leader_potential": false,
     "main_type": "水",
-    "sub_type": "冰"
+    "sub_type": "冰",
+    "implemented": true
   },
   {
     "id": 3528,
     "name": "熔岩布丁",
     "leader_potential": false,
     "main_type": "火",
-    "sub_type": "水"
+    "sub_type": "水",
+    "implemented": true
   },
   {
-    "id": 3530,
-    "name": "圆号鱼",
+    "id": 3120,
+    "name": "琉璃水母",
     "leader_potential": false,
     "main_type": "水",
-    "sub_type": null
+    "sub_type": "毒",
+    "implemented": true
   },
   {
-    "id": 3532,
-    "name": "雪怪",
+    "id": 3123,
+    "name": "雪影娃娃",
+    "leader_potential": true,
+    "main_type": "冰",
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3126,
+    "name": "圣代甜甜",
     "leader_potential": false,
     "main_type": "冰",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3535,
-    "name": "斑枭",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": null
-  },
-  {
-    "id": 3538,
-    "name": "乌拉塔",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": "恶"
-  },
-  {
-    "id": 3541,
-    "name": "乌拉塔",
+    "id": 3458,
+    "name": "圣代甜甜",
     "leader_potential": false,
     "main_type": "冰",
-    "sub_type": "恶"
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3544,
-    "name": "多灵主",
+    "id": 3459,
+    "name": "圣代甜甜",
     "leader_potential": false,
-    "main_type": "幽",
-    "sub_type": null
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3546,
-    "name": "圣剑-X",
-    "leader_potential": true,
-    "main_type": "机械",
-    "sub_type": null
+    "id": 3463,
+    "name": "圣代甜甜",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3547,
-    "name": "帕帕斯卡",
+    "id": 3464,
+    "name": "圣代甜甜",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3465,
+    "name": "圣代甜甜",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3460,
+    "name": "圣代甜甜",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3461,
+    "name": "圣代甜甜",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3462,
+    "name": "圣代甜甜",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3129,
+    "name": "皇家狮鹫",
     "leader_potential": false,
     "main_type": "翼",
-    "sub_type": "机械"
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3551,
-    "name": "棋骑士",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": "武"
-  },
-  {
-    "id": 3552,
-    "name": "棋绮后",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": "武"
-  },
-  {
-    "id": 3553,
-    "name": "棋齐垒",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": "武"
-  },
-  {
-    "id": 3554,
-    "name": "棋祈督",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": "武"
-  },
-  {
-    "id": 3556,
-    "name": "棋骑士",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": "武"
-  },
-  {
-    "id": 3557,
-    "name": "棋绮后",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": "武"
-  },
-  {
-    "id": 3558,
-    "name": "棋齐垒",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": "武"
-  },
-  {
-    "id": 3559,
-    "name": "棋祈督",
-    "leader_potential": true,
-    "main_type": "地",
-    "sub_type": "武"
-  },
-  {
-    "id": 3566,
-    "name": "壳栗丝鼠",
+    "id": 3132,
+    "name": "芋香巨角蛛",
     "leader_potential": false,
     "main_type": "毒",
-    "sub_type": null
+    "sub_type": "虫",
+    "implemented": true
   },
   {
-    "id": 3567,
-    "name": "落陨星兔",
+    "id": 3135,
+    "name": "飞天刀螂",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "武",
+    "implemented": false
+  },
+  {
+    "id": 3138,
+    "name": "化蝶",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3470,
+    "name": "化蝶",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3471,
+    "name": "化蝶",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3472,
+    "name": "化蝶",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3141,
+    "name": "花衣蝶",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "虫",
+    "implemented": true
+  },
+  {
+    "id": 3144,
+    "name": "朔夜伊芙",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3147,
+    "name": "幻影灵菇",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 3150,
+    "name": "夜枭",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3153,
+    "name": "古啦多",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "毒",
+    "implemented": true
+  },
+  {
+    "id": 3156,
+    "name": "裘卡",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3158,
+    "name": "武斗酷猫",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3097,
+    "name": "灵蔓草王",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3372,
+    "name": "春花兔",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3167,
+    "name": "巨噬针鼹",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3169,
+    "name": "超能阿布",
+    "leader_potential": false,
+    "main_type": "龙",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3171,
+    "name": "巨灵石",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 3174,
+    "name": "雪巨人",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3177,
+    "name": "咔咔鸟",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": "翼",
+    "implemented": true
+  },
+  {
+    "id": 3179,
+    "name": "恶魔红钻",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "恶",
+    "implemented": true
+  },
+  {
+    "id": 3182,
+    "name": "龙息帕尔",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3185,
+    "name": "邪眼巨魔",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "恶",
+    "implemented": true
+  },
+  {
+    "id": 3186,
+    "name": "小光",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3187,
+    "name": "迷迷眼",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": "幻",
+    "implemented": false
+  },
+  {
+    "id": 3189,
+    "name": "酷拉",
+    "leader_potential": false,
+    "main_type": "电",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3192,
+    "name": "电球咩咩",
+    "leader_potential": false,
+    "main_type": "电",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3194,
+    "name": "星光狮",
+    "leader_potential": false,
+    "main_type": "电",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3197,
+    "name": "荆棘电环",
+    "leader_potential": false,
+    "main_type": "电",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3199,
+    "name": "小皮球",
+    "leader_potential": false,
+    "main_type": "电",
+    "sub_type": "幻",
+    "implemented": true
+  },
+  {
+    "id": 3202,
+    "name": "立方人",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3205,
+    "name": "贝古斯",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "机械",
+    "implemented": true
+  },
+  {
+    "id": 3208,
+    "name": "波多西",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "机械",
+    "implemented": true
+  },
+  {
+    "id": 3210,
+    "name": "翼龙",
+    "leader_potential": false,
+    "main_type": "龙",
+    "sub_type": "翼",
+    "implemented": true
+  },
+  {
+    "id": 3412,
+    "name": "伊兰亚龙",
+    "leader_potential": true,
+    "main_type": "龙",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3214,
+    "name": "黑炎",
+    "leader_potential": false,
+    "main_type": "龙",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 3216,
+    "name": "海豹船长",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3219,
+    "name": "健猫教练",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3226,
+    "name": "寒音蛇",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3227,
+    "name": "菊花梨",
+    "leader_potential": false,
+    "main_type": "萌",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3229,
+    "name": "友爱星飞",
+    "leader_potential": false,
+    "main_type": "萌",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3233,
+    "name": "加尔",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3235,
+    "name": "帅帅魔偶",
     "leader_potential": false,
     "main_type": "幻",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
-    "id": 3569,
-    "name": "黑猫巫师",
+    "id": 3236,
+    "name": "超能球球",
+    "leader_potential": false,
+    "main_type": "萌",
+    "sub_type": "幻",
+    "implemented": true
+  },
+  {
+    "id": 3238,
+    "name": "怒目怂猫",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3241,
+    "name": "怖哭菇",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3243,
+    "name": "喷火鸟",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "地",
+    "implemented": false
+  },
+  {
+    "id": 3246,
+    "name": "绒仙子",
+    "leader_potential": false,
+    "main_type": "光",
+    "sub_type": "虫",
+    "implemented": true
+  },
+  {
+    "id": 3249,
+    "name": "流星猛犸",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3252,
+    "name": "高脚鹬",
     "leader_potential": true,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3254,
+    "name": "速粒冲锋",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 3256,
+    "name": "流浪鼠",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3259,
+    "name": "冰钻布鲁斯",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3261,
+    "name": "大古拉海象",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3263,
+    "name": "獠牙猪",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "冰",
+    "implemented": true
+  },
+  {
+    "id": 3265,
+    "name": "卡拉波斯",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3267,
+    "name": "闪电鳗鱼",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "电",
+    "implemented": true
+  },
+  {
+    "id": 3269,
+    "name": "寂灭骨龙",
+    "leader_potential": false,
+    "main_type": "龙",
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 3278,
+    "name": "魔眷鸟",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3285,
+    "name": "岚鸟",
+    "leader_potential": true,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3286,
+    "name": "岚鸟",
+    "leader_potential": true,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3287,
+    "name": "岚鸟",
+    "leader_potential": true,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3294,
+    "name": "卡瓦重",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "火",
+    "implemented": false
+  },
+  {
+    "id": 3295,
+    "name": "卡瓦重",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3296,
+    "name": "卡瓦重",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "冰",
+    "implemented": true
+  },
+  {
+    "id": 3303,
+    "name": "蹦蹦花",
+    "leader_potential": true,
+    "main_type": "草",
+    "sub_type": "毒",
+    "implemented": true
+  },
+  {
+    "id": 3304,
+    "name": "蹦蹦花",
+    "leader_potential": true,
+    "main_type": "草",
+    "sub_type": "毒",
+    "implemented": true
+  },
+  {
+    "id": 3305,
+    "name": "蹦蹦花",
+    "leader_potential": true,
+    "main_type": "草",
+    "sub_type": "毒",
+    "implemented": true
+  },
+  {
+    "id": 3308,
+    "name": "晶石蜗",
+    "leader_potential": true,
+    "main_type": "光",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3448,
+    "name": "晶石蜗",
+    "leader_potential": true,
+    "main_type": "光",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3449,
+    "name": "晶石蜗",
+    "leader_potential": true,
+    "main_type": "光",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3450,
+    "name": "晶石蜗",
+    "leader_potential": true,
+    "main_type": "光",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3451,
+    "name": "晶石蜗",
+    "leader_potential": true,
+    "main_type": "光",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3486,
+    "name": "晶石蜗",
+    "leader_potential": true,
+    "main_type": "光",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3311,
+    "name": "疾光千兽",
+    "leader_potential": false,
+    "main_type": "光",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3312,
+    "name": "若叶蜥",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3313,
+    "name": "立叶蜥",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3314,
+    "name": "蝶叶巨蜥",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3317,
+    "name": "卷胡巨獭",
+    "leader_potential": false,
     "main_type": "普通",
-    "sub_type": null
+    "sub_type": "水",
+    "implemented": true
+  },
+  {
+    "id": 3320,
+    "name": "粉耳星兔",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3485,
+    "name": "落陨星兔",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": "幻",
+    "implemented": true
+  },
+  {
+    "id": 3321,
+    "name": "觅觅蝠",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3322,
+    "name": "翻翻蝠",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3323,
+    "name": "夜游魔",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 3327,
+    "name": "独角龙",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3328,
+    "name": "坚角龙",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3329,
+    "name": "爆角龙",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3332,
+    "name": "千棘盔",
+    "leader_potential": true,
+    "main_type": "水",
+    "sub_type": "毒",
+    "implemented": true
+  },
+  {
+    "id": 3335,
+    "name": "雪灵",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3336,
+    "name": "格格布",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3337,
+    "name": "格布布",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3338,
+    "name": "冰虎宝",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3339,
+    "name": "冰晶虎",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3340,
+    "name": "冰晶古齿虎",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3341,
+    "name": "雪灵兽",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3342,
+    "name": "幻雪兽",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3343,
+    "name": "饮雪狂兽",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3346,
+    "name": "翠顶夫人",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "翼",
+    "implemented": true
   },
   {
     "id": 3571,
     "name": "黑羽夫人",
     "leader_potential": false,
     "main_type": "翼",
-    "sub_type": "恶"
+    "sub_type": "恶",
+    "implemented": true
+  },
+  {
+    "id": 3347,
+    "name": "芽眼魔",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 3348,
+    "name": "叶眼魔",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 3349,
+    "name": "障眼魔",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 3352,
+    "name": "雷鸣小子",
+    "leader_potential": false,
+    "main_type": "电",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3353,
+    "name": "雷暴奔奔",
+    "leader_potential": false,
+    "main_type": "电",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3356,
+    "name": "魔能陀螺",
+    "leader_potential": false,
+    "main_type": "电",
+    "sub_type": "机械",
+    "implemented": false
+  },
+  {
+    "id": 3359,
+    "name": "爵士鹿",
+    "leader_potential": true,
+    "main_type": "电",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3362,
+    "name": "徘徊爪爪",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": "萌",
+    "implemented": false
+  },
+  {
+    "id": 3363,
+    "name": "路路",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3364,
+    "name": "路路尼",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3365,
+    "name": "古路尼",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "毒",
+    "implemented": false
+  },
+  {
+    "id": 3368,
+    "name": "嘟嘟锅",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3371,
+    "name": "暮星辰",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": "幻",
+    "implemented": true
+  },
+  {
+    "id": 3375,
+    "name": "梦想三三",
+    "leader_potential": true,
+    "main_type": "萌",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3377,
+    "name": "风滚暮虫",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": "虫",
+    "implemented": true
+  },
+  {
+    "id": 3380,
+    "name": "九幽菇",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3381,
+    "name": "深蓝鲸",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3383,
+    "name": "利灯鱼",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "电",
+    "implemented": true
+  },
+  {
+    "id": 3386,
+    "name": "龙鱼",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "龙",
+    "implemented": true
+  },
+  {
+    "id": 3388,
+    "name": "科多索",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "冰",
+    "implemented": false
+  },
+  {
+    "id": 3394,
+    "name": "凡鹰",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3397,
+    "name": "圣羽翼王",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3400,
+    "name": "陨星虫",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3401,
+    "name": "伊里斯",
+    "leader_potential": false,
+    "main_type": "光",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3402,
+    "name": "碎晶蝎",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 3404,
+    "name": "蝎子王",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 3407,
+    "name": "声波缇塔",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3409,
+    "name": "机甲小子",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3411,
+    "name": "权杖-V",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3416,
+    "name": "格斗小五",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3417,
+    "name": "格斗小六",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3418,
+    "name": "格斗小八",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3420,
+    "name": "厉毒修萝",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": "恶",
+    "implemented": true
+  },
+  {
+    "id": 3422,
+    "name": "食梦者",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3424,
+    "name": "空灵斗士",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3426,
+    "name": "花叶龙",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "龙",
+    "implemented": false
+  },
+  {
+    "id": 3427,
+    "name": "麦香驼",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3429,
+    "name": "埃欧熔锥",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "地",
+    "implemented": false
+  },
+  {
+    "id": 3430,
+    "name": "海枝枝",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 3431,
+    "name": "海枝枝",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 3432,
+    "name": "海枝枝",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 3433,
+    "name": "海枝枝",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 3435,
+    "name": "电企鹅",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": "电",
+    "implemented": true
+  },
+  {
+    "id": 3437,
+    "name": "燃薪虫",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "火",
+    "implemented": true
+  },
+  {
+    "id": 3439,
+    "name": "梦悠悠",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3441,
+    "name": "梦悠悠",
+    "leader_potential": false,
+    "main_type": "光",
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 3443,
+    "name": "星光狮",
+    "leader_potential": false,
+    "main_type": "光",
+    "sub_type": "电",
+    "implemented": true
+  },
+  {
+    "id": 3444,
+    "name": "噼啪鸟",
+    "leader_potential": false,
+    "main_type": "电",
+    "sub_type": "翼",
+    "implemented": true
+  },
+  {
+    "id": 3445,
+    "name": "雪毛角羚牛",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "冰",
+    "implemented": false
+  },
+  {
+    "id": 3446,
+    "name": "雪毛角羚牛",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "冰",
+    "implemented": false
+  },
+  {
+    "id": 3447,
+    "name": "雪毛角羚牛",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "冰",
+    "implemented": false
+  },
+  {
+    "id": 3452,
+    "name": "鸭吉吉",
+    "leader_potential": true,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3453,
+    "name": "鸭吉吉",
+    "leader_potential": true,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3456,
+    "name": "遁地鼠",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3457,
+    "name": "月牙雪熊",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": "幻",
+    "implemented": true
+  },
+  {
+    "id": 3466,
+    "name": "星云旅者",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": "幻",
+    "implemented": true
+  },
+  {
+    "id": 3469,
+    "name": "皇家狮鹫",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3474,
+    "name": "上岸蛙",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3477,
+    "name": "千棘盔",
+    "leader_potential": true,
+    "main_type": "水",
+    "sub_type": "毒",
+    "implemented": true
+  },
+  {
+    "id": 3480,
+    "name": "圣羽翼王",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3547,
+    "name": "帕帕斯卡",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": "机械",
+    "implemented": true
+  },
+  {
+    "id": 3489,
+    "name": "小丑公爵",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3491,
+    "name": "泥吼牙",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "翼",
+    "implemented": true
+  },
+  {
+    "id": 3492,
+    "name": "兽花蕾",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "光",
+    "implemented": true
+  },
+  {
+    "id": 3493,
+    "name": "肥草球",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3494,
+    "name": "赫拉",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3495,
+    "name": "鸭吉吉",
+    "leader_potential": true,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3498,
+    "name": "风滚暮虫",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": "虫",
+    "implemented": true
+  },
+  {
+    "id": 3499,
+    "name": "公平鸽",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3502,
+    "name": "石冠王蜥",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3503,
+    "name": "线球鼠",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3504,
+    "name": "慈母鼠",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3505,
+    "name": "夜回犀牛",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3507,
+    "name": "鳗尾兽",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3510,
+    "name": "嗜波螺",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3513,
+    "name": "嗜波螺",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3514,
+    "name": "圣水迪莫",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3515,
+    "name": "圣火迪莫",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3518,
+    "name": "水泡壳",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3519,
+    "name": "海闪星",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3520,
+    "name": "海魔星",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3521,
+    "name": "里拉鳐",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3523,
+    "name": "水星龙弦",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3524,
+    "name": "阿瓦鲨",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3525,
+    "name": "阿瓦鲨",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3530,
+    "name": "圆号鱼",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3532,
+    "name": "雪怪",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3037,
+    "name": "岚鸟",
+    "leader_potential": true,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3535,
+    "name": "斑枭",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3538,
+    "name": "乌拉塔",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "恶",
+    "implemented": true
+  },
+  {
+    "id": 3541,
+    "name": "乌拉塔",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": "恶",
+    "implemented": true
+  },
+  {
+    "id": 3542,
+    "name": "未完虫",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "幽",
+    "implemented": false
+  },
+  {
+    "id": 3544,
+    "name": "多灵主",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3546,
+    "name": "圣剑-X",
+    "leader_potential": true,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3548,
+    "name": "小银翼龙",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3549,
+    "name": "银翼龙",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3551,
+    "name": "棋骑士",
+    "leader_potential": true,
+    "main_type": "地",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3552,
+    "name": "棋绮后",
+    "leader_potential": true,
+    "main_type": "地",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3553,
+    "name": "棋齐垒",
+    "leader_potential": true,
+    "main_type": "地",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3554,
+    "name": "棋祈督",
+    "leader_potential": true,
+    "main_type": "地",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3556,
+    "name": "棋骑士",
+    "leader_potential": true,
+    "main_type": "地",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3557,
+    "name": "棋绮后",
+    "leader_potential": true,
+    "main_type": "地",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3558,
+    "name": "棋齐垒",
+    "leader_potential": true,
+    "main_type": "地",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3559,
+    "name": "棋祈督",
+    "leader_potential": true,
+    "main_type": "地",
+    "sub_type": "武",
+    "implemented": true
+  },
+  {
+    "id": 3560,
+    "name": "乌咩",
+    "leader_potential": false,
+    "main_type": "萌",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3561,
+    "name": "乌角驮驮",
+    "leader_potential": false,
+    "main_type": "萌",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3562,
+    "name": "堇楹苞",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3563,
+    "name": "蔓羽兽",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3564,
+    "name": "厉毒鸩兽",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3566,
+    "name": "壳栗丝鼠",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3567,
+    "name": "落陨星兔",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3569,
+    "name": "黑猫巫师",
+    "leader_potential": true,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3570,
+    "name": "河马巴斯",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
   },
   {
     "id": 3573,
     "name": "爆焰喷喷",
     "leader_potential": false,
     "main_type": "火",
-    "sub_type": "龙"
+    "sub_type": "龙",
+    "implemented": true
+  },
+  {
+    "id": 3574,
+    "name": "热团团",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3575,
+    "name": "焰米龙",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3576,
+    "name": "圣凯布米龙",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
   },
   {
     "id": 3578,
     "name": "混乱鱿彩",
     "leader_potential": false,
     "main_type": "幽",
-    "sub_type": "恶"
+    "sub_type": "恶",
+    "implemented": true
   },
   {
     "id": 3579,
     "name": "秩序鱿墨",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": "幽"
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 3580,
+    "name": "利刺毒蝎",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3581,
+    "name": "剧毒魔蝎",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
   },
   {
     "id": 3583,
     "name": "月亮砣",
     "leader_potential": false,
     "main_type": "毒",
-    "sub_type": "萌"
+    "sub_type": "萌",
+    "implemented": true
   },
   {
     "id": 3585,
     "name": "月亮砣",
     "leader_potential": false,
     "main_type": "毒",
-    "sub_type": "萌"
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3586,
+    "name": "梦残卷",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3587,
+    "name": "曲率龙卷",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3588,
+    "name": "曲率飞鱼",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3590,
+    "name": "玳塔",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3593,
+    "name": "深渊蛙",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "武",
+    "implemented": false
   },
   {
     "id": 3596,
     "name": "针叶巡林",
     "leader_potential": false,
     "main_type": "草",
-    "sub_type": "武"
+    "sub_type": "武",
+    "implemented": true
   },
   {
     "id": 3599,
     "name": "游蛇魔使",
     "leader_potential": false,
     "main_type": "水",
-    "sub_type": "武"
+    "sub_type": "武",
+    "implemented": true
   },
   {
     "id": 3602,
     "name": "炽心勇狮",
     "leader_potential": false,
     "main_type": "火",
-    "sub_type": "武"
+    "sub_type": "武",
+    "implemented": true
   },
   {
     "id": 3604,
     "name": "捕尘长绒",
     "leader_potential": false,
     "main_type": "地",
-    "sub_type": "虫"
+    "sub_type": "虫",
+    "implemented": true
   },
   {
     "id": 3605,
     "name": "食尘短绒",
     "leader_potential": false,
     "main_type": "地",
-    "sub_type": "虫"
+    "sub_type": "虫",
+    "implemented": true
   },
   {
     "id": 3608,
     "name": "画间法师手",
     "leader_potential": false,
     "main_type": "普通",
-    "sub_type": "幻"
+    "sub_type": "幻",
+    "implemented": true
   },
   {
     "id": 3609,
     "name": "画间沉铁兽",
     "leader_potential": false,
     "main_type": "普通",
-    "sub_type": "武"
+    "sub_type": "武",
+    "implemented": true
   },
   {
     "id": 3612,
     "name": "古卷执政官",
     "leader_potential": false,
     "main_type": "普通",
-    "sub_type": "幻"
+    "sub_type": "幻",
+    "implemented": true
   },
   {
     "id": 3613,
     "name": "古卷匣魔像",
     "leader_potential": false,
     "main_type": "普通",
-    "sub_type": "武"
+    "sub_type": "武",
+    "implemented": true
   },
   {
     "id": 3615,
     "name": "窃光蚊",
     "leader_potential": false,
     "main_type": "光",
-    "sub_type": "恶"
+    "sub_type": "恶",
+    "implemented": true
   },
   {
     "id": 3617,
     "name": "溯源钟",
     "leader_potential": false,
     "main_type": "机械",
-    "sub_type": "幻"
+    "sub_type": "幻",
+    "implemented": true
   },
   {
     "id": 3619,
     "name": "迷迷箱怪",
     "leader_potential": false,
     "main_type": "机械",
-    "sub_type": "幻"
+    "sub_type": "幻",
+    "implemented": true
   },
   {
     "id": 3620,
     "name": "学院呱呱",
     "leader_potential": false,
     "main_type": "武",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3622,
     "name": "寒音蛇",
     "leader_potential": false,
     "main_type": "毒",
-    "sub_type": "萌"
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3624,
+    "name": "吞噬",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 3626,
+    "name": "冥古龙",
+    "leader_potential": false,
+    "main_type": "龙",
+    "sub_type": "幽",
+    "implemented": false
+  },
+  {
+    "id": 3629,
+    "name": "巡天幻星",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3632,
+    "name": "地底银鳞",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3631,
+    "name": "地银链",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3634,
+    "name": "荆棘魔伞",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 3636,
+    "name": "蝶兰花仙",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "翼",
+    "implemented": false
+  },
+  {
+    "id": 3639,
+    "name": "桃花仙",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3642,
+    "name": "鬼笔伯爵",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3644,
+    "name": "药尾灵螈",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3646,
+    "name": "六月星菌",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3648,
+    "name": "红膏女爵",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3650,
+    "name": "笙韵鹿灵",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3653,
+    "name": "笔圣",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3655,
+    "name": "超级鳄椰",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "水",
+    "implemented": false
+  },
+  {
+    "id": 3658,
+    "name": "海豚勇士",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
   },
   {
     "id": 3660,
     "name": "加油蟹",
     "leader_potential": false,
     "main_type": "水",
-    "sub_type": "萌"
+    "sub_type": "萌",
+    "implemented": true
+  },
+  {
+    "id": 3662,
+    "name": "警卫鸟",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3664,
+    "name": "测风蝉",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": "机械",
+    "implemented": false
+  },
+  {
+    "id": 3666,
+    "name": "猫山咪钥",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": "幽",
+    "implemented": false
+  },
+  {
+    "id": 3669,
+    "name": "念珠鹤",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3671,
+    "name": "长翎将军",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "武",
+    "implemented": false
+  },
+  {
+    "id": 3672,
+    "name": "曲鸣大将",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "武",
+    "implemented": false
+  },
+  {
+    "id": 3674,
+    "name": "惩戒巨笼",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3676,
+    "name": "流明坎德拉",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "光",
+    "implemented": false
   },
   {
     "id": 3678,
     "name": "烟花伯爵",
     "leader_potential": false,
     "main_type": "火",
-    "sub_type": "毒"
+    "sub_type": "毒",
+    "implemented": true
+  },
+  {
+    "id": 3680,
+    "name": "蒸汽胖可",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "水",
+    "implemented": false
+  },
+  {
+    "id": 3682,
+    "name": "影子剪纸",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": null,
+    "implemented": false
   },
   {
     "id": 3684,
     "name": "咕德帽帽",
     "leader_potential": false,
     "main_type": "幽",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3687,
+    "name": "丹凤蓝狐",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3689,
+    "name": "具足秘剑",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3691,
+    "name": "卜甲梦龟",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3693,
+    "name": "长生梦兽",
+    "leader_potential": false,
+    "main_type": "萌",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3695,
+    "name": "梭织团团",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "萌",
+    "implemented": false
+  },
+  {
+    "id": 3696,
+    "name": "针织哼哼",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": "萌",
+    "implemented": false
+  },
+  {
+    "id": 3698,
+    "name": "稻草守护者",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": "萌",
+    "implemented": false
+  },
+  {
+    "id": 3700,
+    "name": "去污香芋",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "毒",
+    "implemented": false
+  },
+  {
+    "id": 3701,
+    "name": "嗜污香芋",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "毒",
+    "implemented": false
+  },
+  {
+    "id": 3703,
+    "name": "瘟疫医鸟",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": "翼",
+    "implemented": false
   },
   {
     "id": 3705,
     "name": "绒光优优",
     "leader_potential": false,
     "main_type": "光",
-    "sub_type": "地"
+    "sub_type": "地",
+    "implemented": true
+  },
+  {
+    "id": 3707,
+    "name": "半朽蜜果灵",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "幽",
+    "implemented": false
   },
   {
     "id": 3709,
     "name": "巨鼓象",
     "leader_potential": false,
     "main_type": "机械",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
+  },
+  {
+    "id": 3711,
+    "name": "胡桃王子",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3714,
+    "name": "上古战龙",
+    "leader_potential": false,
+    "main_type": "龙",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3715,
+    "name": "格斗小七",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3717,
+    "name": "可烤汪",
+    "leader_potential": false,
+    "main_type": "萌",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 3719,
+    "name": "离心舞者",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": "幻",
+    "implemented": false
+  },
+  {
+    "id": 3722,
+    "name": "针叶巡林",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "武",
+    "implemented": false
+  },
+  {
+    "id": 3725,
+    "name": "游蛇魔使",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "武",
+    "implemented": false
+  },
+  {
+    "id": 3728,
+    "name": "炽心勇狮",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "武",
+    "implemented": false
   },
   {
     "id": 3730,
     "name": "音碟吼",
     "leader_potential": false,
     "main_type": "普通",
-    "sub_type": "机械"
+    "sub_type": "机械",
+    "implemented": true
+  },
+  {
+    "id": 3732,
+    "name": "紫花雀",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": "翼",
+    "implemented": false
   },
   {
     "id": 3735,
     "name": "机幕方舟",
     "leader_potential": false,
     "main_type": "机械",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3737,
     "name": "​​霹雳迪迪",
     "leader_potential": false,
     "main_type": "光",
-    "sub_type": "电"
+    "sub_type": "电",
+    "implemented": true
   },
   {
     "id": 3739,
     "name": "怒目怂猫",
     "leader_potential": false,
     "main_type": "武",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3740,
     "name": "宝藏小狐",
     "leader_potential": false,
     "main_type": "普通",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3741,
     "name": "宝藏沙狐",
     "leader_potential": false,
     "main_type": "普通",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3742,
     "name": "鸭吉吉",
     "leader_potential": true,
     "main_type": "普通",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3743,
     "name": "加油蟹",
     "leader_potential": false,
     "main_type": "水",
-    "sub_type": "萌"
+    "sub_type": "萌",
+    "implemented": true
   },
   {
     "id": 3745,
     "name": "雅丹鬃",
     "leader_potential": false,
     "main_type": "火",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3746,
     "name": "雪影娃娃·春日",
     "leader_potential": false,
     "main_type": "草",
-    "sub_type": "冰"
+    "sub_type": "冰",
+    "implemented": true
   },
   {
     "id": 3747,
     "name": "莫比乌乌",
     "leader_potential": false,
     "main_type": "龙",
-    "sub_type": "萌"
+    "sub_type": "萌",
+    "implemented": true
   },
   {
     "id": 3748,
     "name": "克莱因龙",
     "leader_potential": false,
     "main_type": "龙",
-    "sub_type": "萌"
+    "sub_type": "萌",
+    "implemented": true
   },
   {
     "id": 3749,
     "name": "森豆丁",
     "leader_potential": false,
     "main_type": "草",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3750,
     "name": "森蛮人",
     "leader_potential": false,
     "main_type": "草",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3751,
     "name": "森巨人",
     "leader_potential": false,
     "main_type": "草",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3752,
     "name": "丁丁卯",
     "leader_potential": false,
     "main_type": "虫",
-    "sub_type": "机械"
+    "sub_type": "机械",
+    "implemented": true
   },
   {
     "id": 3753,
     "name": "卯山咪钥",
     "leader_potential": false,
     "main_type": "虫",
-    "sub_type": "机械"
+    "sub_type": "机械",
+    "implemented": true
   },
   {
     "id": 3754,
     "name": "火豆丁",
     "leader_potential": false,
     "main_type": "火",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3755,
     "name": "火蛮人",
     "leader_potential": false,
     "main_type": "火",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3756,
     "name": "火巨人",
     "leader_potential": false,
     "main_type": "火",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3757,
     "name": "点点",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3758,
     "name": "珀尔鼬",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3759,
     "name": "苞米仔",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3760,
     "name": "炮米花",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3761,
     "name": "诅咒狼灵",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3762,
     "name": "新月狼灵",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3763,
     "name": "银月狼王",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3764,
     "name": "新月鹭",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3765,
     "name": "月辉鹭",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3766,
     "name": "月使鹭纳",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3767,
     "name": "章脑丸",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3768,
     "name": "智辉章脑",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3769,
     "name": "乌头蝇",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3770,
     "name": "乌蝇飞贼",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3771,
     "name": "小浣蛋",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3772,
     "name": "黑手浣熊",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3773,
     "name": "幽铃",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3774,
     "name": "摇铃魔偶",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3775,
     "name": "布灵",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3776,
     "name": "布灵布灵",
     "leader_potential": false,
     "main_type": "萌",
-    "sub_type": null
+    "sub_type": null,
+    "implemented": true
   },
   {
     "id": 3777,
     "name": "幽影树",
     "leader_potential": true,
     "main_type": "草",
-    "sub_type": "幽"
+    "sub_type": "幽",
+    "implemented": true
+  },
+  {
+    "id": 8001,
+    "name": "魔力喵",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8002,
+    "name": "道馆绿草精灵",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "幻",
+    "implemented": false
+  },
+  {
+    "id": 8003,
+    "name": "道馆魔草巫灵",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "幻",
+    "implemented": false
+  },
+  {
+    "id": 8004,
+    "name": "道馆丢丢",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8005,
+    "name": "道馆记忆石",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8006,
+    "name": "道馆幽影树",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "幽",
+    "implemented": false
+  },
+  {
+    "id": 8007,
+    "name": "迪莫",
+    "leader_potential": false,
+    "main_type": "光",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8008,
+    "name": "珂赛特老师",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 8009,
+    "name": "药炉",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8010,
+    "name": "希露德老师",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8011,
+    "name": "翼龙",
+    "leader_potential": false,
+    "main_type": "龙",
+    "sub_type": "翼",
+    "implemented": false
+  },
+  {
+    "id": 8012,
+    "name": "记忆石",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8013,
+    "name": "冥古龙",
+    "leader_potential": false,
+    "main_type": "龙",
+    "sub_type": "幽",
+    "implemented": false
+  },
+  {
+    "id": 8014,
+    "name": "矮核球",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8015,
+    "name": "星脉兽",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8016,
+    "name": "巡天幻星",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8017,
+    "name": "冥古龙",
+    "leader_potential": false,
+    "main_type": "龙",
+    "sub_type": "幽",
+    "implemented": false
+  },
+  {
+    "id": 8018,
+    "name": "裘卡老师",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8019,
+    "name": "珂赛特老师",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 8020,
+    "name": "希露德老师",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8021,
+    "name": "迷失的雪巨人",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8022,
+    "name": "斯维托维德",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8023,
+    "name": "特塞克",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 8024,
+    "name": "古路尼",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "毒",
+    "implemented": false
+  },
+  {
+    "id": 8701,
+    "name": "火羽",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "翼",
+    "implemented": false
+  },
+  {
+    "id": 9001,
+    "name": "幸运惊喜盒",
+    "leader_potential": false,
+    "main_type": "未知",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9002,
+    "name": "幸运惊喜盒",
+    "leader_potential": false,
+    "main_type": "未知",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9003,
+    "name": "幸运惊喜盒",
+    "leader_potential": false,
+    "main_type": "未知",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9801,
+    "name": "鸭吉吉_普通",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9802,
+    "name": "鸭吉吉_草",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9803,
+    "name": "鸭吉吉_火",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9804,
+    "name": "鸭吉吉_水",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9805,
+    "name": "鸭吉吉_光",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9806,
+    "name": "鸭吉吉_地",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9807,
+    "name": "鸭吉吉_冰",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9808,
+    "name": "鸭吉吉_龙",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9809,
+    "name": "鸭吉吉_电",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9810,
+    "name": "鸭吉吉_毒",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9811,
+    "name": "鸭吉吉_虫",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9812,
+    "name": "鸭吉吉_武",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9813,
+    "name": "鸭吉吉_翼",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9814,
+    "name": "鸭吉吉_萌",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9815,
+    "name": "鸭吉吉_幽",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9816,
+    "name": "鸭吉吉_恶魔",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9817,
+    "name": "鸭吉吉_机械",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9818,
+    "name": "鸭吉吉_幻",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9819,
+    "name": "木桶",
+    "leader_potential": false,
+    "main_type": "未知",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9901,
+    "name": "测试喵喵1",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9902,
+    "name": "测试水蓝蓝1",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9903,
+    "name": "测试火花1",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9904,
+    "name": "测试喵喵2",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9905,
+    "name": "测试水蓝蓝2",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9906,
+    "name": "测试火花2（百分百闪避）",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9907,
+    "name": "无敌魔力猫",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9908,
+    "name": "无敌焰火",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9909,
+    "name": "无敌水蓝蓝",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9910,
+    "name": "被克制测试喵喵",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "冰",
+    "implemented": false
+  },
+  {
+    "id": 9911,
+    "name": "抵抗测试喵喵",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": "龙",
+    "implemented": false
+  },
+  {
+    "id": 9912,
+    "name": "大世界BUFF喵喵",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9913,
+    "name": "大世界BUFF水蓝蓝",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9914,
+    "name": "大世界BUFF火花",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9919,
+    "name": "幻化蓝掌测试",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9920,
+    "name": "技能鸭吉吉配置版",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9940,
+    "name": "测试AI鸭吉吉1",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9941,
+    "name": "搭配的鸭吉吉",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9987,
+    "name": "技能鸭吉吉5(布石）",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9988,
+    "name": "技能魔力喵4",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9989,
+    "name": "技能魔力喵3",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9990,
+    "name": "技能魔力喵2",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9991,
+    "name": "技能魔力喵1",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9992,
+    "name": "不死鸭吉吉",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9993,
+    "name": "技能音速犬4",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9994,
+    "name": "技能鸭吉吉3",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9995,
+    "name": "技能鸭吉吉2",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9996,
+    "name": "木桩鸭吉吉",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": "水",
+    "implemented": false
+  },
+  {
+    "id": 9997,
+    "name": "技能鸭吉吉1（贪吃）",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9998,
+    "name": "击退鸭吉吉",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 9999,
+    "name": "无敌鸭吉吉(测试用)",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10000,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "未知",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10001,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "未知",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10002,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10003,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10004,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10005,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10006,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "光",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10007,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10008,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10009,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10010,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "龙",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10011,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "电",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10012,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10013,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10014,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "武",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10015,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10016,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "萌",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10017,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10018,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10019,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10020,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "幻",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10021,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "未知",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 10022,
+    "name": "随机精灵",
+    "leader_potential": false,
+    "main_type": "未知",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 103004,
+    "name": "迪莫",
+    "leader_potential": false,
+    "main_type": "光",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 103005,
+    "name": "圣光迪莫",
+    "leader_potential": false,
+    "main_type": "光",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 103011,
+    "name": "恶魔狼",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 103012,
+    "name": "恶魔狼",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 103061,
+    "name": "小灵面",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 103142,
+    "name": "小夜",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 103143,
+    "name": "紫夜",
+    "leader_potential": false,
+    "main_type": "恶",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 103149,
+    "name": "空空颅",
+    "leader_potential": false,
+    "main_type": "幽",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 103154,
+    "name": "裘洛",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 140001,
+    "name": "20级水桶模板",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 140002,
+    "name": "25级水桶模板",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 140003,
+    "name": "35级水桶模板",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 140004,
+    "name": "40级水桶模板",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 140005,
+    "name": "45级水桶模板",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 140006,
+    "name": "50级水桶模板",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 140007,
+    "name": "55级水桶模板",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 140008,
+    "name": "60级水桶模板",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 440302,
+    "name": "库伦boss战——恶魔叮",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 440303,
+    "name": "库伦booss战——雪蛮人",
+    "leader_potential": false,
+    "main_type": "冰",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 440304,
+    "name": "库伦boss战——库多西",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": "机械",
+    "implemented": false
+  },
+  {
+    "id": 440305,
+    "name": "A1最终战-吞噬",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 440306,
+    "name": "A1最终战-吞噬2",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 440316,
+    "name": "小石头",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 440317,
+    "name": "葛朗台",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 440318,
+    "name": "老大",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 13000150,
+    "name": "技能鸭吉吉5（水灵）",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 14000001,
+    "name": "果冻-剧情变形用",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 14000002,
+    "name": "自动变形测试-斑斑",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 14000003,
+    "name": "芽眼魔-守护地特殊3C专用",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 15000001,
+    "name": "斑斑 - （玩法用）",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 16000001,
+    "name": "春团-B1小游戏变形用",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 16000002,
+    "name": "厉毒修萝-B1小游戏变形用",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 16000003,
+    "name": "地鼠-A2拾遗变形任务用",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 16000004,
+    "name": "迪莫",
+    "leader_potential": true,
+    "main_type": "光",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 16000007,
+    "name": "迪莫",
+    "leader_potential": true,
+    "main_type": "光",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 17000001,
+    "name": "小帕尔-变形测试用",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 17000002,
+    "name": "帕尔萨斯-变形测试用",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": "恶",
+    "implemented": false
+  },
+  {
+    "id": 17000003,
+    "name": "龙息帕尔-变形测试用",
+    "leader_potential": false,
+    "main_type": "草",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 17000004,
+    "name": "石肤蜥-极化钝化测试用",
+    "leader_potential": false,
+    "main_type": "地",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 18000001,
+    "name": "化蝶",
+    "leader_potential": false,
+    "main_type": "虫",
+    "sub_type": "萌",
+    "implemented": false
+  },
+  {
+    "id": 18000002,
+    "name": "寒音蛇",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": "萌",
+    "implemented": false
+  },
+  {
+    "id": 18000003,
+    "name": "武者鸡",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": "武",
+    "implemented": false
+  },
+  {
+    "id": 18000004,
+    "name": "嘟嘟煲",
+    "leader_potential": false,
+    "main_type": "毒",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 19000001,
+    "name": "可立鸡-变形测试用",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 19000002,
+    "name": "紫翎鹰-变形测试用",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 19000003,
+    "name": "果冻-变形测试用",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 19000004,
+    "name": "紫翎鹰",
+    "leader_potential": false,
+    "main_type": "翼",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 19000005,
+    "name": "可立鸡",
+    "leader_potential": false,
+    "main_type": "火",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 19000006,
+    "name": "果冻",
+    "leader_potential": false,
+    "main_type": "水",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 19000008,
+    "name": "钨丝贝贝（S2剧情骑乘专用）",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": false
+  },
+  {
+    "id": 19000009,
+    "name": "机幕方舟（S2剧情战斗专用）",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": null,
+    "implemented": false
   }
 ]
