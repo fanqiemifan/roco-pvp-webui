@@ -848,11 +848,19 @@
     "implemented": false
   },
   {
-    "id": 3233,
+    "id": 3232,
     "name": "加尔",
     "leader_potential": false,
-    "main_type": "幽",
-    "sub_type": null,
+    "main_type": "普通",
+    "sub_type": "萌",
+    "implemented": false
+  },
+  {
+    "id": 3233,
+    "name": "黑化加尔",
+    "leader_potential": false,
+    "main_type": "普通",
+    "sub_type": "幽",
     "implemented": false
   },
   {
@@ -1168,22 +1176,6 @@
     "implemented": true
   },
   {
-    "id": 3321,
-    "name": "觅觅蝠",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": null,
-    "implemented": false
-  },
-  {
-    "id": 3322,
-    "name": "翻翻蝠",
-    "leader_potential": false,
-    "main_type": "翼",
-    "sub_type": null,
-    "implemented": false
-  },
-  {
     "id": 3323,
     "name": "夜游魔",
     "leader_potential": false,
@@ -1272,22 +1264,6 @@
     "implemented": false
   },
   {
-    "id": 3341,
-    "name": "雪灵兽",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null,
-    "implemented": false
-  },
-  {
-    "id": 3342,
-    "name": "幻雪兽",
-    "leader_potential": false,
-    "main_type": "冰",
-    "sub_type": null,
-    "implemented": false
-  },
-  {
     "id": 3343,
     "name": "饮雪狂兽",
     "leader_potential": false,
@@ -1312,35 +1288,11 @@
     "implemented": true
   },
   {
-    "id": 3347,
-    "name": "芽眼魔",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "恶",
-    "implemented": false
-  },
-  {
-    "id": 3348,
-    "name": "叶眼魔",
-    "leader_potential": false,
-    "main_type": "水",
-    "sub_type": "恶",
-    "implemented": false
-  },
-  {
     "id": 3349,
     "name": "障眼魔",
     "leader_potential": false,
     "main_type": "水",
     "sub_type": "恶",
-    "implemented": false
-  },
-  {
-    "id": 3352,
-    "name": "雷鸣小子",
-    "leader_potential": false,
-    "main_type": "电",
-    "sub_type": null,
     "implemented": false
   },
   {
@@ -1501,14 +1453,6 @@
     "leader_potential": false,
     "main_type": "光",
     "sub_type": null,
-    "implemented": false
-  },
-  {
-    "id": 3402,
-    "name": "碎晶蝎",
-    "leader_potential": false,
-    "main_type": "地",
-    "sub_type": "恶",
     "implemented": false
   },
   {
@@ -2936,35 +2880,11 @@
     "implemented": true
   },
   {
-    "id": 3747,
-    "name": "莫比乌乌",
-    "leader_potential": false,
-    "main_type": "龙",
-    "sub_type": "萌",
-    "implemented": true
-  },
-  {
     "id": 3748,
     "name": "克莱因龙",
     "leader_potential": false,
     "main_type": "龙",
     "sub_type": "萌",
-    "implemented": true
-  },
-  {
-    "id": 3749,
-    "name": "森豆丁",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
-    "id": 3750,
-    "name": "森蛮人",
-    "leader_potential": false,
-    "main_type": "草",
-    "sub_type": null,
     "implemented": true
   },
   {
@@ -2992,22 +2912,6 @@
     "implemented": true
   },
   {
-    "id": 3754,
-    "name": "火豆丁",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
-    "id": 3755,
-    "name": "火蛮人",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
     "id": 3756,
     "name": "火巨人",
     "leader_potential": false,
@@ -3016,24 +2920,8 @@
     "implemented": true
   },
   {
-    "id": 3757,
-    "name": "点点",
-    "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
     "id": 3758,
     "name": "珀尔鼬",
-    "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
-    "id": 3759,
-    "name": "苞米仔",
     "leader_potential": false,
     "main_type": "萌",
     "sub_type": null,
