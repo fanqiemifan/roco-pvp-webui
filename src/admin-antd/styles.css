@@ -1,3 +1,5 @@
+@import "../styles/sprite-pet-card.css";
+
 :root {
   color-scheme: light;
 }
@@ -207,11 +209,11 @@ a {
 
 .slot-button {
   width: 100%;
-  max-width: 112px;
+  max-width: 116px;
   height: auto;
-  min-height: 104px;
-  padding: 8px;
-  border-radius: 12px;
+  min-height: 116px;
+  padding: 6px;
+  border-radius: 18px;
 }
 
 .slot-button-left {
@@ -226,6 +228,7 @@ a {
   width: 100%;
   display: grid;
   place-items: center;
+  min-height: 104px;
 }
 
 .slot-button-inner-left {
@@ -245,13 +248,11 @@ a {
 
 .sprite-card-inner {
   width: 100%;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
+  min-height: 104px;
+  display: grid;
+  place-items: center;
 }
 
-.slot-image,
-.sprite-card-image,
 .avatar-preview-image {
   width: 88px;
   height: 88px;
@@ -259,13 +260,15 @@ a {
 }
 
 .slot-placeholder {
-  width: 88px;
-  height: 88px;
-  border-radius: 12px;
-  background: rgba(199, 99, 47, 0.08);
+  width: 96px;
+  height: 96px;
+  border-radius: 18px;
+  border: 1px dashed rgba(199, 99, 47, 0.2);
+  background: rgba(255, 255, 255, 0.72);
   display: grid;
   place-items: center;
-  font-size: 12px;
+  font-size: 18px;
+  font-weight: 600;
   color: #7d624e;
 }
 
@@ -277,13 +280,9 @@ a {
 .sprite-card-button {
   width: 100%;
   height: auto;
-  min-height: 84px;
+  min-height: 116px;
   padding: 6px;
-  border-radius: 12px;
-}
-
-.sprite-card-button .ant-image {
-  display: flex;
+  border-radius: 18px;
 }
 
 .sprite-picker-card .ant-card-body {
@@ -310,15 +309,11 @@ a {
   gap: 10px;
 }
 
-.sprite-card-image {
-  width: 60px;
-  height: 60px;
-}
-
 .sprite-card-inner {
   width: 100%;
-  align-items: center;
-  text-align: center;
+  min-height: 104px;
+  display: grid;
+  place-items: center;
 }
 
 .sprite-filter-panel {
@@ -718,20 +713,14 @@ a {
 }
 
 .quick-fill-candidate-button {
-  width: 64px;
-  height: 64px;
-  padding: 6px;
+  width: 82px;
+  height: 82px;
+  padding: 5px;
   border-radius: 14px;
 }
 
-.quick-fill-candidate-button .ant-image {
-  display: flex;
-}
-
-.quick-fill-candidate-image {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
+.quick-fill-candidate-card {
+  transform: scale(0.96);
 }
 
 .history-filter-row {

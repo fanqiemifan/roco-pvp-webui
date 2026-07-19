@@ -1,10 +1,12 @@
 {
   "name": "pvp-webui-for-roco",
-  "version": "1.3.6",
+  "version": "1.4.0",
   "private": true,
   "type": "module",
   "main": "dist-electron/electron/main.js",
   "scripts": {
+    "sync:sprites": "node scripts/sync-spirits-assets.mjs",
+    "prebuild": "npm run sync:sprites",
     "build:electron": "tsc -p tsconfig.json",
     "build:renderer": "vite build",
     "typecheck:frontend": "tsc -p tsconfig.frontend.json",

@@ -103,6 +103,7 @@ type PanelEditorState = {
 type SpriteFilterState = {
   selectedAttributes: string[];
   selectedForms: string[];
+  selectedFinalForm: boolean;
 };
 
 type AttributeOption = {
@@ -176,6 +177,10 @@ const ATTRIBUTE_OPTIONS: AttributeOption[] = (attributeMapping as Array<{ 编号
   label: item.属性,
   iconPath: `/resources/attribute/${item.编号}.png`,
 }));
+
+const ATTRIBUTE_ICON_BY_LABEL = new Map(ATTRIBUTE_OPTIONS.map((option) => [option.label, option.iconPath]));
+const FINAL_FORM_FILTER_LABEL = '最终形态';
+const EXCLUSIVE_FORM_FILTERS = ['首领', '一阶', '二阶', '三阶'];
 
 const theme = {
   token: {
@@ -254,11 +259,16 @@ function createPanelEditorState(): PanelEditorState {
   };
 }
 
-function createSpriteFilterState(): SpriteFilterState {
+function createSpriteFilterState(options?: { selectedFinalForm?: boolean }): SpriteFilterState {
   return {
     selectedAttributes: [],
     selectedForms: [],
+    selectedFinalForm: options?.selectedFinalForm ?? false,
   };
+}
+
+function createDefaultSpriteFilterState(): SpriteFilterState {
+  return createSpriteFilterState({ selectedFinalForm: true });
 }
 
 function cloneSlot(slot: Partial<SlotState> | null | undefined, index: number): SlotState {
@@ -377,6 +387,36 @@ function formatLineupSummary(lineup: string[], spriteMap: Map<string, SpriteReco
     .join(' / ');
 }
 
+function basename(value: string | null | undefined): string {
+  return String(value ?? '').split('/').filter(Boolean).pop() ?? '';
+}
+
+function buildSpriteLookup(records: SpriteRecord[]): Map<string, SpriteRecord> {
+  const lookup = new Map<string, SpriteRecord>();
+
+  records.forEach((sprite) => {
+    const keys = new Set<string>([
+      sprite.id,
+      sprite.filename,
+      sprite.displayName,
+      sprite.name,
+      sprite.chineseName,
+      basename(sprite.id),
+      basename(sprite.filename),
+      basename(sprite.path),
+      ...(Array.isArray(sprite.aliases) ? sprite.aliases : []),
+    ]);
+
+    keys.forEach((key) => {
+      if (typeof key === 'string' && key.trim()) {
+        lookup.set(key.trim(), sprite);
+      }
+    });
+  });
+
+  return lookup;
+}
+
 function formatDateTime(value: string | null): string {
   if (!value) {
     return '-';
@@ -458,6 +498,83 @@ function splitSpriteAttributes(value: string | null | undefined): string[] {
     .split(/[、/,，\s]+/u)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function cleanSpriteCardName(value: string | null | undefined): string {
+  return String(value ?? '').trim().replace(/[-_－—]\d+$/u, '');
+}
+
+function getSpriteCardNameLeft(nameLength: number): number {
+  switch (nameLength) {
+    case 2:
+      return 44;
+    case 3:
+      return 40;
+    case 4:
+      return 37;
+    case 5:
+      return 34;
+    default:
+      return nameLength <= 2 ? 44 : 37;
+  }
+}
+
+function resolveSpriteAttributeIcons(sprite: SpriteRecord): string[] {
+  const directIcons = [sprite.attributeIcon1, sprite.attributeIcon2].filter(Boolean);
+  if (directIcons.length > 0) {
+    return directIcons;
+  }
+
+  const directCodes = (sprite.attributeCodes ?? [])
+    .map((code) => code.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((code) => `/resources/attribute/${code}.png`);
+
+  if (directCodes.length > 0) {
+    return directCodes;
+  }
+
+  return splitSpriteAttributes(sprite.attribute)
+    .map((attribute) => ATTRIBUTE_ICON_BY_LABEL.get(attribute) ?? '')
+    .filter(Boolean)
+    .slice(0, 2);
+}
+
+type SpritePetCardProps = {
+  sprite: SpriteRecord;
+  size?: number;
+  className?: string;
+};
+
+function SpritePetCard({ sprite, size = 96, className }: SpritePetCardProps) {
+  const cardName = cleanSpriteCardName(sprite.cardName || sprite.displayName || sprite.chineseName || sprite.name);
+  const attributeIcons = resolveSpriteAttributeIcons(sprite);
+  const attributeIcon1 = attributeIcons[0] ?? '';
+  const attributeIcon2 = attributeIcons[1] ?? '';
+  const style = {
+    '--pet-card-size': `${size}px`,
+    '--pet-name-left': String(getSpriteCardNameLeft(cardName.length)),
+  } as React.CSSProperties;
+
+  return (
+    <div
+      className={`sprite-pet-card${attributeIcon2 ? ' sprite-pet-card-has-attr2' : ''}${className ? ` ${className}` : ''}`}
+      style={style}
+    >
+      <div className="sprite-pet-card-bg" />
+      {attributeIcon2 ? <div className="sprite-pet-card-attr-circle" /> : null}
+      <img className="sprite-pet-card-sprite" src={sprite.path} alt={sprite.displayName} />
+      {attributeIcon1 ? (
+        <img className="sprite-pet-card-attr sprite-pet-card-attr-1" src={attributeIcon1} alt="" />
+      ) : null}
+      {attributeIcon2 ? (
+        <img className="sprite-pet-card-attr sprite-pet-card-attr-2" src={attributeIcon2} alt="" />
+      ) : null}
+      <div className="sprite-pet-card-name-bg" />
+      <span className="sprite-pet-card-name">{cardName}</span>
+    </div>
+  );
 }
 
 function buildHistoryLineupEntries(
@@ -745,8 +862,8 @@ function Dashboard() {
     right: createPanelEditorState(),
   });
   const [spriteFilters, setSpriteFilters] = useState<Record<PanelSide, SpriteFilterState>>({
-    left: createSpriteFilterState(),
-    right: createSpriteFilterState(),
+    left: createDefaultSpriteFilterState(),
+    right: createDefaultSpriteFilterState(),
   });
   const [sprites, setSprites] = useState<SpriteRecord[]>([]);
   const [createMatchOpen, setCreateMatchOpen] = useState(false);
@@ -777,7 +894,7 @@ function Dashboard() {
   const livePollTimerRef = useRef<number | null>(null);
   const previewFrameShellRef = useRef<HTMLDivElement | null>(null);
 
-  const spriteMap = new Map(sprites.map((sprite) => [sprite.id, sprite]));
+  const spriteMap = buildSpriteLookup(sprites);
   const activeMatch = getActiveMatch(matchStore);
   const currentGame = getCurrentGame(activeMatch);
   const lineupLocked = activeMatch?.status === 'completed';
@@ -789,10 +906,8 @@ function Dashboard() {
 
   const deferredLeftSearch = useDeferredValue(panels.left.search);
   const deferredRightSearch = useDeferredValue(panels.right.search);
-  const spriteFormOptions = Array.from(new Set(
-    sprites
-      .map((sprite) => sprite.form.trim())
-      .filter(Boolean),
+  const spriteFormOptions = EXCLUSIVE_FORM_FILTERS.filter((form) => (
+    sprites.some((sprite) => sprite.form.trim() === form)
   ));
 
   function setPanelState(side: PanelSide, nextState: PanelEditorState) {
@@ -1181,11 +1296,25 @@ function Dashboard() {
   }
 
   function toggleFormFilter(side: PanelSide, form: string) {
+    mutateSpriteFilter(side, (filter) => {
+      if (filter.selectedFinalForm) {
+        return filter;
+      }
+
+      return {
+        ...filter,
+        selectedForms: filter.selectedForms.includes(form)
+          ? filter.selectedForms.filter((item) => item !== form)
+          : [...filter.selectedForms, form],
+      };
+    });
+  }
+
+  function toggleFinalFormFilter(side: PanelSide) {
     mutateSpriteFilter(side, (filter) => ({
       ...filter,
-      selectedForms: filter.selectedForms.includes(form)
-        ? filter.selectedForms.filter((item) => item !== form)
-        : [...filter.selectedForms, form],
+      selectedFinalForm: !filter.selectedFinalForm,
+      selectedForms: filter.selectedFinalForm ? filter.selectedForms : [],
     }));
   }
 
@@ -2091,12 +2220,13 @@ function Dashboard() {
       const spriteAttributes = splitSpriteAttributes(sprite.attribute);
       const matchesAttributes = !filter.selectedAttributes.length
         || filter.selectedAttributes.every((attribute) => spriteAttributes.includes(attribute));
-      const matchesForms = !filter.selectedForms.length
-        || filter.selectedForms.includes(sprite.form);
+      const matchesForms = filter.selectedFinalForm
+        ? sprite.isFinalForm
+        : !filter.selectedForms.length || filter.selectedForms.includes(sprite.form);
 
       return matchesKeyword && matchesAttributes && matchesForms;
     });
-    const hasFilter = filter.selectedAttributes.length > 0 || filter.selectedForms.length > 0;
+    const hasFilter = filter.selectedAttributes.length > 0 || filter.selectedForms.length > 0 || filter.selectedFinalForm;
 
     return (
       <Card
@@ -2130,13 +2260,7 @@ function Dashboard() {
                 >
                   <div className={`slot-button-inner slot-button-inner-${side}`}>
                     {slot.sprite?.path ? (
-                      <Image
-                        preview={false}
-                        src={slot.sprite.path}
-                        alt={slot.sprite.displayName}
-                        className="slot-image"
-                        fallback="/assets/ui/back.png"
-                      />
+                      <SpritePetCard sprite={slot.sprite} size={96} />
                     ) : (
                       <div className="slot-placeholder">{index + 1}</div>
                     )}
@@ -2197,13 +2321,7 @@ function Dashboard() {
                                 aria-label={`选择 ${candidate.displayName}`}
                                 onClick={() => chooseQuickFillCandidate(side, match.slot, candidate)}
                               >
-                                <Image
-                                  preview={false}
-                                  src={candidate.path}
-                                  alt={candidate.displayName}
-                                  className="quick-fill-candidate-image"
-                                  fallback="/assets/ui/back.png"
-                                />
+                                <SpritePetCard sprite={candidate} size={64} className="quick-fill-candidate-card" />
                               </Button>
                             ))}
                           </div>
@@ -2254,12 +2372,22 @@ function Dashboard() {
                   <div className="sprite-filter-group">
                     <Text type="secondary" className="sprite-filter-label">精灵形态</Text>
                     <Space wrap size={[8, 8]}>
+                      <Button
+                        key={`${side}-form-${FINAL_FORM_FILTER_LABEL}`}
+                        size="small"
+                        type={filter.selectedFinalForm ? 'primary' : 'default'}
+                        className="form-filter-chip"
+                        onClick={() => toggleFinalFormFilter(side)}
+                      >
+                        {FINAL_FORM_FILTER_LABEL}
+                      </Button>
                       {spriteFormOptions.map((form) => (
                         <Button
                           key={`${side}-form-${form}`}
                           size="small"
                           type={filter.selectedForms.includes(form) ? 'primary' : 'default'}
                           className="form-filter-chip"
+                          disabled={filter.selectedFinalForm}
                           onClick={() => toggleFormFilter(side, form)}
                         >
                           {form}
@@ -2283,14 +2411,9 @@ function Dashboard() {
                           disabled={panelLocked}
                           onClick={() => applySprite(side, sprite)}
                         >
-                          <Space direction="vertical" size={0} className="sprite-card-inner">
-                            <Image
-                              preview={false}
-                              src={sprite.path}
-                              alt={sprite.displayName}
-                              className="sprite-card-image"
-                            />
-                          </Space>
+                          <div className="sprite-card-inner">
+                            <SpritePetCard sprite={sprite} size={96} />
+                          </div>
                         </Button>
                       ))}
                     </div>

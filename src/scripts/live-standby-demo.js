@@ -60,9 +60,13 @@
             const keys = new Set([
                 sprite.id,
                 sprite.filename,
+                sprite.displayName,
+                sprite.name,
+                sprite.chineseName,
                 basename(sprite.id),
                 basename(sprite.filename),
-                basename(sprite.path)
+                basename(sprite.path),
+                ...(Array.isArray(sprite.aliases) ? sprite.aliases : [])
             ]);
 
             keys.forEach(key => {

@@ -2,12 +2,17 @@
     'use strict';
 
     const MAX_SLOTS = 6;
-    const SPIRIT_INDEX_URL = '/resources/data/spirits_data_final.json';
+    const SPIRIT_INDEX_URL = '/resources/data/sprites.json';
     const DEFAULT_EVENT_TITLE = 'S2洛克联赛';
     const DEFAULT_BEST_OF = 7;
     const ROUND_BOX_WIDTH = 32;
     const ROUND_BOX_GAP = 4;
     const DEFAULT_LINEUP_DISPLAY_MODE = 'default';
+    const PESTDIV2_SLOT_SIZES = {
+        default: 78,
+        'avatar-only': 98
+    };
+    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
     const PANEL_SLOT_POSITIONS = {
         left: ['0', '1', '2', '3', '4', '5'],
         right: ['0', '1', '2', '3', '4', '5']
@@ -21,6 +26,7 @@
     let lookup = null;
     let scoreboardSignature = null;
     let currentLineupDisplayMode = DEFAULT_LINEUP_DISPLAY_MODE;
+    const unavailableThumbnailPaths = new Set();
 
     function normalizeText(value) {
         return String(value ?? '')
@@ -47,6 +53,26 @@
 
     function displaySpiritName(value) {
         return stripVariantName(value);
+    }
+
+    function toRootPath(value) {
+        const text = String(value ?? '').trim();
+        if (!text) {
+            return '';
+        }
+
+        return text.startsWith('/') ? text : `/${text.replace(/^\/+/, '')}`;
+    }
+
+    function sanitizeFilenameSegment(value, fallback = '') {
+        const normalized = String(value ?? '')
+            .normalize('NFC')
+            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
+            .replace(/\s+/g, '')
+            .replace(/\.+$/g, '')
+            .trim();
+
+        return normalized || fallback;
     }
 
     function getFilename(path) {
@@ -86,8 +112,14 @@
 
         const rawPath = typeof record.path === 'string' ? record.path : '';
         const filename = getFilename(rawPath);
-        const displayName = String(record.displayName || record.name || filename.replace(/\.[^.]+$/, '')).trim();
-        const number = normalizeNumber(record.number);
+        const displayName = String(
+            record.displayName
+            || record['精灵名字2']
+            || record['精灵名称']
+            || record.name
+            || filename.replace(/\.[^.]+$/, '')
+        ).trim();
+        const number = normalizeNumber(record.number || record['精灵编号']);
 
         if (!filename || !displayName) {
             return null;
@@ -97,8 +129,10 @@
             ...record,
             number,
             displayName,
+            cardName: stripVariantName(displayName),
             filename,
-            path: rawPath.startsWith('/') ? rawPath.slice(1) : rawPath
+            path: toRootPath(rawPath),
+            thumbnailId: String(record.thumbnailId || record['缩略图图片ID'] || '').trim()
         };
     }
 
@@ -152,6 +186,175 @@
         return sprite.displayName || sprite.chineseName || sprite.name || sprite.filename || '';
     }
 
+    function getSpriteCardName(sprite) {
+        return displaySpiritName(getSpriteDisplayName(sprite));
+    }
+
+    function getPestdiv2Size() {
+        return PESTDIV2_SLOT_SIZES[currentLineupDisplayMode] || PESTDIV2_SLOT_SIZES.default;
+    }
+
+    function buildThumbnailCandidates(displaySpirit, sourceSprite, spiritName) {
+        const thumbnailId = String(
+            (displaySpirit && displaySpirit.thumbnailId)
+            || sourceSprite?.thumbnailId
+            || sourceSprite?.['缩略图图片ID']
+            || ''
+        ).trim();
+
+        if (!thumbnailId) {
+            return [];
+        }
+
+        const candidateNames = [
+            displaySpirit?.cardName,
+            displaySpirit?.displayName,
+            getSpriteCardName(sourceSprite),
+            getSpriteDisplayName(sourceSprite),
+            spiritName
+        ]
+            .map(value => sanitizeFilenameSegment(value))
+            .filter(Boolean);
+
+        return Array.from(new Set(candidateNames))
+            .map(name => `${THUMBNAIL_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
+    }
+
+    function resolveSpriteImageSources(displaySpirit, sourceSprite, spiritName) {
+        const fallbackSrc = toRootPath(
+            (displaySpirit && displaySpirit.path)
+            || sourceSprite?.path
+            || ''
+        );
+        const thumbnailCandidates = buildThumbnailCandidates(displaySpirit, sourceSprite, spiritName)
+            .filter(path => !unavailableThumbnailPaths.has(path));
+
+        return {
+            fallbackSrc,
+            thumbnailCandidates
+        };
+    }
+
+    function buildSpiritVisualMeta(slotData) {
+        const sourceSprite = slotData && slotData.sprite ? slotData.sprite : null;
+        const displaySpirit = resolveDisplaySpirit(sourceSprite);
+        const spiritName = displaySpiritName(
+            (displaySpirit && displaySpirit.displayName) || getSpriteDisplayName(sourceSprite)
+        );
+
+        return {
+            sourceSprite,
+            displaySpirit,
+            spiritName,
+            size: getPestdiv2Size(),
+            imageSources: resolveSpriteImageSources(displaySpirit, sourceSprite, spiritName)
+        };
+    }
+
+    function syncPestdiv2ThumbnailState(container, imageSrc) {
+        if (!container) {
+            return;
+        }
+
+        container.classList.toggle('pestdiv2-has-thumbnail', String(imageSrc || '').startsWith(THUMBNAIL_RESOURCE_BASE));
+    }
+
+    function applySpiritImage(thumbEl, spiritName, imageSources) {
+        if (!thumbEl) {
+            return;
+        }
+
+        const fallbackSrc = imageSources?.fallbackSrc || '';
+        const candidateList = Array.isArray(imageSources?.thumbnailCandidates)
+            ? imageSources.thumbnailCandidates.slice()
+            : [];
+        const sourceQueue = [...candidateList, ...(fallbackSrc ? [fallbackSrc] : [])];
+
+        thumbEl.alt = spiritName || '';
+
+        if (sourceQueue.length === 0) {
+            thumbEl.removeAttribute('src');
+            delete thumbEl.dataset.currentSrc;
+            thumbEl.onerror = null;
+            syncPestdiv2ThumbnailState(thumbEl.closest('.pestdiv2'), '');
+            return;
+        }
+
+        const imageSignature = JSON.stringify(sourceQueue);
+        if (thumbEl.dataset.imageSignature === imageSignature) {
+            return;
+        }
+
+        thumbEl.dataset.imageSignature = imageSignature;
+        let currentIndex = 0;
+
+        const assignNext = () => {
+            const nextSrc = sourceQueue[currentIndex];
+            thumbEl.dataset.currentSrc = nextSrc;
+            syncPestdiv2ThumbnailState(thumbEl.closest('.pestdiv2'), nextSrc);
+            thumbEl.src = nextSrc;
+        };
+
+        thumbEl.onerror = () => {
+            const failedSrc = thumbEl.dataset.currentSrc || '';
+            if (failedSrc.startsWith(THUMBNAIL_RESOURCE_BASE)) {
+                unavailableThumbnailPaths.add(failedSrc);
+            }
+
+            currentIndex += 1;
+            if (currentIndex >= sourceQueue.length) {
+                thumbEl.onerror = null;
+                return;
+            }
+
+            assignNext();
+        };
+
+        assignNext();
+    }
+
+    function createPestdiv2(spiritVisual) {
+        const container = document.createElement('div');
+        container.className = 'pestdiv2';
+        container.style.setProperty('--pestdiv2-size', `${spiritVisual.size}px`);
+
+        const circle = document.createElement('div');
+        circle.className = 'pestdiv2-circle';
+        container.append(circle);
+
+        const thumb = document.createElement('img');
+        thumb.className = 'pestdiv2-thumb';
+        container.append(thumb);
+        applySpiritImage(thumb, spiritVisual.spiritName, spiritVisual.imageSources);
+
+        return container;
+    }
+
+    function updatePestdiv2(container, spiritVisual) {
+        if (!container) {
+            return;
+        }
+
+        container.className = 'pestdiv2';
+        container.style.setProperty('--pestdiv2-size', `${spiritVisual.size}px`);
+
+        let circle = container.querySelector('.pestdiv2-circle');
+        if (!circle) {
+            circle = document.createElement('div');
+            circle.className = 'pestdiv2-circle';
+            container.prepend(circle);
+        }
+
+        let thumb = container.querySelector('.pestdiv2-thumb');
+        if (!thumb) {
+            thumb = document.createElement('img');
+            thumb.className = 'pestdiv2-thumb';
+            container.append(thumb);
+        }
+
+        applySpiritImage(thumb, spiritVisual.spiritName, spiritVisual.imageSources);
+    }
+
     function resolveDisplaySpirit(sprite) {
         if (!sprite || !lookup) {
             return null;
@@ -174,16 +377,17 @@
     }
 
     function getSlotSignature(slotData) {
-        const sprite = slotData && slotData.sprite ? slotData.sprite : null;
-        const displaySpirit = resolveDisplaySpirit(sprite);
+        const spiritVisual = buildSpiritVisualMeta(slotData);
         const healthMeta = getHealthMeta(slotData);
 
         return JSON.stringify({
             mode: currentLineupDisplayMode,
-            spritePath: displaySpirit ? displaySpirit.path : '',
-            name: displaySpirit ? displaySpiritName(displaySpirit.displayName) : '',
-            sourceName: getSpriteDisplayName(sprite),
-            number: getSpriteNumber(sprite),
+            spritePath: spiritVisual.imageSources.fallbackSrc,
+            thumbnailCandidates: spiritVisual.imageSources.thumbnailCandidates,
+            name: spiritVisual.spiritName,
+            sourceName: getSpriteDisplayName(spiritVisual.sourceSprite),
+            number: getSpriteNumber(spiritVisual.sourceSprite),
+            spriteSize: spiritVisual.size,
             hp: healthMeta.label,
             hpPercent: healthMeta.percent,
             energy: slotData ? clamp(slotData.energyValue, 0, 10, 10) : 10
@@ -280,8 +484,8 @@
     }
 
     function renderSlot(slotEl, slotData) {
-        const sourceSprite = slotData && slotData.sprite ? slotData.sprite : null;
-        const displaySpirit = resolveDisplaySpirit(sourceSprite);
+        const spiritVisual = buildSpiritVisualMeta(slotData);
+        const sourceSprite = spiritVisual.sourceSprite;
 
         if (!sourceSprite) {
             renderEmptySlot(slotEl);
@@ -292,17 +496,20 @@
         const healthPercent = healthMeta.percent;
         const energyValue = clamp(slotData.energyValue, 0, 10, 10);
         const isDone = healthPercent <= 0;
-        const spiritName = displaySpiritName(
-            (displaySpirit && displaySpirit.displayName) || getSpriteDisplayName(sourceSprite)
-        );
-        const spiritPath = displaySpirit ? displaySpirit.path : sourceSprite.path;
-        const spriteKey = JSON.stringify({ spiritPath, spiritName });
+        const spiritName = spiritVisual.spiritName;
+        const spriteKey = JSON.stringify({
+            fallbackSrc: spiritVisual.imageSources.fallbackSrc,
+            thumbnailCandidates: spiritVisual.imageSources.thumbnailCandidates,
+            spiritName,
+            size: spiritVisual.size
+        });
         const isAvatarOnlyMode = currentLineupDisplayMode === 'avatar-only';
         const shouldRebuild = slotEl.dataset.spriteKey !== spriteKey
             || slotEl.dataset.renderMode !== currentLineupDisplayMode
             || (isAvatarOnlyMode
-                ? !slotEl.querySelector('.spirit-thumb')
-                : !slotEl.querySelector('.spirit-name')
+                ? !slotEl.querySelector('.pestdiv2')
+                : !slotEl.querySelector('.pestdiv2')
+                    || !slotEl.querySelector('.spirit-name')
                     || !slotEl.querySelector('.stat-row-hp')
                     || !slotEl.querySelector('.stat-row-energy'));
 
@@ -313,22 +520,11 @@
             if (shouldRebuild) {
                 slotEl.innerHTML = '';
                 slotEl.dataset.spriteKey = spriteKey;
-
-                if (spiritPath) {
-                    const thumb = document.createElement('img');
-                    thumb.className = 'spirit-thumb';
-                    thumb.src = spiritPath;
-                    thumb.alt = spiritName;
-                    slotEl.append(thumb);
-                }
+                slotEl.append(createPestdiv2(spiritVisual));
                 return;
             }
 
-            const thumb = slotEl.querySelector('.spirit-thumb');
-            if (thumb && spiritPath && thumb.src !== spiritPath) {
-                thumb.src = spiritPath;
-                thumb.alt = spiritName;
-            }
+            updatePestdiv2(slotEl.querySelector('.pestdiv2'), spiritVisual);
             return;
         }
 
@@ -339,14 +535,7 @@
         if (shouldRebuild) {
             slotEl.innerHTML = '';
             slotEl.dataset.spriteKey = spriteKey;
-
-            if (spiritPath) {
-                const thumb = document.createElement('img');
-                thumb.className = 'spirit-thumb';
-                thumb.src = spiritPath;
-                thumb.alt = spiritName;
-                slotEl.append(thumb);
-            }
+            slotEl.append(createPestdiv2(spiritVisual));
 
             const hpRow = createStatRow('hp', isDone ? 100 : healthPercent, hpLabel, isDone);
             const energyRow = createStatRow('energy', energyFill, energyLabel, isDone);
@@ -359,11 +548,7 @@
             return;
         }
 
-        const thumb = slotEl.querySelector('.spirit-thumb');
-        if (thumb && spiritPath && thumb.src !== spiritPath) {
-            thumb.src = spiritPath;
-            thumb.alt = spiritName;
-        }
+        updatePestdiv2(slotEl.querySelector('.pestdiv2'), spiritVisual);
 
         const name = slotEl.querySelector('.spirit-name');
         if (name) {

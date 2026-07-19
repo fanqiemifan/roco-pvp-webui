@@ -36,7 +36,7 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     stylesDir: path.join(projectRoot, 'src', 'styles'),
     assetsDir: path.join(projectRoot, 'src', 'assets'),
     resourcesDir: path.join(projectRoot, 'resources'),
-    spritesDir: path.join(projectRoot, 'resources', 'sprites'),
+    spritesDir: path.join(projectRoot, 'resources', 'sprites-img'),
     spritesAltDir: path.join(projectRoot, 'resources', 'sprites-alt'),
     dataDir: path.join(projectRoot, 'resources', 'data'),
     runtimeDir,

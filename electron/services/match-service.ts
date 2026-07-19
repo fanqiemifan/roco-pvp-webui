@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { DEFAULT_BEST_OF, SUPPORTED_BEST_OF } from '../../shared/constants.js';
 import type {
@@ -6,9 +7,11 @@ import type {
   MatchRecord,
   MatchSlotSnapshot,
   MatchStoreState,
+  SpriteRecord,
 } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
 import { ensureRuntimeDirs } from './image-service.js';
+import { spriteLookup } from './sprite-service.js';
 import {
   clearPanelState,
   getPanelState,
@@ -95,18 +98,47 @@ function createEmptySlotSnapshot(index: number): MatchSlotSnapshot {
   };
 }
 
-function sanitizeLineup(lineup: unknown): string[] {
+function normalizeStoredSpriteId(value: unknown, lookup?: Map<string, SpriteRecord>): string | null {
+  if (typeof value !== 'string' || !value.trim()) {
+    return null;
+  }
+
+  const rawValue = value.trim();
+  if (!lookup) {
+    return rawValue;
+  }
+
+  const sprite = lookup.get(rawValue) ?? lookup.get(path.basename(rawValue));
+  const displayName = typeof sprite?.displayName === 'string' ? sprite.displayName.trim() : '';
+  return displayName || rawValue;
+}
+
+function snapshotSpriteIdFromRecord(sprite: SpriteRecord | null | undefined): string | null {
+  if (!sprite) {
+    return null;
+  }
+
+  const displayName = String(sprite.displayName ?? '').trim();
+  if (displayName) {
+    return displayName;
+  }
+
+  const spriteId = String(sprite.id ?? '').trim();
+  return spriteId || null;
+}
+
+function sanitizeLineup(lineup: unknown, lookup?: Map<string, SpriteRecord>): string[] {
   if (!Array.isArray(lineup)) {
     return [];
   }
 
   return lineup
-    .map((item) => (typeof item === 'string' ? item.trim() : ''))
-    .filter(Boolean)
+    .map((item) => normalizeStoredSpriteId(item, lookup))
+    .filter((item): item is string => Boolean(item))
     .slice(0, MAX_GAME_SLOTS);
 }
 
-function sanitizeSlotSnapshots(slots: unknown): MatchSlotSnapshot[] {
+function sanitizeSlotSnapshots(slots: unknown, lookup?: Map<string, SpriteRecord>): MatchSlotSnapshot[] {
   const normalized = Array.from({ length: MAX_GAME_SLOTS }, (_, index) => createEmptySlotSnapshot(index));
   if (!Array.isArray(slots)) {
     return normalized;
@@ -120,7 +152,7 @@ function sanitizeSlotSnapshots(slots: unknown): MatchSlotSnapshot[] {
     const raw = item as Record<string, unknown>;
     normalized[index] = {
       slot: index,
-      spriteId: typeof raw.spriteId === 'string' && raw.spriteId.trim() ? raw.spriteId.trim() : null,
+      spriteId: normalizeStoredSpriteId(raw.spriteId, lookup),
       opacityEnabled: Boolean(raw.opacityEnabled),
       opacity: Number.isFinite(Number(raw.opacity)) ? Number(raw.opacity) : 0.5,
       saturation: Number.isFinite(Number(raw.saturation)) ? Number(raw.saturation) : 1,
@@ -140,7 +172,7 @@ function lineupFromSlots(slots: MatchSlotSnapshot[]): string[] {
 function capturePanelSnapshot(paths: AppPaths, position: 'left' | 'right'): MatchSlotSnapshot[] {
   return getPanelState(paths, position).selected.slice(0, MAX_GAME_SLOTS).map((slot, index) => ({
     slot: index,
-    spriteId: slot.sprite?.id ?? null,
+    spriteId: snapshotSpriteIdFromRecord(slot.sprite),
     opacityEnabled: Boolean(slot.opacityEnabled),
     opacity: Number(slot.opacity ?? 0.5),
     saturation: Number(slot.saturation ?? 1),
@@ -341,14 +373,16 @@ function computeMatchProgress(match: MatchRecord): MatchRecord {
   };
 }
 
-function normalizeGameRecord(game: unknown, index: number): GameRecord {
+function normalizeGameRecord(game: unknown, index: number, lookup?: Map<string, SpriteRecord>): GameRecord {
   if (!game || typeof game !== 'object') {
     return createEmptyGameRecord(index + 1);
   }
 
   const raw = game as Record<string, unknown>;
-  const leftSlots = sanitizeSlotSnapshots(raw.leftSlots);
-  const rightSlots = sanitizeSlotSnapshots(raw.rightSlots);
+  const leftSlots = sanitizeSlotSnapshots(raw.leftSlots, lookup);
+  const rightSlots = sanitizeSlotSnapshots(raw.rightSlots, lookup);
+  const leftLineup = sanitizeLineup(raw.leftLineup, lookup);
+  const rightLineup = sanitizeLineup(raw.rightLineup, lookup);
   const status =
     raw.status === 'in_progress' || raw.status === 'completed'
       ? raw.status
@@ -356,8 +390,8 @@ function normalizeGameRecord(game: unknown, index: number): GameRecord {
 
   return {
     gameNumber: Number.isFinite(Number(raw.gameNumber)) ? Number(raw.gameNumber) : index + 1,
-    leftLineup: sanitizeLineup(raw.leftLineup).length ? sanitizeLineup(raw.leftLineup) : lineupFromSlots(leftSlots),
-    rightLineup: sanitizeLineup(raw.rightLineup).length ? sanitizeLineup(raw.rightLineup) : lineupFromSlots(rightSlots),
+    leftLineup: leftLineup.length ? leftLineup : lineupFromSlots(leftSlots),
+    rightLineup: rightLineup.length ? rightLineup : lineupFromSlots(rightSlots),
     leftSlots,
     rightSlots,
     winner: raw.winner === 'left' || raw.winner === 'right' ? raw.winner : null,
@@ -365,14 +399,14 @@ function normalizeGameRecord(game: unknown, index: number): GameRecord {
   };
 }
 
-function normalizeMatchRecord(match: unknown): MatchRecord | null {
+function normalizeMatchRecord(match: unknown, lookup?: Map<string, SpriteRecord>): MatchRecord | null {
   if (!match || typeof match !== 'object') {
     return null;
   }
 
   const raw = match as Record<string, unknown>;
   const bestOf = normalizeBestOf(raw.bestOf);
-  const games = Array.isArray(raw.games) ? raw.games.map(normalizeGameRecord) : [];
+  const games = Array.isArray(raw.games) ? raw.games.map((game, index) => normalizeGameRecord(game, index, lookup)) : [];
   const normalizedGames = games.length ? games : [createEmptyGameRecord(1)];
 
   return computeMatchProgress({
@@ -414,7 +448,11 @@ function flowSnapshotFromMatch(match: MatchRecord): MatchFlowSnapshot {
   };
 }
 
-function normalizeFlowSnapshot(snapshot: unknown, fallbackMatchId: string): MatchFlowSnapshot | null {
+function normalizeFlowSnapshot(
+  snapshot: unknown,
+  fallbackMatchId: string,
+  lookup?: Map<string, SpriteRecord>,
+): MatchFlowSnapshot | null {
   if (!snapshot || typeof snapshot !== 'object') {
     return null;
   }
@@ -428,7 +466,9 @@ function normalizeFlowSnapshot(snapshot: unknown, fallbackMatchId: string): Matc
   }
 
   const bestOf = normalizeBestOf(raw.bestOf);
-  const games = Array.isArray(raw.games) ? raw.games.map(normalizeGameRecord) : [];
+  const games = Array.isArray(raw.games)
+    ? raw.games.map((game, index) => normalizeGameRecord(game, index, lookup))
+    : [];
   const normalizedGames = games.length ? games : [createEmptyGameRecord(1)];
   const normalized = computeMatchProgress({
     id: matchId,
@@ -458,7 +498,11 @@ function normalizeFlowSnapshot(snapshot: unknown, fallbackMatchId: string): Matc
   };
 }
 
-function normalizeFlowHistoryEntry(value: unknown, matchId: string): MatchFlowHistory {
+function normalizeFlowHistoryEntry(
+  value: unknown,
+  matchId: string,
+  lookup?: Map<string, SpriteRecord>,
+): MatchFlowHistory {
   if (!value || typeof value !== 'object') {
     return { undoStack: [], redoStack: [] };
   }
@@ -470,7 +514,7 @@ function normalizeFlowHistoryEntry(value: unknown, matchId: string): MatchFlowHi
     }
 
     return stack
-      .map((item) => normalizeFlowSnapshot(item, matchId))
+      .map((item) => normalizeFlowSnapshot(item, matchId, lookup))
       .filter((item): item is MatchFlowSnapshot => Boolean(item));
   };
 
@@ -480,20 +524,23 @@ function normalizeFlowHistoryEntry(value: unknown, matchId: string): MatchFlowHi
   };
 }
 
-function normalizeFlowHistoryMap(value: unknown): Record<string, MatchFlowHistory> {
+function normalizeFlowHistoryMap(
+  value: unknown,
+  lookup?: Map<string, SpriteRecord>,
+): Record<string, MatchFlowHistory> {
   if (!value || typeof value !== 'object') {
     return {};
   }
 
   const raw = value as Record<string, unknown>;
   const normalizedEntries = Object.entries(raw)
-    .map(([matchId, history]) => [matchId, normalizeFlowHistoryEntry(history, matchId)] as const)
+    .map(([matchId, history]) => [matchId, normalizeFlowHistoryEntry(history, matchId, lookup)] as const)
     .filter(([matchId]) => Boolean(matchId.trim()));
 
   return Object.fromEntries(normalizedEntries);
 }
 
-function normalizeDeletedHistory(value: unknown): DeletedMatchBatch[] {
+function normalizeDeletedHistory(value: unknown, lookup?: Map<string, SpriteRecord>): DeletedMatchBatch[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -512,7 +559,7 @@ function normalizeDeletedHistory(value: unknown): DeletedMatchBatch[] {
           }
 
           const source = entry as Record<string, unknown>;
-          const match = normalizeMatchRecord(source.match);
+          const match = normalizeMatchRecord(source.match, lookup);
           if (!match) {
             return null;
           }
@@ -520,7 +567,7 @@ function normalizeDeletedHistory(value: unknown): DeletedMatchBatch[] {
           return {
             match,
             index: Number.isFinite(Number(source.index)) ? Math.max(0, Number(source.index)) : 0,
-            flowHistory: normalizeFlowHistoryEntry(source.flowHistory, match.id),
+            flowHistory: normalizeFlowHistoryEntry(source.flowHistory, match.id, lookup),
           } satisfies DeletedMatchEntry;
         }).filter((entry): entry is DeletedMatchEntry => Boolean(entry))
         : [];
@@ -677,10 +724,14 @@ function readStoreFile(paths: AppPaths): { store: MatchStoreFile; mtime: number 
   }
 
   try {
-    const raw = JSON.parse(fs.readFileSync(paths.matchesFile, 'utf-8')) as Record<string, unknown>;
+    const rawText = fs.readFileSync(paths.matchesFile, 'utf-8');
+    const raw = JSON.parse(rawText) as Record<string, unknown>;
     const stat = fs.statSync(paths.matchesFile);
+    const lookup = spriteLookup(paths);
     const matches = Array.isArray(raw.matches)
-      ? raw.matches.map(normalizeMatchRecord).filter((match): match is MatchRecord => Boolean(match && match.id))
+      ? raw.matches
+        .map((match) => normalizeMatchRecord(match, lookup))
+        .filter((match): match is MatchRecord => Boolean(match && match.id))
       : [];
     const activeMatchId = typeof raw.activeMatchId === 'string' && raw.activeMatchId.trim()
       ? raw.activeMatchId.trim()
@@ -689,9 +740,18 @@ function readStoreFile(paths: AppPaths): { store: MatchStoreFile; mtime: number 
     const store = normalizeStoreIdentifiers({
       activeMatchId: activeMatchId && matches.some((match) => match.id === activeMatchId) ? activeMatchId : null,
       matches,
-      flowHistory: normalizeFlowHistoryMap(raw.flowHistory),
-      deletedHistory: normalizeDeletedHistory(raw.deletedHistory),
+      flowHistory: normalizeFlowHistoryMap(raw.flowHistory, lookup),
+      deletedHistory: normalizeDeletedHistory(raw.deletedHistory, lookup),
     });
+    const normalizedText = JSON.stringify(store, null, 2);
+
+    if (rawText !== normalizedText) {
+      fs.writeFileSync(paths.matchesFile, normalizedText, 'utf-8');
+      return {
+        mtime: fs.statSync(paths.matchesFile).mtimeMs,
+        store,
+      };
+    }
 
     return {
       mtime: stat.mtimeMs,
@@ -799,11 +859,12 @@ function syncAfterStoreChange(paths: AppPaths, publicStore: MatchStoreState): vo
   clearActiveDisplayState(paths);
 }
 
-function parseSelectedSlots(selectedSlots: unknown): MatchSlotSnapshot[] {
+function parseSelectedSlots(paths: AppPaths, selectedSlots: unknown): MatchSlotSnapshot[] {
   if (!Array.isArray(selectedSlots)) {
     throw new Error('selected must be a list');
   }
 
+  const lookup = spriteLookup(paths);
   const nextSlots = Array.from({ length: MAX_GAME_SLOTS }, (_, index) => createEmptySlotSnapshot(index));
 
   selectedSlots.slice(0, MAX_GAME_SLOTS).forEach((item, index) => {
@@ -823,7 +884,7 @@ function parseSelectedSlots(selectedSlots: unknown): MatchSlotSnapshot[] {
 
     nextSlots[index] = {
       slot: index,
-      spriteId: typeof spriteId === 'string' && spriteId.trim() ? spriteId.trim() : null,
+      spriteId: normalizeStoredSpriteId(spriteId, lookup),
       opacityEnabled: Boolean(raw.opacityEnabled),
       opacity: Number.isFinite(Number(raw.opacity)) ? Number(raw.opacity) : 0.5,
       saturation: Number.isFinite(Number(raw.saturation)) ? Number(raw.saturation) : 1,
@@ -839,12 +900,13 @@ function parseSelectedSlots(selectedSlots: unknown): MatchSlotSnapshot[] {
   return nextSlots;
 }
 
-function parseSelectedSlot(slotIndex: number, slotData: unknown): MatchSlotSnapshot {
+function parseSelectedSlot(paths: AppPaths, slotIndex: number, slotData: unknown): MatchSlotSnapshot {
   if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= MAX_GAME_SLOTS) {
     throw new Error('invalid slot index');
   }
 
   const nextSlots = parseSelectedSlots(
+    paths,
     Array.from({ length: MAX_GAME_SLOTS }, (_, index) => (index === slotIndex ? slotData : null)),
   );
   return nextSlots[slotIndex];
@@ -1091,7 +1153,7 @@ export function saveDraftPanelStateForActiveMatch(
   const currentGame = getCurrentGame(current);
   assertMatchLineupEditable(current, currentGame);
 
-  const nextSlots = parseSelectedSlots(selectedSlots);
+  const nextSlots = parseSelectedSlots(paths, selectedSlots);
   const nextGames = [...current.games];
   const gameIndex = nextGames.findIndex((game) => game.gameNumber === currentGame.gameNumber);
   nextGames[gameIndex] = {
@@ -1131,7 +1193,7 @@ export function saveDraftPanelSlotStateForActiveMatch(
   const currentGame = getCurrentGame(current);
   assertMatchLineupEditable(current, currentGame);
 
-  const nextSlot = parseSelectedSlot(slotIndex, slotData);
+  const nextSlot = parseSelectedSlot(paths, slotIndex, slotData);
   const nextGames = [...current.games];
   const gameIndex = nextGames.findIndex((game) => game.gameNumber === currentGame.gameNumber);
   const leftSlots = currentGame.leftSlots.slice(0, MAX_GAME_SLOTS);
