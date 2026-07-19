@@ -231,8 +231,8 @@ body[data-page2-lineup-display-mode="avatar-only"] .spirit-slot::before {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 70px;
-    height: 70px;
+    width: calc(var(--pestdiv2-size, 78px) * 70 / 98);
+    height: calc(var(--pestdiv2-size, 78px) * 70 / 98);
     border-radius: 50%;
     background: #424442;
     box-shadow: inset 0 0 0 calc(var(--pestdiv2-size, 78px) * 3 / 98) #5d5d5d;
