@@ -13,7 +13,9 @@ export interface SpriteRecord {
   attributeCodes: string[];
   attributeIcon1: string;
   attributeIcon2: string;
+  thumbnailId: string;
   form: string;
+  isFinalForm: boolean;
 }
 
 export interface SlotState {

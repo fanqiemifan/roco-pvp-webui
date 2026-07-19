@@ -9,6 +9,7 @@ const SPRITE_RESOURCE_BASE = '/resources/sprites-img';
 const ATTRIBUTE_ICON_BASE = '/resources/attribute';
 
 let cachedAttributeCodeByName: Map<string, string> | null = null;
+let cachedFinalFormIds: Set<string> | null = null;
 
 function normalizeSpriteAttributes(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -88,7 +89,9 @@ function buildSpriteEntry(filename: string): SpriteRecord {
     attributeCodes: [],
     attributeIcon1: '',
     attributeIcon2: '',
+    thumbnailId: '',
     form: '',
+    isFinalForm: false,
   };
 }
 
@@ -114,6 +117,30 @@ function loadAttributeCodeByName(paths: AppPaths): Map<string, string> {
   }
 
   cachedAttributeCodeByName = lookup;
+  return lookup;
+}
+
+function loadFinalFormIds(paths: AppPaths): Set<string> {
+  if (cachedFinalFormIds) {
+    return cachedFinalFormIds;
+  }
+
+  const finalFormsFile = path.join(paths.dataDir, 'final_forms.json');
+  const lookup = new Set<string>();
+
+  try {
+    const payload = JSON.parse(fs.readFileSync(finalFormsFile, 'utf-8')) as Array<{ id?: string | number }>;
+    for (const item of payload) {
+      const id = String(item?.id ?? '').trim();
+      if (id) {
+        lookup.add(id);
+      }
+    }
+  } catch {
+    // Best effort only; callers can still fall back to regular form filtering.
+  }
+
+  cachedFinalFormIds = lookup;
   return lookup;
 }
 
@@ -181,12 +208,14 @@ function normalizeSpriteRecord(record: unknown, paths: AppPaths): SpriteRecord |
 
   const attribute = normalizeSpriteAttributes(item.attribute ?? item['精灵属性']).join('、');
   const attributeLookup = loadAttributeCodeByName(paths);
+  const finalFormIds = loadFinalFormIds(paths);
   const attributeCodes = Array.isArray(item.attributeCodes)
     ? item.attributeCodes.filter((code): code is string => typeof code === 'string' && code.trim().length > 0)
     : normalizeSpriteAttributes(item.attribute ?? item['精灵属性'])
       .map((attributeName) => attributeLookup.get(attributeName) ?? '')
       .filter(Boolean)
       .slice(0, 2);
+  const thumbnailId = String(item.thumbnailId ?? item['缩略图图片ID'] ?? '').trim();
 
   return {
     id: typeof item.id === 'string' && item.id.trim() ? item.id.trim() : filename,
@@ -215,7 +244,9 @@ function normalizeSpriteRecord(record: unknown, paths: AppPaths): SpriteRecord |
         : attributeCodes[1]
           ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[1]}.png`
           : '',
+    thumbnailId,
     form: String(item.form ?? item['精灵形态'] ?? '').trim(),
+    isFinalForm: Boolean(thumbnailId && finalFormIds.has(thumbnailId)),
   };
 }
 

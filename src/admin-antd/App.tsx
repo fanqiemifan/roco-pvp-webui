@@ -103,6 +103,7 @@ type PanelEditorState = {
 type SpriteFilterState = {
   selectedAttributes: string[];
   selectedForms: string[];
+  selectedFinalForm: boolean;
 };
 
 type AttributeOption = {
@@ -178,6 +179,8 @@ const ATTRIBUTE_OPTIONS: AttributeOption[] = (attributeMapping as Array<{ 编号
 }));
 
 const ATTRIBUTE_ICON_BY_LABEL = new Map(ATTRIBUTE_OPTIONS.map((option) => [option.label, option.iconPath]));
+const FINAL_FORM_FILTER_LABEL = '最终形态';
+const EXCLUSIVE_FORM_FILTERS = ['首领', '一阶', '二阶', '三阶'];
 
 const theme = {
   token: {
@@ -256,11 +259,16 @@ function createPanelEditorState(): PanelEditorState {
   };
 }
 
-function createSpriteFilterState(): SpriteFilterState {
+function createSpriteFilterState(options?: { selectedFinalForm?: boolean }): SpriteFilterState {
   return {
     selectedAttributes: [],
     selectedForms: [],
+    selectedFinalForm: options?.selectedFinalForm ?? false,
   };
+}
+
+function createDefaultSpriteFilterState(): SpriteFilterState {
+  return createSpriteFilterState({ selectedFinalForm: true });
 }
 
 function cloneSlot(slot: Partial<SlotState> | null | undefined, index: number): SlotState {
@@ -854,8 +862,8 @@ function Dashboard() {
     right: createPanelEditorState(),
   });
   const [spriteFilters, setSpriteFilters] = useState<Record<PanelSide, SpriteFilterState>>({
-    left: createSpriteFilterState(),
-    right: createSpriteFilterState(),
+    left: createDefaultSpriteFilterState(),
+    right: createDefaultSpriteFilterState(),
   });
   const [sprites, setSprites] = useState<SpriteRecord[]>([]);
   const [createMatchOpen, setCreateMatchOpen] = useState(false);
@@ -898,10 +906,8 @@ function Dashboard() {
 
   const deferredLeftSearch = useDeferredValue(panels.left.search);
   const deferredRightSearch = useDeferredValue(panels.right.search);
-  const spriteFormOptions = Array.from(new Set(
-    sprites
-      .map((sprite) => sprite.form.trim())
-      .filter(Boolean),
+  const spriteFormOptions = EXCLUSIVE_FORM_FILTERS.filter((form) => (
+    sprites.some((sprite) => sprite.form.trim() === form)
   ));
 
   function setPanelState(side: PanelSide, nextState: PanelEditorState) {
@@ -1290,11 +1296,25 @@ function Dashboard() {
   }
 
   function toggleFormFilter(side: PanelSide, form: string) {
+    mutateSpriteFilter(side, (filter) => {
+      if (filter.selectedFinalForm) {
+        return filter;
+      }
+
+      return {
+        ...filter,
+        selectedForms: filter.selectedForms.includes(form)
+          ? filter.selectedForms.filter((item) => item !== form)
+          : [...filter.selectedForms, form],
+      };
+    });
+  }
+
+  function toggleFinalFormFilter(side: PanelSide) {
     mutateSpriteFilter(side, (filter) => ({
       ...filter,
-      selectedForms: filter.selectedForms.includes(form)
-        ? filter.selectedForms.filter((item) => item !== form)
-        : [...filter.selectedForms, form],
+      selectedFinalForm: !filter.selectedFinalForm,
+      selectedForms: filter.selectedFinalForm ? filter.selectedForms : [],
     }));
   }
 
@@ -2200,12 +2220,13 @@ function Dashboard() {
       const spriteAttributes = splitSpriteAttributes(sprite.attribute);
       const matchesAttributes = !filter.selectedAttributes.length
         || filter.selectedAttributes.every((attribute) => spriteAttributes.includes(attribute));
-      const matchesForms = !filter.selectedForms.length
-        || filter.selectedForms.includes(sprite.form);
+      const matchesForms = filter.selectedFinalForm
+        ? sprite.isFinalForm
+        : !filter.selectedForms.length || filter.selectedForms.includes(sprite.form);
 
       return matchesKeyword && matchesAttributes && matchesForms;
     });
-    const hasFilter = filter.selectedAttributes.length > 0 || filter.selectedForms.length > 0;
+    const hasFilter = filter.selectedAttributes.length > 0 || filter.selectedForms.length > 0 || filter.selectedFinalForm;
 
     return (
       <Card
@@ -2351,12 +2372,22 @@ function Dashboard() {
                   <div className="sprite-filter-group">
                     <Text type="secondary" className="sprite-filter-label">精灵形态</Text>
                     <Space wrap size={[8, 8]}>
+                      <Button
+                        key={`${side}-form-${FINAL_FORM_FILTER_LABEL}`}
+                        size="small"
+                        type={filter.selectedFinalForm ? 'primary' : 'default'}
+                        className="form-filter-chip"
+                        onClick={() => toggleFinalFormFilter(side)}
+                      >
+                        {FINAL_FORM_FILTER_LABEL}
+                      </Button>
                       {spriteFormOptions.map((form) => (
                         <Button
                           key={`${side}-form-${form}`}
                           size="small"
                           type={filter.selectedForms.includes(form) ? 'primary' : 'default'}
                           className="form-filter-chip"
+                          disabled={filter.selectedFinalForm}
                           onClick={() => toggleFormFilter(side, form)}
                         >
                           {form}
