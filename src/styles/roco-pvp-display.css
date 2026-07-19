@@ -218,25 +218,48 @@ body[data-page2-lineup-display-mode="avatar-only"] .spirit-slot::before {
         repeating-linear-gradient(180deg, #000 0 8px, transparent 8px 16px) top right / 1px 100% no-repeat;
 }
 
-.spirit-thumb {
+.pestdiv2 {
     position: absolute;
-    left: -1px;
-    top: -1px;
-    width: 78px;
-    height: 78px;
-    object-fit: cover;
+    left: 0;
+    top: 0;
+    width: var(--pestdiv2-size, 78px);
+    height: var(--pestdiv2-size, 78px);
 }
 
-body[data-page2-lineup-display-mode="avatar-only"] .spirit-thumb {
+.pestdiv2-circle {
+    display: none;
+    position: absolute;
     left: 50%;
     top: 50%;
-    width: 98px;
-    height: 98px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #424442;
+    box-shadow: inset 0 0 0 calc(var(--pestdiv2-size, 78px) * 3 / 98) #5d5d5d;
+    transform: translate(-50%, -50%);
+}
+
+.pestdiv2.pestdiv2-has-thumbnail .pestdiv2-circle {
+    display: block;
+}
+
+.pestdiv2-thumb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     transform: translate(-50%, -50%);
 }
 
-.spirit-slot.is-done .spirit-thumb {
+body[data-page2-lineup-display-mode="avatar-only"] .pestdiv2 {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.spirit-slot.is-done .pestdiv2-thumb {
     filter: saturate(0);
 }
 
