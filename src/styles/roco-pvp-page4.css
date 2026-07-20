@@ -51,8 +51,7 @@ body {
 }
 
 .lineup-bg-right {
-    right: 0;
-    border-radius: 50px 20px 20px 20px;
+    display: none;
 }
 
 .lineup-outline {
@@ -65,7 +64,7 @@ body {
 
 .lineup {
     position: absolute;
-    top: 0;
+    top: 4px;
     z-index: 2;
     display: flex;
     align-items: center;
@@ -83,15 +82,15 @@ body {
 
 .petsdiv3 {
     position: relative;
-    width: 98px;
-    height: 98px;
+    --petsdiv3-scale: 1;
+    width: calc(98px * var(--petsdiv3-scale));
+    height: calc(98px * var(--petsdiv3-scale));
     overflow: visible;
     flex: none;
 }
 
 .lineup .petsdiv3 {
-    width: 60px;
-    height: 60px;
+    --petsdiv3-scale: 0.6122448979591837;
 }
 
 .petsdiv3.is-active::before,
@@ -100,12 +99,12 @@ body {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 80px;
-    height: 80px;
+    width: calc(80px * var(--petsdiv3-scale));
+    height: calc(80px * var(--petsdiv3-scale));
     transform: translate(-50%, -50%);
     border-radius: 50%;
     background: #424442;
-    border: 3px solid #5d5d5d;
+    border: calc(3px * var(--petsdiv3-scale)) solid #5d5d5d;
     overflow: hidden;
 }
 
@@ -113,8 +112,8 @@ body {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 110px;
-    height: 110px;
+    width: calc(110px * var(--petsdiv3-scale));
+    height: calc(110px * var(--petsdiv3-scale));
     transform: translate(-50%, -50%);
     object-fit: contain;
     pointer-events: none;
@@ -133,8 +132,8 @@ body {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 70px;
-    height: 4px;
+    width: calc(70px * var(--petsdiv3-scale));
+    height: calc(4px * var(--petsdiv3-scale));
     transform: translate(-50%, -50%) rotate(-28deg);
     border-radius: 999px;
     background: rgba(214, 73, 60, 0.92);
