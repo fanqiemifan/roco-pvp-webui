@@ -37,6 +37,24 @@ export interface PanelState {
   mtime: number | null;
 }
 
+export interface Page4SlotState {
+  slot: number;
+  sprite: SpriteRecord | null;
+  isDead: boolean;
+}
+
+export interface Page4PanelState {
+  position: 'left' | 'right';
+  count: number;
+  selected: Page4SlotState[];
+  mtime: number | null;
+}
+
+export interface Page4State {
+  panels: [Page4PanelState, Page4PanelState];
+  mtime: number | null;
+}
+
 export interface ScoreboardState {
   leftName: string;
   leftScore: string;
@@ -127,6 +145,7 @@ export interface AvatarCollectionState {
 
 export interface SnapshotPayload {
   panels: [PanelState, PanelState];
+  page4: Page4State;
   scoreboard: ScoreboardState;
   background: BackgroundState;
   avatars: AvatarCollectionState;

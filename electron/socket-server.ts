@@ -22,6 +22,12 @@ import {
 } from './services/image-service.js';
 import { loadRuntimeConfig, saveRuntimeConfig } from './services/config-service.js';
 import {
+  clearPage4State,
+  getPage4State,
+  savePage4SlotState,
+  savePage4State,
+} from './services/page4-service.js';
+import {
   createMatch,
   deleteMatch,
   deleteMatches,
@@ -64,6 +70,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 function snapshotPayload(paths: AppPaths): SnapshotPayload {
   return {
     panels: [getPanelState(paths, 'left'), getPanelState(paths, 'right')],
+    page4: getPage4State(paths),
     scoreboard: getScoreboardState(paths),
     background: getBackgroundState(paths),
     avatars: getAvatarStates(paths),
@@ -248,6 +255,8 @@ export async function createLocalServer(
   app.get('/login.html', (_request, response) => sendLoginPage(paths, response));
   app.get('/roco-pvp.html', (_request, response) => sendPage(paths, response, 'roco-pvp.html'));
   app.get('/roco-pvp-page3.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page3.html'));
+  app.get('/page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
+  app.get('/roco-pvp-page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
   app.get('/live-standby-demo.html', (_request, response) => sendPage(paths, response, 'live-standby-demo.html'));
 
   // Auth API — always public
@@ -300,7 +309,7 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp.html', '/roco-pvp-page3.html', '/live-standby-demo.html'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/live-standby-demo.html'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 
@@ -333,6 +342,10 @@ export async function createLocalServer(
 
   app.get('/api/scoreboard', (_request, response) => {
     response.json(getScoreboardState(paths));
+  });
+
+  app.get('/api/page4', (_request, response) => {
+    response.json(getPage4State(paths));
   });
 
   app.get('/api/matches', (_request, response) => {
@@ -506,6 +519,64 @@ export async function createLocalServer(
       const scoreboard = saveScoreboardBestOf(paths, request.body ?? {});
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       response.json({ success: true, scoreboard });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/page4/:position', (request, response) => {
+    const position = request.params.position;
+    if (position !== 'left' && position !== 'right') {
+      response.status(404).json({ success: false, error: 'Invalid position' });
+      return;
+    }
+
+    try {
+      savePage4State(paths, position, request.body?.selected ?? []);
+      const page4 = getPage4State(paths);
+      io.emit(SOCKET_EVENTS.page4Update, { page4 });
+      response.json({ success: true, page4 });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      response.status(message.startsWith('Sprite not found') ? 404 : 400).json({ success: false, error: message });
+    }
+  });
+
+  app.patch('/api/page4/:position/slots/:slot', (request, response) => {
+    const position = request.params.position;
+    const slotIndex = Number.parseInt(request.params.slot, 10);
+    if (position !== 'left' && position !== 'right') {
+      response.status(404).json({ success: false, error: 'Invalid position' });
+      return;
+    }
+    if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 6) {
+      response.status(400).json({ success: false, error: 'Invalid slot index' });
+      return;
+    }
+
+    try {
+      savePage4SlotState(paths, position, slotIndex, request.body?.slot ?? null);
+      const page4 = getPage4State(paths);
+      io.emit(SOCKET_EVENTS.page4Update, { page4 });
+      response.json({ success: true, page4 });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      response.status(message.startsWith('Sprite not found') ? 404 : 400).json({ success: false, error: message });
+    }
+  });
+
+  app.delete('/api/page4/:position', (request, response) => {
+    const position = request.params.position;
+    if (position !== 'left' && position !== 'right') {
+      response.status(404).json({ success: false, error: 'Invalid position' });
+      return;
+    }
+
+    try {
+      clearPage4State(paths, position);
+      const page4 = getPage4State(paths);
+      io.emit(SOCKET_EVENTS.page4Update, { page4 });
+      response.json({ success: true, page4 });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }

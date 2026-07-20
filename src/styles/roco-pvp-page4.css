@@ -1,0 +1,143 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    min-height: 100vh;
+    overflow: hidden;
+    background: transparent !important;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+body {
+    display: grid;
+    place-items: center;
+}
+
+.page4-screen {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+.lineup-all-div {
+    position: absolute;
+    left: 50%;
+    bottom: 24px;
+    width: 782px;
+    height: 74px;
+    transform: translateX(-50%);
+    border-radius: 20px;
+    background: #f7f2e8;
+    overflow: hidden;
+}
+
+.lineup-bg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 398px;
+    background: #e6b34e;
+}
+
+.lineup-bg-left {
+    left: 0;
+    border-radius: 20px 50px 20px 20px;
+}
+
+.lineup-bg-right {
+    right: 0;
+    border-radius: 50px 20px 20px 20px;
+}
+
+.lineup-outline {
+    position: absolute;
+    inset: 0;
+    border: 2px solid #c9c9c9;
+    border-radius: 20px;
+    pointer-events: none;
+}
+
+.lineup {
+    position: absolute;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 74px;
+}
+
+.lineup-left {
+    left: 20px;
+}
+
+.lineup-right {
+    right: 20px;
+}
+
+.petsdiv3 {
+    position: relative;
+    width: 98px;
+    height: 98px;
+    overflow: visible;
+    flex: none;
+}
+
+.lineup .petsdiv3 {
+    width: 60px;
+    height: 60px;
+}
+
+.petsdiv3.is-active::before,
+.petsdiv3.is-empty::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 80px;
+    height: 80px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: #424442;
+    border: 3px solid #5d5d5d;
+    overflow: hidden;
+}
+
+.petsdiv3 img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 110px;
+    height: 110px;
+    transform: translate(-50%, -50%);
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.petsdiv3.is-empty img {
+    display: none;
+}
+
+.petsdiv3.is-dead {
+    filter: grayscale(1) brightness(0.72);
+}
+
+.petsdiv3.is-dead::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 70px;
+    height: 4px;
+    transform: translate(-50%, -50%) rotate(-28deg);
+    border-radius: 999px;
+    background: rgba(214, 73, 60, 0.92);
+    box-shadow: 0 0 0 1px rgba(120, 18, 18, 0.16);
+    pointer-events: none;
+}
