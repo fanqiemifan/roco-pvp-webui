@@ -15,12 +15,11 @@ mac:
   category: public.app-category.games
 win:
   executableName: RocoPVPControlPanel
-  artifactName: ${productName}-Setup-${version}-${arch}.${ext}
+  artifactName: ${productName}-Setup-${version}.${ext}
   target:
     - target: nsis
       arch:
         - x64
-        - arm64
 nsis:
   guid: 5cf62ae6-1d1f-4a52-8ef7-6d2f0f0df2d1
   allowElevation: true
