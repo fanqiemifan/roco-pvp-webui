@@ -107,6 +107,8 @@ type Page4PanelEditorState = {
   selected: Page4SlotState[];
   activeSlot: number;
   search: string;
+  quickFillInput: string;
+  quickFillMatches: QuickFillMatch[];
   autoSaveEnabled: boolean;
   dirty: boolean;
   saving: boolean;
@@ -289,6 +291,8 @@ function createPage4PanelEditorState(): Page4PanelEditorState {
     selected: Array.from({ length: 6 }, (_, index) => createPage4EmptySlot(index)),
     activeSlot: 0,
     search: '',
+    quickFillInput: '',
+    quickFillMatches: [],
     autoSaveEnabled: true,
     dirty: false,
     saving: false,
@@ -643,6 +647,42 @@ function SpritePetCard({ sprite, size = 96, className }: SpritePetCardProps) {
   );
 }
 
+type Page4SlotVisualProps = {
+  slot: Page4SlotState;
+  index: number;
+  size?: number;
+  className?: string;
+  placeholderClassName?: string;
+};
+
+function Page4SlotVisual({
+  slot,
+  index,
+  size = 96,
+  className,
+  placeholderClassName,
+}: Page4SlotVisualProps) {
+  if (!slot.sprite?.path) {
+    return (
+      <div
+        className={`slot-placeholder${placeholderClassName ? ` ${placeholderClassName}` : ''}`}
+        style={{ width: size, height: size }}
+      >
+        {index + 1}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`page4-slot-visual${slot.isDead ? ' is-dead' : ''}${className ? ` ${className}` : ''}`}
+      style={{ '--page4-death-size': `${size}px` } as React.CSSProperties}
+    >
+      <SpritePetCard sprite={slot.sprite} size={size} />
+    </div>
+  );
+}
+
 function buildHistoryLineupEntries(
   game: GameRecord,
   side: PanelSide,
@@ -712,6 +752,18 @@ async function requestJson<T>(url: string, init?: JsonInit): Promise<T> {
   }
 
   return payload as T;
+}
+
+async function requestQuickFillMatches(text: string): Promise<QuickFillMatch[]> {
+  const data = await requestJson<{
+    success: boolean;
+    matches: QuickFillMatch[];
+  }>('/api/quick-fill', {
+    method: 'POST',
+    json: { text },
+  });
+
+  return data.matches;
 }
 
 async function uploadSingleFile<T>(url: string, file: File): Promise<T> {
@@ -1336,16 +1388,10 @@ function Dashboard() {
     }
 
     try {
-      const data = await requestJson<{
-        success: boolean;
-        matches: QuickFillMatch[];
-      }>('/api/quick-fill', {
-        method: 'POST',
-        json: { text },
-      });
+      const matches = await requestQuickFillMatches(text);
 
       const nextSelected = Array.from({ length: 6 }, (_, index) => createEmptySlot(index));
-      data.matches.forEach((match) => {
+      matches.forEach((match) => {
         if (match.slot >= 0 && match.slot < 6 && match.sprite) {
           nextSelected[match.slot] = {
             ...nextSelected[match.slot],
@@ -1357,7 +1403,7 @@ function Dashboard() {
       mutatePanel(side, (panel) => ({
         ...panel,
         selected: nextSelected,
-        quickFillMatches: data.matches,
+        quickFillMatches: matches,
         dirty: true,
       }));
       message.success(`${side === 'left' ? '左侧' : '右侧'}快速填充已应用到本地草稿`);
@@ -1526,8 +1572,68 @@ function Dashboard() {
     mutatePage4Panel(side, (panel) => ({
       ...panel,
       selected: Array.from({ length: 6 }, (_, index) => createPage4EmptySlot(index)),
+      quickFillMatches: [],
       dirty: true,
     }));
+  }
+
+  async function runPage4QuickFill(side: PanelSide) {
+    const text = page4Panels[side].quickFillInput.trim();
+    if (!text) {
+      message.warning('请先输入要匹配的精灵名称');
+      return;
+    }
+
+    try {
+      const matches = await requestQuickFillMatches(text);
+      const nextSelected = Array.from({ length: 6 }, (_, index) => createPage4EmptySlot(index));
+      matches.forEach((match) => {
+        if (match.slot >= 0 && match.slot < 6 && match.sprite) {
+          nextSelected[match.slot] = {
+            ...nextSelected[match.slot],
+            sprite: match.sprite,
+          };
+        }
+      });
+
+      mutatePage4Panel(side, (panel) => ({
+        ...panel,
+        selected: nextSelected,
+        quickFillMatches: matches,
+        dirty: true,
+      }));
+      message.success(`${side === 'left' ? '左侧' : '右侧'} page4 快速填充已应用到本地草稿`);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  function choosePage4QuickFillCandidate(side: PanelSide, slotIndex: number, sprite: SpriteRecord) {
+    mutatePage4Panel(side, (panel) => {
+      const selected = clonePage4Selected(panel.selected);
+      selected[slotIndex] = {
+        ...selected[slotIndex],
+        sprite,
+      };
+      return {
+        ...panel,
+        selected,
+        dirty: true,
+      };
+    });
+  }
+
+  function updatePage4SlotAt(side: PanelSide, slotIndex: number, updater: (slot: Page4SlotState) => Page4SlotState) {
+    mutatePage4Panel(side, (panel) => {
+      const selected = clonePage4Selected(panel.selected);
+      const current = selected[slotIndex] ?? createPage4EmptySlot(slotIndex);
+      selected[slotIndex] = updater(current);
+      return {
+        ...panel,
+        selected,
+        dirty: true,
+      };
+    });
   }
 
   function applyPage4Sprite(side: PanelSide, sprite: SpriteRecord) {
@@ -1537,11 +1643,11 @@ function Dashboard() {
     }));
   }
 
-  function togglePage4Dead(side: PanelSide) {
-    updatePage4Slot(side, (slot) => ({
+  function togglePage4DeadAt(side: PanelSide, slotIndex: number) {
+    updatePage4SlotAt(side, slotIndex, (slot) => (slot.sprite ? {
       ...slot,
       isDead: !slot.isDead,
-    }));
+    } : slot));
   }
 
   function togglePage4AttributeFilter(side: PanelSide, attribute: string) {
@@ -2696,6 +2802,51 @@ function Dashboard() {
     );
   }
 
+  function renderPage4DeathPanel() {
+    const entries = (['left', 'right'] as PanelSide[]).flatMap((side) => (
+      page4Panels[side].selected.map((slot, index) => ({
+        side,
+        slot,
+        index,
+      }))
+    ));
+    const selectedCount = entries.filter((entry) => entry.slot.sprite).length;
+    const deadCount = entries.filter((entry) => entry.slot.sprite && entry.slot.isDead).length;
+
+    return (
+      <Card
+        title="page4 精灵阵亡控制"
+        extra={<Text type="secondary">已选 {selectedCount} / 12 · 阵亡 {deadCount}</Text>}
+      >
+        <Space direction="vertical" size={12} className="control-stack">
+          <Paragraph type="secondary">点击已有精灵图片可切换阵亡状态，阵亡效果会同步应用到 page4 展示页。</Paragraph>
+          <div className="page4-death-slot-grid">
+            {entries.map(({ side, slot, index }) => {
+              const isEmpty = !slot.sprite;
+              return (
+                <Button
+                  key={`${side}-page4-death-${index}`}
+                  className={`page4-death-slot-button${slot.isDead ? ' is-dead' : ''}${isEmpty ? ' is-empty' : ''}`}
+                  disabled={isEmpty}
+                  title={slot.sprite ? `${side === 'left' ? '左侧' : '右侧'} ${index + 1} 号位` : '空槽位'}
+                  onClick={() => togglePage4DeadAt(side, index)}
+                >
+                  <Page4SlotVisual
+                    slot={slot}
+                    index={side === 'left' ? index : index + 6}
+                    size={76}
+                    className="page4-death-slot-visual"
+                    placeholderClassName="page4-death-slot-placeholder"
+                  />
+                </Button>
+              );
+            })}
+          </div>
+        </Space>
+      </Card>
+    );
+  }
+
   function renderPage4PanelEditor(side: PanelSide) {
     const panel = page4Panels[side];
     const filter = page4SpriteFilters[side];
@@ -2720,7 +2871,6 @@ function Dashboard() {
       return matchesKeyword && matchesAttributes && matchesForms;
     });
     const hasFilter = filter.selectedAttributes.length > 0 || filter.selectedForms.length > 0 || filter.selectedFinalForm;
-    const currentSlot = panel.selected[panel.activeSlot] ?? createPage4EmptySlot(panel.activeSlot);
     const summary = summarizePage4Slots(panel.selected);
 
     return (
@@ -2752,11 +2902,7 @@ function Dashboard() {
                   onClick={() => mutatePage4Panel(side, (prev) => ({ ...prev, activeSlot: index }))}
                 >
                   <div className={`slot-button-inner slot-button-inner-${side}`}>
-                    {slot.sprite?.path ? (
-                      <SpritePetCard sprite={slot.sprite} size={96} />
-                    ) : (
-                      <div className="slot-placeholder">{index + 1}</div>
-                    )}
+                    <Page4SlotVisual slot={slot} index={index} />
                   </div>
                 </Button>
               ))}
@@ -2777,25 +2923,52 @@ function Dashboard() {
                     />
                   ) : null}
                   <div>
-                    <Text strong>当前槽位</Text>
-                    <Paragraph type="secondary">这里的阵容只用于 page4 展示，不会同步到赛事管理或其他推流页面。</Paragraph>
+                    <Text strong>快速文本填充</Text>
+                    <Paragraph type="secondary">一行一个精灵名，先生成 page4 本地草稿，再保存到展示页。</Paragraph>
                   </div>
-                  <div className="page4-current-slot-preview">
-                    {currentSlot.sprite ? (
-                      <SpritePetCard sprite={currentSlot.sprite} size={96} />
-                    ) : (
-                      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="当前槽位为空" />
-                    )}
-                  </div>
+                  <TextArea
+                    rows={4}
+                    value={panel.quickFillInput}
+                    onChange={(event) => mutatePage4Panel(side, (prev) => ({ ...prev, quickFillInput: event.target.value }))}
+                    placeholder={'普星达\n怕哭菇\n龙息帕尔'}
+                  />
                   <Space wrap>
-                    <Text strong>阵亡</Text>
-                    <Switch checked={currentSlot.isDead} onChange={() => togglePage4Dead(side)} />
                     <Button onClick={() => clearPage4CurrentSlot(side)}>清空当前</Button>
                     <Button onClick={() => clearPage4Panel(side)}>清空全部</Button>
+                    <Button onClick={() => void runPage4QuickFill(side)}>快速填充</Button>
                     <Button type="primary" onClick={() => void savePage4Panel(side)}>保存阵容</Button>
                   </Space>
                 </Space>
               </Card>
+
+              {panel.quickFillMatches.some((match) => match.candidates.length > 1) ? (
+                <Card size="small" className="subtle-card">
+                  <Space direction="vertical" size={12} className="control-stack">
+                    <Text strong>候选精灵选择</Text>
+                    {panel.quickFillMatches
+                      .filter((match) => match.candidates.length > 1)
+                      .map((match) => (
+                        <div key={`${side}-page4-quick-${match.slot}`} className="quick-fill-group">
+                          <Text>槽位 {match.slot + 1}</Text>
+                          <div className="quick-fill-candidate-grid">
+                            {match.candidates.map((candidate) => (
+                              <Button
+                                key={candidate.id}
+                                size="small"
+                                className="quick-fill-candidate-button"
+                                title={candidate.displayName}
+                                aria-label={`选择 ${candidate.displayName}`}
+                                onClick={() => choosePage4QuickFillCandidate(side, match.slot, candidate)}
+                              >
+                                <SpritePetCard sprite={candidate} size={64} className="quick-fill-candidate-card" />
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                  </Space>
+                </Card>
+              ) : null}
 
               <Card size="small" className="subtle-card sprite-picker-card">
                 <div className="sprite-picker-shell">
@@ -3102,6 +3275,7 @@ function Dashboard() {
 
           {view === 'page4' ? (
             <Space direction="vertical" size={18} className="page-stack">
+              {renderPage4DeathPanel()}
               <Row gutter={[18, 18]}>
                 <Col xs={24} xl={12}>{renderPage4PanelEditor('left')}</Col>
                 <Col xs={24} xl={12}>{renderPage4PanelEditor('right')}</Col>
