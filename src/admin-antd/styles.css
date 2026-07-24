@@ -338,7 +338,9 @@ a {
 .sprite-card-button {
   width: 100%;
   height: auto;
-  min-height: 116px;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
   padding: 6px;
   border-radius: 18px;
 }
@@ -368,10 +370,16 @@ a {
 }
 
 .sprite-card-inner {
+  container-type: inline-size;
   width: 100%;
-  min-height: 104px;
+  min-height: 0;
+  aspect-ratio: 1;
   display: grid;
   place-items: center;
+}
+
+.sprite-card-inner > .sprite-pet-card {
+  --sprite-picker-card-size: clamp(64px, calc(100cqw - 12px), 96px);
 }
 
 .sprite-filter-panel {

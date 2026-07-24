@@ -613,7 +613,7 @@ function resolveSpriteAttributeIcons(sprite: SpriteRecord): string[] {
 
 type SpritePetCardProps = {
   sprite: SpriteRecord;
-  size?: number;
+  size?: number | string;
   className?: string;
 };
 
@@ -622,8 +622,9 @@ function SpritePetCard({ sprite, size = 96, className }: SpritePetCardProps) {
   const attributeIcons = resolveSpriteAttributeIcons(sprite);
   const attributeIcon1 = attributeIcons[0] ?? '';
   const attributeIcon2 = attributeIcons[1] ?? '';
+  const cardSize = typeof size === 'number' ? `${size}px` : size;
   const style = {
-    '--pet-card-size': `${size}px`,
+    '--pet-card-size': cardSize,
     '--pet-name-left': String(getSpriteCardNameLeft(cardName.length)),
   } as React.CSSProperties;
 
@@ -2785,7 +2786,7 @@ function Dashboard() {
                           onClick={() => applySprite(side, sprite)}
                         >
                           <div className="sprite-card-inner">
-                            <SpritePetCard sprite={sprite} size={96} />
+                            <SpritePetCard sprite={sprite} size="var(--sprite-picker-card-size)" />
                           </div>
                         </Button>
                       ))}
@@ -3045,7 +3046,7 @@ function Dashboard() {
                             onClick={() => applyPage4Sprite(side, sprite)}
                           >
                             <div className="sprite-card-inner">
-                              <SpritePetCard sprite={sprite} size={96} />
+                              <SpritePetCard sprite={sprite} size="var(--sprite-picker-card-size)" />
                             </div>
                           </Button>
                         ))}
