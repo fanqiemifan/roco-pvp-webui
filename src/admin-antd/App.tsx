@@ -180,7 +180,7 @@ const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     path: '/roco-pvp-page3.html',
   },
   page4: {
-    title: '推流页面4',
+    title: '仅显示阵容',
     fileName: 'roco-pvp-page4.html',
     path: '/roco-pvp-page4.html',
   },
@@ -1534,7 +1534,7 @@ function Dashboard() {
       mutatePage4Panel(side, (panel) => ({ ...panel, dirty: false, saving: false }));
 
       if (!silent) {
-        const nextText = `${side === 'left' ? '左侧' : '右侧'} page4 阵容已保存`;
+        const nextText = `${side === 'left' ? '左侧' : '右侧'} 仅显示阵容已保存`;
         setPage4Notice({ tone: 'success', text: nextText });
         message.success(nextText);
       }
@@ -1603,7 +1603,7 @@ function Dashboard() {
         quickFillMatches: matches,
         dirty: true,
       }));
-      message.success(`${side === 'left' ? '左侧' : '右侧'} page4 快速填充已应用到本地草稿`);
+      message.success(`${side === 'left' ? '左侧' : '右侧'} 仅显示阵容快速填充已应用到本地草稿`);
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
     }
@@ -2458,7 +2458,7 @@ function Dashboard() {
   const menuItems: MenuProps['items'] = [
     { key: 'roster', label: '赛事面板' },
     { key: 'live', label: '实时控制' },
-    { key: 'page4', label: 'page4 展示' },
+    { key: 'page4', label: '仅显示阵容' },
     { key: 'history', label: '比赛历史' },
     { key: 'scoreboard', label: '显示设置' },
     { key: 'background', label: '背景素材' },
@@ -2816,11 +2816,11 @@ function Dashboard() {
 
     return (
       <Card
-        title="page4 精灵阵亡控制"
+        title="仅显示阵容精灵阵亡控制"
         extra={<Text type="secondary">已选 {selectedCount} / 12 · 阵亡 {deadCount}</Text>}
       >
         <Space direction="vertical" size={12} className="control-stack">
-          <Paragraph type="secondary">点击已有精灵图片可切换阵亡状态，阵亡效果会同步应用到 page4 展示页。</Paragraph>
+          <Paragraph type="secondary">点击已有精灵图片可切换阵亡状态，阵亡效果会同步应用到仅显示阵容页。</Paragraph>
           <div className="page4-death-slot-grid">
             {entries.map(({ side, slot, index }) => {
               const isEmpty = !slot.sprite;
@@ -2877,7 +2877,7 @@ function Dashboard() {
     return (
       <Card
         className="panel-editor-card"
-        title={`${side === 'left' ? '左侧' : '右侧'} page4 阵容`}
+        title={`${side === 'left' ? '左侧' : '右侧'} 仅显示阵容`}
         extra={(
           <Space wrap>
             <Text type="secondary">已选 {summary.selectedCount} / 6</Text>
@@ -2925,7 +2925,7 @@ function Dashboard() {
                   ) : null}
                   <div>
                     <Text strong>快速文本填充</Text>
-                    <Paragraph type="secondary">一行一个精灵名，先生成 page4 本地草稿，再保存到展示页。</Paragraph>
+                    <Paragraph type="secondary">一行一个精灵名，先生成仅显示阵容本地草稿，再保存到展示页。</Paragraph>
                   </div>
                   <TextArea
                     rows={4}
@@ -3090,7 +3090,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? 'page4 展示' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'background' ? '背景素材' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'background' ? '背景素材' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -3650,7 +3650,7 @@ function Dashboard() {
                       { value: 'page1', label: '推流页面1' },
                       { value: 'page2', label: '推流页面2' },
                       { value: 'page3', label: '推流页面3' },
-                      { value: 'page4', label: '推流页面4' },
+                      { value: 'page4', label: '仅显示阵容' },
                       { value: 'standby', label: '等待页 Demo' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}
