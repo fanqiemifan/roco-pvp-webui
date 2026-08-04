@@ -1041,18 +1041,29 @@ a {
   background: #000;
 }
 
-.stage-card-thumb-frame-wrap {
+/* 缩略图缩放容器：尺寸 = 1920*scale × 1080*scale，裁剪溢出内容 */
+.stage-card-thumb-viewport {
   position: absolute;
   top: 0;
   left: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+/* 缩放舞台：固定 1920x1080，transform-origin top left，由父级 scale 等比缩小 */
+.stage-card-thumb-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
   transform-origin: top left;
-  pointer-events: none;
 }
 
 .stage-card-frame {
   display: block;
-  width: 1280px;
-  height: 720px;
+  width: 1920px;
+  height: 1080px;
   border: 0;
   background: #000;
 }

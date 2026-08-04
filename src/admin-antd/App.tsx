@@ -1003,8 +1003,8 @@ function findConfigTargetIndex(
   return fallbackIndex;
 }
 
-const STAGE_THUMB_INNER_WIDTH = 1280;
-const STAGE_THUMB_INNER_HEIGHT = 720;
+const STAGE_THUMB_INNER_WIDTH = 1920;
+const STAGE_THUMB_INNER_HEIGHT = 1080;
 
 function StageThumb({ label, previewPath }: { label: string; previewPath: string }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -1012,12 +1012,13 @@ function StageThumb({ label, previewPath }: { label: string; previewPath: string
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) {
+    if (!container || typeof ResizeObserver === 'undefined') {
       return;
     }
     const update = () => {
       const width = container.clientWidth;
       if (width > 0) {
+        // 容器为 16:9，与 1920x1080 同比例，按宽度等比缩放即可完整展示
         setScale(width / STAGE_THUMB_INNER_WIDTH);
       }
     };
@@ -1030,20 +1031,24 @@ function StageThumb({ label, previewPath }: { label: string; previewPath: string
   return (
     <div className="stage-card-thumb" ref={containerRef}>
       <div
-        className="stage-card-thumb-frame-wrap"
+        className="stage-card-thumb-viewport"
         style={{
-          width: STAGE_THUMB_INNER_WIDTH,
-          height: STAGE_THUMB_INNER_HEIGHT,
-          transform: `scale(${scale})`,
+          width: Math.floor(STAGE_THUMB_INNER_WIDTH * scale),
+          height: Math.floor(STAGE_THUMB_INNER_HEIGHT * scale),
         }}
       >
-        <iframe
-          title={label}
-          className="stage-card-frame"
-          src={`${getPreviewOrigin()}${previewPath}`}
-          scrolling="no"
-          loading="lazy"
-        />
+        <div
+          className="stage-card-thumb-stage"
+          style={{ transform: `scale(${scale})` }}
+        >
+          <iframe
+            title={label}
+            className="stage-card-frame"
+            src={`${getPreviewOrigin()}${previewPath}`}
+            scrolling="no"
+            loading="lazy"
+          />
+        </div>
       </div>
       <span className="stage-card-thumb-mark">{label}</span>
     </div>
