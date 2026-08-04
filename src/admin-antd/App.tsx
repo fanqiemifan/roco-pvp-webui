@@ -55,6 +55,8 @@ import type {
   ScoreboardState,
   SlotState,
   SpriteRecord,
+  StageConfig,
+  StagePageKey,
 } from '../../shared/types';
 
 const { Header, Sider, Content } = Layout;
@@ -62,7 +64,7 @@ const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
 
 type PanelSide = 'left' | 'right';
-type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'scoreboard' | 'background' | 'preview' | 'about';
+type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'scoreboard' | 'background' | 'preview' | 'stage' | 'about';
 
 type PreviewSlotKey = 'page1' | 'page2' | 'page3' | 'page4' | 'standby';
 
@@ -190,6 +192,54 @@ const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     path: '/live-standby-demo.html',
   },
 };
+
+const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; description: string; previewPath: string }> = [
+  {
+    value: 'page1-overlay',
+    label: '推流页面1（Overlay）',
+    description: '带比分栏 + 左右精灵槽的经典 Overlay 布局',
+    previewPath: '/roco-overlay.html',
+  },
+  {
+    value: 'page2',
+    label: '推流页面2',
+    description: '全局阵容展示（左右阵容 + 比分 + 赛事标题）',
+    previewPath: '/roco-pvp.html',
+  },
+  {
+    value: 'page3',
+    label: '推流页面3',
+    description: '头像比分阵容展示（带头像 VS 比分栏）',
+    previewPath: '/roco-pvp-page3.html',
+  },
+  {
+    value: 'page4',
+    label: '仅显示阵容',
+    description: '只展示双方阵容，无比分信息',
+    previewPath: '/roco-pvp-page4.html',
+  },
+  {
+    value: 'standby',
+    label: '等待页',
+    description: '直播等待 / 间歇展示页',
+    previewPath: '/live-standby-demo.html',
+  },
+  {
+    value: 'blank',
+    label: '黑场',
+    description: '不加载任何画面（切黑）',
+    previewPath: '',
+  },
+];
+
+const STAGE_VALUE_SET = new Set(STAGE_OPTIONS.map((option) => option.value));
+
+function normalizeStagePage(value: unknown): StagePageKey {
+  if (typeof value === 'string' && STAGE_VALUE_SET.has(value as StagePageKey)) {
+    return value as StagePageKey;
+  }
+  return 'page3';
+}
 
 const ATTRIBUTE_OPTIONS: AttributeOption[] = (attributeMapping as Array<{ 编号: string; 属性: string }>).map((item) => ({
   code: item.编号,
@@ -1003,6 +1053,8 @@ function Dashboard() {
   const [previewSlot, setPreviewSlot] = useState<PreviewSlotKey>('page1');
   const [previewScale, setPreviewScale] = useState(1);
   const [previewShellSize, setPreviewShellSize] = useState({ width: 960, height: 540 });
+  const [stage, setStage] = useState<StageConfig | null>(null);
+  const [stageSaving, setStageSaving] = useState(false);
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
   const [page4Notice, setPage4Notice] = useState<NoticeState>(null);
   const [historyNotice, setHistoryNotice] = useState<NoticeState>(null);
@@ -1108,6 +1160,7 @@ function Dashboard() {
     panel?: PanelState;
     page4?: Page4State;
     page4Panel?: Page4PanelState;
+    stage?: StageConfig;
   }) {
     startTransition(() => {
       if (payload.scoreboard) {
@@ -1142,6 +1195,9 @@ function Dashboard() {
       if (payload.page4Panel && (payload.page4Panel.position === 'left' || payload.page4Panel.position === 'right')) {
         syncPage4PanelFromApi(payload.page4Panel.position, payload.page4Panel);
       }
+      if (payload.stage) {
+        setStage(payload.stage);
+      }
     });
   }
 
@@ -1150,7 +1206,7 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextBackground, nextAvatars, nextPanels, nextPage4, nextSprites] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextBackground, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
@@ -1159,6 +1215,7 @@ function Dashboard() {
         requestJson<{ images: [PanelState, PanelState] }>('/api/images'),
         requestJson<Page4State>('/api/page4'),
         requestJson<{ sprites: SpriteRecord[] }>('/api/sprites'),
+        requestJson<StageConfig>('/api/stage'),
       ]);
 
       if (!auth.authenticated) {
@@ -1172,6 +1229,7 @@ function Dashboard() {
         setBackground(nextBackground);
         setAvatars(nextAvatars);
         setSprites(nextSprites.sprites);
+        setStage(nextStage);
         syncPanelFromApi('left', nextPanels.images[0]);
         syncPanelFromApi('right', nextPanels.images[1]);
         syncPage4PanelFromApi('left', nextPage4.panels[0]);
@@ -1272,6 +1330,12 @@ function Dashboard() {
     socket.on(SOCKET_EVENTS.avatarUpdate, (payload) => {
       if (payload?.avatars) {
         applyServerState({ avatars: payload.avatars });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.stageUpdate, (payload) => {
+      if (payload?.stage) {
+        applyServerState({ stage: payload.stage });
       }
     });
 
@@ -1927,6 +1991,35 @@ function Dashboard() {
     }
   }
 
+  async function saveStage(nextPage: StagePageKey, options?: { silent?: boolean }) {
+    const silent = options?.silent ?? false;
+    const normalized = normalizeStagePage(nextPage);
+    // 乐观更新，避免切换回弹
+    setStage((prev) => prev ? { ...prev, page: normalized } : prev);
+    setStageSaving(true);
+    try {
+      const data = await requestJson<{ success: boolean; stage: StageConfig }>('/api/stage', {
+        method: 'POST',
+        json: { page: normalized },
+      });
+      applyServerState({ stage: data.stage });
+      if (!silent) {
+        message.success(`已切换到：${STAGE_OPTIONS.find((option) => option.value === data.stage.page)?.label ?? data.stage.page}`);
+      }
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+      // 失败时回滚到当前已知值
+      try {
+        const fresh = await requestJson<StageConfig>('/api/stage');
+        setStage(fresh);
+      } catch {
+        // ignore
+      }
+    } finally {
+      setStageSaving(false);
+    }
+  }
+
   async function saveMatchTags(matchId: string, tags: string[]) {
     const nextTags = Array.from(new Set(tags.map((item) => item.trim()).filter(Boolean))).slice(0, 10);
 
@@ -2033,6 +2126,16 @@ function Dashboard() {
     try {
       await copyText(buildPreviewUrl(previewSlot));
       message.success('预览链接已复制');
+    } catch {
+      message.error('复制失败，请手动复制');
+    }
+  }
+
+  async function handleCopyStageLocalAddress() {
+    const host = window.location.port ? `127.0.0.1:${window.location.port}` : '127.0.0.1';
+    try {
+      await copyText(`${host}/`);
+      message.success('载体页地址已复制');
     } catch {
       message.error('复制失败，请手动复制');
     }
@@ -2462,6 +2565,7 @@ function Dashboard() {
     { key: 'history', label: '比赛历史' },
     { key: 'scoreboard', label: '显示设置' },
     { key: 'background', label: '背景素材' },
+    { key: 'stage', label: '推流页面1设置' },
     { key: 'preview', label: '页面预览' },
     { key: 'about', label: '关于项目' },
   ];
@@ -3090,7 +3194,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'background' ? '背景素材' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'background' ? '背景素材' : view === 'stage' ? '推流页面1设置（导播台）' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -3634,6 +3738,67 @@ function Dashboard() {
                 </Col>
               </Row>
             </Card>
+          ) : null}
+
+          {view === 'stage' ? (
+            <Space direction="vertical" size={18} className="page-stack">
+              <Card
+                className="stage-control-card"
+                title="推流页面1设置（导播台）"
+                extra={
+                  <Space wrap>
+                    <Button href="/" target="_blank">打开载体页</Button>
+                    <Button onClick={handleCopyStageLocalAddress}>复制载体页地址</Button>
+                  </Space>
+                }
+              >
+                <Space direction="vertical" size={16} className="page-stack">
+                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                    推流软件（OBS 等）只需固定捕获根路径 <code>/</code>。在此切换后，载体页会实时加载所选画面，无需修改推流来源。
+                  </Paragraph>
+                  <Segmented
+                    block
+                    value={stage?.page ?? 'page3'}
+                    disabled={stageSaving}
+                    options={STAGE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                    onChange={(value) => { void saveStage(value as StagePageKey); }}
+                  />
+                  <Row gutter={[16, 16]}>
+                    {STAGE_OPTIONS.map((option) => {
+                      const active = (stage?.page ?? null) === option.value;
+                      const isBlank = option.value === 'blank';
+                      return (
+                        <Col xs={24} sm={12} md={8} key={option.value}>
+                          <Card
+                            size="small"
+                            hoverable
+                            className={`stage-card ${active ? 'stage-card-active' : ''} ${isBlank ? 'stage-card-blank' : ''}`}
+                            onClick={() => void saveStage(option.value)}
+                          >
+                            <Space direction="vertical" size={6} className="page-stack" style={{ width: '100%' }}>
+                              <Space style={{ justifyContent: 'space-between', width: '100%' }}>
+                                <Text strong>{option.label}</Text>
+                                {active ? <Tag color="green">当前画面</Tag> : null}
+                              </Space>
+                              <Text type="secondary" style={{ fontSize: 12 }}>{option.description}</Text>
+                              {isBlank ? (
+                                <div className="stage-card-thumb stage-card-thumb-blank">
+                                  <span className="stage-card-thumb-mark">黑场</span>
+                                </div>
+                              ) : (
+                                <div className={`stage-card-thumb stage-card-thumb-${option.value}`}>
+                                  <span className="stage-card-thumb-mark">{option.label}</span>
+                                </div>
+                              )}
+                            </Space>
+                          </Card>
+                        </Col>
+                      );
+                    })}
+                  </Row>
+                </Space>
+              </Card>
+            </Space>
           ) : null}
 
           {view === 'preview' ? (

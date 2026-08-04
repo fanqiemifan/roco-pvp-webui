@@ -22,6 +22,10 @@ import {
 } from './services/image-service.js';
 import { loadRuntimeConfig, saveRuntimeConfig } from './services/config-service.js';
 import {
+  getStageState,
+  saveStageState,
+} from './services/stage-service.js';
+import {
   clearPage4State,
   getPage4State,
   savePage4SlotState,
@@ -75,6 +79,7 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     background: getBackgroundState(paths),
     avatars: getAvatarStates(paths),
     matches: getMatchStore(paths),
+    stage: getStageState(paths),
   };
 }
 
@@ -258,6 +263,7 @@ export async function createLocalServer(
   app.get('/page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
   app.get('/roco-pvp-page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
   app.get('/live-standby-demo.html', (_request, response) => sendPage(paths, response, 'live-standby-demo.html'));
+  app.get('/roco-overlay.html', (_request, response) => sendPage(paths, response, 'roco-overlay.html'));
 
   // Auth API — always public
   app.post('/api/auth/login', async (req, res) => {
@@ -309,7 +315,7 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/live-standby-demo.html'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/live-standby-demo.html', '/roco-overlay.html'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 
@@ -346,6 +352,20 @@ export async function createLocalServer(
 
   app.get('/api/page4', (_request, response) => {
     response.json(getPage4State(paths));
+  });
+
+  app.get('/api/stage', (_request, response) => {
+    response.json(getStageState(paths));
+  });
+
+  app.post('/api/stage', (request, response) => {
+    try {
+      const stage = saveStageState(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.stageUpdate, { stage });
+      response.json({ success: true, stage });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
   });
 
   app.get('/api/matches', (_request, response) => {

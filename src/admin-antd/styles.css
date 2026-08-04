@@ -1001,3 +1001,66 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* 推流页面1设置（导播台） */
+.stage-control-card .ant-segmented {
+  --ant-segmented-item-selected-color: #fff;
+}
+
+.stage-card {
+  border: 1px solid rgba(91, 67, 43, 0.14);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.stage-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(90, 55, 26, 0.16);
+}
+
+.stage-card-active {
+  border-color: #c7632f;
+  box-shadow: 0 0 0 2px rgba(199, 99, 47, 0.32), 0 12px 28px rgba(90, 55, 26, 0.16);
+}
+
+.stage-card-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(91, 67, 43, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage-card-thumb-blank {
+  background: #000;
+}
+
+.stage-card-thumb-page1-overlay {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+}
+.stage-card-thumb-page2 {
+  background: linear-gradient(135deg, #2d3a2a 0%, #1f2818 100%);
+}
+.stage-card-thumb-page3 {
+  background: linear-gradient(135deg, #3a2a2a 0%, #2a1f1f 100%);
+}
+.stage-card-thumb-page4 {
+  background: linear-gradient(135deg, #2a2f3a 0%, #1a1f28 100%);
+}
+.stage-card-thumb-standby {
+  background: linear-gradient(135deg, #3a352a 0%, #28251f 100%);
+}
+
+.stage-card-thumb-mark {
+  font: 600 14px/1.4 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.62);
+  text-align: center;
+  padding: 0 12px;
+}
