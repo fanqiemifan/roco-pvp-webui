@@ -62,10 +62,11 @@
         carrier.setAttribute('data-stage', page || 'blank');
     }
 
-    function setBlank(text) {
+    function setBlank() {
         currentPage = 'blank';
         frame.classList.add('is-hidden');
-        applyFallback(true, text || '当前为黑场');
+        // 黑场：完全透明，不显示任何提示
+        applyFallback(false, '');
         setCarrierStage('blank');
     }
 
@@ -75,7 +76,7 @@
         var nextKey = page || DEFAULT_PAGE;
 
         if (stage.path === null) {
-            setBlank('当前为黑场');
+            setBlank();
             return;
         }
 
@@ -183,8 +184,8 @@
             console.error('推流载体 DOM 节点缺失');
             return;
         }
-        // 初始占位
-        setBlank('正在等待导播画面…');
+        // 初始占位：保持透明，等待导播画面加载
+        setBlank();
         loadInitialState();
         connectSocket();
     }
