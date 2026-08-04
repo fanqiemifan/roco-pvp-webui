@@ -1003,6 +1003,53 @@ function findConfigTargetIndex(
   return fallbackIndex;
 }
 
+const STAGE_THUMB_INNER_WIDTH = 1280;
+const STAGE_THUMB_INNER_HEIGHT = 720;
+
+function StageThumb({ label, previewPath }: { label: string; previewPath: string }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = useState(0);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+    const update = () => {
+      const width = container.clientWidth;
+      if (width > 0) {
+        setScale(width / STAGE_THUMB_INNER_WIDTH);
+      }
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className="stage-card-thumb" ref={containerRef}>
+      <div
+        className="stage-card-thumb-frame-wrap"
+        style={{
+          width: STAGE_THUMB_INNER_WIDTH,
+          height: STAGE_THUMB_INNER_HEIGHT,
+          transform: `scale(${scale})`,
+        }}
+      >
+        <iframe
+          title={label}
+          className="stage-card-frame"
+          src={`${getPreviewOrigin()}${previewPath}`}
+          scrolling="no"
+          loading="lazy"
+        />
+      </div>
+      <span className="stage-card-thumb-mark">{label}</span>
+    </div>
+  );
+}
+
 function Dashboard() {
   const { message, modal } = App.useApp();
   const [view, setView] = useState<ViewKey>('roster');
@@ -3786,9 +3833,7 @@ function Dashboard() {
                                   <span className="stage-card-thumb-mark">黑场</span>
                                 </div>
                               ) : (
-                                <div className={`stage-card-thumb stage-card-thumb-${option.value}`}>
-                                  <span className="stage-card-thumb-mark">{option.label}</span>
-                                </div>
+                                <StageThumb label={option.label} previewPath={option.previewPath} />
                               )}
                             </Space>
                           </Card>

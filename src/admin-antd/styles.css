@@ -1032,35 +1032,47 @@ a {
   overflow: hidden;
   background: #000;
   border: 1px solid rgba(91, 67, 43, 0.14);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .stage-card-thumb-blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #000;
 }
 
-.stage-card-thumb-page1-overlay {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+.stage-card-thumb-frame-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  pointer-events: none;
 }
-.stage-card-thumb-page2 {
-  background: linear-gradient(135deg, #2d3a2a 0%, #1f2818 100%);
-}
-.stage-card-thumb-page3 {
-  background: linear-gradient(135deg, #3a2a2a 0%, #2a1f1f 100%);
-}
-.stage-card-thumb-page4 {
-  background: linear-gradient(135deg, #2a2f3a 0%, #1a1f28 100%);
-}
-.stage-card-thumb-standby {
-  background: linear-gradient(135deg, #3a352a 0%, #28251f 100%);
+
+.stage-card-frame {
+  display: block;
+  width: 1280px;
+  height: 720px;
+  border: 0;
+  background: #000;
 }
 
 .stage-card-thumb-mark {
-  font: 600 14px/1.4 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  font: 600 12px/1.4 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
   letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.62);
-  text-align: center;
-  padding: 0 12px;
+  color: rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.stage-card-thumb-blank .stage-card-thumb-mark {
+  position: static;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
 }

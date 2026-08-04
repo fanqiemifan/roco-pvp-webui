@@ -120,7 +120,15 @@
         if (!payload || typeof payload !== 'object') {
             return;
         }
-        var page = payload.page || payload.stagePage;
+        // 后端广播 stage:update 的 payload 形如 { stage: { page: 'page2' } }；
+        // GET /api/stage 返回顶层 { page: 'page2' }。两种结构都要兼容。
+        var page = null;
+        if (payload.stage && typeof payload.stage === 'object') {
+            page = payload.stage.page || payload.stage.stagePage;
+        }
+        if (page === undefined || page === null || page === '') {
+            page = payload.page || payload.stagePage;
+        }
         if (page === undefined || page === null || page === '') {
             return;
         }
