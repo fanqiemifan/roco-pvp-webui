@@ -28,3 +28,12 @@ export const SUPPORTED_STAGE_PAGES = new Set([
   'standby',
   'blank',
 ]);
+
+/**
+ * 导播台切换过渡效果集合：
+ * - none: 无过渡（直接切换）
+ * - blinds: 双向百叶窗
+ * - zoom: 缩放冲击（中心脉冲）
+ */
+export const DEFAULT_STAGE_TRANSITION = 'blinds';
+export const SUPPORTED_STAGE_TRANSITIONS = new Set(['none', 'blinds', 'zoom']);

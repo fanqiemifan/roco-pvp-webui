@@ -20,3 +20,4 @@ src/pages/match-result.html
 scripts/deploy-prod.sh
 /release-new
 /.reasonix
+transition-demo.html

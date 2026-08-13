@@ -83,3 +83,154 @@ body {
 .stage-carrier[data-stage="blank"] .stage-frame {
     opacity: 0;
 }
+
+/* ============ 导播台切换过渡动画层 ============ */
+/* 覆盖在新旧画面之上的全屏过渡层：切换时播放动画遮盖换画过程，动画结束自动消失。 */
+.stage-transition {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.stage-transition.is-running {
+    opacity: 1;
+}
+
+/* 暖色调色板（贴近 #F2ECDF 的米白暖色系） */
+.stage-transition {
+    --fx-warm: #f2ecdf;
+    --fx-warm-deep: #e7dcc6;
+    --fx-warm-ink: #3a342a;
+}
+
+/* 1. 百叶窗：多列竖向百叶交替展开 */
+.stage-transition.fx-blinds {
+    display: flex;
+}
+
+.stage-transition.fx-blinds .fx-blind {
+    flex: 1;
+    height: 100%;
+    background: var(--fx-warm);
+    transform: scaleY(0);
+    transform-origin: center bottom;
+    border-right: 1px solid rgba(58, 52, 42, 0.05);
+}
+
+.stage-transition.fx-blinds.is-running .fx-blind {
+    animation: fxblind-open 620ms cubic-bezier(0.5, 0, 0.3, 1) forwards;
+}
+
+.stage-transition.fx-blinds .fx-blind:nth-child(even) {
+    transform-origin: center top;
+}
+
+@keyframes fxblind-open {
+    0% {
+        transform: scaleY(0);
+    }
+    62% {
+        transform: scaleY(1);
+    }
+    100% {
+        transform: scaleY(1);
+        opacity: 0;
+    }
+}
+
+/* 2. 缩放冲击：中心光晕扩散 + 中心 Logo 脉冲 */
+.stage-transition.fx-zoom {
+    overflow: hidden;
+}
+
+.stage-transition.fx-zoom .fx-zoom-flash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        circle at 50% 50%,
+        var(--fx-warm) 0%,
+        var(--fx-warm-deep) 42%,
+        rgba(231, 220, 198, 0.95) 100%
+    );
+    transform: scale(0.25);
+    opacity: 0;
+}
+
+.stage-transition.fx-zoom .fx-zoom-flash::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        circle at 50% 50%,
+        rgba(255, 255, 255, 0.9) 0%,
+        transparent 26%
+    );
+}
+
+.stage-transition.fx-zoom .fx-zoom-logo {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fx-warm-ink);
+    font-size: 96px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-shadow: 0 2px 24px rgba(58, 52, 42, 0.25);
+    transform: scale(0.6);
+    opacity: 0;
+}
+
+.stage-transition.fx-zoom .fx-zoom-logo-typography {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.stage-transition.fx-zoom .fx-zoom-logo-sub {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.5em;
+    opacity: 0.72;
+}
+
+.stage-transition.fx-zoom.is-running .fx-zoom-flash {
+    animation: fxzoom-flash 720ms cubic-bezier(0.2, 0, 0.3, 1) forwards;
+}
+
+.stage-transition.fx-zoom.is-running .fx-zoom-logo {
+    animation: fxzoom-logo 720ms ease forwards;
+}
+
+@keyframes fxzoom-flash {
+    0% {
+        transform: scale(0.2);
+        opacity: 0;
+    }
+    32% {
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes fxzoom-logo {
+    0% {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+    40% {
+        transform: scale(1.06);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}

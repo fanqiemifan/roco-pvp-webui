@@ -149,8 +149,11 @@ export type StagePageKey =
   | 'standby'
   | 'blank';
 
+export type StageTransitionType = 'none' | 'blinds' | 'zoom';
+
 export interface StageConfig {
   page: StagePageKey;
+  transition: StageTransitionType;
   mtime: number | null;
 }
 

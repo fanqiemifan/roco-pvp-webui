@@ -56,6 +56,7 @@ import type {
   SpriteRecord,
   StageConfig,
   StagePageKey,
+  StageTransitionType,
 } from '../../shared/types';
 
 const { Header, Sider, Content } = Layout;
@@ -228,6 +229,19 @@ const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; description: st
 ];
 
 const STAGE_VALUE_SET = new Set(STAGE_OPTIONS.map((option) => option.value));
+
+const STAGE_TRANSITION_OPTIONS: Array<{ value: StageTransitionType; label: string }> = [
+  { value: 'blinds', label: '百叶窗' },
+  { value: 'zoom', label: '缩放冲击' },
+  { value: 'none', label: '无过渡' },
+];
+
+function normalizeStageTransition(value: unknown): StageTransitionType {
+  if (typeof value === 'string' && STAGE_TRANSITION_OPTIONS.some((option) => option.value === value)) {
+    return value as StageTransitionType;
+  }
+  return 'blinds';
+}
 
 function normalizeStagePage(value: unknown): StagePageKey {
   if (typeof value === 'string' && STAGE_VALUE_SET.has(value as StagePageKey)) {
@@ -2021,16 +2035,20 @@ function Dashboard() {
     }
   }
 
-  async function saveStage(nextPage: StagePageKey, options?: { silent?: boolean }) {
+  async function saveStage(
+    nextPage: StagePageKey,
+    options?: { silent?: boolean; transition?: StageTransitionType },
+  ) {
     const silent = options?.silent ?? false;
     const normalized = normalizeStagePage(nextPage);
+    const transition = normalizeStageTransition(options?.transition ?? stage?.transition);
     // 乐观更新，避免切换回弹
-    setStage((prev) => prev ? { ...prev, page: normalized } : prev);
+    setStage((prev) => (prev ? { ...prev, page: normalized, transition } : prev));
     setStageSaving(true);
     try {
       const data = await requestJson<{ success: boolean; stage: StageConfig }>('/api/stage', {
         method: 'POST',
-        json: { page: normalized },
+        json: { page: normalized, transition },
       });
       applyServerState({ stage: data.stage });
       if (!silent) {
@@ -3716,6 +3734,16 @@ function Dashboard() {
                   <Paragraph type="secondary" style={{ marginBottom: 0 }}>
                     推流软件（OBS 等）只需固定捕获根路径 <code>/</code>。在此切换后，推流页面会实时加载所选画面，无需修改推流来源。
                   </Paragraph>
+                  <div>
+                    <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>切换过渡效果：</Text>
+                    <Segmented
+                      block
+                      value={normalizeStageTransition(stage?.transition)}
+                      disabled={stageSaving}
+                      options={STAGE_TRANSITION_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                      onChange={(value) => { void saveStage(stage?.page ?? 'page3', { transition: value as StageTransitionType }); }}
+                    />
+                  </div>
                   <Segmented
                     block
                     value={stage?.page ?? 'page3'}
