@@ -764,9 +764,15 @@ export async function createLocalServer(
       return;
     }
 
-    const avatar = saveAvatar(paths, side, request.file.buffer, request.file.mimetype);
-    io.emit(SOCKET_EVENTS.avatarUpdate, { side, avatar, avatars: getAvatarStates(paths) });
-    response.json({ success: true, side, avatar });
+    try {
+      // saveAvatar now validates the payload's magic bytes and only accepts
+      // real raster images, so HTML/etc. payloads are rejected before storage.
+      const avatar = saveAvatar(paths, side, request.file.buffer);
+      io.emit(SOCKET_EVENTS.avatarUpdate, { side, avatar, avatars: getAvatarStates(paths) });
+      response.json({ success: true, side, avatar });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
   });
 
   app.delete('/api/delete/avatar/:side', (request, response) => {
