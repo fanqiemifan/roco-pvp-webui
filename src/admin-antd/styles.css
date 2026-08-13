@@ -993,7 +993,7 @@ a {
 
 /* 导播台 */
 .stage-control-card .ant-segmented {
-  --ant-segmented-item-selected-color: #fff;
+  --ant-segmented-item-selected-color: #2f2418;
 }
 
 .stage-card {

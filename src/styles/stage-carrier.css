@@ -120,7 +120,7 @@ body {
 }
 
 .stage-transition.fx-blinds.is-running .fx-blind {
-    animation: fxblind-open 620ms cubic-bezier(0.5, 0, 0.3, 1) forwards;
+    animation: fxblind-open 620ms ease-in forwards;
 }
 
 .stage-transition.fx-blinds .fx-blind:nth-child(even) {
@@ -199,11 +199,11 @@ body {
 }
 
 .stage-transition.fx-zoom.is-running .fx-zoom-flash {
-    animation: fxzoom-flash 720ms cubic-bezier(0.2, 0, 0.3, 1) forwards;
+    animation: fxzoom-flash 720ms ease-in forwards;
 }
 
 .stage-transition.fx-zoom.is-running .fx-zoom-logo {
-    animation: fxzoom-logo 720ms ease forwards;
+    animation: fxzoom-logo 720ms ease-in forwards;
 }
 
 @keyframes fxzoom-flash {
