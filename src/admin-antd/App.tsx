@@ -2568,11 +2568,11 @@ function Dashboard() {
 
   const menuItems: MenuProps['items'] = [
     { key: 'roster', label: '赛事面板' },
+    { key: 'stage', label: '导播台' },
     { key: 'live', label: '实时控制' },
     { key: 'page4', label: '仅显示阵容' },
     { key: 'history', label: '比赛历史' },
     { key: 'scoreboard', label: '显示设置' },
-    { key: 'stage', label: '导播台' },
     { key: 'preview', label: '页面预览' },
     { key: 'about', label: '关于项目' },
   ];
