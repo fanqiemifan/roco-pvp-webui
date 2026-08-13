@@ -869,17 +869,6 @@ a {
   font-size: 12px;
 }
 
-.background-actions {
-  margin-top: 16px;
-}
-
-.background-preview-image {
-  width: 100%;
-  max-height: 420px;
-  object-fit: cover;
-  border-radius: 12px;
-}
-
 .preview-frame-shell {
   position: relative;
   width: 100%;
@@ -1002,7 +991,7 @@ a {
   }
 }
 
-/* 推流页面1设置（导播台） */
+/* 导播台 */
 .stage-control-card .ant-segmented {
   --ant-segmented-item-selected-color: #fff;
 }

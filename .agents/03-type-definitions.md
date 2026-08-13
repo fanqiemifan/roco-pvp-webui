@@ -19,7 +19,7 @@
 
 | 类型名称 | 说明 | 文件 |
 |---------|------|------|
-| ScoreboardState | 记分牌状态（leftName, leftScore, rightName, rightScore, bestOf, scoreboardEnabled, healthBadgeEnabled, abilityBadgeEnabled, eventTitle, eventTitleEnabled, page2LineupDisplayMode, nameFontSize, scoreFontSize, centerAreaEnabled, centerAreaColor, mtime） | shared/types.ts |
+| ScoreboardState | 记分牌状态（leftName, leftScore, rightName, rightScore, bestOf, scoreboardEnabled, eventTitle, eventTitleEnabled, page2LineupDisplayMode, nameFontSize, scoreFontSize, mtime） | shared/types.ts |
 
 ## 比赛记录
 
@@ -30,11 +30,10 @@
 | MatchRecord | 完整比赛记录（id, createdAt, updatedAt, status, leftPlayer, rightPlayer, bestOf, games, leftScore, rightScore, winner, completedAt, tags） | shared/types.ts |
 | MatchStoreState | 比赛存储状态（matches, activeMatchId, mtime） | shared/types.ts |
 
-## 背景和头像
+## 头像
 
 | 类型名称 | 说明 | 文件 |
 |---------|------|------|
-| BackgroundState | 背景图状态（exists, path, size, mtime） | shared/types.ts |
 | AvatarState | 单个头像状态（side, exists, path, size, mtime） | shared/types.ts |
 | AvatarCollectionState | 左右头像集合（left, right） | shared/types.ts |
 
@@ -42,5 +41,5 @@
 
 | 类型名称 | 说明 | 文件 |
 |---------|------|------|
-| SnapshotPayload | Socket 快照负载（leftPanel, rightPanel, scoreboard, background, avatars, matches） | shared/types.ts |
+| SnapshotPayload | Socket 快照负载（panels, page4, scoreboard, avatars, matches, stage） | shared/types.ts |
 | SOCKET_EVENTS | Socket 事件名称常量对象 | shared/events.ts |

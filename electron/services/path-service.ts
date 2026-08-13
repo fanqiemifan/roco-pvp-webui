@@ -13,7 +13,6 @@ export interface AppPaths {
   dataDir: string;
   runtimeDir: string;
   cacheDir: string;
-  backgroundFile: string;
   leftAvatarFile: string;
   rightAvatarFile: string;
   leftAvatarMetaFile: string;
@@ -43,7 +42,6 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     dataDir: path.join(projectRoot, 'resources', 'data'),
     runtimeDir,
     cacheDir,
-    backgroundFile: path.join(cacheDir, 'background.png'),
     leftAvatarFile: path.join(cacheDir, 'left-avatar.png'),
     rightAvatarFile: path.join(cacheDir, 'right-avatar.png'),
     leftAvatarMetaFile: path.join(cacheDir, 'left-avatar.json'),

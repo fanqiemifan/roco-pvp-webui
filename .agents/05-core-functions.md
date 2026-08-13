@@ -50,9 +50,6 @@
 
 | 自然语言描述 | 函数名 | 签名 | 说明 |
 |-------------|-------|------|------|
-| 获取背景状态 | getBackgroundState | (paths: AppPaths) => BackgroundState | 获取背景状态 |
-| 上传背景图 | saveBackground | (paths: AppPaths, buffer: Buffer) => BackgroundState | 保存背景图 |
-| 删除背景图 | deleteBackground | (paths: AppPaths) => BackgroundState | 删除背景图 |
 | 获取单个头像状态 | getAvatarState | (paths: AppPaths, side: 'left' | 'right') => AvatarState | 获取单个头像状态 |
 | 获取双头像状态 | getAvatarStates | (paths: AppPaths) => AvatarCollectionState | 获取双头像状态 |
 | 上传头像 | saveAvatar | (paths: AppPaths, side: 'left' | 'right', buffer: Buffer, mimeType?: string) => AvatarState | 保存头像 |

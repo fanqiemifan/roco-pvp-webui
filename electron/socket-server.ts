@@ -11,9 +11,6 @@ import { SOCKET_EVENTS } from '../shared/events.js';
 import type { SnapshotPayload } from '../shared/types.js';
 import { buildQuickFillPreview, listSprites, spriteMatchesKeyword } from './services/sprite-service.js';
 import {
-  getBackgroundState,
-  saveBackground,
-  deleteBackground,
   ensureRuntimeDirs,
   getAvatarStates,
   saveAvatar,
@@ -76,7 +73,6 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     panels: [getPanelState(paths, 'left'), getPanelState(paths, 'right')],
     page4: getPage4State(paths),
     scoreboard: getScoreboardState(paths),
-    background: getBackgroundState(paths),
     avatars: getAvatarStates(paths),
     matches: getMatchStore(paths),
     stage: getStageState(paths),
@@ -336,10 +332,6 @@ export async function createLocalServer(
 
   app.get('/api/images', (_request, response) => {
     response.json({ images: [getPanelState(paths, 'left'), getPanelState(paths, 'right')] });
-  });
-
-  app.get('/api/background', (_request, response) => {
-    response.json(getBackgroundState(paths));
   });
 
   app.get('/api/avatars', (_request, response) => {
@@ -761,23 +753,6 @@ export async function createLocalServer(
     }
   });
 
-  app.post('/api/upload/background', upload.single('file'), (request, response) => {
-    if (!request.file?.buffer) {
-      response.status(400).json({ success: false, error: 'No file data' });
-      return;
-    }
-
-    const background = saveBackground(paths, request.file.buffer);
-    io.emit(SOCKET_EVENTS.backgroundUpdate, { background });
-    response.json({ success: true, ...background });
-  });
-
-  app.delete('/api/delete/background', (_request, response) => {
-    const background = deleteBackground(paths);
-    io.emit(SOCKET_EVENTS.backgroundUpdate, { background });
-    response.json({ success: true, position: 'background', background });
-  });
-
   app.post('/api/upload/avatar/:side', upload.single('file'), (request, response) => {
     const side = request.params.side;
     if (side !== 'left' && side !== 'right') {
@@ -815,14 +790,6 @@ export async function createLocalServer(
       port: Number(request.body?.port),
     });
     response.json({ success: true, config });
-  });
-
-  app.get('/cache/background.png', (_request, response) => {
-    if (!fs.existsSync(paths.backgroundFile)) {
-      response.status(404).end();
-      return;
-    }
-    response.sendFile(paths.backgroundFile);
   });
 
   app.get('/api/avatar/left-avatar.png', (_request, response) => {

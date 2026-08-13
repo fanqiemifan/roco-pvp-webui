@@ -3,7 +3,6 @@ import path from 'node:path';
 
 import {
   DEFAULT_BEST_OF,
-  DEFAULT_CENTER_AREA_COLOR,
   DEFAULT_ENERGY_VALUE,
   DEFAULT_EVENT_TITLE,
   DEFAULT_HEALTH_PERCENT,
@@ -73,15 +72,6 @@ function normalizeBool(value: unknown, defaultValue = true): boolean {
     const lowered = value.trim().toLowerCase();
     if (['true', '1', 'yes', 'on'].includes(lowered)) return true;
     if (['false', '0', 'no', 'off'].includes(lowered)) return false;
-  }
-  return defaultValue;
-}
-
-function normalizeHexColor(value: unknown, defaultValue = DEFAULT_CENTER_AREA_COLOR): string {
-  if (typeof value !== 'string') return defaultValue;
-  const text = value.trim();
-  if (/^#[0-9a-fA-F]{6}$/.test(text)) {
-    return text.toUpperCase();
   }
   return defaultValue;
 }
@@ -171,15 +161,11 @@ function defaultScoreboardState(): ScoreboardState {
     rightScore: '0',
     bestOf: DEFAULT_BEST_OF,
     scoreboardEnabled: true,
-    healthBadgeEnabled: true,
-    abilityBadgeEnabled: true,
     eventTitle: DEFAULT_EVENT_TITLE,
     eventTitleEnabled: true,
     page2LineupDisplayMode: 'default',
     nameFontSize: 64,
     scoreFontSize: 64,
-    centerAreaEnabled: true,
-    centerAreaColor: DEFAULT_CENTER_AREA_COLOR,
     mtime: null,
   };
 }
@@ -272,15 +258,11 @@ export function getScoreboardState(paths: AppPaths): ScoreboardState {
       rightScore: normalizeScoreboardScore(metadata.rightScore),
       bestOf: normalizeBestOf(metadata.bestOf),
       scoreboardEnabled: normalizeBool(metadata.scoreboardEnabled, true),
-      healthBadgeEnabled: normalizeBool(metadata.healthBadgeEnabled, true),
-      abilityBadgeEnabled: normalizeBool(metadata.abilityBadgeEnabled, true),
       eventTitle: normalizeScoreboardText(metadata.eventTitle ?? DEFAULT_EVENT_TITLE, 40),
       eventTitleEnabled: normalizeBool(metadata.eventTitleEnabled, true),
       page2LineupDisplayMode: normalizePage2LineupDisplayMode(metadata.page2LineupDisplayMode),
       nameFontSize: normalizeFontSize(metadata.nameFontSize, 64),
       scoreFontSize: normalizeFontSize(metadata.scoreFontSize, 64),
-      centerAreaEnabled: normalizeBool(metadata.centerAreaEnabled, true),
-      centerAreaColor: normalizeHexColor(metadata.centerAreaColor, DEFAULT_CENTER_AREA_COLOR),
       mtime: stat.mtimeMs,
     };
   } catch {
@@ -303,15 +285,11 @@ export function saveScoreboardState(paths: AppPaths, payload: unknown): Scoreboa
     rightScore: normalizeScoreboardScore(raw.rightScore),
     bestOf: normalizeBestOf(raw.bestOf),
     scoreboardEnabled: normalizeBool(raw.scoreboardEnabled, true),
-    healthBadgeEnabled: normalizeBool(raw.healthBadgeEnabled, true),
-    abilityBadgeEnabled: normalizeBool(raw.abilityBadgeEnabled, true),
     eventTitle: normalizeScoreboardText(raw.eventTitle ?? DEFAULT_EVENT_TITLE, 40),
     eventTitleEnabled: normalizeBool(raw.eventTitleEnabled, true),
     page2LineupDisplayMode: normalizePage2LineupDisplayMode(raw.page2LineupDisplayMode),
     nameFontSize: normalizeFontSize(raw.nameFontSize, 64),
     scoreFontSize: normalizeFontSize(raw.scoreFontSize, 64),
-    centerAreaEnabled: normalizeBool(raw.centerAreaEnabled, true),
-    centerAreaColor: normalizeHexColor(raw.centerAreaColor, DEFAULT_CENTER_AREA_COLOR),
   };
 
   fs.writeFileSync(paths.scoreboardFile, JSON.stringify(metadata, null, 2), 'utf-8');

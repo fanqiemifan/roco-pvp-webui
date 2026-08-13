@@ -62,15 +62,11 @@ export interface ScoreboardState {
   rightScore: string;
   bestOf: number;
   scoreboardEnabled: boolean;
-  healthBadgeEnabled: boolean;
-  abilityBadgeEnabled: boolean;
   eventTitle: string;
   eventTitleEnabled: boolean;
   page2LineupDisplayMode: 'default' | 'avatar-only';
   nameFontSize: number;
   scoreFontSize: number;
-  centerAreaEnabled: boolean;
-  centerAreaColor: string;
   mtime: number | null;
 }
 
@@ -123,13 +119,6 @@ export interface MatchStoreState {
   mtime: number | null;
 }
 
-export interface BackgroundState {
-  exists: boolean;
-  path?: string;
-  size?: number;
-  mtime?: number;
-}
-
 export interface AvatarState {
   side: 'left' | 'right';
   exists: boolean;
@@ -169,7 +158,6 @@ export interface SnapshotPayload {
   panels: [PanelState, PanelState];
   page4: Page4State;
   scoreboard: ScoreboardState;
-  background: BackgroundState;
   avatars: AvatarCollectionState;
   matches: MatchStoreState;
   stage: StageConfig;

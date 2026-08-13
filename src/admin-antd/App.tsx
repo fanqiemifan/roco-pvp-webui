@@ -43,7 +43,6 @@ import attributeMapping from '../../resources/data/attribute_mapping.json';
 import { SOCKET_EVENTS } from '../../shared/events';
 import type {
   AvatarCollectionState,
-  BackgroundState,
   GameRecord,
   MatchRecord,
   MatchStoreState,
@@ -64,7 +63,7 @@ const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
 
 type PanelSide = 'left' | 'right';
-type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'scoreboard' | 'background' | 'preview' | 'stage' | 'about';
+type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'scoreboard' | 'preview' | 'stage' | 'about';
 
 type PreviewSlotKey = 'page1' | 'page2' | 'page3' | 'page4' | 'standby';
 
@@ -83,10 +82,6 @@ type CreateMatchValues = MatchFormValues;
 
 type ScoreboardFormValues = {
   scoreboardEnabled: boolean;
-  healthBadgeEnabled: boolean;
-  abilityBadgeEnabled: boolean;
-  centerAreaEnabled: boolean;
-  centerAreaColor: string;
   eventTitleEnabled: boolean;
   eventTitle: string;
   page2LineupDisplayMode: 'default' | 'avatar-only';
@@ -1073,7 +1068,6 @@ function Dashboard() {
     },
     mtime: null,
   });
-  const [background, setBackground] = useState<BackgroundState>({ exists: false });
   const [avatars, setAvatars] = useState<AvatarCollectionState>({
     left: { side: 'left', exists: false },
     right: { side: 'right', exists: false },
@@ -1206,7 +1200,6 @@ function Dashboard() {
   function applyServerState(payload: {
     scoreboard?: ScoreboardState;
     matches?: MatchStoreState;
-    background?: BackgroundState;
     avatars?: AvatarCollectionState;
     panels?: PanelState[];
     panel?: PanelState;
@@ -1220,9 +1213,6 @@ function Dashboard() {
       }
       if (payload.matches) {
         setMatchStore(payload.matches);
-      }
-      if (payload.background) {
-        setBackground(payload.background);
       }
       if (payload.avatars) {
         setAvatars(payload.avatars);
@@ -1258,11 +1248,10 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextBackground, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
-        requestJson<BackgroundState>('/api/background'),
         requestJson<AvatarCollectionState>('/api/avatars'),
         requestJson<{ images: [PanelState, PanelState] }>('/api/images'),
         requestJson<Page4State>('/api/page4'),
@@ -1278,7 +1267,6 @@ function Dashboard() {
       startTransition(() => {
         setScoreboard(nextScoreboard);
         setMatchStore(nextMatches);
-        setBackground(nextBackground);
         setAvatars(nextAvatars);
         setSprites(nextSprites.sprites);
         setStage(nextStage);
@@ -1315,10 +1303,6 @@ function Dashboard() {
 
     scoreboardForm.setFieldsValue({
       scoreboardEnabled: scoreboard.scoreboardEnabled,
-      healthBadgeEnabled: scoreboard.healthBadgeEnabled,
-      abilityBadgeEnabled: scoreboard.abilityBadgeEnabled,
-      centerAreaEnabled: scoreboard.centerAreaEnabled,
-      centerAreaColor: scoreboard.centerAreaColor,
       eventTitleEnabled: scoreboard.eventTitleEnabled,
       eventTitle: scoreboard.eventTitle,
       page2LineupDisplayMode: scoreboard.page2LineupDisplayMode,
@@ -1370,12 +1354,6 @@ function Dashboard() {
     socket.on(SOCKET_EVENTS.matchesUpdate, (payload) => {
       if (payload?.matches) {
         applyServerState({ matches: payload.matches });
-      }
-    });
-
-    socket.on(SOCKET_EVENTS.backgroundUpdate, (payload) => {
-      if (payload?.background) {
-        applyServerState({ background: payload.background });
       }
     });
 
@@ -2119,28 +2097,6 @@ function Dashboard() {
     message.success('标签已删除');
   }
 
-  async function uploadBackgroundFile(file: File) {
-    try {
-      const data = await uploadSingleFile<BackgroundState & { success: boolean }>('/api/upload/background', file);
-      setBackground(data);
-      message.success('背景图已更新');
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  async function deleteBackgroundFile() {
-    try {
-      const data = await requestJson<{ success: boolean; background: BackgroundState }>('/api/delete/background', {
-        method: 'DELETE',
-      });
-      setBackground(data.background);
-      message.success('背景图已删除');
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : String(error));
-    }
-  }
-
   async function uploadAvatarFile(side: PanelSide, file: File) {
     try {
       await uploadSingleFile(`/api/upload/avatar/${side}`, file);
@@ -2187,7 +2143,7 @@ function Dashboard() {
     const host = window.location.port ? `127.0.0.1:${window.location.port}` : '127.0.0.1';
     try {
       await copyText(`${host}/`);
-      message.success('载体页地址已复制');
+      message.success('推流页地址已复制');
     } catch {
       message.error('复制失败，请手动复制');
     }
@@ -2616,8 +2572,7 @@ function Dashboard() {
     { key: 'page4', label: '仅显示阵容' },
     { key: 'history', label: '比赛历史' },
     { key: 'scoreboard', label: '显示设置' },
-    { key: 'background', label: '背景素材' },
-    { key: 'stage', label: '推流页面1设置' },
+    { key: 'stage', label: '导播台' },
     { key: 'preview', label: '页面预览' },
     { key: 'about', label: '关于项目' },
   ];
@@ -3246,7 +3201,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'background' ? '背景素材' : view === 'stage' ? '推流页面1设置（导播台）' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'stage' ? '导播台' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -3665,18 +3620,6 @@ function Dashboard() {
                           <Form.Item label="顶部比分栏显示" name="scoreboardEnabled" valuePropName="checked">
                             <Switch />
                           </Form.Item>
-                          <Form.Item label="血量徽标显示" name="healthBadgeEnabled" valuePropName="checked">
-                            <Switch />
-                          </Form.Item>
-                          <Form.Item label="能力值徽标显示" name="abilityBadgeEnabled" valuePropName="checked">
-                            <Switch />
-                          </Form.Item>
-                          <Form.Item label="Center Area 显示" name="centerAreaEnabled" valuePropName="checked">
-                            <Switch />
-                          </Form.Item>
-                          <Form.Item label="Center Area 背景颜色" name="centerAreaColor">
-                            <Input />
-                          </Form.Item>
                         </Space>
                       </Card>
                     </Col>
@@ -3757,56 +3700,21 @@ function Dashboard() {
             </Space>
           ) : null}
 
-          {view === 'background' ? (
-            <Card title="背景图管理">
-              <Row gutter={[18, 18]}>
-                <Col xs={24} xl={10}>
-                  <Upload.Dragger
-                    showUploadList={false}
-                    beforeUpload={(file) => {
-                      void uploadBackgroundFile(file as File);
-                      return false;
-                    }}
-                  >
-                    <p className="ant-upload-text">点击或拖拽上传背景图</p>
-                    <p className="ant-upload-hint">建议使用 1920 × 1080 的直播背景尺寸。</p>
-                  </Upload.Dragger>
-                  <Space wrap className="background-actions">
-                    <Button onClick={() => window.open('/cache/background.png', '_blank')}>查看当前背景</Button>
-                    <Button danger onClick={() => void deleteBackgroundFile()}>删除背景图</Button>
-                  </Space>
-                </Col>
-                <Col xs={24} xl={14}>
-                  <Card size="small" className="subtle-card" title="当前背景预览">
-                    {background.exists ? (
-                      <Image
-                        src={`${background.path}?t=${background.mtime ?? Date.now()}`}
-                        className="background-preview-image"
-                      />
-                    ) : (
-                      <Empty description="当前使用默认背景" />
-                    )}
-                  </Card>
-                </Col>
-              </Row>
-            </Card>
-          ) : null}
-
           {view === 'stage' ? (
             <Space direction="vertical" size={18} className="page-stack">
               <Card
                 className="stage-control-card"
-                title="推流页面1设置（导播台）"
+                title="导播台"
                 extra={
                   <Space wrap>
-                    <Button href="/" target="_blank">打开载体页</Button>
-                    <Button onClick={handleCopyStageLocalAddress}>复制载体页地址</Button>
+                    <Button href="/" target="_blank">打开推流页面</Button>
+                    <Button onClick={handleCopyStageLocalAddress}>复制推流页地址</Button>
                   </Space>
                 }
               >
                 <Space direction="vertical" size={16} className="page-stack">
                   <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                    推流软件（OBS 等）只需固定捕获根路径 <code>/</code>。在此切换后，载体页会实时加载所选画面，无需修改推流来源。
+                    推流软件（OBS 等）只需固定捕获根路径 <code>/</code>。在此切换后，推流页面会实时加载所选画面，无需修改推流来源。
                   </Paragraph>
                   <Segmented
                     block
@@ -3930,7 +3838,7 @@ function Dashboard() {
                         <Col xs={24} md={8}>
                           <Card size="small" className="subtle-card">
                             <Title level={5}>素材与预览联动</Title>
-                            <Paragraph type="secondary">背景图、头像、推流页面 1/2/3 和等待页都能在后台里一起管理。</Paragraph>
+                            <Paragraph type="secondary">头像、推流页面 1/2/3 和等待页都能在后台里一起管理。</Paragraph>
                           </Card>
                         </Col>
                       </Row>

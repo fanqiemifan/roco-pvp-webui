@@ -13,7 +13,6 @@
 - live - 实时控制面板（比赛开始、胜负记录、撤销/恢复）
 - history - 历史记录页（比赛列表、删除、撤销删除）
 - scoreboard - 记分牌配置页（选手名、分数、赛制、显示选项）
-- background - 背景和头像配置页（上传、删除）
 - preview - 预览页（四个推流页面预览）
 - about - 关于页
 
@@ -21,7 +20,7 @@
 - leftPanel / rightPanel - 双面板状态
 - scoreboard - 记分牌状态
 - matches - 比赛存储状态
-- background / avatars - 图片状态
+- avatars - 头像状态
 - leftEditor / rightEditor - 编辑器状态（selected, activeSlot, search 等）
 - socket - Socket.IO 连接实例
 
@@ -35,7 +34,6 @@
 - updateMatch(matchId, values) - 更新比赛
 - recordWinner(matchId, winner) - 记录胜负
 - undoMatch(matchId) / redoMatch(matchId) - 撤销/恢复
-- uploadBackground(file) - 上传背景
 - uploadAvatar(side, file) - 上传头像
 
 ## login-antd/App.tsx（登录页面）
