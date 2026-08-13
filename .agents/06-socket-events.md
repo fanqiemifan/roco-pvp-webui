@@ -2,10 +2,9 @@
 
 | 自然语言描述 | 事件名称 | 方向 | 说明 | 负载结构 |
 |-------------|---------|------|------|---------|
-| 获取完整状态快照 | snapshot | Server → Client | 完整状态快照 | { leftPanel, rightPanel, scoreboard, background, avatars, matches } |
+| 获取完整状态快照 | snapshot | Server → Client | 完整状态快照 | { panels, page4, scoreboard, avatars, matches, stage } |
 | 面板更新通知 | panel:update | Server → Client | 面板更新 | { panel: PanelState } |
 | 记分牌更新通知 | scoreboard:update | Server → Client | 记分牌更新 | { scoreboard: ScoreboardState } |
-| 背景更新通知 | background:update | Server → Client | 背景更新 | { background: BackgroundState } |
 | 头像更新通知 | avatar:update | Server → Client | 头像更新 | { side, avatar, avatars } |
 | 比赛记录更新通知 | matches:update | Server → Client | 比赛记录更新 | { matches: MatchStoreState } |
 

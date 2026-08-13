@@ -1,441 +1,216 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const leftPanel = document.querySelector('.left-panel');
-    const rightPanel = document.querySelector('.right-panel');
-    const frame3 = document.querySelector('.frame3');
-    const scoreboardEl = document.querySelector('.scoreboard');
-    const centerArea = document.querySelector('.center-area');
-    const leftPlayerName = document.getElementById('leftPlayerName');
-    const leftPlayerScore = document.getElementById('leftPlayerScore');
-    const rightPlayerName = document.getElementById('rightPlayerName');
-    const rightPlayerScore = document.getElementById('rightPlayerScore');
+(function () {
+    'use strict';
+
+    const MAX_SLOTS = 6;
+    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
+    const unavailableThumbnailPaths = new Set();
 
     const panelStates = {
-        left: { panelEl: leftPanel, slotSignatures: new Array(6).fill(null), panelSignature: null },
-        right: { panelEl: rightPanel, slotSignatures: new Array(6).fill(null), panelSignature: null }
+        left: { signatures: new Array(MAX_SLOTS).fill(null) },
+        right: { signatures: new Array(MAX_SLOTS).fill(null) }
     };
 
-    const WEAK_OPACITY = 0.5;
-    const WEAK_SATURATION = 0.1;
-    const FEATHER_PERCENT = 6;
-    const PROTECTION_TRANSITION_MS = 800;
-
-    let currentBgSignature = null;
-    let currentScoreboardSignature = null;
-    let socket = null;
-
-    function clampPercent(value) {
-        const number = Number(value);
-        if (Number.isNaN(number)) {
-            return 100;
-        }
-        return Math.min(100, Math.max(0, number));
+    function basename(value) {
+        return String(value || '').split('/').filter(Boolean).pop() || '';
     }
 
-    function buildSlotSignature(slotData) {
-        return JSON.stringify({
-            sprite: slotData && slotData.sprite ? slotData.sprite.id : null,
-            opacity: slotData ? slotData.effectiveOpacity : 1,
-            saturation: slotData ? slotData.saturation : 1,
-            healthEnabled: !!(slotData && slotData.healthEnabled),
-            healthPercent: slotData ? clampPercent(slotData.healthPercent) : 100,
-            energyValue: slotData && Number.isFinite(Number(slotData.energyValue)) ? Number(slotData.energyValue) : 10
-        });
+    function sanitizeFilenameSegment(value, fallback = '') {
+        const normalized = String(value ?? '')
+            .normalize('NFC')
+            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
+            .replace(/\s+/g, '')
+            .replace(/\.+$/g, '')
+            .trim();
+
+        return normalized || fallback;
     }
 
-    function buildLayer(slotEl, className) {
-        const image = document.createElement('img');
-        image.className = `sprite-layer ${className}`;
-        image.style.transitionDuration = `${PROTECTION_TRANSITION_MS}ms`;
-        slotEl.appendChild(image);
-        return image;
+    function getSpriteDisplayName(sprite) {
+        if (!sprite || typeof sprite !== 'object') {
+            return '';
+        }
+        return String(sprite.cardName || sprite.displayName || sprite.chineseName || sprite.name || basename(sprite.path) || '').trim();
     }
 
-    function getBaseLayerSaturation(slotData) {
-        if (!slotData || !slotData.healthEnabled) {
-            return slotData && typeof slotData.saturation === 'number' ? slotData.saturation : 1;
+    function buildThumbnailCandidates(sprite) {
+        const thumbnailId = String(sprite && sprite.thumbnailId ? sprite.thumbnailId : '').trim();
+        if (!thumbnailId) {
+            return [];
         }
-        const healthPercent = clampPercent(slotData && slotData.healthPercent);
-        if (healthPercent <= 0) {
-            return 0.1;
-        }
-        return (slotData.saturation ?? 1) * WEAK_SATURATION;
+
+        const candidateNames = [
+            sprite && sprite.cardName,
+            sprite && sprite.displayName,
+            sprite && sprite.chineseName,
+            sprite && sprite.name,
+            sprite && sprite.path ? basename(sprite.path) : '',
+        ]
+            .map((value) => sanitizeFilenameSegment(value))
+            .filter(Boolean);
+
+        return Array.from(new Set(candidateNames)).map((name) => `${THUMBNAIL_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
     }
 
-    function ensureLayerPair(slotEl) {
-        const baseLayer = slotEl.querySelector('.base-layer') || buildLayer(slotEl, 'base-layer');
-        const protectLayer = slotEl.querySelector('.protect-layer') || buildLayer(slotEl, 'protect-layer');
-        return { baseLayer, protectLayer };
-    }
+    function resolveSpriteImageSources(sprite) {
+        const fallbackSrc = sprite && sprite.path ? String(sprite.path) : '';
+        const thumbnailCandidates = buildThumbnailCandidates(sprite).filter((path) => !unavailableThumbnailPaths.has(path));
 
-    function normalizeEnergyValue(value) {
-        const number = Number(value);
-        if (Number.isNaN(number)) {
-            return 10;
-        }
-        return Math.min(10, Math.max(0, Math.round(number)));
-    }
-
-    function getHeartAsset(healthPercent) {
-        const health = clampPercent(healthPercent);
-        if (health <= 0) {
-            return '/assets/ui/heart0.png';
-        }
-        if (health <= 10) {
-            return '/assets/ui/heart10.png';
-        }
-        if (health <= 50) {
-            return '/assets/ui/heart50.png';
-        }
-        return '/assets/ui/heart100.png';
-    }
-
-    function getAbilityMeta(energyValue) {
-        const energy = normalizeEnergyValue(energyValue);
-        if (energy <= 2) {
-            return {
-                className: 'danger',
-                icon: '/assets/ui/start-3.png'
-            };
-        }
-        if (energy <= 5) {
-            return {
-                className: 'mid',
-                icon: '/assets/ui/start-2.png'
-            };
-        }
         return {
-            className: 'high',
-            icon: '/assets/ui/start-1.png'
+            fallbackSrc,
+            thumbnailCandidates,
         };
     }
 
-    function ensureOverlay(slotEl, className, builder) {
-        let overlay = slotEl.querySelector(`.${className}`);
-        if (!overlay) {
-            overlay = builder();
-            overlay.classList.add(className);
-            slotEl.appendChild(overlay);
-        }
-        return overlay;
+    function syncImageState(slotEl, imageSrc) {
+        slotEl.classList.toggle('is-thumbnail', String(imageSrc || '').startsWith(THUMBNAIL_RESOURCE_BASE));
     }
 
-    function ensureSlotIndicators(slotEl) {
-        const hpBadge = ensureOverlay(slotEl, 'slot-hp-badge', () => {
-            const badge = document.createElement('div');
-            const value = document.createElement('span');
-            value.className = 'slot-hp-value';
-            badge.appendChild(value);
-            return badge;
-        });
-        const abilityBadge = ensureOverlay(slotEl, 'slot-ability-badge', () => {
-            const badge = document.createElement('div');
-            const icon = document.createElement('img');
-            icon.className = 'slot-ability-icon';
-            const value = document.createElement('span');
-            value.className = 'slot-ability-value';
-            badge.appendChild(icon);
-            badge.appendChild(value);
-            return badge;
-        });
-        return { hpBadge, abilityBadge };
-    }
-
-    function updateSlotIndicators(slotEl, slotData) {
-        const sprite = slotData && slotData.sprite ? slotData.sprite : null;
-        const { hpBadge, abilityBadge } = ensureSlotIndicators(slotEl);
-        const healthBadgeEnabled = document.body.dataset.healthBadgeEnabled !== '0';
-        const abilityBadgeEnabled = document.body.dataset.abilityBadgeEnabled !== '0';
-
-        if (!sprite) {
-            hpBadge.classList.remove('is-visible');
-            abilityBadge.classList.remove('is-visible');
+    function applySpriteImage(imgEl, sprite) {
+        if (!imgEl) {
             return;
         }
 
-        const healthPercent = clampPercent(slotData.healthPercent);
-        const energyValue = normalizeEnergyValue(slotData.energyValue);
-        const hpValue = hpBadge.querySelector('.slot-hp-value');
-        const abilityIcon = abilityBadge.querySelector('.slot-ability-icon');
-        const abilityValue = abilityBadge.querySelector('.slot-ability-value');
-        const abilityMeta = getAbilityMeta(energyValue);
+        const imageSources = resolveSpriteImageSources(sprite);
+        const sourceQueue = [...imageSources.thumbnailCandidates, ...(imageSources.fallbackSrc ? [imageSources.fallbackSrc] : [])];
 
-        if (healthBadgeEnabled && healthPercent > 0) {
-            hpBadge.style.backgroundImage = `url('${getHeartAsset(healthPercent)}')`;
-            hpValue.textContent = String(healthPercent);
-            hpBadge.classList.add('is-visible');
-        } else {
-            hpBadge.classList.remove('is-visible');
-            hpValue.textContent = '';
-        }
-
-        if (!abilityBadgeEnabled || healthPercent <= 0) {
-            abilityBadge.classList.remove('is-visible', 'high', 'mid', 'danger');
-            abilityIcon.removeAttribute('src');
-            abilityValue.textContent = '';
+        if (sourceQueue.length === 0) {
+            imgEl.removeAttribute('src');
+            imgEl.onerror = null;
             return;
         }
 
-        abilityBadge.classList.remove('high', 'mid', 'danger');
-        abilityBadge.classList.add(abilityMeta.className, 'is-visible');
-        abilityIcon.src = abilityMeta.icon;
-        abilityIcon.alt = `能力值 ${energyValue}`;
-        abilityValue.textContent = String(energyValue);
-    }
-
-    function applyProtectionMask(protectLayer, healthPercent) {
-        const keepPercent = clampPercent(healthPercent);
-        if (keepPercent >= 100) {
-            protectLayer.classList.add('mask-disabled');
-            protectLayer.style.setProperty('--protect-start', '0%');
-            protectLayer.style.setProperty('--protect-end', '0%');
+        const imageSignature = JSON.stringify(sourceQueue);
+        if (imgEl.dataset.imageSignature === imageSignature) {
             return;
         }
 
-        protectLayer.classList.remove('mask-disabled');
+        imgEl.dataset.imageSignature = imageSignature;
+        let currentIndex = 0;
 
-        if (keepPercent <= 0) {
-            protectLayer.style.setProperty('--protect-start', '100%');
-            protectLayer.style.setProperty('--protect-end', '100%');
-            return;
-        }
+        const assignNext = () => {
+            const nextSrc = sourceQueue[currentIndex];
+            imgEl.dataset.currentSrc = nextSrc;
+            syncImageState(imgEl.closest('.petsdiv3') || imgEl.parentElement, nextSrc);
+            imgEl.src = nextSrc;
+        };
 
-        const weakPercent = 100 - keepPercent;
-        const start = Math.max(0, weakPercent - FEATHER_PERCENT);
-        const end = Math.min(100, weakPercent + FEATHER_PERCENT);
-        protectLayer.style.setProperty('--protect-start', `${start}%`);
-        protectLayer.style.setProperty('--protect-end', `${end}%`);
-    }
+        imgEl.onerror = () => {
+            const failedSrc = imgEl.dataset.currentSrc || '';
+            if (failedSrc.startsWith(THUMBNAIL_RESOURCE_BASE)) {
+                unavailableThumbnailPaths.add(failedSrc);
+            }
 
-    function applyNoProtectionMask(protectLayer) {
-        protectLayer.classList.add('mask-disabled');
-        protectLayer.style.setProperty('--protect-start', '0%');
-        protectLayer.style.setProperty('--protect-end', '0%');
-    }
-
-    function applyLayerStyles(baseLayer, protectLayer, slotData) {
-        const sprite = slotData && slotData.sprite ? slotData.sprite : null;
-        if (!sprite) {
-            return;
-        }
-
-        const healthEnabled = !!slotData.healthEnabled;
-        const baseOpacity = healthEnabled
-            ? (slotData.effectiveOpacity ?? 1) * WEAK_OPACITY
-            : (slotData.effectiveOpacity ?? 1);
-        const baseSaturation = getBaseLayerSaturation(slotData);
-
-        baseLayer.alt = sprite.displayName || sprite.filename || '';
-        baseLayer.style.opacity = String(baseOpacity);
-        baseLayer.style.filter = `saturate(${baseSaturation})`;
-
-        protectLayer.alt = sprite.displayName || sprite.filename || '';
-        protectLayer.style.opacity = healthEnabled ? String(slotData.effectiveOpacity ?? 1) : '0';
-        protectLayer.style.filter = `saturate(${slotData.saturation ?? 1})`;
-        if (healthEnabled) {
-            applyProtectionMask(protectLayer, slotData.healthPercent);
-        } else {
-            applyNoProtectionMask(protectLayer);
-        }
-    }
-
-    function removeSlotLayers(slotEl) {
-        slotEl.querySelectorAll('.sprite-layer').forEach(layer => {
-            layer.classList.add('is-exiting');
-            window.setTimeout(() => {
-                if (layer.parentNode === slotEl) {
-                    layer.remove();
-                }
-            }, 240);
-        });
-    }
-
-    function setLayerSource(layer, src, alt) {
-        if (layer.src.endsWith(src)) {
-            layer.alt = alt;
-            return false;
-        }
-        layer.src = src;
-        layer.alt = alt;
-        return true;
-    }
-
-    function applySlotUpdate(slotEl, slotData, mtime) {
-        const sprite = slotData && slotData.sprite ? slotData.sprite : null;
-
-        if (!sprite) {
-            removeSlotLayers(slotEl);
-            updateSlotIndicators(slotEl, null);
-            return;
-        }
-
-        const cacheBuster = mtime ? Math.floor(mtime * 1000) : Date.now();
-        const nextSrc = `${sprite.path}?t=${cacheBuster}`;
-        const alt = sprite.displayName || sprite.filename || '';
-        const { baseLayer, protectLayer } = ensureLayerPair(slotEl);
-
-        const baseChanged = setLayerSource(baseLayer, nextSrc, alt);
-        const protectChanged = setLayerSource(protectLayer, nextSrc, alt);
-
-        if (baseChanged || protectChanged) {
-            [baseLayer, protectLayer].forEach(layer => {
-                layer.classList.add('is-entering');
-                requestAnimationFrame(() => {
-                    layer.classList.remove('is-entering');
-                });
-            });
-        }
-
-        applyLayerStyles(baseLayer, protectLayer, slotData);
-        updateSlotIndicators(slotEl, slotData);
-    }
-
-    function renderPanel(position, data) {
-        const state = panelStates[position];
-        const selected = data && Array.isArray(data.selected) ? data.selected : [];
-        const slots = state.panelEl.querySelectorAll('.sprite-slot');
-
-        slots.forEach((slotEl, index) => {
-            const slotData = selected[index] || null;
-            const nextSignature = buildSlotSignature(slotData);
-
-            if (state.slotSignatures[index] === nextSignature) {
+            currentIndex += 1;
+            if (currentIndex >= sourceQueue.length) {
+                imgEl.onerror = null;
                 return;
             }
 
-            applySlotUpdate(slotEl, slotData, data ? data.mtime : null);
-            state.slotSignatures[index] = nextSignature;
-        });
+            assignNext();
+        };
 
-        const nextPanelSignature = JSON.stringify({
-            hasImage: selected.some(slot => slot && slot.sprite)
-        });
-
-        if (state.panelSignature !== nextPanelSignature) {
-            state.panelEl.classList.toggle('has-image', selected.some(slot => slot && slot.sprite));
-            state.panelSignature = nextPanelSignature;
-        }
+        assignNext();
     }
 
-    function renderScoreboard(data) {
-        const scoreboard = data || {};
-        const nextSignature = JSON.stringify({
-            leftName: scoreboard.leftName || '',
-            leftScore: scoreboard.leftScore || '0',
-            rightName: scoreboard.rightName || '',
-            rightScore: scoreboard.rightScore || '0',
-            scoreboardEnabled: scoreboard.scoreboardEnabled !== false,
-            healthBadgeEnabled: scoreboard.healthBadgeEnabled !== false,
-            abilityBadgeEnabled: scoreboard.abilityBadgeEnabled !== false,
-            nameFontSize: scoreboard.nameFontSize || 64,
-            scoreFontSize: scoreboard.scoreFontSize || 64,
-            centerAreaEnabled: scoreboard.centerAreaEnabled !== false,
-            centerAreaColor: scoreboard.centerAreaColor || '#393939'
-        });
+    function isSlotDead(slotData) {
+        return Boolean(slotData && slotData.healthEnabled && Number(slotData.healthPercent) <= 0);
+    }
 
-        if (currentScoreboardSignature === nextSignature) {
+    function renderEmptySlot(slotEl) {
+        slotEl.className = 'petsdiv3 is-empty';
+        slotEl.innerHTML = '';
+        delete slotEl.dataset.spriteKey;
+    }
+
+    function renderSlot(slotEl, slotData) {
+        const sprite = slotData && slotData.sprite ? slotData.sprite : null;
+        if (!sprite) {
+            renderEmptySlot(slotEl);
             return;
         }
 
-        currentScoreboardSignature = nextSignature;
-        const scoreboardEnabled = scoreboard.scoreboardEnabled !== false;
-        const healthBadgeEnabled = scoreboard.healthBadgeEnabled !== false;
-        const abilityBadgeEnabled = scoreboard.abilityBadgeEnabled !== false;
-        scoreboardEl.classList.toggle('is-hidden', !scoreboardEnabled);
-        leftPlayerName.textContent = scoreboard.leftName || '';
-        leftPlayerScore.textContent = scoreboard.leftScore || '0';
-        rightPlayerName.textContent = scoreboard.rightName || '';
-        rightPlayerScore.textContent = scoreboard.rightScore || '0';
-        const nameFontSize = Number(scoreboard.nameFontSize) || 64;
-        const scoreFontSize = Number(scoreboard.scoreFontSize) || 64;
-        [leftPlayerName, rightPlayerName].forEach(el => {
-            el.style.fontSize = `${nameFontSize}px`;
+        const isDead = isSlotDead(slotData);
+        const signature = JSON.stringify({
+            id: sprite.id || sprite.path || getSpriteDisplayName(sprite),
+            name: getSpriteDisplayName(sprite),
+            path: sprite.path || '',
+            thumbnailId: sprite.thumbnailId || '',
+            isDead,
         });
-        [leftPlayerScore, rightPlayerScore].forEach(el => {
-            el.style.fontSize = `${scoreFontSize}px`;
-        });
-        const centerAreaEnabled = scoreboard.centerAreaEnabled !== false;
-        centerArea.classList.toggle('is-hidden', !centerAreaEnabled);
-        centerArea.style.backgroundColor = centerAreaEnabled
-            ? (scoreboard.centerAreaColor || '#393939')
-            : 'transparent';
-        document.body.dataset.healthBadgeEnabled = healthBadgeEnabled ? '1' : '0';
-        document.body.dataset.abilityBadgeEnabled = abilityBadgeEnabled ? '1' : '0';
+
+        slotEl.className = `petsdiv3 is-active${isDead ? ' is-dead' : ''}`;
+
+        if (slotEl.dataset.spriteKey !== signature) {
+            slotEl.dataset.spriteKey = signature;
+            slotEl.innerHTML = '<img alt="">';
+        }
+
+        const imgEl = slotEl.querySelector('img');
+        if (imgEl) {
+            imgEl.alt = getSpriteDisplayName(sprite);
+            applySpriteImage(imgEl, sprite);
+        }
     }
 
-    function renderBackground(data) {
-        const newSignature = data && data.exists && data.path && data.mtime ? `${data.path}:${data.mtime}` : 'default';
-        if (currentBgSignature === newSignature) {
-            return;
-        }
+    function renderPanel(position, panelData) {
+        const selected = panelData && Array.isArray(panelData.selected) ? panelData.selected : [];
+        const slotEls = document.querySelectorAll(`.petsdiv3[data-side="${position}"]`);
 
-        currentBgSignature = newSignature;
-        if (data && data.exists) {
-            frame3.style.backgroundImage = `url('${data.path}?t=${Math.floor(data.mtime * 1000)}')`;
-        } else {
-            frame3.style.backgroundImage = "url('/assets/ui/back.png')";
-        }
+        slotEls.forEach((slotEl, index) => {
+            const slotData = selected[index] || null;
+            const isDead = isSlotDead(slotData);
+            const nextSignature = JSON.stringify({
+                spriteKey: slotData && slotData.sprite ? (slotData.sprite.id || slotData.sprite.path || getSpriteDisplayName(slotData.sprite)) : null,
+                isDead,
+            });
+
+            if (panelStates[position].signatures[index] === nextSignature) {
+                return;
+            }
+
+            renderSlot(slotEl, slotData);
+            panelStates[position].signatures[index] = nextSignature;
+        });
     }
 
     function applySnapshot(payload) {
         const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
-        const leftData = panels.find(img => img.position === 'left');
-        const rightData = panels.find(img => img.position === 'right');
-
-        renderPanel('left', leftData);
-        renderPanel('right', rightData);
-        renderBackground(payload ? payload.background : null);
-        renderScoreboard(payload ? payload.scoreboard : null);
+        renderPanel('left', panels.find((panel) => panel && panel.position === 'left'));
+        renderPanel('right', panels.find((panel) => panel && panel.position === 'right'));
     }
 
-    function loadInitialState() {
-        return Promise.all([
-            fetch('api/images').then(response => response.json()),
-            fetch('api/background').then(response => response.json()),
-            fetch('api/scoreboard').then(response => response.json())
-        ]).then(([imagesData, backgroundData, scoreboardData]) => {
-            applySnapshot({
-                panels: imagesData.images || [],
-                background: backgroundData,
-                scoreboard: scoreboardData
-            });
-        });
+    async function loadInitialState() {
+        const response = await fetch('/api/images');
+        const data = await response.json();
+        applySnapshot({ panels: data.images || [] });
     }
 
     function connectSocket() {
         if (typeof io !== 'function') {
-            console.error('Socket.IO 客户端未加载');
             return;
         }
 
-        socket = io({
-            transports: ['websocket', 'polling']
+        const socket = io({
+            transports: ['websocket', 'polling'],
         });
 
-        socket.on('snapshot', payload => {
+        socket.on('snapshot', (payload) => {
             applySnapshot(payload || {});
         });
 
-        socket.on('panel:update', payload => {
+        socket.on('panel:update', (payload) => {
             if (payload && payload.panel && payload.panel.position) {
                 renderPanel(payload.panel.position, payload.panel);
             }
         });
-
-        socket.on('background:update', payload => {
-            renderBackground(payload ? payload.background : null);
-        });
-
-        socket.on('scoreboard:update', payload => {
-            renderScoreboard(payload ? payload.scoreboard : null);
-        });
-
-        socket.on('connect_error', error => {
-            console.error('Socket.IO 连接失败:', error);
-        });
     }
 
-    loadInitialState().catch(error => {
-        console.error('初始化展示数据失败:', error);
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await loadInitialState();
+            connectSocket();
+        } catch (error) {
+            console.error('overlay 初始加载失败:', error);
+        }
     });
-    connectSocket();
-});
+})();

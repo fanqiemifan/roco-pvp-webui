@@ -14,7 +14,7 @@
 | 创建比赛 | createMatch | electron/services/match-service.ts |
 | 更新面板 | savePanelState | electron/services/state-service.ts |
 | 搜索精灵 | listSprites | electron/services/sprite-service.ts |
-| 上传背景 | saveBackground | electron/services/image-service.ts |
+| 上传头像 | saveAvatar | electron/services/image-service.ts |
 | 发送 Socket 事件 | socket.emit | electron/socket-server.ts |
 
 ## 类型引用

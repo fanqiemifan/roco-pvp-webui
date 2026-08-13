@@ -43,7 +43,6 @@ import attributeMapping from '../../resources/data/attribute_mapping.json';
 import { SOCKET_EVENTS } from '../../shared/events';
 import type {
   AvatarCollectionState,
-  BackgroundState,
   GameRecord,
   MatchRecord,
   MatchStoreState,
@@ -55,6 +54,9 @@ import type {
   ScoreboardState,
   SlotState,
   SpriteRecord,
+  StageConfig,
+  StagePageKey,
+  StageTransitionType,
 } from '../../shared/types';
 
 const { Header, Sider, Content } = Layout;
@@ -62,9 +64,9 @@ const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
 
 type PanelSide = 'left' | 'right';
-type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'scoreboard' | 'background' | 'preview' | 'about';
+type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'scoreboard' | 'preview' | 'stage' | 'about';
 
-type PreviewSlotKey = 'page1' | 'page2' | 'page3' | 'page4' | 'standby';
+type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'standby';
 
 type JsonInit = RequestInit & {
   json?: unknown;
@@ -81,10 +83,6 @@ type CreateMatchValues = MatchFormValues;
 
 type ScoreboardFormValues = {
   scoreboardEnabled: boolean;
-  healthBadgeEnabled: boolean;
-  abilityBadgeEnabled: boolean;
-  centerAreaEnabled: boolean;
-  centerAreaColor: string;
   eventTitleEnabled: boolean;
   eventTitle: string;
   page2LineupDisplayMode: 'default' | 'avatar-only';
@@ -164,15 +162,20 @@ declare global {
 const DEFAULT_TAGS = ['淘汰赛', '海选赛', '128进64', '64进32', '32进16', '16进8', '8进4', '4进2', '季军赛', '决赛'];
 
 const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
-  page1: {
-    title: '推流页面1',
+  stage: {
+    title: '直播推流（全局推流页面）',
     fileName: 'index.html',
     path: '/',
   },
+  page1: {
+    title: '推流页面1',
+    fileName: 'roco-pvp-page1.html',
+    path: '/roco-pvp-page1.html',
+  },
   page2: {
     title: '推流页面2',
-    fileName: 'roco-pvp.html',
-    path: '/roco-pvp.html',
+    fileName: 'roco-pvp-page2.html',
+    path: '/roco-pvp-page2.html',
   },
   page3: {
     title: '推流页面3',
@@ -190,6 +193,67 @@ const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     path: '/live-standby-demo.html',
   },
 };
+
+const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; description: string; previewPath: string }> = [
+  {
+    value: 'page1-overlay',
+    label: '推流页面1',
+    description: '带比分栏 + 左右精灵槽的经典 Overlay 布局',
+    previewPath: '/roco-pvp-page1.html',
+  },
+  {
+    value: 'page2',
+    label: '推流页面2',
+    description: '全局阵容展示（左右阵容 + 比分 + 赛事标题）',
+    previewPath: '/roco-pvp-page2.html',
+  },
+  {
+    value: 'page3',
+    label: '推流页面3',
+    description: '头像比分阵容展示（带头像 VS 比分栏）',
+    previewPath: '/roco-pvp-page3.html',
+  },
+  {
+    value: 'page4',
+    label: '仅显示阵容',
+    description: '只展示双方阵容，无比分信息',
+    previewPath: '/roco-pvp-page4.html',
+  },
+  {
+    value: 'standby',
+    label: '等待页',
+    description: '直播等待 / 间歇展示页',
+    previewPath: '/live-standby-demo.html',
+  },
+  {
+    value: 'blank',
+    label: '黑场',
+    description: '不加载任何画面（切黑）',
+    previewPath: '',
+  },
+];
+
+const STAGE_VALUE_SET = new Set(STAGE_OPTIONS.map((option) => option.value));
+
+const STAGE_TRANSITION_OPTIONS: Array<{ value: StageTransitionType; label: string }> = [
+  { value: 'blinds', label: '百叶窗' },
+  { value: 'zoom', label: '缩放冲击' },
+  { value: 'none', label: '无过渡' },
+];
+
+function normalizeStageTransition(value: unknown): StageTransitionType {
+  if (typeof value === 'string' && STAGE_TRANSITION_OPTIONS.some((option) => option.value === value)) {
+    return value as StageTransitionType;
+  }
+  return 'blinds';
+}
+
+function normalizeStagePage(value: unknown): StagePageKey {
+  if (typeof value === 'string' && STAGE_VALUE_SET.has(value as StagePageKey)) {
+    return value as StagePageKey;
+  }
+  return 'page3';
+}
 
 const ATTRIBUTE_OPTIONS: AttributeOption[] = (attributeMapping as Array<{ 编号: string; 属性: string }>).map((item) => ({
   code: item.编号,
@@ -953,6 +1017,58 @@ function findConfigTargetIndex(
   return fallbackIndex;
 }
 
+const STAGE_THUMB_INNER_WIDTH = 1920;
+const STAGE_THUMB_INNER_HEIGHT = 1080;
+
+function StageThumb({ label, previewPath }: { label: string; previewPath: string }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = useState(0);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const update = () => {
+      const width = container.clientWidth;
+      if (width > 0) {
+        // 容器为 16:9，与 1920x1080 同比例，按宽度等比缩放即可完整展示
+        setScale(width / STAGE_THUMB_INNER_WIDTH);
+      }
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className="stage-card-thumb" ref={containerRef}>
+      <div
+        className="stage-card-thumb-viewport"
+        style={{
+          width: Math.floor(STAGE_THUMB_INNER_WIDTH * scale),
+          height: Math.floor(STAGE_THUMB_INNER_HEIGHT * scale),
+        }}
+      >
+        <div
+          className="stage-card-thumb-stage"
+          style={{ transform: `scale(${scale})` }}
+        >
+          <iframe
+            title={label}
+            className="stage-card-frame"
+            src={`${getPreviewOrigin()}${previewPath}`}
+            scrolling="no"
+            loading="lazy"
+          />
+        </div>
+      </div>
+      <span className="stage-card-thumb-mark">{label}</span>
+    </div>
+  );
+}
+
 function Dashboard() {
   const { message, modal } = App.useApp();
   const [view, setView] = useState<ViewKey>('roster');
@@ -971,7 +1087,6 @@ function Dashboard() {
     },
     mtime: null,
   });
-  const [background, setBackground] = useState<BackgroundState>({ exists: false });
   const [avatars, setAvatars] = useState<AvatarCollectionState>({
     left: { side: 'left', exists: false },
     right: { side: 'right', exists: false },
@@ -1000,9 +1115,11 @@ function Dashboard() {
   const [selectedHistoryKeys, setSelectedHistoryKeys] = useState<React.Key[]>([]);
   const [expandedHistoryKeys, setExpandedHistoryKeys] = useState<React.Key[]>([]);
   const [historyTagFilter, setHistoryTagFilter] = useState<string | null>(null);
-  const [previewSlot, setPreviewSlot] = useState<PreviewSlotKey>('page1');
+  const [previewSlot, setPreviewSlot] = useState<PreviewSlotKey>('stage');
   const [previewScale, setPreviewScale] = useState(1);
   const [previewShellSize, setPreviewShellSize] = useState({ width: 960, height: 540 });
+  const [stage, setStage] = useState<StageConfig | null>(null);
+  const [stageSaving, setStageSaving] = useState(false);
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
   const [page4Notice, setPage4Notice] = useState<NoticeState>(null);
   const [historyNotice, setHistoryNotice] = useState<NoticeState>(null);
@@ -1102,12 +1219,12 @@ function Dashboard() {
   function applyServerState(payload: {
     scoreboard?: ScoreboardState;
     matches?: MatchStoreState;
-    background?: BackgroundState;
     avatars?: AvatarCollectionState;
     panels?: PanelState[];
     panel?: PanelState;
     page4?: Page4State;
     page4Panel?: Page4PanelState;
+    stage?: StageConfig;
   }) {
     startTransition(() => {
       if (payload.scoreboard) {
@@ -1115,9 +1232,6 @@ function Dashboard() {
       }
       if (payload.matches) {
         setMatchStore(payload.matches);
-      }
-      if (payload.background) {
-        setBackground(payload.background);
       }
       if (payload.avatars) {
         setAvatars(payload.avatars);
@@ -1142,6 +1256,9 @@ function Dashboard() {
       if (payload.page4Panel && (payload.page4Panel.position === 'left' || payload.page4Panel.position === 'right')) {
         syncPage4PanelFromApi(payload.page4Panel.position, payload.page4Panel);
       }
+      if (payload.stage) {
+        setStage(payload.stage);
+      }
     });
   }
 
@@ -1150,15 +1267,15 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextBackground, nextAvatars, nextPanels, nextPage4, nextSprites] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
-        requestJson<BackgroundState>('/api/background'),
         requestJson<AvatarCollectionState>('/api/avatars'),
         requestJson<{ images: [PanelState, PanelState] }>('/api/images'),
         requestJson<Page4State>('/api/page4'),
         requestJson<{ sprites: SpriteRecord[] }>('/api/sprites'),
+        requestJson<StageConfig>('/api/stage'),
       ]);
 
       if (!auth.authenticated) {
@@ -1169,9 +1286,9 @@ function Dashboard() {
       startTransition(() => {
         setScoreboard(nextScoreboard);
         setMatchStore(nextMatches);
-        setBackground(nextBackground);
         setAvatars(nextAvatars);
         setSprites(nextSprites.sprites);
+        setStage(nextStage);
         syncPanelFromApi('left', nextPanels.images[0]);
         syncPanelFromApi('right', nextPanels.images[1]);
         syncPage4PanelFromApi('left', nextPage4.panels[0]);
@@ -1205,10 +1322,6 @@ function Dashboard() {
 
     scoreboardForm.setFieldsValue({
       scoreboardEnabled: scoreboard.scoreboardEnabled,
-      healthBadgeEnabled: scoreboard.healthBadgeEnabled,
-      abilityBadgeEnabled: scoreboard.abilityBadgeEnabled,
-      centerAreaEnabled: scoreboard.centerAreaEnabled,
-      centerAreaColor: scoreboard.centerAreaColor,
       eventTitleEnabled: scoreboard.eventTitleEnabled,
       eventTitle: scoreboard.eventTitle,
       page2LineupDisplayMode: scoreboard.page2LineupDisplayMode,
@@ -1263,15 +1376,15 @@ function Dashboard() {
       }
     });
 
-    socket.on(SOCKET_EVENTS.backgroundUpdate, (payload) => {
-      if (payload?.background) {
-        applyServerState({ background: payload.background });
-      }
-    });
-
     socket.on(SOCKET_EVENTS.avatarUpdate, (payload) => {
       if (payload?.avatars) {
         applyServerState({ avatars: payload.avatars });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.stageUpdate, (payload) => {
+      if (payload?.stage) {
+        applyServerState({ stage: payload.stage });
       }
     });
 
@@ -1927,6 +2040,39 @@ function Dashboard() {
     }
   }
 
+  async function saveStage(
+    nextPage: StagePageKey,
+    options?: { silent?: boolean; transition?: StageTransitionType },
+  ) {
+    const silent = options?.silent ?? false;
+    const normalized = normalizeStagePage(nextPage);
+    const transition = normalizeStageTransition(options?.transition ?? stage?.transition);
+    // 乐观更新，避免切换回弹
+    setStage((prev) => (prev ? { ...prev, page: normalized, transition } : prev));
+    setStageSaving(true);
+    try {
+      const data = await requestJson<{ success: boolean; stage: StageConfig }>('/api/stage', {
+        method: 'POST',
+        json: { page: normalized, transition },
+      });
+      applyServerState({ stage: data.stage });
+      if (!silent) {
+        message.success(`已切换到：${STAGE_OPTIONS.find((option) => option.value === data.stage.page)?.label ?? data.stage.page}`);
+      }
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+      // 失败时回滚到当前已知值
+      try {
+        const fresh = await requestJson<StageConfig>('/api/stage');
+        setStage(fresh);
+      } catch {
+        // ignore
+      }
+    } finally {
+      setStageSaving(false);
+    }
+  }
+
   async function saveMatchTags(matchId: string, tags: string[]) {
     const nextTags = Array.from(new Set(tags.map((item) => item.trim()).filter(Boolean))).slice(0, 10);
 
@@ -1974,28 +2120,6 @@ function Dashboard() {
     message.success('标签已删除');
   }
 
-  async function uploadBackgroundFile(file: File) {
-    try {
-      const data = await uploadSingleFile<BackgroundState & { success: boolean }>('/api/upload/background', file);
-      setBackground(data);
-      message.success('背景图已更新');
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  async function deleteBackgroundFile() {
-    try {
-      const data = await requestJson<{ success: boolean; background: BackgroundState }>('/api/delete/background', {
-        method: 'DELETE',
-      });
-      setBackground(data.background);
-      message.success('背景图已删除');
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : String(error));
-    }
-  }
-
   async function uploadAvatarFile(side: PanelSide, file: File) {
     try {
       await uploadSingleFile(`/api/upload/avatar/${side}`, file);
@@ -2033,6 +2157,16 @@ function Dashboard() {
     try {
       await copyText(buildPreviewUrl(previewSlot));
       message.success('预览链接已复制');
+    } catch {
+      message.error('复制失败，请手动复制');
+    }
+  }
+
+  async function handleCopyStageLocalAddress() {
+    const host = window.location.port ? `127.0.0.1:${window.location.port}` : '127.0.0.1';
+    try {
+      await copyText(`${host}/`);
+      message.success('推流页地址已复制');
     } catch {
       message.error('复制失败，请手动复制');
     }
@@ -2457,11 +2591,11 @@ function Dashboard() {
 
   const menuItems: MenuProps['items'] = [
     { key: 'roster', label: '赛事面板' },
+    { key: 'stage', label: '直播推流' },
     { key: 'live', label: '实时控制' },
     { key: 'page4', label: '仅显示阵容' },
     { key: 'history', label: '比赛历史' },
     { key: 'scoreboard', label: '显示设置' },
-    { key: 'background', label: '背景素材' },
     { key: 'preview', label: '页面预览' },
     { key: 'about', label: '关于项目' },
   ];
@@ -3090,7 +3224,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'background' ? '背景素材' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -3509,18 +3643,6 @@ function Dashboard() {
                           <Form.Item label="顶部比分栏显示" name="scoreboardEnabled" valuePropName="checked">
                             <Switch />
                           </Form.Item>
-                          <Form.Item label="血量徽标显示" name="healthBadgeEnabled" valuePropName="checked">
-                            <Switch />
-                          </Form.Item>
-                          <Form.Item label="能力值徽标显示" name="abilityBadgeEnabled" valuePropName="checked">
-                            <Switch />
-                          </Form.Item>
-                          <Form.Item label="Center Area 显示" name="centerAreaEnabled" valuePropName="checked">
-                            <Switch />
-                          </Form.Item>
-                          <Form.Item label="Center Area 背景颜色" name="centerAreaColor">
-                            <Input />
-                          </Form.Item>
                         </Space>
                       </Card>
                     </Col>
@@ -3601,39 +3723,73 @@ function Dashboard() {
             </Space>
           ) : null}
 
-          {view === 'background' ? (
-            <Card title="背景图管理">
-              <Row gutter={[18, 18]}>
-                <Col xs={24} xl={10}>
-                  <Upload.Dragger
-                    showUploadList={false}
-                    beforeUpload={(file) => {
-                      void uploadBackgroundFile(file as File);
-                      return false;
-                    }}
-                  >
-                    <p className="ant-upload-text">点击或拖拽上传背景图</p>
-                    <p className="ant-upload-hint">建议使用 1920 × 1080 的直播背景尺寸。</p>
-                  </Upload.Dragger>
-                  <Space wrap className="background-actions">
-                    <Button onClick={() => window.open('/cache/background.png', '_blank')}>查看当前背景</Button>
-                    <Button danger onClick={() => void deleteBackgroundFile()}>删除背景图</Button>
+          {view === 'stage' ? (
+            <Space direction="vertical" size={18} className="page-stack">
+              <Card
+                className="stage-control-card"
+                title="直播推流"
+                extra={
+                  <Space wrap>
+                    <Button href="/" target="_blank">打开推流页面</Button>
+                    <Button onClick={handleCopyStageLocalAddress}>复制推流页地址</Button>
                   </Space>
-                </Col>
-                <Col xs={24} xl={14}>
-                  <Card size="small" className="subtle-card" title="当前背景预览">
-                    {background.exists ? (
-                      <Image
-                        src={`${background.path}?t=${background.mtime ?? Date.now()}`}
-                        className="background-preview-image"
-                      />
-                    ) : (
-                      <Empty description="当前使用默认背景" />
-                    )}
-                  </Card>
-                </Col>
-              </Row>
-            </Card>
+                }
+              >
+                <Space direction="vertical" size={16} className="page-stack">
+                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                    推流软件（OBS 等）只需固定捕获根路径 <code>/</code>。在此切换后，推流页面会实时加载所选画面，无需修改推流来源。
+                  </Paragraph>
+                  <div>
+                    <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>切换过渡效果：</Text>
+                    <Segmented
+                      block
+                      value={normalizeStageTransition(stage?.transition)}
+                      disabled={stageSaving}
+                      options={STAGE_TRANSITION_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                      onChange={(value) => { void saveStage(stage?.page ?? 'page3', { transition: value as StageTransitionType }); }}
+                    />
+                  </div>
+                  <Segmented
+                    block
+                    value={stage?.page ?? 'page3'}
+                    disabled={stageSaving}
+                    options={STAGE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                    onChange={(value) => { void saveStage(value as StagePageKey); }}
+                  />
+                  <Row gutter={[16, 16]}>
+                    {STAGE_OPTIONS.map((option) => {
+                      const active = (stage?.page ?? null) === option.value;
+                      const isBlank = option.value === 'blank';
+                      return (
+                        <Col xs={24} sm={12} md={8} key={option.value}>
+                          <Card
+                            size="small"
+                            hoverable
+                            className={`stage-card ${active ? 'stage-card-active' : ''} ${isBlank ? 'stage-card-blank' : ''}`}
+                            onClick={() => void saveStage(option.value)}
+                          >
+                            <Space direction="vertical" size={6} className="page-stack" style={{ width: '100%' }}>
+                              <Space style={{ justifyContent: 'space-between', width: '100%' }}>
+                                <Text strong>{option.label}</Text>
+                                {active ? <Tag color="green">当前画面</Tag> : null}
+                              </Space>
+                              <Text type="secondary" style={{ fontSize: 12 }}>{option.description}</Text>
+                              {isBlank ? (
+                                <div className="stage-card-thumb stage-card-thumb-blank">
+                                  <span className="stage-card-thumb-mark">黑场</span>
+                                </div>
+                              ) : (
+                                <StageThumb label={option.label} previewPath={option.previewPath} />
+                              )}
+                            </Space>
+                          </Card>
+                        </Col>
+                      );
+                    })}
+                  </Row>
+                </Space>
+              </Card>
+            </Space>
           ) : null}
 
           {view === 'preview' ? (
@@ -3647,6 +3803,7 @@ function Dashboard() {
                   <Segmented
                     value={previewSlot}
                     options={[
+                      { value: 'stage', label: '直播推流' },
                       { value: 'page1', label: '推流页面1' },
                       { value: 'page2', label: '推流页面2' },
                       { value: 'page3', label: '推流页面3' },
@@ -3715,7 +3872,7 @@ function Dashboard() {
                         <Col xs={24} md={8}>
                           <Card size="small" className="subtle-card">
                             <Title level={5}>素材与预览联动</Title>
-                            <Paragraph type="secondary">背景图、头像、推流页面 1/2/3 和等待页都能在后台里一起管理。</Paragraph>
+                            <Paragraph type="secondary">头像、推流页面 1/2/3 和等待页都能在后台里一起管理。</Paragraph>
                           </Card>
                         </Col>
                       </Row>
@@ -3728,7 +3885,7 @@ function Dashboard() {
                       <Title level={4}>项目链接</Title>
                       <Link href="/login.html" target="_blank">登录页入口</Link>
                       <Link href="/admin.html" target="_blank">当前后台入口</Link>
-                      <Link href="/roco-pvp.html" target="_blank">推流页面 2</Link>
+                      <Link href="/roco-pvp-page2.html" target="_blank">推流页面 2</Link>
                       <Link href="https://wiki.biligame.com/rocom/" target="_blank">精灵图素材来源</Link>
                       <Link href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</Link>
                     </Space>

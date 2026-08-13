@@ -13,7 +13,6 @@ export interface AppPaths {
   dataDir: string;
   runtimeDir: string;
   cacheDir: string;
-  backgroundFile: string;
   leftAvatarFile: string;
   rightAvatarFile: string;
   leftAvatarMetaFile: string;
@@ -21,6 +20,7 @@ export interface AppPaths {
   scoreboardFile: string;
   page4File: string;
   matchesFile: string;
+  stageFile: string;
   configFile: string;
   panelStatePath(position: 'left' | 'right'): string;
 }
@@ -42,7 +42,6 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     dataDir: path.join(projectRoot, 'resources', 'data'),
     runtimeDir,
     cacheDir,
-    backgroundFile: path.join(cacheDir, 'background.png'),
     leftAvatarFile: path.join(cacheDir, 'left-avatar.png'),
     rightAvatarFile: path.join(cacheDir, 'right-avatar.png'),
     leftAvatarMetaFile: path.join(cacheDir, 'left-avatar.json'),
@@ -50,6 +49,7 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     scoreboardFile: path.join(cacheDir, 'scoreboard.json'),
     page4File: path.join(cacheDir, 'page4.json'),
     matchesFile: path.join(cacheDir, 'matches.json'),
+    stageFile: path.join(cacheDir, 'stage.json'),
     configFile: path.join(runtimeDir, 'config.json'),
     panelStatePath(position: 'left' | 'right') {
       return path.join(cacheDir, `${position}.json`);

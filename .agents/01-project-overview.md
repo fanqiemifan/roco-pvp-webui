@@ -47,7 +47,7 @@ pvp-webUI-for-roco/
 | electron/services/match-service.ts | 比赛管理核心服务（创建、更新、胜负记录、撤销） |
 | electron/services/state-service.ts | 面板状态和记分牌状态管理 |
 | electron/services/sprite-service.ts | 精灵数据加载、搜索、快速填充 |
-| electron/services/image-service.ts | 背景图和头像上传/删除/读取 |
+| electron/services/image-service.ts | 头像上传/删除/读取 |
 | electron/services/config-service.ts | 运行时配置（端口）管理 |
 | electron/services/path-service.ts | 文件路径管理和路径工厂 |
 
@@ -70,7 +70,7 @@ pvp-webUI-for-roco/
 
 | 文件路径 | 说明 |
 |---------|------|
-| src/scripts/overlay.js | 主展示页脚本（推流页面1），双面板、记分牌、背景 |
+| src/scripts/overlay.js | 推流页面1脚本（阵容展示，读取赛事面板阵容数据） |
 | src/scripts/lineup-display.js | 阵容展示页脚本（推流页面2），血量条、能量值 |
 | src/scripts/live-standby-demo.js | 等待页脚本 |
 | src/scripts/page3-display.js | 推流页面3脚本 |

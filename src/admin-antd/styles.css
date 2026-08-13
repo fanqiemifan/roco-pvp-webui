@@ -869,17 +869,6 @@ a {
   font-size: 12px;
 }
 
-.background-actions {
-  margin-top: 16px;
-}
-
-.background-preview-image {
-  width: 100%;
-  max-height: 420px;
-  object-fit: cover;
-  border-radius: 12px;
-}
-
 .preview-frame-shell {
   position: relative;
   width: 100%;
@@ -1000,4 +989,90 @@ a {
   .live-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 直播推流 */
+.stage-control-card .ant-segmented {
+  --ant-segmented-item-selected-color: #2f2418;
+}
+
+.stage-card {
+  border: 1px solid rgba(91, 67, 43, 0.14);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.stage-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(90, 55, 26, 0.16);
+}
+
+.stage-card-active {
+  border-color: #c7632f;
+  box-shadow: 0 0 0 2px rgba(199, 99, 47, 0.32), 0 12px 28px rgba(90, 55, 26, 0.16);
+}
+
+.stage-card-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(91, 67, 43, 0.14);
+}
+
+.stage-card-thumb-blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+/* 缩略图缩放容器：尺寸 = 1920*scale × 1080*scale，裁剪溢出内容 */
+.stage-card-thumb-viewport {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+/* 缩放舞台：固定 1920x1080，transform-origin top left，由父级 scale 等比缩小 */
+.stage-card-thumb-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: top left;
+}
+
+.stage-card-frame {
+  display: block;
+  width: 1920px;
+  height: 1080px;
+  border: 0;
+  background: #000;
+}
+
+.stage-card-thumb-mark {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  font: 600 12px/1.4 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.stage-card-thumb-blank .stage-card-thumb-mark {
+  position: static;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
 }

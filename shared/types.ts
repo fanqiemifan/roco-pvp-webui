@@ -62,15 +62,11 @@ export interface ScoreboardState {
   rightScore: string;
   bestOf: number;
   scoreboardEnabled: boolean;
-  healthBadgeEnabled: boolean;
-  abilityBadgeEnabled: boolean;
   eventTitle: string;
   eventTitleEnabled: boolean;
   page2LineupDisplayMode: 'default' | 'avatar-only';
   nameFontSize: number;
   scoreFontSize: number;
-  centerAreaEnabled: boolean;
-  centerAreaColor: string;
   mtime: number | null;
 }
 
@@ -123,13 +119,6 @@ export interface MatchStoreState {
   mtime: number | null;
 }
 
-export interface BackgroundState {
-  exists: boolean;
-  path?: string;
-  size?: number;
-  mtime?: number;
-}
-
 export interface AvatarState {
   side: 'left' | 'right';
   exists: boolean;
@@ -143,13 +132,38 @@ export interface AvatarCollectionState {
   right: AvatarState;
 }
 
+/**
+ * 直播推流画面 key：决定推流载体页（index.html）要加载哪个推流页面。
+ * - page1-overlay: 推流页面1（Overlay 比分栏布局）
+ * - page2: 推流页面2（全局阵容展示）
+ * - page3: 推流页面3（头像比分阵容）
+ * - page4: 仅显示阵容
+ * - standby: 等待页
+ * - blank: 黑场（不加载任何画面）
+ */
+export type StagePageKey =
+  | 'page1-overlay'
+  | 'page2'
+  | 'page3'
+  | 'page4'
+  | 'standby'
+  | 'blank';
+
+export type StageTransitionType = 'none' | 'blinds' | 'zoom';
+
+export interface StageConfig {
+  page: StagePageKey;
+  transition: StageTransitionType;
+  mtime: number | null;
+}
+
 export interface SnapshotPayload {
   panels: [PanelState, PanelState];
   page4: Page4State;
   scoreboard: ScoreboardState;
-  background: BackgroundState;
   avatars: AvatarCollectionState;
   matches: MatchStoreState;
+  stage: StageConfig;
 }
 
 export interface QuickFillMatch {

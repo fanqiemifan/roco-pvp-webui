@@ -3,46 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>洛克王国PVP - B站直播推流</title>
-    <link rel="stylesheet" href="/styles/style.css">
+    <title>洛克王国PVP - 推流载体</title>
+    <link rel="stylesheet" href="/styles/stage-carrier.css">
 </head>
 <body>
-    <div class="frame83">
-        <div class="frame3">
-            <div class="scoreboard">
-                <div class="scoreboard-side scoreboard-left">
-                    <div class="player-name" id="leftPlayerName"></div>
-                    <div class="player-score" id="leftPlayerScore"></div>
-                </div>
-                <div class="scoreboard-side scoreboard-right">
-                    <div class="player-score" id="rightPlayerScore"></div>
-                    <div class="player-name" id="rightPlayerName"></div>
-                </div>
-            </div>
-            <div class="side-panel left-panel">
-                <div class="sprite-slot" data-slot="0"></div>
-                <div class="sprite-slot" data-slot="1"></div>
-                <div class="sprite-slot" data-slot="2"></div>
-                <div class="sprite-slot" data-slot="3"></div>
-                <div class="sprite-slot" data-slot="4"></div>
-                <div class="sprite-slot" data-slot="5"></div>
-            </div>
-            
-            <div class="center-area">
-            </div>
-            
-            <div class="side-panel right-panel">
-                <div class="sprite-slot" data-slot="0"></div>
-                <div class="sprite-slot" data-slot="1"></div>
-                <div class="sprite-slot" data-slot="2"></div>
-                <div class="sprite-slot" data-slot="3"></div>
-                <div class="sprite-slot" data-slot="4"></div>
-                <div class="sprite-slot" data-slot="5"></div>
+    <!--
+        推流载体页：本身不承载任何画面内容，仅作为一个全屏 iframe 载体。
+        由后台「推流页面1设置 / 直播推流」决定要加载哪个推流页面（页面2/3/仅阵容/等待页/Overlay 等）。
+        OBS 等推流软件只需固定捕获本页（http://host/），切换画面由直播推流实时下发，无需重新配置来源。
+    -->
+    <div class="stage-carrier" id="stageCarrier" data-stage="loading">
+        <iframe
+            id="stageFrame"
+            class="stage-frame"
+            title="推流载体"
+            src="about:blank"
+            allow="autoplay; fullscreen"
+            allowtransparency="true"
+        ></iframe>
+        <div class="stage-fallback" id="stageFallback">
+            <div class="stage-fallback-inner">
+                <div class="stage-fallback-title">推流载体</div>
+                <div class="stage-fallback-text" id="stageFallbackText">正在等待导播画面…</div>
             </div>
         </div>
+        <div class="stage-transition" id="stageTransition" aria-hidden="true"></div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="/scripts/overlay.js"></script>
+    <script src="/scripts/stage-carrier.js"></script>
 </body>
 </html>

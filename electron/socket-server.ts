@@ -11,9 +11,6 @@ import { SOCKET_EVENTS } from '../shared/events.js';
 import type { SnapshotPayload } from '../shared/types.js';
 import { buildQuickFillPreview, listSprites, spriteMatchesKeyword } from './services/sprite-service.js';
 import {
-  getBackgroundState,
-  saveBackground,
-  deleteBackground,
   ensureRuntimeDirs,
   getAvatarStates,
   saveAvatar,
@@ -21,6 +18,10 @@ import {
   readAvatarMimeType,
 } from './services/image-service.js';
 import { loadRuntimeConfig, saveRuntimeConfig } from './services/config-service.js';
+import {
+  getStageState,
+  saveStageState,
+} from './services/stage-service.js';
 import {
   clearPage4State,
   getPage4State,
@@ -72,9 +73,9 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     panels: [getPanelState(paths, 'left'), getPanelState(paths, 'right')],
     page4: getPage4State(paths),
     scoreboard: getScoreboardState(paths),
-    background: getBackgroundState(paths),
     avatars: getAvatarStates(paths),
     matches: getMatchStore(paths),
+    stage: getStageState(paths),
   };
 }
 
@@ -253,11 +254,12 @@ export async function createLocalServer(
   // === Public routes (no auth required) ===
   app.get('/', (_request, response) => sendPage(paths, response, 'index.html'));
   app.get('/login.html', (_request, response) => sendLoginPage(paths, response));
-  app.get('/roco-pvp.html', (_request, response) => sendPage(paths, response, 'roco-pvp.html'));
+  app.get('/roco-pvp-page2.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page2.html'));
   app.get('/roco-pvp-page3.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page3.html'));
   app.get('/page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
   app.get('/roco-pvp-page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
   app.get('/live-standby-demo.html', (_request, response) => sendPage(paths, response, 'live-standby-demo.html'));
+  app.get('/roco-pvp-page1.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page1.html'));
 
   // Auth API — always public
   app.post('/api/auth/login', async (req, res) => {
@@ -309,7 +311,7 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/live-standby-demo.html'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/live-standby-demo.html'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 
@@ -332,10 +334,6 @@ export async function createLocalServer(
     response.json({ images: [getPanelState(paths, 'left'), getPanelState(paths, 'right')] });
   });
 
-  app.get('/api/background', (_request, response) => {
-    response.json(getBackgroundState(paths));
-  });
-
   app.get('/api/avatars', (_request, response) => {
     response.json(getAvatarStates(paths));
   });
@@ -346,6 +344,20 @@ export async function createLocalServer(
 
   app.get('/api/page4', (_request, response) => {
     response.json(getPage4State(paths));
+  });
+
+  app.get('/api/stage', (_request, response) => {
+    response.json(getStageState(paths));
+  });
+
+  app.post('/api/stage', (request, response) => {
+    try {
+      const stage = saveStageState(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.stageUpdate, { stage });
+      response.json({ success: true, stage });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
   });
 
   app.get('/api/matches', (_request, response) => {
@@ -741,23 +753,6 @@ export async function createLocalServer(
     }
   });
 
-  app.post('/api/upload/background', upload.single('file'), (request, response) => {
-    if (!request.file?.buffer) {
-      response.status(400).json({ success: false, error: 'No file data' });
-      return;
-    }
-
-    const background = saveBackground(paths, request.file.buffer);
-    io.emit(SOCKET_EVENTS.backgroundUpdate, { background });
-    response.json({ success: true, ...background });
-  });
-
-  app.delete('/api/delete/background', (_request, response) => {
-    const background = deleteBackground(paths);
-    io.emit(SOCKET_EVENTS.backgroundUpdate, { background });
-    response.json({ success: true, position: 'background', background });
-  });
-
   app.post('/api/upload/avatar/:side', upload.single('file'), (request, response) => {
     const side = request.params.side;
     if (side !== 'left' && side !== 'right') {
@@ -769,9 +764,15 @@ export async function createLocalServer(
       return;
     }
 
-    const avatar = saveAvatar(paths, side, request.file.buffer, request.file.mimetype);
-    io.emit(SOCKET_EVENTS.avatarUpdate, { side, avatar, avatars: getAvatarStates(paths) });
-    response.json({ success: true, side, avatar });
+    try {
+      // saveAvatar now validates the payload's magic bytes and only accepts
+      // real raster images, so HTML/etc. payloads are rejected before storage.
+      const avatar = saveAvatar(paths, side, request.file.buffer);
+      io.emit(SOCKET_EVENTS.avatarUpdate, { side, avatar, avatars: getAvatarStates(paths) });
+      response.json({ success: true, side, avatar });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
   });
 
   app.delete('/api/delete/avatar/:side', (request, response) => {
@@ -795,14 +796,6 @@ export async function createLocalServer(
       port: Number(request.body?.port),
     });
     response.json({ success: true, config });
-  });
-
-  app.get('/cache/background.png', (_request, response) => {
-    if (!fs.existsSync(paths.backgroundFile)) {
-      response.status(404).end();
-      return;
-    }
-    response.sendFile(paths.backgroundFile);
   });
 
   app.get('/api/avatar/left-avatar.png', (_request, response) => {

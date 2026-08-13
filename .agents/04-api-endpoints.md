@@ -53,9 +53,6 @@
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
 |-------------|------|------|------|------|
 | 获取双面板 | GET | /api/images | 获取双面板状态 | electron/socket-server.ts |
-| 获取背景 | GET | /api/background | 获取背景状态 | electron/socket-server.ts |
-| 上传背景 | POST | /api/upload/background | 上传背景图 | electron/socket-server.ts |
-| 删除背景 | DELETE | /api/delete/background | 删除背景图 | electron/socket-server.ts |
 | 获取头像 | GET | /api/avatars | 获取左右头像状态 | electron/socket-server.ts |
 | 上传头像 | POST | /api/upload/avatar/:side | 上传头像（side: left/right） | electron/socket-server.ts |
 | 删除头像 | DELETE | /api/delete/avatar/:side | 删除头像 | electron/socket-server.ts |
