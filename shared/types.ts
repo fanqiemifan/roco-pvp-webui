@@ -133,7 +133,7 @@ export interface AvatarCollectionState {
 }
 
 /**
- * 导播台画面 key：决定推流载体页（index.html）要加载哪个推流页面。
+ * 直播推流画面 key：决定推流载体页（index.html）要加载哪个推流页面。
  * - page1-overlay: 推流页面1（Overlay 比分栏布局）
  * - page2: 推流页面2（全局阵容展示）
  * - page3: 推流页面3（头像比分阵容）

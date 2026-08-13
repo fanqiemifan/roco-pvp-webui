@@ -11,7 +11,7 @@ export const SUPPORTED_IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.we
 export const SUPPORTED_BEST_OF = new Set([1, 3, 5, 7]);
 
 /**
- * 导播台画面 key 集合：决定推流载体页（index.html）加载哪个推流页面。
+ * 直播推流画面 key 集合：决定推流载体页（index.html）加载哪个推流页面。
  * - page1-overlay: 推流页面1（Overlay 比分栏布局）
  * - page2: 推流页面2（全局阵容展示）
  * - page3: 推流页面3（头像比分阵容）
@@ -30,7 +30,7 @@ export const SUPPORTED_STAGE_PAGES = new Set([
 ]);
 
 /**
- * 导播台切换过渡效果集合：
+ * 直播推流切换过渡效果集合：
  * - none: 无过渡（直接切换）
  * - blinds: 双向百叶窗
  * - zoom: 缩放冲击（中心脉冲）

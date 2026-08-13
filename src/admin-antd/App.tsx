@@ -163,7 +163,7 @@ const DEFAULT_TAGS = ['淘汰赛', '海选赛', '128进64', '64进32', '32进16'
 
 const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
   stage: {
-    title: '导播台（全局导播推流页面）',
+    title: '直播推流（全局推流页面）',
     fileName: 'index.html',
     path: '/',
   },
@@ -2591,7 +2591,7 @@ function Dashboard() {
 
   const menuItems: MenuProps['items'] = [
     { key: 'roster', label: '赛事面板' },
-    { key: 'stage', label: '导播台' },
+    { key: 'stage', label: '直播推流' },
     { key: 'live', label: '实时控制' },
     { key: 'page4', label: '仅显示阵容' },
     { key: 'history', label: '比赛历史' },
@@ -3224,7 +3224,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'stage' ? '导播台' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -3727,7 +3727,7 @@ function Dashboard() {
             <Space direction="vertical" size={18} className="page-stack">
               <Card
                 className="stage-control-card"
-                title="导播台"
+                title="直播推流"
                 extra={
                   <Space wrap>
                     <Button href="/" target="_blank">打开推流页面</Button>
@@ -3803,7 +3803,7 @@ function Dashboard() {
                   <Segmented
                     value={previewSlot}
                     options={[
-                      { value: 'stage', label: '导播台' },
+                      { value: 'stage', label: '直播推流' },
                       { value: 'page1', label: '推流页面1' },
                       { value: 'page2', label: '推流页面2' },
                       { value: 'page3', label: '推流页面3' },
