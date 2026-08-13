@@ -66,7 +66,7 @@ const { TextArea } = Input;
 type PanelSide = 'left' | 'right';
 type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'scoreboard' | 'preview' | 'stage' | 'about';
 
-type PreviewSlotKey = 'page1' | 'page2' | 'page3' | 'page4' | 'standby';
+type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'standby';
 
 type JsonInit = RequestInit & {
   json?: unknown;
@@ -162,15 +162,20 @@ declare global {
 const DEFAULT_TAGS = ['淘汰赛', '海选赛', '128进64', '64进32', '32进16', '16进8', '8进4', '4进2', '季军赛', '决赛'];
 
 const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
-  page1: {
-    title: '推流页面1',
+  stage: {
+    title: '导播台（全局导播推流页面）',
     fileName: 'index.html',
     path: '/',
   },
+  page1: {
+    title: '推流页面1',
+    fileName: 'roco-pvp-page1.html',
+    path: '/roco-pvp-page1.html',
+  },
   page2: {
     title: '推流页面2',
-    fileName: 'roco-pvp.html',
-    path: '/roco-pvp.html',
+    fileName: 'roco-pvp-page2.html',
+    path: '/roco-pvp-page2.html',
   },
   page3: {
     title: '推流页面3',
@@ -192,15 +197,15 @@ const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
 const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; description: string; previewPath: string }> = [
   {
     value: 'page1-overlay',
-    label: '推流页面1（Overlay）',
+    label: '推流页面1',
     description: '带比分栏 + 左右精灵槽的经典 Overlay 布局',
-    previewPath: '/roco-overlay.html',
+    previewPath: '/roco-pvp-page1.html',
   },
   {
     value: 'page2',
     label: '推流页面2',
     description: '全局阵容展示（左右阵容 + 比分 + 赛事标题）',
-    previewPath: '/roco-pvp.html',
+    previewPath: '/roco-pvp-page2.html',
   },
   {
     value: 'page3',
@@ -1110,7 +1115,7 @@ function Dashboard() {
   const [selectedHistoryKeys, setSelectedHistoryKeys] = useState<React.Key[]>([]);
   const [expandedHistoryKeys, setExpandedHistoryKeys] = useState<React.Key[]>([]);
   const [historyTagFilter, setHistoryTagFilter] = useState<string | null>(null);
-  const [previewSlot, setPreviewSlot] = useState<PreviewSlotKey>('page1');
+  const [previewSlot, setPreviewSlot] = useState<PreviewSlotKey>('stage');
   const [previewScale, setPreviewScale] = useState(1);
   const [previewShellSize, setPreviewShellSize] = useState({ width: 960, height: 540 });
   const [stage, setStage] = useState<StageConfig | null>(null);
@@ -3798,6 +3803,7 @@ function Dashboard() {
                   <Segmented
                     value={previewSlot}
                     options={[
+                      { value: 'stage', label: '导播台' },
                       { value: 'page1', label: '推流页面1' },
                       { value: 'page2', label: '推流页面2' },
                       { value: 'page3', label: '推流页面3' },
@@ -3879,7 +3885,7 @@ function Dashboard() {
                       <Title level={4}>项目链接</Title>
                       <Link href="/login.html" target="_blank">登录页入口</Link>
                       <Link href="/admin.html" target="_blank">当前后台入口</Link>
-                      <Link href="/roco-pvp.html" target="_blank">推流页面 2</Link>
+                      <Link href="/roco-pvp-page2.html" target="_blank">推流页面 2</Link>
                       <Link href="https://wiki.biligame.com/rocom/" target="_blank">精灵图素材来源</Link>
                       <Link href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</Link>
                     </Space>

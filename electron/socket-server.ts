@@ -254,12 +254,12 @@ export async function createLocalServer(
   // === Public routes (no auth required) ===
   app.get('/', (_request, response) => sendPage(paths, response, 'index.html'));
   app.get('/login.html', (_request, response) => sendLoginPage(paths, response));
-  app.get('/roco-pvp.html', (_request, response) => sendPage(paths, response, 'roco-pvp.html'));
+  app.get('/roco-pvp-page2.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page2.html'));
   app.get('/roco-pvp-page3.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page3.html'));
   app.get('/page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
   app.get('/roco-pvp-page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
   app.get('/live-standby-demo.html', (_request, response) => sendPage(paths, response, 'live-standby-demo.html'));
-  app.get('/roco-overlay.html', (_request, response) => sendPage(paths, response, 'roco-overlay.html'));
+  app.get('/roco-pvp-page1.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page1.html'));
 
   // Auth API — always public
   app.post('/api/auth/login', async (req, res) => {
@@ -311,7 +311,7 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/live-standby-demo.html', '/roco-overlay.html'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/live-standby-demo.html'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 

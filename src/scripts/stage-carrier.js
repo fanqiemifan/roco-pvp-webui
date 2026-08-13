@@ -10,8 +10,8 @@
      * 3. 切换时做淡入淡出过渡，加载失败展示回退提示。
      *
      * 导播画面用页面 key 标识，支持的 key 与对应路径：
-     *   - page1-overlay : 推流页面1（Overlay 比分栏布局）  -> /roco-overlay.html
-     *   - page2         : 推流页面2（全局阵容展示）       -> /roco-pvp.html
+     *   - page1-overlay : 推流页面1（Overlay 比分栏布局）  -> /roco-pvp-page1.html
+     *   - page2         : 推流页面2（全局阵容展示）       -> /roco-pvp-page2.html
      *   - page3         : 推流页面3（头像比分阵容）       -> /roco-pvp-page3.html
      *   - page4         : 仅显示阵容                      -> /roco-pvp-page4.html
      *   - standby       : 等待页                          -> /live-standby-demo.html
@@ -19,8 +19,8 @@
      */
 
     var STAGE_PAGES = {
-        'page1-overlay': { label: '推流页面1（Overlay）', path: '/roco-overlay.html' },
-        'page2': { label: '推流页面2', path: '/roco-pvp.html' },
+        'page1-overlay': { label: '推流页面1', path: '/roco-pvp-page1.html' },
+        'page2': { label: '推流页面2', path: '/roco-pvp-page2.html' },
         'page3': { label: '推流页面3', path: '/roco-pvp-page3.html' },
         'page4': { label: '仅显示阵容', path: '/roco-pvp-page4.html' },
         'standby': { label: '等待页', path: '/live-standby-demo.html' },
