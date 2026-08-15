@@ -5918,5 +5918,25 @@
     "缩略图": "https://patchwiki.biligame.com/images/rocom/thumb/5/58/19ehwm1mmk8iidn2s3zw2fy2v51z1tv.png/46px-Head_3746.png",
     "缩略图图片ID": "3746",
     "path": "/resources/sprites-img/NO.440_睡铃雪影娃娃.png"
+  },
+  {
+    "精灵编号": "NO.441",
+    "精灵名称": "宝藏小狐",
+    "精灵属性": "普通",
+    "精灵形态": "一阶",
+    "精灵名字2": "宝藏小狐",
+    "缩略图": "https://patchwiki.biligame.com/images/rocom/thumb/7/7c/690n5t1mnsocezt2vzhf6hdzby9824p.png/46px-Head_3740.png",
+    "缩略图图片ID": "3740",
+    "path": "/resources/sprites-img/NO.441_宝藏小狐.png"
+  },
+  {
+    "精灵编号": "NO.442",
+    "精灵名称": "宝藏沙狐",
+    "精灵属性": "普通",
+    "精灵形态": "二阶",
+    "精灵名字2": "宝藏沙狐",
+    "缩略图": "https://patchwiki.biligame.com/images/rocom/thumb/f/ff/esjftr9ldicwjdkbmbtbxh9cmw4fykw.png/46px-Head_3741.png",
+    "缩略图图片ID": "3741",
+    "path": "/resources/sprites-img/NO.442_宝藏沙狐.png"
   }
 ]
