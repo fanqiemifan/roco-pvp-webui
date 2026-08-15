@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Alibaba PuHuiTi 2.0";
+  src: url("/assets/fonts/Alibaba_PuHuiTi_2.0_65_Medium_65_Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
 .sprite-pet-card {
   --pet-card-size: 96px;
   --pet-name-left: 37;
