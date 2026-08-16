@@ -13,6 +13,7 @@ import {
   Space,
   Typography,
 } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
 
 type LoginFormValues = {
   username: string;
@@ -203,6 +204,7 @@ function LoginPage() {
 export function LoginApp() {
   return (
     <ConfigProvider
+      locale={zhCN}
       theme={{
         token: {
           colorPrimary: '#b6532a',

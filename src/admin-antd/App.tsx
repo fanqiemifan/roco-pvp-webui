@@ -34,6 +34,7 @@ import {
   Typography,
   Upload,
 } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
 import type { MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { io } from 'socket.io-client';
@@ -2645,7 +2646,7 @@ function Dashboard() {
 
 export function AdminApp() {
   return (
-    <ConfigProvider theme={theme}>
+    <ConfigProvider theme={theme} locale={zhCN}>
       <App>
         <Dashboard />
       </App>
