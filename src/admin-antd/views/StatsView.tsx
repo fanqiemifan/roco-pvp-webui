@@ -30,6 +30,23 @@ import type { SpriteUsageRow, StatsMetricKey, StatsRangeKey } from '../lib/stats
 
 const { Text } = Typography;
 
+function StatsColumnTitle({ text, tip }: { text: string; tip: string }) {
+  return (
+    <Tooltip
+      styles={{
+        root: { maxWidth: 'min(300px, 80vw)' },
+        container: { whiteSpace: 'normal', wordBreak: 'break-word' },
+      }}
+      title={tip}
+    >
+      <span className="stats-column-title">
+        {text}
+        <span className="stats-column-hint" aria-hidden>?</span>
+      </span>
+    </Tooltip>
+  );
+}
+
 type StatsViewProps = {
   matches: MatchStoreState['matches'];
   spriteMap: Map<string, SpriteRecord>;
@@ -128,22 +145,15 @@ export function StatsView({
     },
     {
       title: (
-        <Tooltip
-          styles={{
-            root: { maxWidth: 'min(300px, 80vw)' },
-            container: { whiteSpace: 'normal', wordBreak: 'break-word' },
-          }}
-          title={metric === 'pickRate'
+        <StatsColumnTitle
+          text={metric === 'pickRate' ? '使用率' : '上场率'}
+          tip={metric === 'pickRate'
             ? '使用率 = 登场只次 ÷ 总登场只次（同局重复携带按只次计）'
             : '上场率 = 登场场次 ÷ 总场次（同局同侧重复携带只计 1 次）'}
-        >
-          <span className="stats-column-title">
-            {metric === 'pickRate' ? '使用率' : '上场率'}
-            <span className="stats-column-hint" aria-hidden>?</span>
-          </span>
-        </Tooltip>
+        />
       ),
       key: 'usage',
+      showSorterTooltip: false,
       render: (_: unknown, record: SpriteUsageRow) => (
         <div className="stats-usage-cell">
           <Progress
@@ -158,19 +168,21 @@ export function StatsView({
       sorter: (a, b) => a.usageRate - b.usageRate,
     },
     {
-      title: '登场只次',
+      title: <StatsColumnTitle text="登场只次" tip="登场只次 = 精灵在局内阵容中出现的次数（同名精灵同局重复携带按只次逐只计）" />,
       dataIndex: 'picks',
       key: 'picks',
       width: 96,
       align: 'right',
+      showSorterTooltip: false,
       sorter: (a, b) => a.picks - b.picks,
     },
     {
-      title: '登场场次',
+      title: <StatsColumnTitle text="登场场次" tip="登场场次 = 精灵登场的场次数（同局同侧重复携带同名精灵只计 1 次）" />,
       dataIndex: 'games',
       key: 'games',
       width: 96,
       align: 'right',
+      showSorterTooltip: false,
       sorter: (a, b) => a.games - b.games,
     },
     {
@@ -190,7 +202,7 @@ export function StatsView({
       ),
     },
     {
-      title: '趋势',
+      title: <StatsColumnTitle text="趋势" tip="趋势 = 本周期登场场次 − 上一等长周期登场场次（范围选择“全部”时不显示）" />,
       key: 'trend',
       width: 80,
       align: 'center',
