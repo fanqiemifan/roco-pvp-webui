@@ -159,7 +159,11 @@ function closeFloatMenuWindow(): void {
   floatMenuWindow = null;
 }
 
-function openFloatMenuWindow(payload: { side: string; slot: number }): void {
+function openFloatMenuWindow(payload: {
+  side: string;
+  slot: number;
+  rect?: { x: number; y: number; width: number; height: number };
+}): void {
   if (payload.side !== 'left' && payload.side !== 'right') {
     return;
   }
@@ -170,14 +174,34 @@ function openFloatMenuWindow(payload: { side: string; slot: number }): void {
 
   closeFloatMenuWindow();
 
-  const parentBounds = floatWindow && !floatWindow.isDestroyed() ? floatWindow.getBounds() : null;
+  const parentBounds = floatWindow && !floatWindow.isDestroyed() ? floatWindow.getContentBounds() : null;
   const display = parentBounds
     ? screen.getDisplayMatching(parentBounds)
     : screen.getPrimaryDisplay();
   const area = display.workArea;
 
-  let x = parentBounds ? parentBounds.x + parentBounds.width + 4 : area.x + 60;
-  let y = parentBounds ? parentBounds.y : area.y + 60;
+  let x: number;
+  let y: number;
+  const rect = payload.rect;
+  const hasRect = Boolean(
+    rect
+    && Number.isFinite(rect.x)
+    && Number.isFinite(rect.y)
+    && Number.isFinite(rect.width)
+    && Number.isFinite(rect.height),
+  );
+
+  if (parentBounds && hasRect) {
+    // 定位到对应精灵上方，横向居中
+    const spriteScreenX = parentBounds.x + rect!.x + rect!.width / 2;
+    const spriteScreenY = parentBounds.y + rect!.y;
+    x = Math.round(spriteScreenX - FLOAT_MENU_WIDTH / 2);
+    y = Math.round(spriteScreenY - FLOAT_MENU_HEIGHT - 6);
+  } else {
+    x = parentBounds ? parentBounds.x + parentBounds.width + 4 : area.x + 60;
+    y = parentBounds ? parentBounds.y : area.y + 60;
+  }
+
   x = Math.max(area.x, Math.min(x, area.x + area.width - FLOAT_MENU_WIDTH));
   y = Math.max(area.y, Math.min(y, area.y + area.height - FLOAT_MENU_HEIGHT));
 

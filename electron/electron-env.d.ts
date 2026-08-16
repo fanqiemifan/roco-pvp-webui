@@ -15,7 +15,7 @@ declare global {
       toggle(): void;
       close(): void;
       reportShape(rect: { x: number; y: number; width: number; height: number }): void;
-      openMenu(payload: { side: string; slot: number }): void;
+      openMenu(payload: { side: string; slot: number; rect?: { x: number; y: number; width: number; height: number } }): void;
       closeMenu(): void;
     };
   }

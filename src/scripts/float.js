@@ -111,26 +111,26 @@
         });
         el.addEventListener('contextmenu', (event) => {
             event.preventDefault();
-            openSpriteMenu(side, index);
+            const rect = el.getBoundingClientRect();
+            openSpriteMenu(side, index, { x: rect.left, y: rect.top, width: rect.width, height: rect.height });
         });
         return el;
     }
 
     let menuPopupWindow = null;
 
-    function openSpriteMenu(side, slotIndex) {
+    function openSpriteMenu(side, slotIndex, rect) {
         if (window.rocoFloat && typeof window.rocoFloat.openMenu === 'function') {
-            window.rocoFloat.openMenu({ side, slot: slotIndex });
+            window.rocoFloat.openMenu({ side, slot: slotIndex, rect });
             return;
         }
         if (menuPopupWindow && !menuPopupWindow.closed) {
             menuPopupWindow.close();
         }
-        menuPopupWindow = window.open(
-            `/float-menu.html?side=${encodeURIComponent(side)}&slot=${encodeURIComponent(String(slotIndex))}`,
-            '_blank',
-            'width=360,height=180,popup=yes',
-        );
+        const url = `/float-menu.html?side=${encodeURIComponent(side)}&slot=${encodeURIComponent(String(slotIndex))}`;
+        const left = Math.max(0, Math.round(window.screenX + rect.x + rect.width / 2 - 180));
+        const top = Math.max(0, Math.round(window.screenY + rect.y - 186));
+        menuPopupWindow = window.open(url, '_blank', `width=360,height=180,popup=yes,left=${left},top=${top}`);
     }
 
     function renderSlot(slotEl, slotData) {
