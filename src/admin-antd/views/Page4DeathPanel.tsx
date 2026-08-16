@@ -23,11 +23,11 @@ export function Page4DeathPanel({ page4Panels, onTogglePage4DeadAt }: Page4Death
 
   return (
     <Card
-      title="仅显示阵容精灵阵亡控制"
+      title="仅显阵容精灵阵亡控制"
       extra={<Text type="secondary">已选 {selectedCount} / 12 · 阵亡 {deadCount}</Text>}
     >
       <Space direction="vertical" size={12} className="control-stack">
-        <Paragraph type="secondary">点击已有精灵图片可切换阵亡状态，阵亡效果会同步应用到仅显示阵容页。</Paragraph>
+        <Paragraph type="secondary">点击已有精灵图片可切换阵亡状态，阵亡效果会同步应用到仅显阵容页。</Paragraph>
         <div className="page4-death-slot-grid">
           {entries.map(({ side, slot, index }) => {
             const isEmpty = !slot.sprite;

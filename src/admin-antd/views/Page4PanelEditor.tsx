@@ -89,7 +89,7 @@ export function Page4PanelEditor({
   return (
     <Card
       className="panel-editor-card"
-      title={`${side === 'left' ? '左侧' : '右侧'} 仅显示阵容`}
+      title={`${side === 'left' ? '左侧' : '右侧'} 仅显阵容`}
       extra={(
         <Space wrap>
           <Text type="secondary">已选 {summary.selectedCount} / 6</Text>
@@ -137,7 +137,7 @@ export function Page4PanelEditor({
                 ) : null}
                 <div>
                   <Text strong>快速文本填充</Text>
-                  <Paragraph type="secondary">一行一个精灵名，先生成仅显示阵容本地草稿，再保存到展示页。</Paragraph>
+                  <Paragraph type="secondary">一行一个精灵名，先生成仅显阵容本地草稿，再保存到展示页。</Paragraph>
                 </div>
                 <TextArea
                   rows={4}

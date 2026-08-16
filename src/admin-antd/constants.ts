@@ -26,7 +26,7 @@ export const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     path: '/roco-pvp-page3.html',
   },
   page4: {
-    title: '仅显示阵容',
+    title: '仅显阵容',
     fileName: 'roco-pvp-page4.html',
     path: '/roco-pvp-page4.html',
   },
@@ -58,7 +58,7 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
   },
   {
     value: 'page4',
-    label: '仅显示阵容',
+    label: '仅显阵容',
     description: '只展示双方阵容，无比分信息',
     previewPath: '/roco-pvp-page4.html',
   },

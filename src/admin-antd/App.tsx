@@ -717,7 +717,7 @@ function Dashboard() {
       mutatePage4Panel(side, (panel) => ({ ...panel, dirty: false, saving: false }));
 
       if (!silent) {
-        const nextText = `${side === 'left' ? '左侧' : '右侧'} 仅显示阵容已保存`;
+        const nextText = `${side === 'left' ? '左侧' : '右侧'} 仅显阵容已保存`;
         setPage4Notice({ tone: 'success', text: nextText });
         message.success(nextText);
       }
@@ -786,7 +786,7 @@ function Dashboard() {
         quickFillMatches: matches,
         dirty: true,
       }));
-      message.success(`${side === 'left' ? '左侧' : '右侧'} 仅显示阵容快速填充已应用到本地草稿`);
+      message.success(`${side === 'left' ? '左侧' : '右侧'} 仅显阵容快速填充已应用到本地草稿`);
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
     }
@@ -1663,7 +1663,7 @@ function Dashboard() {
     { key: 'roster', label: '赛事面板' },
     { key: 'stage', label: '直播推流' },
     { key: 'live', label: '实时控制' },
-    { key: 'page4', label: '仅显示阵容' },
+    { key: 'page4', label: '仅显阵容' },
     { key: 'history', label: '比赛历史' },
     { key: 'stats', label: '数据统计' },
     { key: 'scoreboard', label: '显示设置' },
@@ -1819,7 +1819,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'stats' ? '数据统计' : view === 'scoreboard' ? '显示设置' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'stats' ? '数据统计' : view === 'scoreboard' ? '显示设置' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -2509,7 +2509,7 @@ function Dashboard() {
                       { value: 'page1', label: '推流页面1' },
                       { value: 'page2', label: '推流页面2' },
                       { value: 'page3', label: '推流页面3' },
-                      { value: 'page4', label: '仅显示阵容' },
+                      { value: 'page4', label: '仅显阵容' },
                       { value: 'standby', label: '等待页 Demo' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}
