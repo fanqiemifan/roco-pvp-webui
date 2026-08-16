@@ -17,6 +17,7 @@ import {
   Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { ATTRIBUTE_ICON_BY_LABEL } from '../constants';
 import type { MatchStoreState, SpriteRecord } from '../../../shared/types';
 import {
   buildStatsCsv,
@@ -303,18 +304,30 @@ export function StatsView({
             <Card title="属性分布" extra={<Text type="secondary">按登场只次</Text>}>
               {stats.attributeRows.length ? (
                 <Space direction="vertical" size={10} className="page-stack">
-                  {stats.attributeRows.slice(0, 8).map((row) => (
-                    <div key={row.attribute} className="stats-attribute-row">
-                      <Text className="stats-attribute-label">{row.attribute}</Text>
-                      <Progress
-                        percent={row.percent}
-                        showInfo={false}
-                        size="small"
-                        className="stats-usage-bar"
-                      />
-                      <Text className="stats-usage-value">{row.percent.toFixed(1)}%</Text>
-                    </div>
-                  ))}
+                  {stats.attributeRows.slice(0, 8).map((row) => {
+                    const iconPath = ATTRIBUTE_ICON_BY_LABEL.get(row.attribute);
+                    return (
+                      <div key={row.attribute} className="stats-attribute-row">
+                        {iconPath && (
+                          <Image
+                            src={iconPath}
+                            preview={false}
+                            width={22}
+                            height={22}
+                            alt={row.attribute}
+                          />
+                        )}
+                        <Text className="stats-attribute-label">{row.attribute}</Text>
+                        <Progress
+                          percent={row.percent}
+                          showInfo={false}
+                          size="small"
+                          className="stats-usage-bar"
+                        />
+                        <Text className="stats-usage-value">{row.percent.toFixed(1)}%</Text>
+                      </div>
+                    );
+                  })}
                 </Space>
               ) : (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
