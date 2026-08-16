@@ -137,7 +137,7 @@ export interface AvatarCollectionState {
  * - page1-overlay: 推流页面1（Overlay 比分栏布局）
  * - page2: 推流页面2（全局阵容展示）
  * - page3: 推流页面3（头像比分阵容）
- * - page4: 仅显阵容
+ * - page5: 推流页面5（使用率/胜率排行）
  * - standby: 等待页
  * - blank: 黑场（不加载任何画面）
  */
@@ -145,15 +145,22 @@ export type StagePageKey =
   | 'page1-overlay'
   | 'page2'
   | 'page3'
-  | 'page4'
+  | 'page5'
   | 'standby'
   | 'blank';
 
 export type StageTransitionType = 'none' | 'blinds' | 'zoom';
 
+/** 推流页面5 统计口径：时间范围 */
+export type Page5RangeKey = 'today' | '7d' | '30d' | 'all';
+
 export interface StageConfig {
   page: StagePageKey;
   transition: StageTransitionType;
+  /** 推流页面5：统计时间范围（默认 all = 全部时间） */
+  page5Range: Page5RangeKey;
+  /** 推流页面5：赛事标签过滤（空字符串 = 全部标签） */
+  page5Tag: string;
   mtime: number | null;
 }
 

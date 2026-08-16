@@ -48,6 +48,7 @@ import type {
   Page4PanelState,
   Page4SlotState,
   Page4State,
+  Page5RangeKey,
   PanelState,
   ScoreboardState,
   SlotState,
@@ -117,7 +118,7 @@ import { Page4PanelEditor } from './views/Page4PanelEditor';
 import { RosterPanelEditor } from './views/RosterPanelEditor';
 import { StatsView } from './views/StatsView';
 
-import type { StatsMetricKey, StatsRangeKey } from './lib/stats';
+import { STATS_RANGE_OPTIONS, type StatsMetricKey, type StatsRangeKey } from './lib/stats';
 import type {
   CreateMatchValues,
   LiveField,
@@ -1209,18 +1210,20 @@ function Dashboard() {
 
   async function saveStage(
     nextPage: StagePageKey,
-    options?: { silent?: boolean; transition?: StageTransitionType },
+    options?: { silent?: boolean; transition?: StageTransitionType; page5Range?: Page5RangeKey; page5Tag?: string },
   ) {
     const silent = options?.silent ?? false;
     const normalized = normalizeStagePage(nextPage);
     const transition = normalizeStageTransition(options?.transition ?? stage?.transition);
+    const page5Range = options?.page5Range ?? stage?.page5Range ?? 'all';
+    const page5Tag = options?.page5Tag ?? stage?.page5Tag ?? '';
     // 乐观更新，避免切换回弹
-    setStage((prev) => (prev ? { ...prev, page: normalized, transition } : prev));
+    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page5Range, page5Tag } : prev));
     setStageSaving(true);
     try {
       const data = await requestJson<{ success: boolean; stage: StageConfig }>('/api/stage', {
         method: 'POST',
-        json: { page: normalized, transition },
+        json: { page: normalized, transition, page5Range, page5Tag },
       });
       applyServerState({ stage: data.stage });
       if (!silent) {
@@ -2566,6 +2569,33 @@ function Dashboard() {
                   <Paragraph type="secondary" style={{ marginBottom: 0 }}>
                     推流软件（OBS 等）只需固定捕获根路径 <code>/</code>。在此切换后，推流页面会实时加载所选画面，无需修改推流来源。
                   </Paragraph>
+                  <Card size="small" className="subtle-card">
+                    <Space direction="vertical" size={12} className="control-stack">
+                      <Text strong>推流页面5 统计口径</Text>
+                      <div>
+                        <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>时间范围：</Text>
+                        <Segmented
+                          block
+                          value={stage?.page5Range ?? 'all'}
+                          disabled={stageSaving}
+                          options={STATS_RANGE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                          onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page5Range: value as Page5RangeKey }); }}
+                        />
+                      </div>
+                      <div>
+                        <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>赛事标签：</Text>
+                        <Select
+                          allowClear
+                          className="stage-page5-tag-select"
+                          placeholder="全部赛事标签"
+                          value={stage?.page5Tag || undefined}
+                          disabled={stageSaving}
+                          options={allHistoryTags.map((tag) => ({ value: tag, label: tag }))}
+                          onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page5Tag: value ?? '' }); }}
+                        />
+                      </div>
+                    </Space>
+                  </Card>
                   <div>
                     <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>切换过渡效果：</Text>
                     <Segmented
@@ -2635,6 +2665,7 @@ function Dashboard() {
                       { value: 'page2', label: '推流页面2' },
                       { value: 'page3', label: '推流页面3' },
                       { value: 'page4', label: '仅显阵容' },
+                      { value: 'page5', label: '推流页面5' },
                       { value: 'standby', label: '等待页 Demo' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}

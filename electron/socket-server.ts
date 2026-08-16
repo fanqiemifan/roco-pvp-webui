@@ -10,6 +10,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { SOCKET_EVENTS } from '../shared/events.js';
 import type { SnapshotPayload } from '../shared/types.js';
 import { buildQuickFillPreview, listSprites, spriteMatchesKeyword } from './services/sprite-service.js';
+import { getSpriteRanking } from './services/stats-service.js';
 import {
   ensureRuntimeDirs,
   getAvatarStates,
@@ -265,6 +266,7 @@ export async function createLocalServer(
   app.get('/roco-pvp-page3.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page3.html'));
   app.get('/page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
   app.get('/roco-pvp-page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
+  app.get('/roco-pvp-page5.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page5.html'));
   app.get('/live-standby-demo.html', (_request, response) => sendPage(paths, response, 'live-standby-demo.html'));
   app.get('/roco-pvp-page1.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page1.html'));
   app.get('/float.html', (_request, response) => sendPage(paths, response, 'float.html'));
@@ -320,7 +322,7 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/live-standby-demo.html', '/float.html', '/float-menu.html'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/live-standby-demo.html', '/float.html', '/float-menu.html'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 
@@ -614,6 +616,12 @@ export async function createLocalServer(
     const keyword = typeof request.query.q === 'string' ? request.query.q.trim() : '';
     const sprites = listSprites(paths).filter((sprite) => !keyword || spriteMatchesKeyword(sprite, keyword));
     response.json({ sprites, count: sprites.length });
+  });
+
+  app.get('/api/stats/ranking', (request, response) => {
+    const range = typeof request.query.range === 'string' ? request.query.range : 'all';
+    const tag = typeof request.query.tag === 'string' ? request.query.tag : '';
+    response.json(getSpriteRanking(paths, { range, tag: tag || null }));
   });
 
   app.post('/api/panels/:position', (request, response) => {

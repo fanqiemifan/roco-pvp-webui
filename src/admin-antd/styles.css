@@ -1091,6 +1091,11 @@ a {
   transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
+.stage-page5-tag-select {
+  width: 100%;
+  min-width: 200px;
+}
+
 .stage-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(90, 55, 26, 0.16);

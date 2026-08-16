@@ -30,6 +30,11 @@ export const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     fileName: 'roco-pvp-page4.html',
     path: '/roco-pvp-page4.html',
   },
+  page5: {
+    title: '推流页面5',
+    fileName: 'roco-pvp-page5.html',
+    path: '/roco-pvp-page5.html',
+  },
   standby: {
     title: '等待页 Demo',
     fileName: 'live-standby-demo.html',
@@ -57,10 +62,10 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
     previewPath: '/roco-pvp-page3.html',
   },
   {
-    value: 'page4',
-    label: '仅显阵容',
-    description: '只展示双方阵容，无比分信息',
-    previewPath: '/roco-pvp-page4.html',
+    value: 'page5',
+    label: '推流页面5',
+    description: '使用率 / 胜率排行统计页',
+    previewPath: '/roco-pvp-page5.html',
   },
   {
     value: 'standby',

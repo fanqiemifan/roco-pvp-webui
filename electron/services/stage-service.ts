@@ -6,9 +6,11 @@ import {
   SUPPORTED_STAGE_PAGES,
   SUPPORTED_STAGE_TRANSITIONS,
 } from '../../shared/constants.js';
-import type { StageConfig, StagePageKey, StageTransitionType } from '../../shared/types.js';
+import type { Page5RangeKey, StageConfig, StagePageKey, StageTransitionType } from '../../shared/types.js';
 import { ensureRuntimeDirs } from './image-service.js';
 import type { AppPaths } from './path-service.js';
+
+const SUPPORTED_PAGE5_RANGES = new Set(['today', '7d', '30d', 'all']);
 
 function normalizeStagePage(value: unknown): StagePageKey {
   if (typeof value === 'string' && SUPPORTED_STAGE_PAGES.has(value)) {
@@ -24,10 +26,23 @@ function normalizeStageTransition(value: unknown): StageTransitionType {
   return DEFAULT_STAGE_TRANSITION as StageTransitionType;
 }
 
+function normalizePage5Range(value: unknown): Page5RangeKey {
+  if (typeof value === 'string' && SUPPORTED_PAGE5_RANGES.has(value)) {
+    return value as Page5RangeKey;
+  }
+  return 'all';
+}
+
+function normalizePage5Tag(value: unknown): string {
+  return String(value ?? '').trim().slice(0, 40);
+}
+
 function defaultStageState(): StageConfig {
   return {
     page: DEFAULT_STAGE_PAGE as StagePageKey,
     transition: DEFAULT_STAGE_TRANSITION as StageTransitionType,
+    page5Range: 'all',
+    page5Tag: '',
     mtime: null,
   };
 }
@@ -43,6 +58,8 @@ export function getStageState(paths: AppPaths): StageConfig {
     return {
       page: normalizeStagePage(metadata.page),
       transition: normalizeStageTransition(metadata.transition),
+      page5Range: normalizePage5Range(metadata.page5Range),
+      page5Tag: normalizePage5Tag(metadata.page5Tag),
       mtime: stat.mtimeMs,
     };
   } catch {
@@ -61,6 +78,8 @@ export function saveStageState(paths: AppPaths, payload: unknown): StageConfig {
   const metadata = {
     page: normalizeStagePage(raw.page),
     transition: normalizeStageTransition(raw.transition),
+    page5Range: normalizePage5Range(raw.page5Range),
+    page5Tag: normalizePage5Tag(raw.page5Tag),
   };
 
   fs.writeFileSync(paths.stageFile, JSON.stringify(metadata, null, 2), 'utf-8');

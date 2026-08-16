@@ -15,7 +15,7 @@ export const SUPPORTED_BEST_OF = new Set([1, 3, 5, 7]);
  * - page1-overlay: 推流页面1（Overlay 比分栏布局）
  * - page2: 推流页面2（全局阵容展示）
  * - page3: 推流页面3（头像比分阵容）
- * - page4: 仅显阵容
+ * - page5: 推流页面5（使用率/胜率排行）
  * - standby: 等待页
  * - blank: 黑场
  */
@@ -24,7 +24,7 @@ export const SUPPORTED_STAGE_PAGES = new Set([
   'page1-overlay',
   'page2',
   'page3',
-  'page4',
+  'page5',
   'standby',
   'blank',
 ]);
