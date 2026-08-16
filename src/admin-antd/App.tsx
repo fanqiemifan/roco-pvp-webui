@@ -984,7 +984,7 @@ function collectUsageStats(
         const seen = new Set<string>();
         lineup.forEach((spriteId) => {
           const sprite = spriteMap.get(spriteId);
-          const name = sprite?.displayName ?? spriteId;
+          const name = sprite?.chineseName || sprite?.name || sprite?.displayName || spriteId;
           let acc = spriteAcc.get(name);
           if (!acc) {
             acc = { picks: 0, games: 0, wins: 0, dailyGames: new Map() };
