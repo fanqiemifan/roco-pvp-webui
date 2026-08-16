@@ -114,6 +114,13 @@
             return;
         }
         window.close();
+        // 兜底：部分浏览器会忽略非脚本打开窗口的 window.close()
+        window.setTimeout(() => {
+            if (!window.closed) {
+                window.open('', '_self');
+                window.close();
+            }
+        }, 50);
     }
 
     function renderMenu() {
