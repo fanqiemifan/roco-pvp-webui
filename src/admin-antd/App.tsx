@@ -984,7 +984,7 @@ function collectUsageStats(
         const seen = new Set<string>();
         lineup.forEach((spriteId) => {
           const sprite = spriteMap.get(spriteId);
-          const name = sprite?.chineseName || sprite?.name || sprite?.displayName || spriteId;
+          const name = resolveSpriteStatsName(sprite, spriteId);
           let acc = spriteAcc.get(name);
           if (!acc) {
             acc = { picks: 0, games: 0, wins: 0, dailyGames: new Map() };
@@ -1115,6 +1115,10 @@ function buildUsageStats(
   return { ...current, rows };
 }
 
+function resolveSpriteStatsName(sprite: SpriteRecord | null | undefined, fallback: string): string {
+  return sprite?.chineseName || sprite?.name || sprite?.displayName || fallback;
+}
+
 function buildStatsCsv(rows: SpriteUsageRow[], metric: StatsMetricKey): string {
   const header = ['排名', '精灵', '属性', metric === 'pickRate' ? '使用率(%)' : '上场率(%)', '登场只次', '登场场次', '获胜场次', '胜率(%)'];
   const lines = rows.map((row, index) => [
@@ -1127,6 +1131,48 @@ function buildStatsCsv(rows: SpriteUsageRow[], metric: StatsMetricKey): string {
     String(row.wins),
     row.winRate === null ? '' : (row.winRate * 100).toFixed(1),
   ]);
+  return [header, ...lines].map((cells) => cells.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
+}
+
+function buildHistoryCsv(matches: MatchRecord[], spriteMap: Map<string, SpriteRecord>): string {
+  const header = ['赛事ID', '完成时间', '左侧选手', '右侧选手', '比分', '赛制', '标签', '局数', '该局胜方', '该局状态', '左侧阵容', '右侧阵容'];
+  const lines: string[][] = [];
+
+  matches.forEach((match) => {
+    const base = [
+      match.id,
+      match.completedAt ? formatDateTime(match.completedAt) : '',
+      match.leftPlayer || '左侧',
+      match.rightPlayer || '右侧',
+      `${match.leftScore} : ${match.rightScore}`,
+      `BO${match.bestOf}`,
+      (match.tags ?? []).join('/'),
+    ];
+    const visibleGames = getVisibleGames(match);
+    if (!visibleGames.length) {
+      lines.push([...base, '', '', '', '', '']);
+      return;
+    }
+    visibleGames.forEach((game) => {
+      const leftNames = buildHistoryLineupEntries(game, 'left', spriteMap)
+        .filter((entry): entry is { id: string; name: string; path: string } => Boolean(entry))
+        .map((entry) => resolveSpriteStatsName(spriteMap.get(entry.id), entry.name))
+        .join('/');
+      const rightNames = buildHistoryLineupEntries(game, 'right', spriteMap)
+        .filter((entry): entry is { id: string; name: string; path: string } => Boolean(entry))
+        .map((entry) => resolveSpriteStatsName(spriteMap.get(entry.id), entry.name))
+        .join('/');
+      lines.push([
+        ...base,
+        String(game.gameNumber),
+        getGameResultLabel(game),
+        getGameStatusLabel(game.status),
+        leftNames,
+        rightNames,
+      ]);
+    });
+  });
+
   return [header, ...lines].map((cells) => cells.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
 }
 
@@ -2975,6 +3021,18 @@ function Dashboard() {
     },
   ];
 
+  function exportHistoryCsv() {
+    const csv = buildHistoryCsv(filteredMatches, spriteMap);
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '比赛历史.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    message.success(`已导出 ${filteredMatches.length} 场赛事历史`);
+  }
+
   function renderStatsView() {
     const stats = buildUsageStats(matchStore.matches, spriteMap, {
       range: statsRange,
@@ -3989,6 +4047,7 @@ function Dashboard() {
                 title="比赛历史"
                 extra={(
                   <Space wrap>
+                    <Button onClick={exportHistoryCsv} disabled={!filteredMatches.length}>导出 CSV</Button>
                     <Button danger disabled={!selectedHistoryKeys.length} onClick={() => void deleteHistoryMatches(selectedHistoryKeys.map(String))}>
                       删除选中赛事
                     </Button>
