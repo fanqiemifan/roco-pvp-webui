@@ -76,7 +76,7 @@ body {
     font-size: 92px;
     line-height: 0.9;
     letter-spacing: 2px;
-    color: var(--ink);
+    color: var(--gold-deep);
     text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.55);
     white-space: nowrap;
     overflow: hidden;
