@@ -1663,11 +1663,11 @@ function Dashboard() {
     { key: 'roster', label: '赛事面板' },
     { key: 'stage', label: '直播推流' },
     { key: 'live', label: '实时控制' },
-    { key: 'page4', label: '仅显阵容' },
     { key: 'history', label: '比赛历史' },
     { key: 'stats', label: '数据统计' },
     { key: 'scoreboard', label: '显示设置' },
     { key: 'preview', label: '页面预览' },
+    { key: 'page4', label: '仅显阵容' },
     { key: 'about', label: '关于项目' },
   ];
 
