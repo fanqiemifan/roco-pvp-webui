@@ -605,6 +605,15 @@ a {
   justify-content: flex-start;
 }
 
+/* 比赛列表比分胶囊：与赛制/状态胶囊风格统一 */
+.match-list-score-tag.ant-tag {
+  background: rgba(91, 67, 43, 0.08);
+  color: #2f2418;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border-radius: 999px;
+}
+
 .current-match-overview {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 360px) minmax(0, 1fr);

@@ -1971,7 +1971,7 @@ function Dashboard() {
                                 <Space wrap>
                                   <Tag color="gold">BO{match.bestOf}</Tag>
                                   <Tag color={getMatchStatusColor(match.status)}>{getMatchStatusLabel(match.status)}</Tag>
-                                  <Text type="secondary">{match.leftScore} : {match.rightScore}</Text>
+                                  <Tag bordered={false} className="match-list-score-tag">{match.leftScore} : {match.rightScore}</Tag>
                                 </Space>
                               )}
                             />
