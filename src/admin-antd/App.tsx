@@ -21,6 +21,7 @@ import {
   List,
   Menu,
   Modal,
+  Progress,
   Row,
   Segmented,
   Select,
@@ -64,7 +65,7 @@ const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
 
 type PanelSide = 'left' | 'right';
-type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'scoreboard' | 'preview' | 'stage' | 'about';
+type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'stats' | 'scoreboard' | 'preview' | 'stage' | 'about';
 
 type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'standby';
 
@@ -873,6 +874,264 @@ function buildHistoryTags(matches: MatchStoreState['matches']): string[] {
   return Array.from(tagSet);
 }
 
+type StatsRangeKey = 'today' | '7d' | '30d' | 'all';
+type StatsMetricKey = 'pickRate' | 'gameRate';
+
+const STATS_RANGE_OPTIONS: Array<{ value: StatsRangeKey; label: string }> = [
+  { value: 'today', label: '今日' },
+  { value: '7d', label: '近7天' },
+  { value: '30d', label: '近30天' },
+  { value: 'all', label: '全部' },
+];
+
+const STATS_METRIC_OPTIONS: Array<{ value: StatsMetricKey; label: string }> = [
+  { value: 'pickRate', label: '使用率' },
+  { value: 'gameRate', label: '上场率' },
+];
+
+type StatsWindow = { sinceMs: number; untilMs: number; player: string | null; tag: string | null };
+
+type SpriteUsageAccumulator = {
+  picks: number;
+  games: number;
+  wins: number;
+  dailyGames: Map<string, number>;
+};
+
+type SpriteUsageRow = {
+  key: string;
+  name: string;
+  spritePath: string;
+  attributes: string[];
+  picks: number;
+  games: number;
+  wins: number;
+  winRate: number | null;
+  usageRate: number;
+  usagePercent: number;
+  trendDelta: number;
+  dailyGames: Map<string, number>;
+};
+
+type UsageStatsResult = {
+  totalGames: number;
+  totalPicks: number;
+  distinctSprites: number;
+  playerCount: number;
+  attributeRows: Array<{ attribute: string; count: number; percent: number }>;
+  dailyKeys: string[];
+  rows: SpriteUsageRow[];
+  spriteAcc: Map<string, SpriteUsageAccumulator>;
+  spriteMeta: Map<string, { path: string; attributes: string[] }>;
+};
+
+function getStatsDateKey(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function collectUsageStats(
+  matches: MatchStoreState['matches'],
+  spriteMap: Map<string, SpriteRecord>,
+  window: StatsWindow,
+): UsageStatsResult {
+  const spriteAcc = new Map<string, SpriteUsageAccumulator>();
+  const spriteMeta = new Map<string, { path: string; attributes: string[] }>();
+  const attributeAcc = new Map<string, number>();
+  const dailySprites = new Map<string, Map<string, number>>();
+  const players = new Set<string>();
+  let totalGames = 0;
+  let totalPicks = 0;
+  let attributeTotal = 0;
+
+  matches.forEach((match) => {
+    const time = new Date(match.createdAt).getTime();
+    if (Number.isNaN(time) || time < window.sinceMs || time >= window.untilMs) {
+      return;
+    }
+    if (window.player && match.leftPlayer !== window.player && match.rightPlayer !== window.player) {
+      return;
+    }
+    if (window.tag && !(match.tags ?? []).includes(window.tag)) {
+      return;
+    }
+    if (match.leftPlayer) {
+      players.add(match.leftPlayer);
+    }
+    if (match.rightPlayer) {
+      players.add(match.rightPlayer);
+    }
+
+    const dateKey = getStatsDateKey(match.createdAt);
+
+    match.games.forEach((game) => {
+      const sides: Array<{ lineup: string[]; side: 'left' | 'right' }> = [
+        { lineup: game.leftLineup, side: 'left' },
+        { lineup: game.rightLineup, side: 'right' },
+      ];
+      if (!sides.some(({ lineup }) => lineup.length > 0)) {
+        return;
+      }
+
+      let gameCounted = false;
+      sides.forEach(({ lineup, side }) => {
+        const won = game.winner === side;
+        const seen = new Set<string>();
+        lineup.forEach((spriteId) => {
+          const sprite = spriteMap.get(spriteId);
+          const name = sprite?.displayName ?? spriteId;
+          let acc = spriteAcc.get(name);
+          if (!acc) {
+            acc = { picks: 0, games: 0, wins: 0, dailyGames: new Map() };
+            spriteAcc.set(name, acc);
+          }
+          if (!spriteMeta.has(name)) {
+            spriteMeta.set(name, {
+              path: sprite?.path ?? '',
+              attributes: sprite ? splitSpriteAttributes(sprite.attribute) : [],
+            });
+          }
+
+          acc.picks += 1;
+          totalPicks += 1;
+          if (!seen.has(name)) {
+            seen.add(name);
+            acc.games += 1;
+            if (won) {
+              acc.wins += 1;
+            }
+            if (dateKey) {
+              acc.dailyGames.set(dateKey, (acc.dailyGames.get(dateKey) ?? 0) + 1);
+              let dayMap = dailySprites.get(dateKey);
+              if (!dayMap) {
+                dayMap = new Map();
+                dailySprites.set(dateKey, dayMap);
+              }
+              dayMap.set(name, (dayMap.get(name) ?? 0) + 1);
+            }
+          }
+          (spriteMeta.get(name)?.attributes ?? []).forEach((attribute) => {
+            attributeAcc.set(attribute, (attributeAcc.get(attribute) ?? 0) + 1);
+            attributeTotal += 1;
+          });
+          gameCounted = true;
+        });
+      });
+
+      if (gameCounted) {
+        totalGames += 1;
+      }
+    });
+  });
+
+  return {
+    totalGames,
+    totalPicks,
+    distinctSprites: spriteAcc.size,
+    playerCount: players.size,
+    attributeRows: Array.from(attributeAcc.entries())
+      .map(([attribute, count]) => ({
+        attribute,
+        count,
+        percent: attributeTotal > 0 ? (count / attributeTotal) * 100 : 0,
+      }))
+      .sort((a, b) => b.count - a.count),
+    dailyKeys: Array.from(dailySprites.keys()).sort(),
+    rows: [],
+    spriteAcc,
+    spriteMeta,
+  };
+}
+
+function buildUsageStats(
+  matches: MatchStoreState['matches'],
+  spriteMap: Map<string, SpriteRecord>,
+  options: { range: StatsRangeKey; player: string | null; tag: string | null; metric: StatsMetricKey },
+): UsageStatsResult {
+  const now = Date.now();
+  let sinceMs = 0;
+  let spanMs = 0;
+  if (options.range === 'today') {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    sinceMs = start.getTime();
+    spanMs = Math.max(1, now - sinceMs);
+  } else if (options.range === '7d') {
+    spanMs = 7 * 86400000;
+    sinceMs = now - spanMs;
+  } else if (options.range === '30d') {
+    spanMs = 30 * 86400000;
+    sinceMs = now - spanMs;
+  }
+
+  const current = collectUsageStats(matches, spriteMap, {
+    sinceMs,
+    untilMs: Number.MAX_SAFE_INTEGER,
+    player: options.player,
+    tag: options.tag,
+  });
+
+  let prevGamesByName = new Map<string, number>();
+  let prevGamesTotal = 0;
+  if (options.range !== 'all' && spanMs > 0) {
+    const previous = collectUsageStats(matches, spriteMap, {
+      sinceMs: sinceMs - spanMs,
+      untilMs: sinceMs,
+      player: options.player,
+      tag: options.tag,
+    });
+    previous.spriteAcc.forEach((acc, name) => prevGamesByName.set(name, acc.games));
+    prevGamesTotal = previous.totalGames;
+  }
+
+  const denominator = options.metric === 'pickRate' ? current.totalPicks || 1 : current.totalGames || 1;
+  const rows: SpriteUsageRow[] = Array.from(current.spriteAcc.entries()).map(([name, acc]) => {
+    const usageRate = (options.metric === 'pickRate' ? acc.picks : acc.games) / denominator;
+    const trendDelta = prevGamesTotal > 0 ? acc.games - (prevGamesByName.get(name) ?? 0) : 0;
+    const meta = current.spriteMeta.get(name);
+    return {
+      key: name,
+      name,
+      spritePath: meta?.path ?? '',
+      attributes: meta?.attributes ?? [],
+      picks: acc.picks,
+      games: acc.games,
+      wins: acc.wins,
+      winRate: acc.games > 0 ? acc.wins / acc.games : null,
+      usageRate,
+      usagePercent: Math.round(usageRate * 1000) / 10,
+      trendDelta,
+      dailyGames: acc.dailyGames,
+    };
+  });
+
+  rows.sort((a, b) => b.usageRate - a.usageRate || b.picks - a.picks || a.name.localeCompare(b.name, 'zh-CN'));
+
+  return { ...current, rows };
+}
+
+function buildStatsCsv(rows: SpriteUsageRow[], metric: StatsMetricKey): string {
+  const header = ['排名', '精灵', '属性', metric === 'pickRate' ? '使用率(%)' : '上场率(%)', '登场只次', '登场场次', '获胜场次', '胜率(%)'];
+  const lines = rows.map((row, index) => [
+    String(index + 1),
+    row.name,
+    row.attributes.join('/'),
+    row.usagePercent.toFixed(1),
+    String(row.picks),
+    String(row.games),
+    String(row.wins),
+    row.winRate === null ? '' : (row.winRate * 100).toFixed(1),
+  ]);
+  return [header, ...lines].map((cells) => cells.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
+}
+
+
+
 function buildProgressItems(match: MatchRecord | null) {
   if (!match) {
     return {
@@ -1115,6 +1374,11 @@ function Dashboard() {
   const [selectedHistoryKeys, setSelectedHistoryKeys] = useState<React.Key[]>([]);
   const [expandedHistoryKeys, setExpandedHistoryKeys] = useState<React.Key[]>([]);
   const [historyTagFilter, setHistoryTagFilter] = useState<string | null>(null);
+  const [statsRange, setStatsRange] = useState<StatsRangeKey>('7d');
+  const [statsMetric, setStatsMetric] = useState<StatsMetricKey>('pickRate');
+  const [statsPlayer, setStatsPlayer] = useState<string | null>(null);
+  const [statsTag, setStatsTag] = useState<string | null>(null);
+  const [statsSearch, setStatsSearch] = useState('');
   const [previewSlot, setPreviewSlot] = useState<PreviewSlotKey>('stage');
   const [previewScale, setPreviewScale] = useState(1);
   const [previewShellSize, setPreviewShellSize] = useState({ width: 960, height: 540 });
@@ -2595,6 +2859,7 @@ function Dashboard() {
     { key: 'live', label: '实时控制' },
     { key: 'page4', label: '仅显示阵容' },
     { key: 'history', label: '比赛历史' },
+    { key: 'stats', label: '数据统计' },
     { key: 'scoreboard', label: '显示设置' },
     { key: 'preview', label: '页面预览' },
     { key: 'about', label: '关于项目' },
@@ -2709,6 +2974,306 @@ function Dashboard() {
       ),
     },
   ];
+
+  function renderStatsView() {
+    const stats = buildUsageStats(matchStore.matches, spriteMap, {
+      range: statsRange,
+      player: statsPlayer,
+      tag: statsTag,
+      metric: statsMetric,
+    });
+    const keyword = statsSearch.trim().toLowerCase();
+    const visibleRows = keyword
+      ? stats.rows.filter((row) => row.name.toLowerCase().includes(keyword))
+      : stats.rows;
+    const maxUsagePercent = stats.rows[0]?.usagePercent ?? 0;
+    const playerOptions = Array.from(new Set(matchStore.matches.flatMap((match) => [
+      match.leftPlayer,
+      match.rightPlayer,
+    ]).filter(Boolean)));
+    const tagOptions = Array.from(new Set(matchStore.matches.flatMap((match) => match.tags ?? [])));
+    const trendColors = ['#d38b2d', '#4f8cff', '#c24635'];
+    const topTrendRows = stats.rows.slice(0, 3);
+    const dailyKeys = stats.dailyKeys.slice(-14);
+    const topUsageForTrend = Math.max(1, ...topTrendRows.flatMap((row) => dailyKeys.map((key) => row.dailyGames.get(key) ?? 0)));
+
+    const statsColumns: ColumnsType<SpriteUsageRow> = [
+      {
+        title: '#',
+        key: 'rank',
+        width: 56,
+        render: (_: unknown, __: SpriteUsageRow, index: number) => {
+          if (keyword) {
+            return <Text type="secondary">{index + 1}</Text>;
+          }
+          if (index === 0) return <Text strong style={{ color: '#d38b2d' }}>1</Text>;
+          if (index === 1) return <Text strong style={{ color: '#8a8f99' }}>2</Text>;
+          if (index === 2) return <Text strong style={{ color: '#b5793f' }}>3</Text>;
+          return <Text type="secondary">{index + 1}</Text>;
+        },
+      },
+      {
+        title: '精灵',
+        dataIndex: 'name',
+        key: 'name',
+        render: (_: unknown, record: SpriteUsageRow) => (
+          <Space>
+            {record.spritePath ? (
+              <Image
+                preview={false}
+                src={record.spritePath}
+                alt={record.name}
+                width={44}
+                height={44}
+                className="stats-row-image"
+                fallback="/assets/ui/back.png"
+              />
+            ) : (
+              <div className="stats-row-image stats-row-image-fallback">{record.name.slice(0, 1)}</div>
+            )}
+            <Space direction="vertical" size={2}>
+              <Text strong>{record.name}</Text>
+              {record.attributes.length ? (
+                <Text type="secondary" className="stats-row-attrs">{record.attributes.join(' / ')}</Text>
+              ) : (
+                <Text type="secondary" className="stats-row-attrs">未知属性</Text>
+              )}
+            </Space>
+          </Space>
+        ),
+      },
+      {
+        title: statsMetric === 'pickRate' ? '使用率' : '上场率',
+        key: 'usage',
+        render: (_: unknown, record: SpriteUsageRow) => (
+          <div className="stats-usage-cell">
+            <Progress
+              percent={maxUsagePercent > 0 ? Math.max(2, (record.usagePercent / maxUsagePercent) * 100) : 0}
+              showInfo={false}
+              size="small"
+              className="stats-usage-bar"
+            />
+            <Text className="stats-usage-value">{record.usagePercent.toFixed(1)}%</Text>
+          </div>
+        ),
+        sorter: (a, b) => a.usageRate - b.usageRate,
+      },
+      {
+        title: '登场只次',
+        dataIndex: 'picks',
+        key: 'picks',
+        width: 96,
+        align: 'right',
+        sorter: (a, b) => a.picks - b.picks,
+      },
+      {
+        title: '登场场次',
+        dataIndex: 'games',
+        key: 'games',
+        width: 96,
+        align: 'right',
+        sorter: (a, b) => a.games - b.games,
+      },
+      {
+        title: '胜率',
+        key: 'winRate',
+        width: 96,
+        align: 'right',
+        sorter: (a, b) => (a.winRate ?? -1) - (b.winRate ?? -1),
+        render: (_: unknown, record: SpriteUsageRow) => (
+          record.winRate === null ? (
+            <Text type="secondary">-</Text>
+          ) : (
+            <Text type={record.winRate >= 0.5 ? 'success' : 'danger'} className="stats-winrate">
+              {(record.winRate * 100).toFixed(1)}%
+            </Text>
+          )
+        ),
+      },
+      {
+        title: '趋势',
+        key: 'trend',
+        width: 80,
+        align: 'center',
+        render: (_: unknown, record: SpriteUsageRow) => (
+          record.trendDelta > 0 ? (
+            <Text type="success">▲{record.trendDelta}</Text>
+          ) : record.trendDelta < 0 ? (
+            <Text type="danger">▼{Math.abs(record.trendDelta)}</Text>
+          ) : (
+            <Text type="secondary">—</Text>
+          )
+        ),
+      },
+    ];
+
+    function exportStatsCsv() {
+      const csv = buildStatsCsv(stats.rows, statsMetric);
+      const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `精灵${statsMetric === 'pickRate' ? '使用率' : '上场率'}统计.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      message.success(`已导出 ${stats.rows.length} 条精灵统计`);
+    }
+
+    return (
+      <Space direction="vertical" size={18} className="page-stack">
+        <Card title="统计口径">
+          <Space wrap size={12}>
+            <Segmented
+              value={statsRange}
+              options={STATS_RANGE_OPTIONS}
+              onChange={(value) => setStatsRange(value as StatsRangeKey)}
+            />
+            <Segmented
+              value={statsMetric}
+              options={STATS_METRIC_OPTIONS}
+              onChange={(value) => setStatsMetric(value as StatsMetricKey)}
+            />
+            <Select
+              allowClear
+              placeholder="全部选手"
+              value={statsPlayer ?? undefined}
+              options={playerOptions.map((player) => ({ value: player, label: player }))}
+              onChange={(value) => setStatsPlayer(value ?? null)}
+              className="stats-filter-select"
+            />
+            <Select
+              allowClear
+              placeholder="全部赛事标签"
+              value={statsTag ?? undefined}
+              options={tagOptions.map((tag) => ({ value: tag, label: tag }))}
+              onChange={(value) => setStatsTag(value ?? null)}
+              className="stats-filter-select"
+            />
+          </Space>
+        </Card>
+
+        <Row gutter={[18, 18]}>
+          <Col xs={12} xl={6}>
+            <Card size="small" className="subtle-card">
+              <Statistic title="统计场次" value={stats.totalGames} suffix="局" />
+              <Text type="secondary">有阵容记录的对局</Text>
+            </Card>
+          </Col>
+          <Col xs={12} xl={6}>
+            <Card size="small" className="subtle-card">
+              <Statistic title="登场精灵总数" value={stats.totalPicks} suffix="只次" />
+              <Text type="secondary">场均 {(stats.totalGames > 0 ? stats.totalPicks / stats.totalGames : 0).toFixed(1)} 只</Text>
+            </Card>
+          </Col>
+          <Col xs={12} xl={6}>
+            <Card size="small" className="subtle-card">
+              <Statistic title="不同精灵数" value={stats.distinctSprites} suffix="种" />
+              <Text type="secondary">筛选范围内出现过</Text>
+            </Card>
+          </Col>
+          <Col xs={12} xl={6}>
+            <Card size="small" className="subtle-card">
+              <Statistic
+                title="热门属性"
+                value={stats.attributeRows[0]?.attribute ?? '-'}
+                styles={{ content: { fontSize: 22 } }}
+              />
+              <Text type="secondary">{stats.attributeRows[0] ? `占比 ${stats.attributeRows[0].percent.toFixed(1)}%` : '暂无数据'}</Text>
+            </Card>
+          </Col>
+        </Row>
+
+        <Row gutter={[18, 18]}>
+          <Col xs={24} xl={15}>
+            <Card
+              title={statsMetric === 'pickRate' ? '精灵使用率排行' : '精灵上场率排行'}
+              extra={(
+                <Space wrap>
+                  <Input.Search
+                    placeholder="搜索精灵名称"
+                    value={statsSearch}
+                    onChange={(event) => setStatsSearch(event.target.value)}
+                    className="stats-search"
+                    allowClear
+                  />
+                  <Button onClick={exportStatsCsv} disabled={!stats.rows.length}>导出 CSV</Button>
+                </Space>
+              )}
+            >
+              <Table
+                rowKey={(record) => record.key}
+                columns={statsColumns}
+                dataSource={visibleRows}
+                size="middle"
+                pagination={{ pageSize: 15, showSizeChanger: false, hideOnSinglePage: true }}
+                locale={{ emptyText: '当前筛选范围内暂无登场记录' }}
+              />
+              <Text type="secondary" className="stats-footnote">
+                {statsMetric === 'pickRate'
+                  ? '使用率 = 登场只次 ÷ 总登场只次（同局重复携带按只次计）'
+                  : '上场率 = 登场场次 ÷ 总场次（同局同侧重复携带只计 1 次）'}
+                {' · 胜率 = 该精灵所在一侧获胜场次 ÷ 登场场次'}
+              </Text>
+            </Card>
+          </Col>
+          <Col xs={24} xl={9}>
+            <Space direction="vertical" size={18} className="page-stack stats-side-stack">
+              <Card title="属性分布" extra={<Text type="secondary">按登场只次</Text>}>
+                {stats.attributeRows.length ? (
+                  <Space direction="vertical" size={10} className="page-stack">
+                    {stats.attributeRows.slice(0, 8).map((row) => (
+                      <div key={row.attribute} className="stats-attribute-row">
+                        <Text className="stats-attribute-label">{row.attribute}</Text>
+                        <Progress
+                          percent={row.percent}
+                          showInfo={false}
+                          size="small"
+                          className="stats-usage-bar"
+                        />
+                        <Text className="stats-usage-value">{row.percent.toFixed(1)}%</Text>
+                      </div>
+                    ))}
+                  </Space>
+                ) : (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
+                )}
+              </Card>
+
+              <Card title="Top 3 登场趋势" extra={<Text type="secondary">按日聚合</Text>}>
+                {topTrendRows.length && dailyKeys.length > 1 ? (
+                  <Space direction="vertical" size={10} className="page-stack">
+                    <svg viewBox={`0 0 ${Math.max(dailyKeys.length * 40, 120)} 140`} className="stats-trend-svg" preserveAspectRatio="none">
+                      {topTrendRows.map((row, rowIndex) => {
+                        const points = dailyKeys.map((key, index) => {
+                          const games = row.dailyGames.get(key) ?? 0;
+                          const x = dailyKeys.length > 1 ? (index / (dailyKeys.length - 1)) * 100 : 0;
+                          const y = 130 - (games / topUsageForTrend) * 120;
+                          return `${x},${Math.max(4, y)}`;
+                        }).join(' ');
+                        return (
+                          <polyline key={row.key} points={points} fill="none" stroke={trendColors[rowIndex]} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+                        );
+                      })}
+                    </svg>
+                    <Space wrap size={14}>
+                      {topTrendRows.map((row, rowIndex) => (
+                        <Text key={row.key} type="secondary">
+                          <span className="stats-trend-dot" style={{ background: trendColors[rowIndex] }} />
+                          {row.name}
+                        </Text>
+                      ))}
+                    </Space>
+                  </Space>
+                ) : (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="需要至少两天的登场数据" />
+                )}
+              </Card>
+            </Space>
+          </Col>
+        </Row>
+      </Space>
+    );
+  }
 
   function renderPanelEditor(side: PanelSide) {
     const panel = panels[side];
@@ -3224,7 +3789,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'scoreboard' ? '显示设置' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显示阵容' : view === 'history' ? '比赛历史' : view === 'stats' ? '数据统计' : view === 'scoreboard' ? '显示设置' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -3529,6 +4094,8 @@ function Dashboard() {
               </Card>
             </Space>
           ) : null}
+
+          {view === 'stats' ? renderStatsView() : null}
 
           {view === 'live' ? (
             <Space direction="vertical" size={18} className="page-stack">
