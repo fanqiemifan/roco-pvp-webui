@@ -106,9 +106,9 @@ function collectUsageStats(
       }
 
       let gameCounted = false;
+      const seen = new Set<string>();
       sides.forEach(({ lineup, side }) => {
         const won = game.winner === side;
-        const seen = new Set<string>();
         lineup.forEach((spriteId) => {
           const sprite = spriteMap.get(spriteId);
           const name = resolveSpriteStatsName(sprite, spriteId);
