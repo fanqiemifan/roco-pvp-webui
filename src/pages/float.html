@@ -16,6 +16,16 @@
             <section class="lineup lineup-right" aria-label="右侧阵容"></section>
         </section>
         <button id="floatCloseBtn" class="float-close" type="button" title="关闭悬浮窗">×</button>
+
+        <div id="floatMenu" class="float-menu" hidden></div>
+
+        <div id="floatPicker" class="float-picker" hidden>
+            <div class="float-picker-head">
+                <input id="floatPickerSearch" class="float-picker-search" type="text" placeholder="搜索精灵…" spellcheck="false" />
+                <button id="floatPickerClose" class="float-picker-x" type="button" title="关闭">×</button>
+            </div>
+            <div id="floatPickerStrip" class="float-picker-strip"></div>
+        </div>
     </main>
 
     <script src="/socket.io/socket.io.js"></script>
