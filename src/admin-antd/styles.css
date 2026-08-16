@@ -1086,6 +1086,42 @@ a {
   width: 180px;
 }
 
+.stats-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  color: #fff;
+}
+
+.stats-rank-1 {
+  background: linear-gradient(135deg, #f7d774, #d4a017);
+  box-shadow: 0 2px 6px rgba(212, 160, 23, 0.35);
+}
+
+.stats-rank-2 {
+  background: linear-gradient(135deg, #eef0f3, #aab0ba);
+  box-shadow: 0 2px 6px rgba(170, 176, 186, 0.35);
+}
+
+.stats-rank-3 {
+  background: linear-gradient(135deg, #f2c48f, #b5793f);
+  box-shadow: 0 2px 6px rgba(181, 121, 63, 0.35);
+}
+
+.stats-rank-plain {
+  width: auto;
+  background: transparent;
+  box-shadow: none;
+  color: #8a8f99;
+  font-weight: 500;
+}
+
 .stats-row-image {
   border-radius: 10px;
   object-fit: contain;

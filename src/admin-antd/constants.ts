@@ -116,6 +116,7 @@ export const theme = {
     colorWarning: '#d38b2d',
     colorError: '#c24635',
     colorBgBase: '#f6efe6',
+    colorBgContainer: '#ffffff',
     colorTextBase: '#2f2418',
     colorBorder: 'rgba(91, 67, 43, 0.14)',
     borderRadius: 12,
@@ -152,8 +153,10 @@ export const theme = {
       colorFillAlter: 'rgba(255, 250, 245, 0.9)',
     },
     Table: {
-      borderColor: 'rgba(91, 67, 43, 0.12)',
-      headerBg: '#fbf4ea',
+      borderColor: '#EBEEF5',
+      headerBg: '#FAFAFA',
+      headerSplitColor: '#EBEEF5',
+      rowHoverBg: '#F5F7FA',
     },
   },
 };

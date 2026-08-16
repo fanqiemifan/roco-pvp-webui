@@ -107,10 +107,8 @@ export function StatsView({
         if (keyword) {
           return <Text type="secondary">{index + 1}</Text>;
         }
-        if (index === 0) return <Text strong style={{ color: '#d38b2d' }}>1</Text>;
-        if (index === 1) return <Text strong style={{ color: '#8a8f99' }}>2</Text>;
-        if (index === 2) return <Text strong style={{ color: '#b5793f' }}>3</Text>;
-        return <Text type="secondary">{index + 1}</Text>;
+        const rankCls = index < 3 ? `stats-rank-${index + 1}` : 'stats-rank-plain';
+        return <span className={`stats-rank ${rankCls}`}>{index + 1}</span>;
       },
     },
     {
