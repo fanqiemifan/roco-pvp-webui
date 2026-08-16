@@ -1145,9 +1145,26 @@ a {
   gap: 10px;
 }
 
-.stats-attribute-label {
-  min-width: 56px;
-  text-align: right;
+.stats-attribute-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  min-width: 64px;
+  padding: 3px 10px 3px 6px;
+  border-radius: 999px;
+  background: rgba(199, 99, 47, 0.1);
+  border: 1px solid rgba(199, 99, 47, 0.18);
+}
+
+.stats-attribute-pill img {
+  display: block;
+  border-radius: 50%;
+}
+
+.stats-attribute-pill-text {
+  font-size: 13px;
+  color: #2f2418;
 }
 
 .stats-trend-svg {

@@ -308,16 +308,17 @@ export function StatsView({
                     const iconPath = ATTRIBUTE_ICON_BY_LABEL.get(row.attribute);
                     return (
                       <div key={row.attribute} className="stats-attribute-row">
-                        {iconPath && (
-                          <Image
-                            src={iconPath}
-                            preview={false}
-                            width={22}
-                            height={22}
-                            alt={row.attribute}
-                          />
-                        )}
-                        <Text className="stats-attribute-label">{row.attribute}</Text>
+                        <span className="stats-attribute-pill">
+                          {iconPath && (
+                            <img
+                              src={iconPath}
+                              alt={row.attribute}
+                              width={16}
+                              height={16}
+                            />
+                          )}
+                          <span className="stats-attribute-pill-text">{row.attribute}</span>
+                        </span>
                         <Progress
                           percent={row.percent}
                           showInfo={false}
