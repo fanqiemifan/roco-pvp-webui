@@ -202,6 +202,10 @@ function Dashboard() {
     left: { side: 'left', exists: false },
     right: { side: 'right', exists: false },
   });
+  const [createLeftAvatar, setCreateLeftAvatar] = useState<File | null>(null);
+  const [createRightAvatar, setCreateRightAvatar] = useState<File | null>(null);
+  const [createLeftAvatarUrl, setCreateLeftAvatarUrl] = useState<string | null>(null);
+  const [createRightAvatarUrl, setCreateRightAvatarUrl] = useState<string | null>(null);
   const [panels, setPanels] = useState<Record<PanelSide, PanelEditorState>>({
     left: createPanelEditorState(),
     right: createPanelEditorState(),
@@ -1018,6 +1022,16 @@ function Dashboard() {
 
   async function createMatch(values: CreateMatchValues) {
     try {
+      if (createLeftAvatar) {
+        await uploadSingleFile('/api/upload/avatar/left', createLeftAvatar);
+      }
+      if (createRightAvatar) {
+        await uploadSingleFile('/api/upload/avatar/right', createRightAvatar);
+      }
+      if (createLeftAvatar || createRightAvatar) {
+        const nextAvatars = await requestJson<AvatarCollectionState>('/api/avatars');
+        setAvatars(nextAvatars);
+      }
       const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches', {
         method: 'POST',
         json: {
@@ -1032,11 +1046,42 @@ function Dashboard() {
       });
       setCreateMatchOpen(false);
       createMatchForm.resetFields();
+      clearCreateAvatars();
       setRosterNotice({ tone: 'success', text: '新赛事已创建，系统已自动切到第 1 局草稿' });
       message.success('新赛事已创建');
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
     }
+  }
+
+  function getAvatarPreviewSrc(side: PanelSide): string {
+    const avatar = avatars[side];
+    return avatar.exists
+      ? `${avatar.path}?t=${avatar.mtime ?? Date.now()}`
+      : side === 'left'
+        ? '/assets/ui/left-avatar.png'
+        : '/assets/ui/right-avatar.png';
+  }
+
+  function pickCreateAvatar(side: PanelSide, file: File) {
+    if (side === 'left') {
+      if (createLeftAvatarUrl) URL.revokeObjectURL(createLeftAvatarUrl);
+      setCreateLeftAvatar(file);
+      setCreateLeftAvatarUrl(URL.createObjectURL(file));
+    } else {
+      if (createRightAvatarUrl) URL.revokeObjectURL(createRightAvatarUrl);
+      setCreateRightAvatar(file);
+      setCreateRightAvatarUrl(URL.createObjectURL(file));
+    }
+  }
+
+  function clearCreateAvatars() {
+    if (createLeftAvatarUrl) URL.revokeObjectURL(createLeftAvatarUrl);
+    if (createRightAvatarUrl) URL.revokeObjectURL(createRightAvatarUrl);
+    setCreateLeftAvatar(null);
+    setCreateRightAvatar(null);
+    setCreateLeftAvatarUrl(null);
+    setCreateRightAvatarUrl(null);
   }
 
   async function deleteHistoryMatches(matchIds: string[]) {
@@ -1958,8 +2003,39 @@ function Dashboard() {
                   >
                     {activeMatch ? (
                       <Space direction="vertical" size={18} className="page-stack">
+                        <div className="roster-avatar-editor">
+                          {(['left', 'right'] as PanelSide[]).map((side) => {
+                            const avatar = avatars[side];
+                            const previewSrc = getAvatarPreviewSrc(side);
+                            return (
+                              <div key={side} className="roster-avatar-item">
+                                <div className="player-avatar-circular">
+                                  <Image preview={false} src={previewSrc} alt={side === 'left' ? '左侧选手头像' : '右侧选手头像'} />
+                                </div>
+                                <Text type="secondary">{side === 'left' ? '左侧选手' : '右侧选手'}</Text>
+                                <Space wrap size={6}>
+                                  <Upload
+                                    showUploadList={false}
+                                    beforeUpload={(file) => {
+                                      void uploadAvatarFile(side, file as File);
+                                      return false;
+                                    }}
+                                  >
+                                    <Button size="small">更换头像</Button>
+                                  </Upload>
+                                  {avatar.exists ? (
+                                    <Button size="small" danger onClick={() => void deleteAvatarFile(side)}>删除</Button>
+                                  ) : null}
+                                </Space>
+                              </div>
+                            );
+                          })}
+                        </div>
                         <div className="current-match-overview">
                           <div className="current-match-player current-match-player-left">
+                            <div className="player-avatar-circular current-match-player-avatar">
+                              <Image preview={false} src={getAvatarPreviewSrc('left')} alt="左侧选手头像" />
+                            </div>
                             <Text type="secondary" className="current-match-player-label">左侧选手</Text>
                             <Text strong className="current-match-player-name current-match-player-name-left">
                               {activeMatch.leftPlayer || '未设置'}
@@ -1984,6 +2060,9 @@ function Dashboard() {
                             </Text>
                           </div>
                           <div className="current-match-player current-match-player-right">
+                            <div className="player-avatar-circular current-match-player-avatar">
+                              <Image preview={false} src={getAvatarPreviewSrc('right')} alt="右侧选手头像" />
+                            </div>
                             <Text type="secondary" className="current-match-player-label">右侧选手</Text>
                             <Text strong className="current-match-player-name current-match-player-name-right">
                               {activeMatch.rightPlayer || '未设置'}
@@ -2674,7 +2753,10 @@ function Dashboard() {
       <Modal
         title="创建赛事"
         open={createMatchOpen}
-        onCancel={() => setCreateMatchOpen(false)}
+        onCancel={() => {
+          setCreateMatchOpen(false);
+          clearCreateAvatars();
+        }}
         onOk={() => createMatchForm.submit()}
         okText="创建比赛"
         cancelText="取消"
@@ -2691,6 +2773,52 @@ function Dashboard() {
           <Form.Item label="右侧选手" name="rightPlayer" rules={[{ required: true, message: '请输入右侧选手名' }]}>
             <Input maxLength={32} placeholder="例如：选手B" />
           </Form.Item>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Form.Item label="左侧选手头像（留空则使用默认）">
+                <div className="create-avatar-row">
+                  <div className="player-avatar-circular">
+                    {createLeftAvatarUrl ? (
+                      <img src={createLeftAvatarUrl} alt="左侧头像预览" />
+                    ) : (
+                      <Image preview={false} src="/assets/ui/left-avatar.png" alt="左侧头像预览" />
+                    )}
+                  </div>
+                  <Upload
+                    showUploadList={false}
+                    beforeUpload={(file) => {
+                      pickCreateAvatar('left', file as File);
+                      return false;
+                    }}
+                  >
+                    <Button>选择头像</Button>
+                  </Upload>
+                </div>
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item label="右侧选手头像（留空则使用默认）">
+                <div className="create-avatar-row">
+                  <div className="player-avatar-circular">
+                    {createRightAvatarUrl ? (
+                      <img src={createRightAvatarUrl} alt="右侧头像预览" />
+                    ) : (
+                      <Image preview={false} src="/assets/ui/right-avatar.png" alt="右侧头像预览" />
+                    )}
+                  </div>
+                  <Upload
+                    showUploadList={false}
+                    beforeUpload={(file) => {
+                      pickCreateAvatar('right', file as File);
+                      return false;
+                    }}
+                  >
+                    <Button>选择头像</Button>
+                  </Upload>
+                </div>
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item label="比赛赛制" name="bestOf">
             <Select
               options={[
