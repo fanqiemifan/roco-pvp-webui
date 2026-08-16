@@ -1145,6 +1145,27 @@ a {
   gap: 10px;
 }
 
+.stats-column-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: help;
+}
+
+.stats-column-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 10px;
+  line-height: 1;
+  color: #c7632f;
+  background: rgba(199, 99, 47, 0.12);
+  border: 1px solid rgba(199, 99, 47, 0.25);
+}
+
 .stats-attribute-pill {
   display: inline-flex;
   align-items: center;

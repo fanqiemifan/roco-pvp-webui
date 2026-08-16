@@ -14,6 +14,7 @@ import {
   Space,
   Statistic,
   Table,
+  Tooltip,
   Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -126,7 +127,18 @@ export function StatsView({
       ),
     },
     {
-      title: metric === 'pickRate' ? '使用率' : '上场率',
+      title: (
+        <Tooltip
+          title={metric === 'pickRate'
+            ? '使用率 = 登场只次 ÷ 总登场只次（同局重复携带按只次计）'
+            : '上场率 = 登场场次 ÷ 总场次（同局同侧重复携带只计 1 次）'}
+        >
+          <span className="stats-column-title">
+            {metric === 'pickRate' ? '使用率' : '上场率'}
+            <span className="stats-column-hint" aria-hidden>?</span>
+          </span>
+        </Tooltip>
+      ),
       key: 'usage',
       render: (_: unknown, record: SpriteUsageRow) => (
         <div className="stats-usage-cell">
