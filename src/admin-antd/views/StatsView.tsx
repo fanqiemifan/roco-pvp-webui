@@ -251,20 +251,24 @@ export function StatsView({
             onChange={(value) => onMetricChange(value as StatsMetricKey)}
           />
           <Select
+            showSearch
             allowClear
-            placeholder="全部选手"
+            placeholder="搜索选择选手"
             value={player ?? undefined}
             options={playerOptions.map((playerName) => ({ value: playerName, label: playerName }))}
             onChange={(value) => onPlayerChange(value ?? null)}
             className="stats-filter-select"
+            optionFilterProp="label"
           />
           <Select
+            showSearch
             allowClear
-            placeholder="全部赛事标签"
+            placeholder="搜索选择赛事标签"
             value={tag ?? undefined}
             options={tagOptions.map((tagName) => ({ value: tagName, label: tagName }))}
             onChange={(value) => onTagChange(value ?? null)}
             className="stats-filter-select"
+            optionFilterProp="label"
           />
         </Space>
       </Card>
