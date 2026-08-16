@@ -13,5 +13,5 @@ services:
     environment:
       NODE_ENV: production
       ADMIN_USER: admin
-      ADMIN_PASS: admin123
+      ADMIN_PASS: "123"
     restart: unless-stopped
