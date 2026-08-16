@@ -301,7 +301,7 @@ export function StatsView({
       </Row>
 
       <Row gutter={[18, 18]}>
-        <Col xs={24} xl={15}>
+        <Col xs={24} xl={16}>
           <Card
             title={metric === 'pickRate' ? '精灵使用率排行' : '精灵上场率排行'}
             extra={(
@@ -333,7 +333,7 @@ export function StatsView({
             </Text>
           </Card>
         </Col>
-        <Col xs={24} xl={9}>
+        <Col xs={24} xl={8}>
           <Space direction="vertical" size={18} className="page-stack stats-side-stack">
             <Card title="属性分布" extra={<Text type="secondary">按登场只次</Text>}>
               {stats.attributeRows.length ? (
