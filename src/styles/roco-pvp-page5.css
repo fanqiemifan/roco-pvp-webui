@@ -238,7 +238,7 @@ body {
     width: 190px;
     font-family: var(--title-font);
     font-size: 48px;
-    color: var(--ink);
+    color: var(--gold-deep);
     text-align: center;
     line-height: 1;
     font-variant-numeric: tabular-nums;
@@ -250,5 +250,5 @@ body {
 }
 
 .page5-data-wins {
-    color: var(--green);
+    color: var(--gold-deep);
 }
