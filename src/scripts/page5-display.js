@@ -132,10 +132,12 @@
         });
 
         const rangeLabel = RANGE_LABELS[data && data.range] || '全部';
-        const tagLabel = data && data.tag ? data.tag : '全部';
+        const tagLabel = data && data.tag ? data.tag : '';
+        // 只显示具体口径：有赛事标签显示标签，否则显示时间范围
+        const scopeLabel = tagLabel || rangeLabel;
         badgeEl.innerHTML = '';
         const inner = document.createElement('span');
-        inner.textContent = `${rangeLabel} · ${tagLabel}`;
+        inner.textContent = scopeLabel;
         badgeEl.appendChild(inner);
     }
 

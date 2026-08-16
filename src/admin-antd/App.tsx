@@ -2573,44 +2573,52 @@ function Dashboard() {
                   <Paragraph type="secondary" style={{ marginBottom: 0 }}>
                     推流软件（OBS 等）只需固定捕获根路径 <code>/</code>。在此切换后，推流页面会实时加载所选画面，无需修改推流来源。
                   </Paragraph>
-                  <Card size="small" className="subtle-card">
-                    <Space direction="vertical" size={12} className="control-stack">
-                      <Text strong>推流页面5 统计口径</Text>
-                      <div>
-                        <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>时间范围：</Text>
-                        <Segmented
-                          block
-                          value={stage?.page5Range ?? 'all'}
-                          disabled={stageSaving}
-                          options={STATS_RANGE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                          onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page5Range: value as Page5RangeKey }); }}
-                        />
-                      </div>
-                      <div>
-                        <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>赛事标签：</Text>
-                        <Select
-                          className="stage-page5-tag-select"
-                          value={stage?.page5Tag || undefined}
-                          disabled={stageSaving}
-                          options={[
-                            { value: '', label: '全部' },
-                            ...allHistoryTags.map((tag) => ({ value: tag, label: tag })),
-                          ]}
-                          onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page5Tag: value ?? '' }); }}
-                        />
-                      </div>
-                    </Space>
-                  </Card>
-                  <div>
-                    <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>切换过渡效果：</Text>
-                    <Segmented
-                      block
-                      value={normalizeStageTransition(stage?.transition)}
-                      disabled={stageSaving}
-                      options={STAGE_TRANSITION_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                      onChange={(value) => { void saveStage(stage?.page ?? 'page3', { transition: value as StageTransitionType }); }}
-                    />
-                  </div>
+                  <Row gutter={[16, 16]}>
+                    <Col xs={24} md={12}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>推流页面5 统计口径</Text>
+                          <div>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>时间范围：</Text>
+                            <Segmented
+                              block
+                              value={stage?.page5Range ?? 'all'}
+                              disabled={stageSaving}
+                              options={STATS_RANGE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                              onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page5Range: value as Page5RangeKey }); }}
+                            />
+                          </div>
+                          <div>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>赛事标签：</Text>
+                            <Select
+                              className="stage-page5-tag-select"
+                              value={stage?.page5Tag || undefined}
+                              disabled={stageSaving}
+                              options={[
+                                { value: '', label: '全部' },
+                                ...allHistoryTags.map((tag) => ({ value: tag, label: tag })),
+                              ]}
+                              onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page5Tag: value ?? '' }); }}
+                            />
+                          </div>
+                        </Space>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>切换过渡效果</Text>
+                          <Segmented
+                            block
+                            value={normalizeStageTransition(stage?.transition)}
+                            disabled={stageSaving}
+                            options={STAGE_TRANSITION_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                            onChange={(value) => { void saveStage(stage?.page ?? 'page3', { transition: value as StageTransitionType }); }}
+                          />
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
                   <Segmented
                     block
                     value={stage?.page ?? 'page3'}
