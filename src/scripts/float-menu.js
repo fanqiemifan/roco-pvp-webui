@@ -96,9 +96,10 @@
 
     function renderMenu() {
         const currentSprite = slotData && slotData.sprite ? slotData.sprite : null;
+        const slotLabel = `${side === 'left' ? '左侧' : '右侧'} 第 ${slotIndex + 1} 位`;
         menuTitle.textContent = currentSprite
-            ? `${getSpriteDisplayName(currentSprite)}${getSpriteForm(currentSprite) ? `（${getSpriteForm(currentSprite)}）` : ''}`
-            : `${side === 'left' ? '左' : '右'}侧 第 ${slotIndex + 1} 位（空槽位）`;
+            ? `正在编辑：${getSpriteDisplayName(currentSprite)}${getSpriteForm(currentSprite) ? `（${getSpriteForm(currentSprite)}）` : ''} · ${slotLabel}`
+            : `正在编辑：空槽位 · ${slotLabel}`;
 
         menuBody.innerHTML = '';
 

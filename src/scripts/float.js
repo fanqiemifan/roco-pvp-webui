@@ -124,7 +124,7 @@
         window.open(
             `/float-menu.html?side=${encodeURIComponent(side)}&slot=${encodeURIComponent(String(slotIndex))}`,
             '_blank',
-            'width=340,height=460,popup=yes',
+            'width=380,height=210,popup=yes',
         );
     }
 
