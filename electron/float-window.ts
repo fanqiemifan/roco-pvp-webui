@@ -122,7 +122,11 @@ function createFloatWindow(getPort: () => number): BrowserWindow {
 
 function showFloatWindow(getPort: () => number): void {
   const win = createFloatWindow(getPort);
+  if (win.isMinimized()) {
+    win.restore();
+  }
   win.show();
+  win.moveTop();
   win.focus();
 }
 
@@ -133,11 +137,8 @@ function hideFloatWindow(): void {
 }
 
 function toggleFloatWindow(getPort: () => number): void {
-  if (floatWindow && !floatWindow.isDestroyed() && floatWindow.isVisible()) {
-    hideFloatWindow();
-  } else {
-    showFloatWindow(getPort);
-  }
+  // 已打开时再次点击：直接显示并聚焦已存在的窗口，不再重复创建
+  showFloatWindow(getPort);
 }
 
 function closeFloatWindow(): void {
