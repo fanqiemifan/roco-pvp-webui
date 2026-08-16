@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阵容悬浮窗</title>
+    <link rel="stylesheet" href="/styles/float.css">
+</head>
+<body>
+    <main id="floatStage" class="float-stage">
+        <section class="float-panel float-panel-left">
+            <div class="float-panel-title">左侧阵容</div>
+            <div class="float-slots" data-side="left"></div>
+        </section>
+        <section class="float-panel float-panel-right">
+            <div class="float-panel-title">右侧阵容</div>
+            <div class="float-slots" data-side="right"></div>
+        </section>
+        <button id="floatCloseBtn" class="float-close" type="button" title="关闭悬浮窗">×</button>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/float.js"></script>
+</body>
+</html>

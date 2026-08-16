@@ -24,4 +24,17 @@ const rocoDesktop = {
   },
 };
 
+const rocoFloat = {
+  toggle() {
+    ipcRenderer.send('float:toggle');
+  },
+  close() {
+    ipcRenderer.send('float:close');
+  },
+  reportShape(rect: { x: number; y: number; width: number; height: number }) {
+    ipcRenderer.send('float:shape', rect);
+  },
+};
+
 contextBridge.exposeInMainWorld('rocoDesktop', rocoDesktop);
+contextBridge.exposeInMainWorld('rocoFloat', rocoFloat);

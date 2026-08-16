@@ -11,5 +11,10 @@ declare global {
       statFile(filePath: string): Promise<{ mtimeMs: number; size: number }>;
       openExternal(target: string): Promise<boolean>;
     };
+    rocoFloat?: {
+      toggle(): void;
+      close(): void;
+      reportShape(rect: { x: number; y: number; width: number; height: number }): void;
+    };
   }
 }

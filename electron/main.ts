@@ -8,6 +8,7 @@ import { loadRuntimeConfig } from './services/config-service.js';
 import { createAppPaths } from './services/path-service.js';
 import { createLocalServer } from './socket-server.js';
 import { registerWindowIpc } from './ipc/window-ipc.js';
+import { registerFloatWindow } from './float-window.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -199,6 +200,7 @@ async function createMainWindow(): Promise<void> {
   const runtimeConfig = loadRuntimeConfig(paths);
 
   localServer = await createLocalServer(paths, runtimeConfig.port);
+  registerFloatWindow(() => localServer?.port ?? 0);
 
   mainWindow = new BrowserWindow({
     width: 1600,
