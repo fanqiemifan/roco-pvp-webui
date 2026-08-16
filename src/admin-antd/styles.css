@@ -45,6 +45,11 @@ a {
 }
 
 .admin-sider {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  align-self: flex-start;
+  overflow-y: auto;
   border-right: 1px solid rgba(91, 67, 43, 0.12);
   box-shadow: 20px 0 60px rgba(77, 48, 25, 0.04);
 }
