@@ -1824,9 +1824,17 @@ function Dashboard() {
             </Title>
           </div>
           <Space wrap>
-            {window.rocoFloat ? (
-              <Button onClick={() => window.rocoFloat?.toggle?.()}>阵容悬浮窗</Button>
-            ) : null}
+            <Button
+              onClick={() => {
+                if (window.rocoFloat?.toggle) {
+                  window.rocoFloat.toggle();
+                } else {
+                  window.open('/float.html', '_blank');
+                }
+              }}
+            >
+              阵容悬浮窗
+            </Button>
             <Button href={buildPreviewUrl(previewSlot)} target="_blank">打开当前预览</Button>
             <Button onClick={() => void handleCopyPreviewLink()}>复制预览链接</Button>
             <Button type="primary" loading={refreshing} onClick={() => void loadInitialData(true)}>
