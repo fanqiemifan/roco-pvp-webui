@@ -5,7 +5,6 @@ import React, { startTransition, useDeferredValue, useEffect, useRef, useState }
 import {
   Alert,
   App,
-  Avatar,
   Badge,
   Button,
   Card,
@@ -21,7 +20,6 @@ import {
   List,
   Menu,
   Modal,
-  Progress,
   Row,
   Segmented,
   Select,
@@ -39,19 +37,16 @@ import {
 import type { MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { io } from 'socket.io-client';
-import attributeMapping from '../../resources/data/attribute_mapping.json';
 
 import { SOCKET_EVENTS } from '../../shared/events';
 import type {
   AvatarCollectionState,
-  GameRecord,
   MatchRecord,
   MatchStoreState,
-  PanelState,
   Page4PanelState,
   Page4SlotState,
   Page4State,
-  QuickFillMatch,
+  PanelState,
   ScoreboardState,
   SlotState,
   SpriteRecord,
@@ -60,1319 +55,84 @@ import type {
   StageTransitionType,
 } from '../../shared/types';
 
+import {
+  DEFAULT_TAGS,
+  EXCLUSIVE_FORM_FILTERS,
+  STAGE_OPTIONS,
+  STAGE_TRANSITION_OPTIONS,
+  normalizeStagePage,
+  normalizeStageTransition,
+  theme,
+} from './constants';
+import { StageThumb } from './components/StageThumb';
+import { formatDateTime } from './lib/format';
+import {
+  buildHistoryBattleEntries,
+  buildHistoryCsv,
+  buildHistoryLineupEntries,
+  buildHistoryTags,
+  getVisibleGames,
+} from './lib/history';
+import {
+  clampNumber,
+  extractLiveConfigPanel,
+  findConfigTargetIndex,
+  getEnergyLevel,
+  getHealthLevel,
+  readNumberField,
+  stringifyLiveConfig,
+} from './lib/live';
+import {
+  buildProgressItems,
+  getActiveMatch,
+  getCurrentGame,
+  getGameResultLabel,
+  getGameStatusLabel,
+  getMatchStatusColor,
+  getMatchStatusLabel,
+  getNoticeTagColor,
+  summarizeSeriesForBestOf,
+} from './lib/match';
+import {
+  buildPage4Request,
+  buildPanelRequest,
+  clonePage4Selected,
+  cloneSelected,
+  createDefaultSpriteFilterState,
+  createEmptySlot,
+  createPage4EmptySlot,
+  createPage4PanelEditorState,
+  createPanelEditorState,
+  createSpriteFilterState,
+  page4PanelStateToSelected,
+  panelStateToSelected,
+} from './lib/panel';
+import { buildPreviewUrl, getLocalAddressText, getPreviewPage } from './lib/preview';
+import { copyText, requestJson, requestQuickFillMatches, uploadSingleFile } from './lib/request';
+import { buildSpriteLookup } from './lib/sprite';
+import { Page4DeathPanel } from './views/Page4DeathPanel';
+import { Page4PanelEditor } from './views/Page4PanelEditor';
+import { RosterPanelEditor } from './views/RosterPanelEditor';
+import { StatsView } from './views/StatsView';
+
+import type { StatsMetricKey, StatsRangeKey } from './lib/stats';
+import type {
+  CreateMatchValues,
+  LiveField,
+  MatchFormValues,
+  NoticeState,
+  Page4PanelEditorState,
+  PanelEditorState,
+  PanelSide,
+  PreviewSlotKey,
+  ScoreboardFormValues,
+  SpriteFilterState,
+  ViewKey,
+} from './types';
+
 const { Header, Sider, Content } = Layout;
 const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
-
-type PanelSide = 'left' | 'right';
-type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'stats' | 'scoreboard' | 'preview' | 'stage' | 'about';
-
-type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'standby';
-
-type JsonInit = RequestInit & {
-  json?: unknown;
-};
-
-type MatchFormValues = {
-  leftPlayer: string;
-  rightPlayer: string;
-  bestOf: number;
-  tags?: string[];
-};
-
-type CreateMatchValues = MatchFormValues;
-
-type ScoreboardFormValues = {
-  scoreboardEnabled: boolean;
-  eventTitleEnabled: boolean;
-  eventTitle: string;
-  page2LineupDisplayMode: 'default' | 'avatar-only';
-  nameFontSize: number;
-  scoreFontSize: number;
-};
-
-type PanelEditorState = {
-  selected: SlotState[];
-  activeSlot: number;
-  search: string;
-  quickFillInput: string;
-  quickFillMatches: QuickFillMatch[];
-  autoSaveEnabled: boolean;
-  dirty: boolean;
-  saving: boolean;
-};
-
-type Page4PanelEditorState = {
-  selected: Page4SlotState[];
-  activeSlot: number;
-  search: string;
-  quickFillInput: string;
-  quickFillMatches: QuickFillMatch[];
-  autoSaveEnabled: boolean;
-  dirty: boolean;
-  saving: boolean;
-};
-
-type SpriteFilterState = {
-  selectedAttributes: string[];
-  selectedForms: string[];
-  selectedFinalForm: boolean;
-};
-
-type AttributeOption = {
-  code: string;
-  label: string;
-  iconPath: string;
-};
-
-type PreviewConfig = {
-  title: string;
-  fileName: string;
-  path: string;
-};
-
-type NoticeTone = 'success' | 'info' | 'warning' | 'error';
-
-type NoticeState = {
-  tone: NoticeTone;
-  text: string;
-} | null;
-
-type LiveField = 'healthPercent' | 'energyValue';
-
-type LiveConfigPayload = {
-  left: Array<{ name: string; HP: number; value: number }>;
-  right: Array<{ name: string; HP: number; value: number }>;
-};
-
-declare global {
-  interface Window {
-    rocoDesktop?: {
-      copyText?: (text: string) => Promise<void>;
-      showOpenDialog?: () => Promise<string | null>;
-      showSaveDialog?: () => Promise<string | null>;
-      readTextFile?: (filePath: string) => Promise<string>;
-      writeTextFile?: (filePath: string, text: string) => Promise<boolean>;
-      statFile?: (filePath: string) => Promise<{ mtimeMs: number; size: number }>;
-    };
-    showOpenFilePicker?: (options?: unknown) => Promise<Array<{ getFile: () => Promise<File>; queryPermission?: (options?: unknown) => Promise<string>; requestPermission?: (options?: unknown) => Promise<string>; createWritable?: () => Promise<{ write: (text: string) => Promise<void>; close: () => Promise<void> }> }>>;
-    showSaveFilePicker?: (options?: unknown) => Promise<{ getFile: () => Promise<File>; queryPermission?: (options?: unknown) => Promise<string>; requestPermission?: (options?: unknown) => Promise<string>; createWritable: () => Promise<{ write: (text: string) => Promise<void>; close: () => Promise<void> }> }>;
-  }
-}
-
-const DEFAULT_TAGS = ['淘汰赛', '海选赛', '128进64', '64进32', '32进16', '16进8', '8进4', '4进2', '季军赛', '决赛'];
-
-const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
-  stage: {
-    title: '直播推流（全局推流页面）',
-    fileName: 'index.html',
-    path: '/',
-  },
-  page1: {
-    title: '推流页面1',
-    fileName: 'roco-pvp-page1.html',
-    path: '/roco-pvp-page1.html',
-  },
-  page2: {
-    title: '推流页面2',
-    fileName: 'roco-pvp-page2.html',
-    path: '/roco-pvp-page2.html',
-  },
-  page3: {
-    title: '推流页面3',
-    fileName: 'roco-pvp-page3.html',
-    path: '/roco-pvp-page3.html',
-  },
-  page4: {
-    title: '仅显示阵容',
-    fileName: 'roco-pvp-page4.html',
-    path: '/roco-pvp-page4.html',
-  },
-  standby: {
-    title: '等待页 Demo',
-    fileName: 'live-standby-demo.html',
-    path: '/live-standby-demo.html',
-  },
-};
-
-const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; description: string; previewPath: string }> = [
-  {
-    value: 'page1-overlay',
-    label: '推流页面1',
-    description: '带比分栏 + 左右精灵槽的经典 Overlay 布局',
-    previewPath: '/roco-pvp-page1.html',
-  },
-  {
-    value: 'page2',
-    label: '推流页面2',
-    description: '全局阵容展示（左右阵容 + 比分 + 赛事标题）',
-    previewPath: '/roco-pvp-page2.html',
-  },
-  {
-    value: 'page3',
-    label: '推流页面3',
-    description: '头像比分阵容展示（带头像 VS 比分栏）',
-    previewPath: '/roco-pvp-page3.html',
-  },
-  {
-    value: 'page4',
-    label: '仅显示阵容',
-    description: '只展示双方阵容，无比分信息',
-    previewPath: '/roco-pvp-page4.html',
-  },
-  {
-    value: 'standby',
-    label: '等待页',
-    description: '直播等待 / 间歇展示页',
-    previewPath: '/live-standby-demo.html',
-  },
-  {
-    value: 'blank',
-    label: '黑场',
-    description: '不加载任何画面（切黑）',
-    previewPath: '',
-  },
-];
-
-const STAGE_VALUE_SET = new Set(STAGE_OPTIONS.map((option) => option.value));
-
-const STAGE_TRANSITION_OPTIONS: Array<{ value: StageTransitionType; label: string }> = [
-  { value: 'blinds', label: '百叶窗' },
-  { value: 'zoom', label: '缩放冲击' },
-  { value: 'none', label: '无过渡' },
-];
-
-function normalizeStageTransition(value: unknown): StageTransitionType {
-  if (typeof value === 'string' && STAGE_TRANSITION_OPTIONS.some((option) => option.value === value)) {
-    return value as StageTransitionType;
-  }
-  return 'blinds';
-}
-
-function normalizeStagePage(value: unknown): StagePageKey {
-  if (typeof value === 'string' && STAGE_VALUE_SET.has(value as StagePageKey)) {
-    return value as StagePageKey;
-  }
-  return 'page3';
-}
-
-const ATTRIBUTE_OPTIONS: AttributeOption[] = (attributeMapping as Array<{ 编号: string; 属性: string }>).map((item) => ({
-  code: item.编号,
-  label: item.属性,
-  iconPath: `/resources/attribute/${item.编号}.png`,
-}));
-
-const ATTRIBUTE_ICON_BY_LABEL = new Map(ATTRIBUTE_OPTIONS.map((option) => [option.label, option.iconPath]));
-const FINAL_FORM_FILTER_LABEL = '最终形态';
-const EXCLUSIVE_FORM_FILTERS = ['首领', '一阶', '二阶', '三阶'];
-
-const theme = {
-  token: {
-    colorPrimary: '#c7632f',
-    colorInfo: '#b8894c',
-    colorSuccess: '#2d7a58',
-    colorWarning: '#d38b2d',
-    colorError: '#c24635',
-    colorBgBase: '#f6efe6',
-    colorTextBase: '#2f2418',
-    colorBorder: 'rgba(91, 67, 43, 0.14)',
-    borderRadius: 12,
-    borderRadiusLG: 16,
-    controlHeight: 42,
-    fontFamily: '"Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif',
-  },
-  components: {
-    Layout: {
-      bodyBg: 'transparent',
-      siderBg: 'rgba(255, 251, 246, 0.92)',
-      headerBg: 'transparent',
-    },
-    Card: {
-      borderRadiusLG: 16,
-    },
-    Button: {
-      borderRadius: 12,
-      controlHeight: 42,
-    },
-    Input: {
-      borderRadius: 12,
-    },
-    InputNumber: {
-      borderRadius: 12,
-    },
-    Select: {
-      borderRadius: 12,
-    },
-    Collapse: {
-      borderRadiusLG: 14,
-    },
-    Upload: {
-      colorFillAlter: 'rgba(255, 250, 245, 0.9)',
-    },
-    Table: {
-      borderColor: 'rgba(91, 67, 43, 0.12)',
-      headerBg: '#fbf4ea',
-    },
-  },
-};
-
-function createEmptySlot(index: number): SlotState {
-  return {
-    slot: index,
-    sprite: null,
-    opacityEnabled: false,
-    opacity: 0.5,
-    effectiveOpacity: 1,
-    saturation: 1,
-    healthEnabled: true,
-    healthPercent: 100,
-    energyValue: 10,
-  };
-}
-
-function createPanelEditorState(): PanelEditorState {
-  return {
-    selected: Array.from({ length: 6 }, (_, index) => createEmptySlot(index)),
-    activeSlot: 0,
-    search: '',
-    quickFillInput: '',
-    quickFillMatches: [],
-    autoSaveEnabled: true,
-    dirty: false,
-    saving: false,
-  };
-}
-
-function createPage4EmptySlot(index: number): Page4SlotState {
-  return {
-    slot: index,
-    sprite: null,
-    isDead: false,
-  };
-}
-
-function createPage4PanelEditorState(): Page4PanelEditorState {
-  return {
-    selected: Array.from({ length: 6 }, (_, index) => createPage4EmptySlot(index)),
-    activeSlot: 0,
-    search: '',
-    quickFillInput: '',
-    quickFillMatches: [],
-    autoSaveEnabled: true,
-    dirty: false,
-    saving: false,
-  };
-}
-
-function createSpriteFilterState(options?: { selectedFinalForm?: boolean }): SpriteFilterState {
-  return {
-    selectedAttributes: [],
-    selectedForms: [],
-    selectedFinalForm: options?.selectedFinalForm ?? false,
-  };
-}
-
-function createDefaultSpriteFilterState(): SpriteFilterState {
-  return createSpriteFilterState({ selectedFinalForm: true });
-}
-
-function cloneSlot(slot: Partial<SlotState> | null | undefined, index: number): SlotState {
-  return {
-    slot: index,
-    sprite: slot?.sprite ?? null,
-    opacityEnabled: Boolean(slot?.opacityEnabled),
-    opacity: typeof slot?.opacity === 'number' ? slot.opacity : 0.5,
-    effectiveOpacity: slot?.opacityEnabled ? (typeof slot.opacity === 'number' ? slot.opacity : 0.5) : 1,
-    saturation: typeof slot?.saturation === 'number' ? slot.saturation : 1,
-    healthEnabled: slot?.healthEnabled !== false,
-    healthPercent: typeof slot?.healthPercent === 'number' ? slot.healthPercent : 100,
-    energyValue: typeof slot?.energyValue === 'number' ? slot.energyValue : 10,
-  };
-}
-
-function cloneSelected(selected: SlotState[] | undefined): SlotState[] {
-  const next = Array.from({ length: 6 }, (_, index) => {
-    const source = selected?.[index];
-    return cloneSlot(source, index);
-  });
-  return next;
-}
-
-function clonePage4Slot(slot: Partial<Page4SlotState> | null | undefined, index: number): Page4SlotState {
-  return {
-    slot: index,
-    sprite: slot?.sprite ?? null,
-    isDead: Boolean(slot?.isDead),
-  };
-}
-
-function clonePage4Selected(selected: Page4SlotState[] | undefined): Page4SlotState[] {
-  return Array.from({ length: 6 }, (_, index) => clonePage4Slot(selected?.[index], index));
-}
-
-function panelStateToSelected(panel: PanelState | null | undefined): SlotState[] {
-  return cloneSelected(panel?.selected);
-}
-
-function page4PanelStateToSelected(panel: Page4PanelState | null | undefined): Page4SlotState[] {
-  return clonePage4Selected(panel?.selected);
-}
-
-function buildPanelRequest(selected: SlotState[]) {
-  return selected.map((slot, index) => ({
-    slot: index,
-    sprite: slot.sprite?.id ?? null,
-    opacityEnabled: slot.opacityEnabled,
-    opacity: slot.opacity,
-    saturation: slot.saturation,
-    healthEnabled: slot.healthEnabled,
-    healthPercent: slot.healthPercent,
-    energyValue: slot.energyValue,
-  }));
-}
-
-function buildPage4Request(selected: Page4SlotState[]) {
-  return selected.map((slot, index) => ({
-    slot: index,
-    sprite: slot.sprite?.id ?? null,
-    isDead: slot.isDead,
-  }));
-}
-
-function summarizePage4Slots(selected: Page4SlotState[]) {
-  const selectedCount = selected.filter((slot) => slot.sprite).length;
-  const deadCount = selected.filter((slot) => slot.sprite && slot.isDead).length;
-  return { selectedCount, deadCount };
-}
-
-function getPreviewOrigin(): string {
-  return `${window.location.protocol}//${window.location.host}`;
-}
-
-function getPreviewPage(slot: PreviewSlotKey): PreviewConfig {
-  return PREVIEW_PAGES[slot];
-}
-
-function buildPreviewUrl(slot: PreviewSlotKey): string {
-  return `${getPreviewOrigin()}${getPreviewPage(slot).path}`;
-}
-
-function getLocalAddressText(slot: PreviewSlotKey): string {
-  const host = window.location.port ? `127.0.0.1:${window.location.port}` : '127.0.0.1';
-  const path = getPreviewPage(slot).path;
-  return path === '/' ? host : `${host}${path}`;
-}
-
-function winsNeeded(bestOf: number): number {
-  return Math.floor(bestOf / 2) + 1;
-}
-
-function summarizeSeriesForBestOf(match: MatchRecord, bestOf: number) {
-  const needed = winsNeeded(bestOf);
-  let leftScore = 0;
-  let rightScore = 0;
-  let completedGameCount = 0;
-  let winner: MatchRecord['winner'] = null;
-
-  for (const game of match.games) {
-    if (game.status !== 'completed' || (game.winner !== 'left' && game.winner !== 'right')) {
-      continue;
-    }
-
-    completedGameCount += 1;
-    if (game.winner === 'left') {
-      leftScore += 1;
-    } else {
-      rightScore += 1;
-    }
-
-    if (leftScore >= needed || rightScore >= needed) {
-      winner = game.winner;
-      break;
-    }
-  }
-
-  return {
-    leftScore,
-    rightScore,
-    completedGameCount,
-    winner,
-  };
-}
-
-function getActiveMatch(matchStore: MatchStoreState): MatchRecord | null {
-  return matchStore.matches.find((match) => match.id === matchStore.activeMatchId) ?? null;
-}
-
-function getCurrentGame(match: MatchRecord | null) {
-  if (!match) {
-    return null;
-  }
-  return match.games.find((game) => game.status === 'in_progress')
-    ?? match.games.find((game) => game.status === 'pending')
-    ?? null;
-}
-
-function formatLineupSummary(lineup: string[], spriteMap: Map<string, SpriteRecord>): string {
-  if (!lineup.length) {
-    return '待设置';
-  }
-  return lineup
-    .map((spriteId) => spriteMap.get(spriteId)?.displayName ?? spriteId)
-    .join(' / ');
-}
-
-function basename(value: string | null | undefined): string {
-  return String(value ?? '').split('/').filter(Boolean).pop() ?? '';
-}
-
-function buildSpriteLookup(records: SpriteRecord[]): Map<string, SpriteRecord> {
-  const lookup = new Map<string, SpriteRecord>();
-
-  records.forEach((sprite) => {
-    const keys = new Set<string>([
-      sprite.id,
-      sprite.filename,
-      sprite.displayName,
-      sprite.name,
-      sprite.chineseName,
-      basename(sprite.id),
-      basename(sprite.filename),
-      basename(sprite.path),
-      ...(Array.isArray(sprite.aliases) ? sprite.aliases : []),
-    ]);
-
-    keys.forEach((key) => {
-      if (typeof key === 'string' && key.trim()) {
-        lookup.set(key.trim(), sprite);
-      }
-    });
-  });
-
-  return lookup;
-}
-
-function formatDateTime(value: string | null): string {
-  if (!value) {
-    return '-';
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleString('zh-CN', {
-    hour12: false,
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function getMatchStatusColor(status: MatchRecord['status']): string {
-  if (status === 'completed') {
-    return 'success';
-  }
-  if (status === 'in_progress') {
-    return 'processing';
-  }
-  return 'default';
-}
-
-function getMatchStatusLabel(status: MatchRecord['status']): string {
-  if (status === 'completed') {
-    return '已完成';
-  }
-  if (status === 'in_progress') {
-    return '进行中';
-  }
-  return '待开始';
-}
-
-function getNoticeTagColor(tone: NoticeTone): string {
-  if (tone === 'success') {
-    return 'success';
-  }
-  if (tone === 'warning') {
-    return 'warning';
-  }
-  if (tone === 'error') {
-    return 'error';
-  }
-  return 'processing';
-}
-
-function getGameStatusLabel(status: GameRecord['status']): string {
-  if (status === 'completed') {
-    return '已完成';
-  }
-  if (status === 'in_progress') {
-    return '进行中';
-  }
-  return '待开始';
-}
-
-function getGameResultLabel(game: GameRecord): string {
-  if (game.status === 'in_progress') {
-    return '进行中';
-  }
-  if (game.status !== 'completed' || !game.winner) {
-    return '待结算';
-  }
-  return game.winner === 'left' ? '左侧胜' : '右侧胜';
-}
-
-function summarizePanelSlots(selected: SlotState[]) {
-  const selectedCount = selected.filter((slot) => slot.sprite).length;
-  const aliveCount = selected.filter((slot) => slot.sprite && slot.healthPercent > 0).length;
-  return { selectedCount, aliveCount };
-}
-
-function splitSpriteAttributes(value: string | null | undefined): string[] {
-  return String(value ?? '')
-    .split(/[、/,，\s]+/u)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function cleanSpriteCardName(value: string | null | undefined): string {
-  return String(value ?? '').trim().replace(/[-_－—]\d+$/u, '');
-}
-
-function getSpriteCardNameLeft(nameLength: number): number {
-  switch (nameLength) {
-    case 2:
-      return 44;
-    case 3:
-      return 40;
-    case 4:
-      return 37;
-    case 5:
-      return 34;
-    default:
-      return nameLength <= 2 ? 44 : 37;
-  }
-}
-
-function resolveSpriteAttributeIcons(sprite: SpriteRecord): string[] {
-  const directIcons = [sprite.attributeIcon1, sprite.attributeIcon2].filter(Boolean);
-  if (directIcons.length > 0) {
-    return directIcons;
-  }
-
-  const directCodes = (sprite.attributeCodes ?? [])
-    .map((code) => code.trim())
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((code) => `/resources/attribute/${code}.png`);
-
-  if (directCodes.length > 0) {
-    return directCodes;
-  }
-
-  return splitSpriteAttributes(sprite.attribute)
-    .map((attribute) => ATTRIBUTE_ICON_BY_LABEL.get(attribute) ?? '')
-    .filter(Boolean)
-    .slice(0, 2);
-}
-
-type SpritePetCardProps = {
-  sprite: SpriteRecord;
-  size?: number | string;
-  className?: string;
-};
-
-function SpritePetCard({ sprite, size = 96, className }: SpritePetCardProps) {
-  const cardName = cleanSpriteCardName(sprite.cardName || sprite.displayName || sprite.chineseName || sprite.name);
-  const attributeIcons = resolveSpriteAttributeIcons(sprite);
-  const attributeIcon1 = attributeIcons[0] ?? '';
-  const attributeIcon2 = attributeIcons[1] ?? '';
-  const cardSize = typeof size === 'number' ? `${size}px` : size;
-  const style = {
-    '--pet-card-size': cardSize,
-    '--pet-name-left': String(getSpriteCardNameLeft(cardName.length)),
-  } as React.CSSProperties;
-
-  return (
-    <div
-      className={`sprite-pet-card${attributeIcon2 ? ' sprite-pet-card-has-attr2' : ''}${className ? ` ${className}` : ''}`}
-      style={style}
-    >
-      <div className="sprite-pet-card-bg" />
-      {attributeIcon2 ? <div className="sprite-pet-card-attr-circle" /> : null}
-      <img className="sprite-pet-card-sprite" src={sprite.path} alt={sprite.displayName} />
-      {attributeIcon1 ? (
-        <img className="sprite-pet-card-attr sprite-pet-card-attr-1" src={attributeIcon1} alt="" />
-      ) : null}
-      {attributeIcon2 ? (
-        <img className="sprite-pet-card-attr sprite-pet-card-attr-2" src={attributeIcon2} alt="" />
-      ) : null}
-      <div className="sprite-pet-card-name-bg" />
-      <span className="sprite-pet-card-name">{cardName}</span>
-    </div>
-  );
-}
-
-type Page4SlotVisualProps = {
-  slot: Page4SlotState;
-  index: number;
-  size?: number;
-  className?: string;
-  placeholderClassName?: string;
-};
-
-function Page4SlotVisual({
-  slot,
-  index,
-  size = 96,
-  className,
-  placeholderClassName,
-}: Page4SlotVisualProps) {
-  if (!slot.sprite?.path) {
-    return (
-      <div
-        className={`slot-placeholder${placeholderClassName ? ` ${placeholderClassName}` : ''}`}
-        style={{ width: size, height: size }}
-      >
-        {index + 1}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`page4-slot-visual${slot.isDead ? ' is-dead' : ''}${className ? ` ${className}` : ''}`}
-      style={{ '--page4-death-size': `${size}px` } as React.CSSProperties}
-    >
-      <SpritePetCard sprite={slot.sprite} size={size} />
-    </div>
-  );
-}
-
-function buildHistoryLineupEntries(
-  game: GameRecord,
-  side: PanelSide,
-  spriteMap: Map<string, SpriteRecord>,
-): Array<{ id: string; name: string; path: string } | null> {
-  const slotSource = side === 'left' ? game.leftSlots : game.rightSlots;
-  const lineupSource = side === 'left' ? game.leftLineup : game.rightLineup;
-  const slotEntries = slotSource
-    .filter((slot) => slot?.spriteId)
-    .map((slot) => slot.spriteId as string);
-  const source = slotEntries.length ? slotEntries : lineupSource;
-  const entries: Array<{ id: string; name: string; path: string } | null> = source.slice(0, 6).map((spriteId) => {
-    const sprite = spriteMap.get(spriteId);
-    return {
-      id: spriteId,
-      name: sprite?.displayName ?? spriteId,
-      path: sprite?.path ?? '',
-    };
-  });
-
-  while (entries.length < 6) {
-    entries.push(null);
-  }
-
-  return entries;
-}
-
-function buildHistoryBattleEntries(
-  game: GameRecord,
-  spriteMap: Map<string, SpriteRecord>,
-): Array<{ id: string; name: string; path: string; side: PanelSide } | null> {
-  return [
-    ...buildHistoryLineupEntries(game, 'left', spriteMap).map((entry) => (entry ? { ...entry, side: 'left' as const } : null)),
-    ...buildHistoryLineupEntries(game, 'right', spriteMap).map((entry) => (entry ? { ...entry, side: 'right' as const } : null)),
-  ];
-}
-
-function getVisibleGames(record: MatchRecord) {
-  return record.games.filter((game) => (
-    game.status !== 'pending'
-    || game.leftLineup.length > 0
-    || game.rightLineup.length > 0
-  ));
-}
-
-async function requestJson<T>(url: string, init?: JsonInit): Promise<T> {
-  const response = await fetch(url, {
-    credentials: 'same-origin',
-    ...init,
-    headers: {
-      ...(init?.json ? { 'Content-Type': 'application/json' } : null),
-      ...(init?.headers ?? {}),
-    },
-    body: init?.json !== undefined ? JSON.stringify(init.json) : init?.body,
-  });
-
-  const contentType = response.headers.get('content-type') ?? '';
-  const payload = contentType.includes('application/json')
-    ? await response.json()
-    : await response.text();
-
-  if (!response.ok) {
-    if (typeof payload === 'object' && payload && 'error' in payload) {
-      throw new Error(String((payload as { error?: unknown }).error ?? '请求失败'));
-    }
-    throw new Error(typeof payload === 'string' ? payload : `${response.status} 请求失败`);
-  }
-
-  return payload as T;
-}
-
-async function requestQuickFillMatches(text: string): Promise<QuickFillMatch[]> {
-  const data = await requestJson<{
-    success: boolean;
-    matches: QuickFillMatch[];
-  }>('/api/quick-fill', {
-    method: 'POST',
-    json: { text },
-  });
-
-  return data.matches;
-}
-
-async function uploadSingleFile<T>(url: string, file: File): Promise<T> {
-  const formData = new FormData();
-  formData.append('file', file);
-  return requestJson<T>(url, {
-    method: 'POST',
-    body: formData,
-  });
-}
-
-async function copyText(text: string): Promise<void> {
-  if (navigator.clipboard && window.isSecureContext) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-
-  if (window.rocoDesktop?.copyText) {
-    await window.rocoDesktop.copyText(text);
-    return;
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'absolute';
-  textarea.style.left = '-9999px';
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
-}
-
-function buildHistoryTags(matches: MatchStoreState['matches']): string[] {
-  const tagSet = new Set<string>();
-  for (const tag of DEFAULT_TAGS) {
-    tagSet.add(tag);
-  }
-  matches.forEach((match) => {
-    (match.tags ?? []).forEach((tag) => tagSet.add(tag));
-  });
-  return Array.from(tagSet);
-}
-
-type StatsRangeKey = 'today' | '7d' | '30d' | 'all';
-type StatsMetricKey = 'pickRate' | 'gameRate';
-
-const STATS_RANGE_OPTIONS: Array<{ value: StatsRangeKey; label: string }> = [
-  { value: 'today', label: '今日' },
-  { value: '7d', label: '近7天' },
-  { value: '30d', label: '近30天' },
-  { value: 'all', label: '全部' },
-];
-
-const STATS_METRIC_OPTIONS: Array<{ value: StatsMetricKey; label: string }> = [
-  { value: 'pickRate', label: '使用率' },
-  { value: 'gameRate', label: '上场率' },
-];
-
-type StatsWindow = { sinceMs: number; untilMs: number; player: string | null; tag: string | null };
-
-type SpriteUsageAccumulator = {
-  picks: number;
-  games: number;
-  wins: number;
-  dailyGames: Map<string, number>;
-};
-
-type SpriteUsageRow = {
-  key: string;
-  name: string;
-  spritePath: string;
-  attributes: string[];
-  picks: number;
-  games: number;
-  wins: number;
-  winRate: number | null;
-  usageRate: number;
-  usagePercent: number;
-  trendDelta: number;
-  dailyGames: Map<string, number>;
-};
-
-type UsageStatsResult = {
-  totalGames: number;
-  totalPicks: number;
-  distinctSprites: number;
-  playerCount: number;
-  attributeRows: Array<{ attribute: string; count: number; percent: number }>;
-  dailyKeys: string[];
-  rows: SpriteUsageRow[];
-  spriteAcc: Map<string, SpriteUsageAccumulator>;
-  spriteMeta: Map<string, { path: string; attributes: string[] }>;
-};
-
-function getStatsDateKey(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-function collectUsageStats(
-  matches: MatchStoreState['matches'],
-  spriteMap: Map<string, SpriteRecord>,
-  window: StatsWindow,
-): UsageStatsResult {
-  const spriteAcc = new Map<string, SpriteUsageAccumulator>();
-  const spriteMeta = new Map<string, { path: string; attributes: string[] }>();
-  const attributeAcc = new Map<string, number>();
-  const dailySprites = new Map<string, Map<string, number>>();
-  const players = new Set<string>();
-  let totalGames = 0;
-  let totalPicks = 0;
-  let attributeTotal = 0;
-
-  matches.forEach((match) => {
-    const time = new Date(match.createdAt).getTime();
-    if (Number.isNaN(time) || time < window.sinceMs || time >= window.untilMs) {
-      return;
-    }
-    if (window.player && match.leftPlayer !== window.player && match.rightPlayer !== window.player) {
-      return;
-    }
-    if (window.tag && !(match.tags ?? []).includes(window.tag)) {
-      return;
-    }
-    if (match.leftPlayer) {
-      players.add(match.leftPlayer);
-    }
-    if (match.rightPlayer) {
-      players.add(match.rightPlayer);
-    }
-
-    const dateKey = getStatsDateKey(match.createdAt);
-
-    match.games.forEach((game) => {
-      const sides: Array<{ lineup: string[]; side: 'left' | 'right' }> = [
-        { lineup: game.leftLineup, side: 'left' },
-        { lineup: game.rightLineup, side: 'right' },
-      ];
-      if (!sides.some(({ lineup }) => lineup.length > 0)) {
-        return;
-      }
-
-      let gameCounted = false;
-      sides.forEach(({ lineup, side }) => {
-        const won = game.winner === side;
-        const seen = new Set<string>();
-        lineup.forEach((spriteId) => {
-          const sprite = spriteMap.get(spriteId);
-          const name = resolveSpriteStatsName(sprite, spriteId);
-          let acc = spriteAcc.get(name);
-          if (!acc) {
-            acc = { picks: 0, games: 0, wins: 0, dailyGames: new Map() };
-            spriteAcc.set(name, acc);
-          }
-          if (!spriteMeta.has(name)) {
-            spriteMeta.set(name, {
-              path: sprite?.path ?? '',
-              attributes: sprite ? splitSpriteAttributes(sprite.attribute) : [],
-            });
-          }
-
-          acc.picks += 1;
-          totalPicks += 1;
-          if (!seen.has(name)) {
-            seen.add(name);
-            acc.games += 1;
-            if (won) {
-              acc.wins += 1;
-            }
-            if (dateKey) {
-              acc.dailyGames.set(dateKey, (acc.dailyGames.get(dateKey) ?? 0) + 1);
-              let dayMap = dailySprites.get(dateKey);
-              if (!dayMap) {
-                dayMap = new Map();
-                dailySprites.set(dateKey, dayMap);
-              }
-              dayMap.set(name, (dayMap.get(name) ?? 0) + 1);
-            }
-          }
-          (spriteMeta.get(name)?.attributes ?? []).forEach((attribute) => {
-            attributeAcc.set(attribute, (attributeAcc.get(attribute) ?? 0) + 1);
-            attributeTotal += 1;
-          });
-          gameCounted = true;
-        });
-      });
-
-      if (gameCounted) {
-        totalGames += 1;
-      }
-    });
-  });
-
-  return {
-    totalGames,
-    totalPicks,
-    distinctSprites: spriteAcc.size,
-    playerCount: players.size,
-    attributeRows: Array.from(attributeAcc.entries())
-      .map(([attribute, count]) => ({
-        attribute,
-        count,
-        percent: attributeTotal > 0 ? (count / attributeTotal) * 100 : 0,
-      }))
-      .sort((a, b) => b.count - a.count),
-    dailyKeys: Array.from(dailySprites.keys()).sort(),
-    rows: [],
-    spriteAcc,
-    spriteMeta,
-  };
-}
-
-function buildUsageStats(
-  matches: MatchStoreState['matches'],
-  spriteMap: Map<string, SpriteRecord>,
-  options: { range: StatsRangeKey; player: string | null; tag: string | null; metric: StatsMetricKey },
-): UsageStatsResult {
-  const now = Date.now();
-  let sinceMs = 0;
-  let spanMs = 0;
-  if (options.range === 'today') {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    sinceMs = start.getTime();
-    spanMs = Math.max(1, now - sinceMs);
-  } else if (options.range === '7d') {
-    spanMs = 7 * 86400000;
-    sinceMs = now - spanMs;
-  } else if (options.range === '30d') {
-    spanMs = 30 * 86400000;
-    sinceMs = now - spanMs;
-  }
-
-  const current = collectUsageStats(matches, spriteMap, {
-    sinceMs,
-    untilMs: Number.MAX_SAFE_INTEGER,
-    player: options.player,
-    tag: options.tag,
-  });
-
-  let prevGamesByName = new Map<string, number>();
-  let prevGamesTotal = 0;
-  if (options.range !== 'all' && spanMs > 0) {
-    const previous = collectUsageStats(matches, spriteMap, {
-      sinceMs: sinceMs - spanMs,
-      untilMs: sinceMs,
-      player: options.player,
-      tag: options.tag,
-    });
-    previous.spriteAcc.forEach((acc, name) => prevGamesByName.set(name, acc.games));
-    prevGamesTotal = previous.totalGames;
-  }
-
-  const denominator = options.metric === 'pickRate' ? current.totalPicks || 1 : current.totalGames || 1;
-  const rows: SpriteUsageRow[] = Array.from(current.spriteAcc.entries()).map(([name, acc]) => {
-    const usageRate = (options.metric === 'pickRate' ? acc.picks : acc.games) / denominator;
-    const trendDelta = prevGamesTotal > 0 ? acc.games - (prevGamesByName.get(name) ?? 0) : 0;
-    const meta = current.spriteMeta.get(name);
-    return {
-      key: name,
-      name,
-      spritePath: meta?.path ?? '',
-      attributes: meta?.attributes ?? [],
-      picks: acc.picks,
-      games: acc.games,
-      wins: acc.wins,
-      winRate: acc.games > 0 ? acc.wins / acc.games : null,
-      usageRate,
-      usagePercent: Math.round(usageRate * 1000) / 10,
-      trendDelta,
-      dailyGames: acc.dailyGames,
-    };
-  });
-
-  rows.sort((a, b) => b.usageRate - a.usageRate || b.picks - a.picks || a.name.localeCompare(b.name, 'zh-CN'));
-
-  return { ...current, rows };
-}
-
-function resolveSpriteStatsName(sprite: SpriteRecord | null | undefined, fallback: string): string {
-  return sprite?.chineseName || sprite?.name || sprite?.displayName || fallback;
-}
-
-function buildStatsCsv(rows: SpriteUsageRow[], metric: StatsMetricKey): string {
-  const header = ['排名', '精灵', '属性', metric === 'pickRate' ? '使用率(%)' : '上场率(%)', '登场只次', '登场场次', '获胜场次', '胜率(%)'];
-  const lines = rows.map((row, index) => [
-    String(index + 1),
-    row.name,
-    row.attributes.join('/'),
-    row.usagePercent.toFixed(1),
-    String(row.picks),
-    String(row.games),
-    String(row.wins),
-    row.winRate === null ? '' : (row.winRate * 100).toFixed(1),
-  ]);
-  return [header, ...lines].map((cells) => cells.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
-}
-
-function buildHistoryCsv(matches: MatchRecord[], spriteMap: Map<string, SpriteRecord>): string {
-  const header = ['赛事ID', '完成时间', '左侧选手', '右侧选手', '比分', '赛制', '标签', '局数', '该局胜方', '该局状态', '左侧阵容', '右侧阵容'];
-  const lines: string[][] = [];
-
-  matches.forEach((match) => {
-    const base = [
-      match.id,
-      match.completedAt ? formatDateTime(match.completedAt) : '',
-      match.leftPlayer || '左侧',
-      match.rightPlayer || '右侧',
-      `${match.leftScore} : ${match.rightScore}`,
-      `BO${match.bestOf}`,
-      (match.tags ?? []).join('/'),
-    ];
-    const visibleGames = getVisibleGames(match);
-    if (!visibleGames.length) {
-      lines.push([...base, '', '', '', '', '']);
-      return;
-    }
-    visibleGames.forEach((game) => {
-      const leftNames = buildHistoryLineupEntries(game, 'left', spriteMap)
-        .filter((entry): entry is { id: string; name: string; path: string } => Boolean(entry))
-        .map((entry) => resolveSpriteStatsName(spriteMap.get(entry.id), entry.name))
-        .join('/');
-      const rightNames = buildHistoryLineupEntries(game, 'right', spriteMap)
-        .filter((entry): entry is { id: string; name: string; path: string } => Boolean(entry))
-        .map((entry) => resolveSpriteStatsName(spriteMap.get(entry.id), entry.name))
-        .join('/');
-      lines.push([
-        ...base,
-        String(game.gameNumber),
-        getGameResultLabel(game),
-        getGameStatusLabel(game.status),
-        leftNames,
-        rightNames,
-      ]);
-    });
-  });
-
-  return [header, ...lines].map((cells) => cells.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
-}
-
-
-
-function buildProgressItems(match: MatchRecord | null) {
-  if (!match) {
-    return {
-      current: 0,
-      items: [
-        { title: '创建赛事' },
-        { title: '录入阵容' },
-        { title: '开始对局' },
-        { title: '记录结果' },
-        { title: '完成系列赛' },
-      ],
-    };
-  }
-
-  const currentGame = getCurrentGame(match);
-  const readyToStart = Boolean(
-    currentGame
-    && currentGame.leftLineup.length > 0
-    && currentGame.rightLineup.length > 0,
-  );
-
-  let current = 1;
-  if (currentGame?.status === 'in_progress') {
-    current = 3;
-  } else if (readyToStart) {
-    current = 2;
-  }
-  if (match.status === 'completed') {
-    current = 4;
-  }
-
-  return {
-    current,
-    items: [
-      { title: '创建赛事' },
-      { title: '录入阵容' },
-      { title: '开始对局' },
-      { title: '记录结果' },
-      { title: '完成系列赛' },
-    ],
-  };
-}
-
-function cleanSpriteName(value: string | null | undefined): string {
-  return String(value ?? '')
-    .trim()
-    .replace(/\.(png|jpe?g|webp)$/i, '')
-    .replace(/^NO\.\d+_/i, '')
-    .replace(/[-_]\d+$/u, '');
-}
-
-function getSlotName(slot: SlotState | null | undefined): string {
-  const sprite = slot?.sprite;
-  if (!sprite) {
-    return '';
-  }
-  return cleanSpriteName(sprite.displayName || sprite.chineseName || sprite.name || sprite.filename || sprite.id);
-}
-
-function clampNumber(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-function getHealthLevel(slot: SlotState | null | undefined): number {
-  if (!slot || !slot.healthEnabled || typeof slot.healthPercent !== 'number') {
-    return 100;
-  }
-  return clampNumber(slot.healthPercent, 0, 100);
-}
-
-function getEnergyLevel(slot: SlotState | null | undefined): number {
-  if (!slot || typeof slot.energyValue !== 'number') {
-    return 10;
-  }
-  return clampNumber(Math.round(slot.energyValue), 0, 10);
-}
-
-function buildLiveConfigPayload(panels: Record<PanelSide, PanelEditorState>): LiveConfigPayload {
-  const mapSlot = (slot: SlotState) => ({
-    name: getSlotName(slot),
-    HP: clampNumber(Math.round(Number(slot.healthPercent) || 0), 0, 100),
-    value: clampNumber(Math.round(Number(slot.energyValue) || 0), 0, 10),
-  });
-
-  return {
-    left: panels.left.selected.filter((slot) => slot.sprite).map(mapSlot),
-    right: panels.right.selected.filter((slot) => slot.sprite).map(mapSlot),
-  };
-}
-
-function stringifyLiveConfig(panels: Record<PanelSide, PanelEditorState>): string {
-  return JSON.stringify(buildLiveConfigPayload(panels), null, 2);
-}
-
-function extractLiveConfigPanel(payload: Record<string, unknown>, panel: PanelSide) {
-  const direct = payload[panel];
-  if (Array.isArray(direct)) {
-    return direct;
-  }
-  if (direct && typeof direct === 'object' && Array.isArray((direct as { selected?: unknown[] }).selected)) {
-    return (direct as { selected: unknown[] }).selected;
-  }
-  const panels = payload.panels;
-  if (panels && typeof panels === 'object') {
-    const nested = (panels as Record<string, unknown>)[panel];
-    if (Array.isArray(nested)) {
-      return nested;
-    }
-  }
-  return null;
-}
-
-function readNumberField(item: Record<string, unknown>, names: string[], min: number, max: number) {
-  for (const name of names) {
-    const value = item[name];
-    if (value !== undefined && value !== null && value !== '') {
-      const numeric = Number(value);
-      if (!Number.isNaN(numeric)) {
-        return clampNumber(Math.round(numeric), min, max);
-      }
-    }
-  }
-  return null;
-}
-
-function findConfigTargetIndex(
-  panel: PanelSide,
-  item: Record<string, unknown>,
-  fallbackIndex: number,
-  usedIndexes: Set<number>,
-  panels: Record<PanelSide, PanelEditorState>,
-) {
-  const expectedName = cleanSpriteName(typeof item.name === 'string' ? item.name : '');
-  if (expectedName) {
-    const matchIndex = panels[panel].selected.findIndex((slot, index) => {
-      return !usedIndexes.has(index) && getSlotName(slot) === expectedName;
-    });
-    if (matchIndex >= 0) {
-      return matchIndex;
-    }
-  }
-  return fallbackIndex;
-}
-
-const STAGE_THUMB_INNER_WIDTH = 1920;
-const STAGE_THUMB_INNER_HEIGHT = 1080;
-
-function StageThumb({ label, previewPath }: { label: string; previewPath: string }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [scale, setScale] = useState(0);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || typeof ResizeObserver === 'undefined') {
-      return;
-    }
-    const update = () => {
-      const width = container.clientWidth;
-      if (width > 0) {
-        // 容器为 16:9，与 1920x1080 同比例，按宽度等比缩放即可完整展示
-        setScale(width / STAGE_THUMB_INNER_WIDTH);
-      }
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div className="stage-card-thumb" ref={containerRef}>
-      <div
-        className="stage-card-thumb-viewport"
-        style={{
-          width: Math.floor(STAGE_THUMB_INNER_WIDTH * scale),
-          height: Math.floor(STAGE_THUMB_INNER_HEIGHT * scale),
-        }}
-      >
-        <div
-          className="stage-card-thumb-stage"
-          style={{ transform: `scale(${scale})` }}
-        >
-          <iframe
-            title={label}
-            className="stage-card-frame"
-            src={`${getPreviewOrigin()}${previewPath}`}
-            scrolling="no"
-            loading="lazy"
-          />
-        </div>
-      </div>
-      <span className="stage-card-thumb-mark">{label}</span>
-    </div>
-  );
-}
 
 function Dashboard() {
   const { message, modal } = App.useApp();
@@ -3033,794 +1793,6 @@ function Dashboard() {
     message.success(`已导出 ${filteredMatches.length} 场赛事历史`);
   }
 
-  function renderStatsView() {
-    const stats = buildUsageStats(matchStore.matches, spriteMap, {
-      range: statsRange,
-      player: statsPlayer,
-      tag: statsTag,
-      metric: statsMetric,
-    });
-    const keyword = statsSearch.trim().toLowerCase();
-    const visibleRows = keyword
-      ? stats.rows.filter((row) => row.name.toLowerCase().includes(keyword))
-      : stats.rows;
-    const maxUsagePercent = stats.rows[0]?.usagePercent ?? 0;
-    const playerOptions = Array.from(new Set(matchStore.matches.flatMap((match) => [
-      match.leftPlayer,
-      match.rightPlayer,
-    ]).filter(Boolean)));
-    const tagOptions = Array.from(new Set(matchStore.matches.flatMap((match) => match.tags ?? [])));
-    const trendColors = ['#d38b2d', '#4f8cff', '#c24635'];
-    const topTrendRows = stats.rows.slice(0, 3);
-    const dailyKeys = stats.dailyKeys.slice(-14);
-    const topUsageForTrend = Math.max(1, ...topTrendRows.flatMap((row) => dailyKeys.map((key) => row.dailyGames.get(key) ?? 0)));
-
-    const statsColumns: ColumnsType<SpriteUsageRow> = [
-      {
-        title: '#',
-        key: 'rank',
-        width: 56,
-        render: (_: unknown, __: SpriteUsageRow, index: number) => {
-          if (keyword) {
-            return <Text type="secondary">{index + 1}</Text>;
-          }
-          if (index === 0) return <Text strong style={{ color: '#d38b2d' }}>1</Text>;
-          if (index === 1) return <Text strong style={{ color: '#8a8f99' }}>2</Text>;
-          if (index === 2) return <Text strong style={{ color: '#b5793f' }}>3</Text>;
-          return <Text type="secondary">{index + 1}</Text>;
-        },
-      },
-      {
-        title: '精灵',
-        dataIndex: 'name',
-        key: 'name',
-        render: (_: unknown, record: SpriteUsageRow) => (
-          <Space>
-            {record.spritePath ? (
-              <Image
-                preview={false}
-                src={record.spritePath}
-                alt={record.name}
-                width={44}
-                height={44}
-                className="stats-row-image"
-                fallback="/assets/ui/back.png"
-              />
-            ) : (
-              <div className="stats-row-image stats-row-image-fallback">{record.name.slice(0, 1)}</div>
-            )}
-            <Space direction="vertical" size={2}>
-              <Text strong>{record.name}</Text>
-              {record.attributes.length ? (
-                <Text type="secondary" className="stats-row-attrs">{record.attributes.join(' / ')}</Text>
-              ) : (
-                <Text type="secondary" className="stats-row-attrs">未知属性</Text>
-              )}
-            </Space>
-          </Space>
-        ),
-      },
-      {
-        title: statsMetric === 'pickRate' ? '使用率' : '上场率',
-        key: 'usage',
-        render: (_: unknown, record: SpriteUsageRow) => (
-          <div className="stats-usage-cell">
-            <Progress
-              percent={maxUsagePercent > 0 ? Math.max(2, (record.usagePercent / maxUsagePercent) * 100) : 0}
-              showInfo={false}
-              size="small"
-              className="stats-usage-bar"
-            />
-            <Text className="stats-usage-value">{record.usagePercent.toFixed(1)}%</Text>
-          </div>
-        ),
-        sorter: (a, b) => a.usageRate - b.usageRate,
-      },
-      {
-        title: '登场只次',
-        dataIndex: 'picks',
-        key: 'picks',
-        width: 96,
-        align: 'right',
-        sorter: (a, b) => a.picks - b.picks,
-      },
-      {
-        title: '登场场次',
-        dataIndex: 'games',
-        key: 'games',
-        width: 96,
-        align: 'right',
-        sorter: (a, b) => a.games - b.games,
-      },
-      {
-        title: '胜率',
-        key: 'winRate',
-        width: 96,
-        align: 'right',
-        sorter: (a, b) => (a.winRate ?? -1) - (b.winRate ?? -1),
-        render: (_: unknown, record: SpriteUsageRow) => (
-          record.winRate === null ? (
-            <Text type="secondary">-</Text>
-          ) : (
-            <Text type={record.winRate >= 0.5 ? 'success' : 'danger'} className="stats-winrate">
-              {(record.winRate * 100).toFixed(1)}%
-            </Text>
-          )
-        ),
-      },
-      {
-        title: '趋势',
-        key: 'trend',
-        width: 80,
-        align: 'center',
-        render: (_: unknown, record: SpriteUsageRow) => (
-          record.trendDelta > 0 ? (
-            <Text type="success">▲{record.trendDelta}</Text>
-          ) : record.trendDelta < 0 ? (
-            <Text type="danger">▼{Math.abs(record.trendDelta)}</Text>
-          ) : (
-            <Text type="secondary">—</Text>
-          )
-        ),
-      },
-    ];
-
-    function exportStatsCsv() {
-      const csv = buildStatsCsv(stats.rows, statsMetric);
-      const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `精灵${statsMetric === 'pickRate' ? '使用率' : '上场率'}统计.csv`;
-      link.click();
-      URL.revokeObjectURL(url);
-      message.success(`已导出 ${stats.rows.length} 条精灵统计`);
-    }
-
-    return (
-      <Space direction="vertical" size={18} className="page-stack">
-        <Card title="统计口径">
-          <Space wrap size={12}>
-            <Segmented
-              value={statsRange}
-              options={STATS_RANGE_OPTIONS}
-              onChange={(value) => setStatsRange(value as StatsRangeKey)}
-            />
-            <Segmented
-              value={statsMetric}
-              options={STATS_METRIC_OPTIONS}
-              onChange={(value) => setStatsMetric(value as StatsMetricKey)}
-            />
-            <Select
-              allowClear
-              placeholder="全部选手"
-              value={statsPlayer ?? undefined}
-              options={playerOptions.map((player) => ({ value: player, label: player }))}
-              onChange={(value) => setStatsPlayer(value ?? null)}
-              className="stats-filter-select"
-            />
-            <Select
-              allowClear
-              placeholder="全部赛事标签"
-              value={statsTag ?? undefined}
-              options={tagOptions.map((tag) => ({ value: tag, label: tag }))}
-              onChange={(value) => setStatsTag(value ?? null)}
-              className="stats-filter-select"
-            />
-          </Space>
-        </Card>
-
-        <Row gutter={[18, 18]}>
-          <Col xs={12} xl={6}>
-            <Card size="small" className="subtle-card">
-              <Statistic title="统计场次" value={stats.totalGames} suffix="局" />
-              <Text type="secondary">有阵容记录的对局</Text>
-            </Card>
-          </Col>
-          <Col xs={12} xl={6}>
-            <Card size="small" className="subtle-card">
-              <Statistic title="登场精灵总数" value={stats.totalPicks} suffix="只次" />
-              <Text type="secondary">场均 {(stats.totalGames > 0 ? stats.totalPicks / stats.totalGames : 0).toFixed(1)} 只</Text>
-            </Card>
-          </Col>
-          <Col xs={12} xl={6}>
-            <Card size="small" className="subtle-card">
-              <Statistic title="不同精灵数" value={stats.distinctSprites} suffix="种" />
-              <Text type="secondary">筛选范围内出现过</Text>
-            </Card>
-          </Col>
-          <Col xs={12} xl={6}>
-            <Card size="small" className="subtle-card">
-              <Statistic
-                title="热门属性"
-                value={stats.attributeRows[0]?.attribute ?? '-'}
-                styles={{ content: { fontSize: 22 } }}
-              />
-              <Text type="secondary">{stats.attributeRows[0] ? `占比 ${stats.attributeRows[0].percent.toFixed(1)}%` : '暂无数据'}</Text>
-            </Card>
-          </Col>
-        </Row>
-
-        <Row gutter={[18, 18]}>
-          <Col xs={24} xl={15}>
-            <Card
-              title={statsMetric === 'pickRate' ? '精灵使用率排行' : '精灵上场率排行'}
-              extra={(
-                <Space wrap>
-                  <Input.Search
-                    placeholder="搜索精灵名称"
-                    value={statsSearch}
-                    onChange={(event) => setStatsSearch(event.target.value)}
-                    className="stats-search"
-                    allowClear
-                  />
-                  <Button onClick={exportStatsCsv} disabled={!stats.rows.length}>导出 CSV</Button>
-                </Space>
-              )}
-            >
-              <Table
-                rowKey={(record) => record.key}
-                columns={statsColumns}
-                dataSource={visibleRows}
-                size="middle"
-                pagination={{ pageSize: 15, showSizeChanger: false, hideOnSinglePage: true }}
-                locale={{ emptyText: '当前筛选范围内暂无登场记录' }}
-              />
-              <Text type="secondary" className="stats-footnote">
-                {statsMetric === 'pickRate'
-                  ? '使用率 = 登场只次 ÷ 总登场只次（同局重复携带按只次计）'
-                  : '上场率 = 登场场次 ÷ 总场次（同局同侧重复携带只计 1 次）'}
-                {' · 胜率 = 该精灵所在一侧获胜场次 ÷ 登场场次'}
-              </Text>
-            </Card>
-          </Col>
-          <Col xs={24} xl={9}>
-            <Space direction="vertical" size={18} className="page-stack stats-side-stack">
-              <Card title="属性分布" extra={<Text type="secondary">按登场只次</Text>}>
-                {stats.attributeRows.length ? (
-                  <Space direction="vertical" size={10} className="page-stack">
-                    {stats.attributeRows.slice(0, 8).map((row) => (
-                      <div key={row.attribute} className="stats-attribute-row">
-                        <Text className="stats-attribute-label">{row.attribute}</Text>
-                        <Progress
-                          percent={row.percent}
-                          showInfo={false}
-                          size="small"
-                          className="stats-usage-bar"
-                        />
-                        <Text className="stats-usage-value">{row.percent.toFixed(1)}%</Text>
-                      </div>
-                    ))}
-                  </Space>
-                ) : (
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
-                )}
-              </Card>
-
-              <Card title="Top 3 登场趋势" extra={<Text type="secondary">按日聚合</Text>}>
-                {topTrendRows.length && dailyKeys.length > 1 ? (
-                  <Space direction="vertical" size={10} className="page-stack">
-                    <svg viewBox={`0 0 ${Math.max(dailyKeys.length * 40, 120)} 140`} className="stats-trend-svg" preserveAspectRatio="none">
-                      {topTrendRows.map((row, rowIndex) => {
-                        const points = dailyKeys.map((key, index) => {
-                          const games = row.dailyGames.get(key) ?? 0;
-                          const x = dailyKeys.length > 1 ? (index / (dailyKeys.length - 1)) * 100 : 0;
-                          const y = 130 - (games / topUsageForTrend) * 120;
-                          return `${x},${Math.max(4, y)}`;
-                        }).join(' ');
-                        return (
-                          <polyline key={row.key} points={points} fill="none" stroke={trendColors[rowIndex]} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-                        );
-                      })}
-                    </svg>
-                    <Space wrap size={14}>
-                      {topTrendRows.map((row, rowIndex) => (
-                        <Text key={row.key} type="secondary">
-                          <span className="stats-trend-dot" style={{ background: trendColors[rowIndex] }} />
-                          {row.name}
-                        </Text>
-                      ))}
-                    </Space>
-                  </Space>
-                ) : (
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="需要至少两天的登场数据" />
-                )}
-              </Card>
-            </Space>
-          </Col>
-        </Row>
-      </Space>
-    );
-  }
-
-  function renderPanelEditor(side: PanelSide) {
-    const panel = panels[side];
-    const filter = spriteFilters[side];
-    const panelLocked = lineupLocked;
-    const searchValue = side === 'left' ? deferredLeftSearch : deferredRightSearch;
-    const filteredSprites = sprites.filter((sprite) => {
-      const keyword = searchValue.trim().toLowerCase();
-      const values = [
-        sprite.displayName,
-        sprite.name,
-        sprite.chineseName,
-        sprite.filename,
-        ...(sprite.aliases ?? []),
-      ];
-      const matchesKeyword = !keyword || values.some((value) => String(value ?? '').toLowerCase().includes(keyword));
-      const spriteAttributes = splitSpriteAttributes(sprite.attribute);
-      const matchesAttributes = !filter.selectedAttributes.length
-        || filter.selectedAttributes.every((attribute) => spriteAttributes.includes(attribute));
-      const matchesForms = filter.selectedFinalForm
-        ? sprite.isFinalForm
-        : !filter.selectedForms.length || filter.selectedForms.includes(sprite.form);
-
-      return matchesKeyword && matchesAttributes && matchesForms;
-    });
-    const hasFilter = filter.selectedAttributes.length > 0 || filter.selectedForms.length > 0 || filter.selectedFinalForm;
-
-    return (
-      <Card
-        className="panel-editor-card"
-        title={`${side === 'left' ? '左侧' : '右侧'}当前阵容`}
-        extra={(
-          <Space wrap>
-            <Text type="secondary">已选 {summarizePanelSlots(panel.selected).selectedCount} / 6</Text>
-            <Switch
-              checked={panel.autoSaveEnabled}
-              checkedChildren="自动保存"
-              unCheckedChildren="手动保存"
-              disabled={panelLocked}
-              onChange={(checked) => mutatePanel(side, (prev) => ({ ...prev, autoSaveEnabled: checked }))}
-            />
-            {panel.saving ? <Tag color="processing">保存中</Tag> : null}
-            {panelLocked ? <Tag color="warning">已锁定</Tag> : null}
-          </Space>
-        )}
-      >
-        <div className={`panel-editor-layout panel-editor-layout-${side}`}>
-          <div className={`panel-slot-rail panel-slot-rail-${side}`}>
-            <div className={`panel-slot-grid panel-slot-grid-${side}`}>
-              {panel.selected.map((slot, index) => (
-                <Button
-                  key={`${side}-${index}`}
-                  type={index === panel.activeSlot ? 'primary' : 'default'}
-                  className={`slot-button slot-button-${side}`}
-                  disabled={panelLocked}
-                  onClick={() => mutatePanel(side, (prev) => ({ ...prev, activeSlot: index }))}
-                >
-                  <div className={`slot-button-inner slot-button-inner-${side}`}>
-                    {slot.sprite?.path ? (
-                      <SpritePetCard sprite={slot.sprite} size={96} />
-                    ) : (
-                      <div className="slot-placeholder">{index + 1}</div>
-                    )}
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          <div className="panel-editor-main">
-            <div className="panel-editor-tools">
-              <Card size="small" className="subtle-card">
-                <Space direction="vertical" size={12} className="control-stack">
-                  {panelLocked ? (
-                    <Alert
-                      showIcon
-                      type="warning"
-                      message="当前赛事已完成，阵容编辑已锁定"
-                    />
-                  ) : null}
-                  <div>
-                    <Text strong>快速文本填充</Text>
-                    <Paragraph type="secondary">一行一个精灵名，先生成本地草稿，再保存到阵容。</Paragraph>
-                  </div>
-                  <TextArea
-                    disabled={panelLocked}
-                    rows={4}
-                    value={panel.quickFillInput}
-                    onChange={(event) => mutatePanel(side, (prev) => ({ ...prev, quickFillInput: event.target.value }))}
-                    placeholder={'暮星辰\n怖哭菇\n龙息帕尔'}
-                  />
-                  <Space wrap>
-                    <Button disabled={panelLocked} onClick={() => void runQuickFill(side)}>快速填充</Button>
-                    <Button disabled={panelLocked} type="primary" onClick={() => void savePanel(side)}>保存到{side === 'left' ? '左侧' : '右侧'}</Button>
-                    <Button disabled={panelLocked} onClick={() => clearCurrentSlot(side)}>选中清除</Button>
-                    <Button disabled={panelLocked} onClick={() => clearPanel(side)}>清除全部</Button>
-                  </Space>
-                </Space>
-              </Card>
-
-              {panel.quickFillMatches.some((match) => match.candidates.length > 1) ? (
-                <Card size="small" className="subtle-card">
-                  <Space direction="vertical" size={12} className="control-stack">
-                    <Text strong>候选精灵选择</Text>
-                    {panel.quickFillMatches
-                      .filter((match) => match.candidates.length > 1)
-                      .map((match) => (
-                        <div key={`${side}-quick-${match.slot}`} className="quick-fill-group">
-                          <Text>槽位 {match.slot + 1}</Text>
-                          <div className="quick-fill-candidate-grid">
-                            {match.candidates.map((candidate) => (
-                              <Button
-                                key={candidate.id}
-                                size="small"
-                                className="quick-fill-candidate-button"
-                                disabled={panelLocked}
-                                title={candidate.displayName}
-                                aria-label={`选择 ${candidate.displayName}`}
-                                onClick={() => chooseQuickFillCandidate(side, match.slot, candidate)}
-                              >
-                                <SpritePetCard sprite={candidate} size={64} className="quick-fill-candidate-card" />
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                  </Space>
-                </Card>
-              ) : null}
-            </div>
-
-            <Card size="small" className="subtle-card sprite-picker-card">
-              <div className="sprite-picker-shell">
-                <div className="sprite-filter-panel">
-                  <div className="sprite-filter-header">
-                    <Text strong>筛选精灵</Text>
-                    {hasFilter ? (
-                      <Button size="small" type="link" onClick={() => clearSpriteFilters(side)}>
-                        清空筛选
-                      </Button>
-                    ) : null}
-                  </div>
-                  <div className="sprite-filter-group">
-                    <Text type="secondary" className="sprite-filter-label">精灵属性（最多 2 个）</Text>
-                    <div className="attribute-filter-grid">
-                      {ATTRIBUTE_OPTIONS.map((option) => {
-                        const active = filter.selectedAttributes.includes(option.label);
-                        return (
-                          <Button
-                            key={`${side}-attr-${option.code}`}
-                            type={active ? 'primary' : 'default'}
-                            className={`attribute-filter-chip${active ? ' is-active' : ''}`}
-                            title={option.label}
-                            aria-label={option.label}
-                            onClick={() => toggleAttributeFilter(side, option.label)}
-                          >
-                            <span className="attribute-filter-chip-inner">
-                              <img
-                                src={option.iconPath}
-                                alt=""
-                                className="attribute-filter-icon"
-                              />
-                            </span>
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className="sprite-filter-group">
-                    <Text type="secondary" className="sprite-filter-label">精灵形态</Text>
-                    <Space wrap size={[8, 8]}>
-                      <Button
-                        key={`${side}-form-${FINAL_FORM_FILTER_LABEL}`}
-                        size="small"
-                        type={filter.selectedFinalForm ? 'primary' : 'default'}
-                        className="form-filter-chip"
-                        onClick={() => toggleFinalFormFilter(side)}
-                      >
-                        {FINAL_FORM_FILTER_LABEL}
-                      </Button>
-                      {spriteFormOptions.map((form) => (
-                        <Button
-                          key={`${side}-form-${form}`}
-                          size="small"
-                          type={filter.selectedForms.includes(form) ? 'primary' : 'default'}
-                          className="form-filter-chip"
-                          disabled={filter.selectedFinalForm}
-                          onClick={() => toggleFormFilter(side, form)}
-                        >
-                          {form}
-                        </Button>
-                      ))}
-                    </Space>
-                  </div>
-                </div>
-                <Input
-                  value={panel.search}
-                  onChange={(event) => mutatePanel(side, (prev) => ({ ...prev, search: event.target.value }))}
-                  placeholder={`搜索${side === 'left' ? '左侧' : '右侧'}精灵名称`}
-                />
-                <div className="sprite-picker-scroll">
-                  {filteredSprites.length ? (
-                    <div className="sprite-picker-grid">
-                      {filteredSprites.map((sprite) => (
-                        <Button
-                          key={`${side}-${sprite.id}`}
-                          className="sprite-card-button"
-                          disabled={panelLocked}
-                          onClick={() => applySprite(side, sprite)}
-                        >
-                          <div className="sprite-card-inner">
-                            <SpritePetCard sprite={sprite} size="var(--sprite-picker-card-size)" />
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  ) : (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有匹配到精灵" />
-                  )}
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
-  function renderPage4DeathPanel() {
-    const entries = (['left', 'right'] as PanelSide[]).flatMap((side) => (
-      page4Panels[side].selected.map((slot, index) => ({
-        side,
-        slot,
-        index,
-      }))
-    ));
-    const selectedCount = entries.filter((entry) => entry.slot.sprite).length;
-    const deadCount = entries.filter((entry) => entry.slot.sprite && entry.slot.isDead).length;
-
-    return (
-      <Card
-        title="仅显示阵容精灵阵亡控制"
-        extra={<Text type="secondary">已选 {selectedCount} / 12 · 阵亡 {deadCount}</Text>}
-      >
-        <Space direction="vertical" size={12} className="control-stack">
-          <Paragraph type="secondary">点击已有精灵图片可切换阵亡状态，阵亡效果会同步应用到仅显示阵容页。</Paragraph>
-          <div className="page4-death-slot-grid">
-            {entries.map(({ side, slot, index }) => {
-              const isEmpty = !slot.sprite;
-              return (
-                <Button
-                  key={`${side}-page4-death-${index}`}
-                  className={`page4-death-slot-button${slot.isDead ? ' is-dead' : ''}${isEmpty ? ' is-empty' : ''}`}
-                  disabled={isEmpty}
-                  title={slot.sprite ? `${side === 'left' ? '左侧' : '右侧'} ${index + 1} 号位` : '空槽位'}
-                  onClick={() => togglePage4DeadAt(side, index)}
-                >
-                  <Page4SlotVisual
-                    slot={slot}
-                    index={side === 'left' ? index : index + 6}
-                    size={76}
-                    className="page4-death-slot-visual"
-                    placeholderClassName="page4-death-slot-placeholder"
-                  />
-                </Button>
-              );
-            })}
-          </div>
-        </Space>
-      </Card>
-    );
-  }
-
-  function renderPage4PanelEditor(side: PanelSide) {
-    const panel = page4Panels[side];
-    const filter = page4SpriteFilters[side];
-    const searchValue = side === 'left' ? deferredPage4LeftSearch : deferredPage4RightSearch;
-    const filteredSprites = sprites.filter((sprite) => {
-      const keyword = searchValue.trim().toLowerCase();
-      const values = [
-        sprite.displayName,
-        sprite.name,
-        sprite.chineseName,
-        sprite.filename,
-        ...(sprite.aliases ?? []),
-      ];
-      const matchesKeyword = !keyword || values.some((value) => String(value ?? '').toLowerCase().includes(keyword));
-      const spriteAttributes = splitSpriteAttributes(sprite.attribute);
-      const matchesAttributes = !filter.selectedAttributes.length
-        || filter.selectedAttributes.every((attribute) => spriteAttributes.includes(attribute));
-      const matchesForms = filter.selectedFinalForm
-        ? sprite.isFinalForm
-        : !filter.selectedForms.length || filter.selectedForms.includes(sprite.form);
-
-      return matchesKeyword && matchesAttributes && matchesForms;
-    });
-    const hasFilter = filter.selectedAttributes.length > 0 || filter.selectedForms.length > 0 || filter.selectedFinalForm;
-    const summary = summarizePage4Slots(panel.selected);
-
-    return (
-      <Card
-        className="panel-editor-card"
-        title={`${side === 'left' ? '左侧' : '右侧'} 仅显示阵容`}
-        extra={(
-          <Space wrap>
-            <Text type="secondary">已选 {summary.selectedCount} / 6</Text>
-            <Text type="secondary">阵亡 {summary.deadCount}</Text>
-            <Switch
-              checked={panel.autoSaveEnabled}
-              checkedChildren="自动保存"
-              unCheckedChildren="手动保存"
-              onChange={(checked) => mutatePage4Panel(side, (prev) => ({ ...prev, autoSaveEnabled: checked }))}
-            />
-            {panel.saving ? <Tag color="processing">保存中</Tag> : null}
-          </Space>
-        )}
-      >
-        <div className={`panel-editor-layout panel-editor-layout-${side}`}>
-          <div className={`panel-slot-rail panel-slot-rail-${side}`}>
-            <div className={`panel-slot-grid panel-slot-grid-${side}`}>
-              {panel.selected.map((slot, index) => (
-                <Button
-                  key={`${side}-page4-${index}`}
-                  type={index === panel.activeSlot ? 'primary' : 'default'}
-                  className={`slot-button slot-button-${side}`}
-                  onClick={() => mutatePage4Panel(side, (prev) => ({ ...prev, activeSlot: index }))}
-                >
-                  <div className={`slot-button-inner slot-button-inner-${side}`}>
-                    <Page4SlotVisual slot={slot} index={index} />
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          <div className="panel-editor-main">
-            <div className="panel-editor-tools">
-              <Card size="small" className="subtle-card">
-                <Space direction="vertical" size={12} className="control-stack">
-                  {page4Notice ? (
-                    <Alert
-                      showIcon
-                      closable
-                      type={page4Notice.tone}
-                      message={page4Notice.text}
-                      onClose={() => setPage4Notice(null)}
-                    />
-                  ) : null}
-                  <div>
-                    <Text strong>快速文本填充</Text>
-                    <Paragraph type="secondary">一行一个精灵名，先生成仅显示阵容本地草稿，再保存到展示页。</Paragraph>
-                  </div>
-                  <TextArea
-                    rows={4}
-                    value={panel.quickFillInput}
-                    onChange={(event) => mutatePage4Panel(side, (prev) => ({ ...prev, quickFillInput: event.target.value }))}
-                    placeholder={'普星达\n怕哭菇\n龙息帕尔'}
-                  />
-                  <Space wrap>
-                    <Button onClick={() => clearPage4CurrentSlot(side)}>清空当前</Button>
-                    <Button onClick={() => clearPage4Panel(side)}>清空全部</Button>
-                    <Button onClick={() => void runPage4QuickFill(side)}>快速填充</Button>
-                    <Button type="primary" onClick={() => void savePage4Panel(side)}>保存阵容</Button>
-                  </Space>
-                </Space>
-              </Card>
-
-              {panel.quickFillMatches.some((match) => match.candidates.length > 1) ? (
-                <Card size="small" className="subtle-card">
-                  <Space direction="vertical" size={12} className="control-stack">
-                    <Text strong>候选精灵选择</Text>
-                    {panel.quickFillMatches
-                      .filter((match) => match.candidates.length > 1)
-                      .map((match) => (
-                        <div key={`${side}-page4-quick-${match.slot}`} className="quick-fill-group">
-                          <Text>槽位 {match.slot + 1}</Text>
-                          <div className="quick-fill-candidate-grid">
-                            {match.candidates.map((candidate) => (
-                              <Button
-                                key={candidate.id}
-                                size="small"
-                                className="quick-fill-candidate-button"
-                                title={candidate.displayName}
-                                aria-label={`选择 ${candidate.displayName}`}
-                                onClick={() => choosePage4QuickFillCandidate(side, match.slot, candidate)}
-                              >
-                                <SpritePetCard sprite={candidate} size={64} className="quick-fill-candidate-card" />
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                  </Space>
-                </Card>
-              ) : null}
-
-              <Card size="small" className="subtle-card sprite-picker-card">
-                <div className="sprite-picker-shell">
-                  <div className="sprite-filter-panel">
-                    <div className="sprite-filter-header">
-                      <Text strong>筛选精灵</Text>
-                      {hasFilter ? (
-                        <Button size="small" type="link" onClick={() => clearPage4SpriteFilters(side)}>
-                          清空筛选
-                        </Button>
-                      ) : null}
-                    </div>
-                    <div className="sprite-filter-group">
-                      <Text type="secondary" className="sprite-filter-label">精灵属性（最多 2 个）</Text>
-                      <div className="attribute-filter-grid">
-                        {ATTRIBUTE_OPTIONS.map((option) => {
-                          const active = filter.selectedAttributes.includes(option.label);
-                          return (
-                            <Button
-                              key={`${side}-page4-attr-${option.code}`}
-                              type={active ? 'primary' : 'default'}
-                              className={`attribute-filter-chip${active ? ' is-active' : ''}`}
-                              title={option.label}
-                              aria-label={option.label}
-                              onClick={() => togglePage4AttributeFilter(side, option.label)}
-                            >
-                              <span className="attribute-filter-chip-inner">
-                                <img src={option.iconPath} alt="" className="attribute-filter-icon" />
-                              </span>
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="sprite-filter-group">
-                      <Text type="secondary" className="sprite-filter-label">精灵形态</Text>
-                      <Space wrap size={[8, 8]}>
-                        <Button
-                          key={`${side}-page4-form-final`}
-                          size="small"
-                          type={filter.selectedFinalForm ? 'primary' : 'default'}
-                          className="form-filter-chip"
-                          onClick={() => togglePage4FinalFormFilter(side)}
-                        >
-                          最终形态
-                        </Button>
-                        {spriteFormOptions.map((form) => (
-                          <Button
-                            key={`${side}-page4-form-${form}`}
-                            size="small"
-                            type={filter.selectedForms.includes(form) ? 'primary' : 'default'}
-                            className="form-filter-chip"
-                            disabled={filter.selectedFinalForm}
-                            onClick={() => togglePage4FormFilter(side, form)}
-                          >
-                            {form}
-                          </Button>
-                        ))}
-                      </Space>
-                    </div>
-                  </div>
-                  <Input
-                    value={panel.search}
-                    onChange={(event) => mutatePage4Panel(side, (prev) => ({ ...prev, search: event.target.value }))}
-                    placeholder={`搜索${side === 'left' ? '左侧' : '右侧'}精灵名称`}
-                  />
-                  <div className="sprite-picker-scroll">
-                    {filteredSprites.length ? (
-                      <div className="sprite-picker-grid">
-                        {filteredSprites.map((sprite) => (
-                          <Button
-                            key={`${side}-page4-${sprite.id}`}
-                            className="sprite-card-button"
-                            onClick={() => applyPage4Sprite(side, sprite)}
-                          >
-                            <div className="sprite-card-inner">
-                              <SpritePetCard sprite={sprite} size="var(--sprite-picker-card-size)" />
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-                    ) : (
-                      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有匹配到精灵" />
-                    )}
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
   return (
     <Layout className="admin-shell">
       <Sider width={292} breakpoint="lg" collapsedWidth={0} className="admin-sider">
@@ -4025,18 +1997,107 @@ function Dashboard() {
               </Row>
 
               <Row gutter={[18, 18]}>
-                <Col xs={24} xl={12}>{renderPanelEditor('left')}</Col>
-                <Col xs={24} xl={12}>{renderPanelEditor('right')}</Col>
+                <Col xs={24} xl={12}>
+                  <RosterPanelEditor
+                    side="left"
+                    panel={panels.left}
+                    filter={spriteFilters.left}
+                    locked={lineupLocked}
+                    searchValue={deferredLeftSearch}
+                    sprites={sprites}
+                    spriteFormOptions={spriteFormOptions}
+                    onMutatePanel={mutatePanel}
+                    onSavePanel={savePanel}
+                    onRunQuickFill={runQuickFill}
+                    onClearCurrentSlot={clearCurrentSlot}
+                    onClearPanel={clearPanel}
+                    onChooseQuickFillCandidate={chooseQuickFillCandidate}
+                    onApplySprite={applySprite}
+                    onClearSpriteFilters={clearSpriteFilters}
+                    onToggleAttributeFilter={toggleAttributeFilter}
+                    onToggleFinalFormFilter={toggleFinalFormFilter}
+                    onToggleFormFilter={toggleFormFilter}
+                  />
+                </Col>
+                <Col xs={24} xl={12}>
+                  <RosterPanelEditor
+                    side="right"
+                    panel={panels.right}
+                    filter={spriteFilters.right}
+                    locked={lineupLocked}
+                    searchValue={deferredRightSearch}
+                    sprites={sprites}
+                    spriteFormOptions={spriteFormOptions}
+                    onMutatePanel={mutatePanel}
+                    onSavePanel={savePanel}
+                    onRunQuickFill={runQuickFill}
+                    onClearCurrentSlot={clearCurrentSlot}
+                    onClearPanel={clearPanel}
+                    onChooseQuickFillCandidate={chooseQuickFillCandidate}
+                    onApplySprite={applySprite}
+                    onClearSpriteFilters={clearSpriteFilters}
+                    onToggleAttributeFilter={toggleAttributeFilter}
+                    onToggleFinalFormFilter={toggleFinalFormFilter}
+                    onToggleFormFilter={toggleFormFilter}
+                  />
+                </Col>
               </Row>
             </Space>
           ) : null}
 
           {view === 'page4' ? (
             <Space direction="vertical" size={18} className="page-stack">
-              {renderPage4DeathPanel()}
+              <Page4DeathPanel
+                page4Panels={page4Panels}
+                onTogglePage4DeadAt={togglePage4DeadAt}
+              />
               <Row gutter={[18, 18]}>
-                <Col xs={24} xl={12}>{renderPage4PanelEditor('left')}</Col>
-                <Col xs={24} xl={12}>{renderPage4PanelEditor('right')}</Col>
+                <Col xs={24} xl={12}>
+                  <Page4PanelEditor
+                    side="left"
+                    panel={page4Panels.left}
+                    filter={page4SpriteFilters.left}
+                    notice={page4Notice}
+                    searchValue={deferredPage4LeftSearch}
+                    sprites={sprites}
+                    spriteFormOptions={spriteFormOptions}
+                    onMutatePanel={mutatePage4Panel}
+                    onDismissNotice={() => setPage4Notice(null)}
+                    onSavePanel={savePage4Panel}
+                    onRunQuickFill={runPage4QuickFill}
+                    onClearCurrentSlot={clearPage4CurrentSlot}
+                    onClearPanel={clearPage4Panel}
+                    onChooseQuickFillCandidate={choosePage4QuickFillCandidate}
+                    onApplySprite={applyPage4Sprite}
+                    onClearSpriteFilters={clearPage4SpriteFilters}
+                    onToggleAttributeFilter={togglePage4AttributeFilter}
+                    onToggleFinalFormFilter={togglePage4FinalFormFilter}
+                    onToggleFormFilter={togglePage4FormFilter}
+                  />
+                </Col>
+                <Col xs={24} xl={12}>
+                  <Page4PanelEditor
+                    side="right"
+                    panel={page4Panels.right}
+                    filter={page4SpriteFilters.right}
+                    notice={page4Notice}
+                    searchValue={deferredPage4RightSearch}
+                    sprites={sprites}
+                    spriteFormOptions={spriteFormOptions}
+                    onMutatePanel={mutatePage4Panel}
+                    onDismissNotice={() => setPage4Notice(null)}
+                    onSavePanel={savePage4Panel}
+                    onRunQuickFill={runPage4QuickFill}
+                    onClearCurrentSlot={clearPage4CurrentSlot}
+                    onClearPanel={clearPage4Panel}
+                    onChooseQuickFillCandidate={choosePage4QuickFillCandidate}
+                    onApplySprite={applyPage4Sprite}
+                    onClearSpriteFilters={clearPage4SpriteFilters}
+                    onToggleAttributeFilter={togglePage4AttributeFilter}
+                    onToggleFinalFormFilter={togglePage4FinalFormFilter}
+                    onToggleFormFilter={togglePage4FormFilter}
+                  />
+                </Col>
               </Row>
             </Space>
           ) : null}
@@ -4154,7 +2215,22 @@ function Dashboard() {
             </Space>
           ) : null}
 
-          {view === 'stats' ? renderStatsView() : null}
+          {view === 'stats' ? (
+            <StatsView
+              matches={matchStore.matches}
+              spriteMap={spriteMap}
+              range={statsRange}
+              metric={statsMetric}
+              player={statsPlayer}
+              tag={statsTag}
+              search={statsSearch}
+              onRangeChange={setStatsRange}
+              onMetricChange={setStatsMetric}
+              onPlayerChange={setStatsPlayer}
+              onTagChange={setStatsTag}
+              onSearchChange={setStatsSearch}
+            />
+          ) : null}
 
           {view === 'live' ? (
             <Space direction="vertical" size={18} className="page-stack">

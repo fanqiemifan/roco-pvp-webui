@@ -1,0 +1,97 @@
+import type { QuickFillMatch, Page4SlotState, SlotState } from '../../shared/types';
+
+export type PanelSide = 'left' | 'right';
+export type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'stats' | 'scoreboard' | 'preview' | 'stage' | 'about';
+
+export type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'standby';
+
+export type JsonInit = RequestInit & {
+  json?: unknown;
+};
+
+export type MatchFormValues = {
+  leftPlayer: string;
+  rightPlayer: string;
+  bestOf: number;
+  tags?: string[];
+};
+
+export type CreateMatchValues = MatchFormValues;
+
+export type ScoreboardFormValues = {
+  scoreboardEnabled: boolean;
+  eventTitleEnabled: boolean;
+  eventTitle: string;
+  page2LineupDisplayMode: 'default' | 'avatar-only';
+  nameFontSize: number;
+  scoreFontSize: number;
+};
+
+export type PanelEditorState = {
+  selected: SlotState[];
+  activeSlot: number;
+  search: string;
+  quickFillInput: string;
+  quickFillMatches: QuickFillMatch[];
+  autoSaveEnabled: boolean;
+  dirty: boolean;
+  saving: boolean;
+};
+
+export type Page4PanelEditorState = {
+  selected: Page4SlotState[];
+  activeSlot: number;
+  search: string;
+  quickFillInput: string;
+  quickFillMatches: QuickFillMatch[];
+  autoSaveEnabled: boolean;
+  dirty: boolean;
+  saving: boolean;
+};
+
+export type SpriteFilterState = {
+  selectedAttributes: string[];
+  selectedForms: string[];
+  selectedFinalForm: boolean;
+};
+
+export type AttributeOption = {
+  code: string;
+  label: string;
+  iconPath: string;
+};
+
+export type PreviewConfig = {
+  title: string;
+  fileName: string;
+  path: string;
+};
+
+export type NoticeTone = 'success' | 'info' | 'warning' | 'error';
+
+export type NoticeState = {
+  tone: NoticeTone;
+  text: string;
+} | null;
+
+export type LiveField = 'healthPercent' | 'energyValue';
+
+export type LiveConfigPayload = {
+  left: Array<{ name: string; HP: number; value: number }>;
+  right: Array<{ name: string; HP: number; value: number }>;
+};
+
+declare global {
+  interface Window {
+    rocoDesktop?: {
+      copyText?: (text: string) => Promise<void>;
+      showOpenDialog?: () => Promise<string | null>;
+      showSaveDialog?: () => Promise<string | null>;
+      readTextFile?: (filePath: string) => Promise<string>;
+      writeTextFile?: (filePath: string, text: string) => Promise<boolean>;
+      statFile?: (filePath: string) => Promise<{ mtimeMs: number; size: number }>;
+    };
+    showOpenFilePicker?: (options?: unknown) => Promise<Array<{ getFile: () => Promise<File>; queryPermission?: (options?: unknown) => Promise<string>; requestPermission?: (options?: unknown) => Promise<string>; createWritable?: () => Promise<{ write: (text: string) => Promise<void>; close: () => Promise<void> }> }>>;
+    showSaveFilePicker?: (options?: unknown) => Promise<{ getFile: () => Promise<File>; queryPermission?: (options?: unknown) => Promise<string>; requestPermission?: (options?: unknown) => Promise<string>; createWritable: () => Promise<{ write: (text: string) => Promise<void>; close: () => Promise<void> }> }>;
+  }
+}
