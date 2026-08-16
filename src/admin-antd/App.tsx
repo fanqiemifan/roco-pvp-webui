@@ -2805,7 +2805,7 @@ function Dashboard() {
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item label="比赛赛制" name="bestOf">
+          <Form.Item label="比赛赛制" name="bestOf" rules={[{ required: true, message: '请选择比赛赛制' }]}>
             <Select
               options={[
                 { value: 1, label: 'BO1' },
