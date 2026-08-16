@@ -38,6 +38,28 @@
         return sprite && sprite.path ? String(sprite.path) : FALLBACK_IMG;
     }
 
+    // 多形态匹配：同文件名基名（去掉 -N / _N 变体后缀），如 NO.020_岚鸟-1 / -2 / -3 / -4
+    function variantGroupKey(sprite) {
+        if (!sprite || typeof sprite !== 'object') {
+            return '';
+        }
+        const filename = String(sprite.filename || sprite.id || basename(sprite.path || '') || '').trim();
+        return basename(filename)
+            .replace(/\.(png|jpg|jpeg|webp)$/i, '')
+            .replace(/[-_](\d+)$/u, '');
+    }
+
+    function getSiblings(sprite) {
+        if (!sprite || typeof sprite !== 'object') {
+            return [];
+        }
+        const key = variantGroupKey(sprite);
+        if (!key) {
+            return [];
+        }
+        return spriteCache.filter((item) => variantGroupKey(item) === key && item.id !== sprite.id);
+    }
+
     async function requestJson(url, options) {
         const response = await fetch(url, {
             headers: { 'Content-Type': 'application/json' },
@@ -103,41 +125,34 @@
 
         menuBody.innerHTML = '';
 
-        if (currentSprite && typeof currentSprite.number === 'number') {
-            const sameNumber = spriteCache.filter((sprite) => sprite.number === currentSprite.number && sprite.id !== currentSprite.id);
-            if (sameNumber.length > 0) {
-                const section = document.createElement('div');
-                section.className = 'menu-section';
-                section.textContent = '其他形态';
-                menuBody.appendChild(section);
+        const siblings = getSiblings(currentSprite);
+        if (siblings.length > 0) {
+            const section = document.createElement('div');
+            section.className = 'menu-section';
+            section.textContent = '其他形态';
+            menuBody.appendChild(section);
 
-                sameNumber.slice(0, 30).forEach((sprite) => {
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'menu-item';
-                    button.innerHTML = '<img alt="" /><span class="menu-item-text"></span>';
-                    const img = button.querySelector('img');
-                    img.src = spriteImgSrc(sprite);
-                    img.alt = getSpriteDisplayName(sprite);
-                    button.querySelector('.menu-item-text').textContent = getSpriteDisplayName(sprite);
-                    const form = getSpriteForm(sprite);
-                    if (form) {
-                        const formTag = document.createElement('span');
-                        formTag.className = 'menu-item-form';
-                        formTag.textContent = form;
-                        button.appendChild(formTag);
-                    }
-                    button.addEventListener('click', () => {
-                        void replaceSlot(sprite.id);
-                    });
-                    menuBody.appendChild(button);
+            siblings.slice(0, 30).forEach((sprite) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'menu-item';
+                button.innerHTML = '<img alt="" /><span class="menu-item-text"></span>';
+                const img = button.querySelector('img');
+                img.src = spriteImgSrc(sprite);
+                img.alt = getSpriteDisplayName(sprite);
+                button.querySelector('.menu-item-text').textContent = getSpriteDisplayName(sprite);
+                const form = getSpriteForm(sprite);
+                if (form) {
+                    const formTag = document.createElement('span');
+                    formTag.className = 'menu-item-form';
+                    formTag.textContent = form;
+                    button.appendChild(formTag);
+                }
+                button.addEventListener('click', () => {
+                    void replaceSlot(sprite.id);
                 });
-            } else {
-                const hint = document.createElement('div');
-                hint.className = 'menu-hint';
-                hint.textContent = '该精灵没有其他形态';
-                menuBody.appendChild(hint);
-            }
+                menuBody.appendChild(button);
+            });
         } else if (currentSprite) {
             const hint = document.createElement('div');
             hint.className = 'menu-hint';
@@ -149,6 +164,11 @@
             hint.textContent = '点击下方按钮选择一只全新精灵';
             menuBody.appendChild(hint);
         }
+    }
+
+    function hasMultiForms() {
+        const currentSprite = slotData && slotData.sprite ? slotData.sprite : null;
+        return currentSprite ? getSiblings(currentSprite).length > 0 : false;
     }
 
     function renderPickerGrid() {
@@ -221,6 +241,10 @@
             .then(() => {
                 renderMenu();
                 renderPickerGrid();
+                // 没有多形态时直接进入更换精灵选择器
+                if (!hasMultiForms()) {
+                    showPicker();
+                }
             })
             .catch((error) => {
                 menuBody.innerHTML = '';
