@@ -2604,10 +2604,17 @@ function Dashboard() {
 
           {view === 'about' ? (
             <Space direction="vertical" size={18} className="page-stack">
-              <Row gutter={[18, 18]}>
-                <Col xs={24} xl={16}>
-                  <Card>
-                    <Space direction="vertical" size={16} className="page-stack">
+              <Card title="项目链接">
+                <Space wrap size={12}>
+                  <Link href="/login.html" target="_blank">登录页入口</Link>
+                  <Link href="/admin.html" target="_blank">当前后台入口</Link>
+                  <Link href="/roco-pvp-page2.html" target="_blank">推流页面 2</Link>
+                  <Link href="https://wiki.biligame.com/rocom/" target="_blank">精灵图素材来源</Link>
+                  <Link href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</Link>
+                </Space>
+              </Card>
+              <Card>
+                <Space direction="vertical" size={16} className="page-stack">
                       <div>
                         <Text className="eyebrow">About This Site</Text>
                         <Title level={3}>关于这个新的后台</Title>
@@ -2659,20 +2666,6 @@ function Dashboard() {
                       </Card>
                     </Space>
                   </Card>
-                </Col>
-                <Col xs={24} xl={8}>
-                  <Card>
-                    <Space direction="vertical" size={12} className="page-stack">
-                      <Title level={4}>项目链接</Title>
-                      <Link href="/login.html" target="_blank">登录页入口</Link>
-                      <Link href="/admin.html" target="_blank">当前后台入口</Link>
-                      <Link href="/roco-pvp-page2.html" target="_blank">推流页面 2</Link>
-                      <Link href="https://wiki.biligame.com/rocom/" target="_blank">精灵图素材来源</Link>
-                      <Link href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</Link>
-                    </Space>
-                  </Card>
-                </Col>
-              </Row>
             </Space>
           ) : null}
         </Content>
