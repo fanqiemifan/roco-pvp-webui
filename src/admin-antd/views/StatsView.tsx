@@ -348,10 +348,10 @@ export function StatsView({
         <Col xs={24} xxl={isFullscreenWide ? 6 : 24} order={isFullscreenWide ? 2 : 1}>
           <Row gutter={[18, 18]}>
             <Col xs={isFullscreenWide ? 24 : 12}>
-              <Card title="属性分布" extra={<Text type="secondary">按登场只次</Text>}>
+              <Card title="属性分布" extra={<Text type="secondary">按登场只次</Text>} className="stats-equal-card">
                 {stats.attributeRows.length ? (
-                  <Space direction="vertical" size={10} className="page-stack">
-                    {stats.attributeRows.slice(0, 8).map((row) => {
+                  <div className="stats-attribute-grid">
+                    {stats.attributeRows.slice(0, 18).map((row) => {
                       const iconPath = ATTRIBUTE_ICON_BY_LABEL.get(row.attribute);
                       return (
                         <div key={row.attribute} className="stats-attribute-row">
@@ -376,16 +376,18 @@ export function StatsView({
                         </div>
                       );
                     })}
-                  </Space>
+                  </div>
                 ) : (
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
+                  <div className="stats-card-empty">
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
+                  </div>
                 )}
               </Card>
             </Col>
             <Col xs={isFullscreenWide ? 24 : 12}>
-              <Card title="Top 3 登场趋势" extra={<Text type="secondary">按日聚合</Text>}>
+              <Card title="Top 3 登场趋势" extra={<Text type="secondary">按日聚合</Text>} className="stats-equal-card">
                 {topTrendRows.length && dailyKeys.length > 1 ? (
-                  <Space direction="vertical" size={10} className="page-stack">
+                  <Space direction="vertical" size={10} className="page-stack stats-trend-stack">
                     <svg viewBox={`0 0 ${Math.max(dailyKeys.length * 40, 120)} 140`} className="stats-trend-svg" preserveAspectRatio="none">
                       {topTrendRows.map((row, rowIndex) => {
                         const points = dailyKeys.map((key, index) => {
@@ -409,7 +411,9 @@ export function StatsView({
                     </Space>
                   </Space>
                 ) : (
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="需要至少两天的登场数据" />
+                  <div className="stats-card-empty">
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="需要至少两天的登场数据" />
+                  </div>
                 )}
               </Card>
             </Col>

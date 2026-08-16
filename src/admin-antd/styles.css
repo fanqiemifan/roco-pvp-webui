@@ -1281,6 +1281,41 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+}
+
+.stats-attribute-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+}
+
+.stats-equal-card > .ant-card-body {
+  height: 300px;
+  overflow: hidden;
+}
+
+.stats-equal-card .stats-attribute-grid {
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.stats-card-empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-trend-stack {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-trend-stack .stats-trend-svg {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .stats-column-title {
