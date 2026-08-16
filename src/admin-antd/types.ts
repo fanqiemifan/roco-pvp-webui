@@ -23,6 +23,7 @@ export type ScoreboardFormValues = {
   eventTitleEnabled: boolean;
   eventTitle: string;
   page2LineupDisplayMode: 'default' | 'avatar-only';
+  page5Title: string;
   nameFontSize: number;
   scoreFontSize: number;
 };

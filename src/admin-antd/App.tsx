@@ -449,6 +449,7 @@ function Dashboard() {
       eventTitleEnabled: scoreboard.eventTitleEnabled,
       eventTitle: scoreboard.eventTitle,
       page2LineupDisplayMode: scoreboard.page2LineupDisplayMode,
+      page5Title: scoreboard.page5Title,
       nameFontSize: scoreboard.nameFontSize,
       scoreFontSize: scoreboard.scoreFontSize,
     });
@@ -2528,6 +2529,9 @@ function Dashboard() {
                               ]}
                             />
                           </Form.Item>
+                          <Form.Item label="推流页面5标题" name="page5Title">
+                            <Input maxLength={40} placeholder="例如：使用率 · 胜率排行" />
+                          </Form.Item>
                           <Form.Item label="选手名字字号" name="nameFontSize">
                             <InputNumber min={12} max={160} className="full-width-number" />
                           </Form.Item>
@@ -2585,12 +2589,13 @@ function Dashboard() {
                       <div>
                         <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>赛事标签：</Text>
                         <Select
-                          allowClear
                           className="stage-page5-tag-select"
-                          placeholder="全部赛事标签"
                           value={stage?.page5Tag || undefined}
                           disabled={stageSaving}
-                          options={allHistoryTags.map((tag) => ({ value: tag, label: tag }))}
+                          options={[
+                            { value: '', label: '全部' },
+                            ...allHistoryTags.map((tag) => ({ value: tag, label: tag })),
+                          ]}
                           onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page5Tag: value ?? '' }); }}
                         />
                       </div>

@@ -164,6 +164,7 @@ function defaultScoreboardState(): ScoreboardState {
     eventTitle: DEFAULT_EVENT_TITLE,
     eventTitleEnabled: true,
     page2LineupDisplayMode: 'avatar-only',
+    page5Title: '',
     nameFontSize: 64,
     scoreFontSize: 64,
     mtime: null,
@@ -261,6 +262,7 @@ export function getScoreboardState(paths: AppPaths): ScoreboardState {
       eventTitle: normalizeScoreboardText(metadata.eventTitle ?? DEFAULT_EVENT_TITLE, 40),
       eventTitleEnabled: normalizeBool(metadata.eventTitleEnabled, true),
       page2LineupDisplayMode: normalizePage2LineupDisplayMode(metadata.page2LineupDisplayMode),
+      page5Title: normalizeScoreboardText(metadata.page5Title, 40),
       nameFontSize: normalizeFontSize(metadata.nameFontSize, 64),
       scoreFontSize: normalizeFontSize(metadata.scoreFontSize, 64),
       mtime: stat.mtimeMs,
@@ -288,6 +290,7 @@ export function saveScoreboardState(paths: AppPaths, payload: unknown): Scoreboa
     eventTitle: normalizeScoreboardText(raw.eventTitle ?? DEFAULT_EVENT_TITLE, 40),
     eventTitleEnabled: normalizeBool(raw.eventTitleEnabled, true),
     page2LineupDisplayMode: normalizePage2LineupDisplayMode(raw.page2LineupDisplayMode),
+    page5Title: normalizeScoreboardText(raw.page5Title, 40),
     nameFontSize: normalizeFontSize(raw.nameFontSize, 64),
     scoreFontSize: normalizeFontSize(raw.scoreFontSize, 64),
   };

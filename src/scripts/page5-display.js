@@ -99,9 +99,9 @@
         sprite.innerHTML = '<img alt="" />';
         applySpriteImage(sprite.querySelector('img'), row);
 
-        const name = document.createElement('div');
-        name.className = 'page5-sprite-name';
-        name.textContent = row.name || '-';
+        const count = document.createElement('div');
+        count.className = 'page5-data page5-data-count';
+        count.textContent = String(row.picks || 0);
 
         const usage = document.createElement('div');
         usage.className = 'page5-data';
@@ -113,7 +113,7 @@
 
         el.appendChild(rank);
         el.appendChild(sprite);
-        el.appendChild(name);
+        el.appendChild(count);
         el.appendChild(usage);
         el.appendChild(wins);
         return el;
@@ -168,7 +168,7 @@
                 fetch('/api/stage', { credentials: 'same-origin' }).then((r) => r.json()),
                 fetch('/api/scoreboard', { credentials: 'same-origin' }).then((r) => r.json()),
             ]);
-            applyTitle(scoreboard && scoreboard.eventTitle);
+            applyTitle(scoreboard && scoreboard.page5Title);
             await fetchRanking(stage && stage.page5Range, stage && stage.page5Tag);
         } catch (error) {
             console.error('page5 初始加载失败:', error);
@@ -195,7 +195,7 @@
             const stage = payload && payload.stage ? payload.stage : null;
             const scoreboard = payload && payload.scoreboard ? payload.scoreboard : null;
             if (scoreboard) {
-                applyTitle(scoreboard.eventTitle);
+                applyTitle(scoreboard.page5Title);
             }
             if (stage) {
                 void fetchRanking(stage.page5Range, stage.page5Tag);
@@ -212,7 +212,7 @@
         socket.on('scoreboardUpdate', (payload) => {
             const scoreboard = payload && payload.scoreboard ? payload.scoreboard : null;
             if (scoreboard) {
-                applyTitle(scoreboard.eventTitle);
+                applyTitle(scoreboard.page5Title);
             }
         });
 

@@ -65,6 +65,7 @@ export interface ScoreboardState {
   eventTitle: string;
   eventTitleEnabled: boolean;
   page2LineupDisplayMode: 'default' | 'avatar-only';
+  page5Title: string;
   nameFontSize: number;
   scoreFontSize: number;
   mtime: number | null;
