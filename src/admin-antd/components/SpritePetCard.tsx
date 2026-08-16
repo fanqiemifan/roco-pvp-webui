@@ -1,4 +1,4 @@
-import type React from 'react';
+import React from 'react';
 import type { SpriteRecord } from '../../../shared/types';
 import { cleanSpriteCardName, getSpriteCardNameLeft } from '../lib/format';
 import { resolveSpriteAttributeIcons } from '../lib/sprite';

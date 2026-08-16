@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button, Card, Space, Typography } from 'antd';
 import { Page4SlotVisual } from '../components/Page4SlotVisual';
 import type { Page4PanelEditorState, PanelSide } from '../types';

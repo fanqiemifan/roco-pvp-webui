@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getPreviewOrigin } from '../lib/preview';
 
 const STAGE_THUMB_INNER_WIDTH = 1920;
