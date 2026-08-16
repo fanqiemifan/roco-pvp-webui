@@ -129,6 +129,10 @@ export function StatsView({
     {
       title: (
         <Tooltip
+          styles={{
+            root: { maxWidth: 'min(300px, 80vw)' },
+            container: { whiteSpace: 'normal', wordBreak: 'break-word' },
+          }}
           title={metric === 'pickRate'
             ? '使用率 = 登场只次 ÷ 总登场只次（同局重复携带按只次计）'
             : '上场率 = 登场场次 ÷ 总场次（同局同侧重复携带只计 1 次）'}
