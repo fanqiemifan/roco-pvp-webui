@@ -13,16 +13,15 @@ export interface AppPaths {
   dataDir: string;
   runtimeDir: string;
   cacheDir: string;
-  leftAvatarFile: string;
-  rightAvatarFile: string;
-  leftAvatarMetaFile: string;
-  rightAvatarMetaFile: string;
   scoreboardFile: string;
   page4File: string;
   matchesFile: string;
   stageFile: string;
   configFile: string;
   panelStatePath(position: 'left' | 'right'): string;
+  avatarDir(matchId: string | null): string;
+  avatarFile(side: 'left' | 'right', matchId: string | null): string;
+  avatarMetaFile(side: 'left' | 'right', matchId: string | null): string;
 }
 
 export function createAppPaths(projectRoot: string, userDataDir: string): AppPaths {
@@ -42,10 +41,6 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     dataDir: path.join(projectRoot, 'resources', 'data'),
     runtimeDir,
     cacheDir,
-    leftAvatarFile: path.join(cacheDir, 'left-avatar.png'),
-    rightAvatarFile: path.join(cacheDir, 'right-avatar.png'),
-    leftAvatarMetaFile: path.join(cacheDir, 'left-avatar.json'),
-    rightAvatarMetaFile: path.join(cacheDir, 'right-avatar.json'),
     scoreboardFile: path.join(cacheDir, 'scoreboard.json'),
     page4File: path.join(cacheDir, 'page4.json'),
     matchesFile: path.join(cacheDir, 'matches.json'),
@@ -53,6 +48,16 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     configFile: path.join(runtimeDir, 'config.json'),
     panelStatePath(position: 'left' | 'right') {
       return path.join(cacheDir, `${position}.json`);
+    },
+    avatarDir(matchId) {
+      // 头像按赛事隔离：cache/avatars/{matchId}
+      return path.join(cacheDir, 'avatars', matchId ? String(matchId) : 'none');
+    },
+    avatarFile(side, matchId) {
+      return path.join(this.avatarDir(matchId), `${side}-avatar.png`);
+    },
+    avatarMetaFile(side, matchId) {
+      return path.join(this.avatarDir(matchId), `${side}-avatar.json`);
     },
   };
 }

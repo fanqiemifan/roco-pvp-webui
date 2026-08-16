@@ -1003,6 +1003,8 @@ function Dashboard() {
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
+      const nextAvatars = await requestJson<AvatarCollectionState>('/api/avatars');
+      setAvatars(nextAvatars);
       setView('roster');
       const nextStore = data.matches ?? matchStore;
       const nextActiveMatch = getActiveMatch(nextStore);
@@ -1022,16 +1024,6 @@ function Dashboard() {
 
   async function createMatch(values: CreateMatchValues) {
     try {
-      if (createLeftAvatar) {
-        await uploadSingleFile('/api/upload/avatar/left', createLeftAvatar);
-      }
-      if (createRightAvatar) {
-        await uploadSingleFile('/api/upload/avatar/right', createRightAvatar);
-      }
-      if (createLeftAvatar || createRightAvatar) {
-        const nextAvatars = await requestJson<AvatarCollectionState>('/api/avatars');
-        setAvatars(nextAvatars);
-      }
       const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches', {
         method: 'POST',
         json: {
@@ -1044,6 +1036,17 @@ function Dashboard() {
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
+      // 新赛事创建后即为当前赛事，头像按赛事隔离上传到新赛事下
+      if (createLeftAvatar) {
+        await uploadSingleFile('/api/upload/avatar/left', createLeftAvatar);
+      }
+      if (createRightAvatar) {
+        await uploadSingleFile('/api/upload/avatar/right', createRightAvatar);
+      }
+      if (createLeftAvatar || createRightAvatar) {
+        const nextAvatars = await requestJson<AvatarCollectionState>('/api/avatars');
+        setAvatars(nextAvatars);
+      }
       setCreateMatchOpen(false);
       createMatchForm.resetFields();
       clearCreateAvatars();
@@ -2531,6 +2534,9 @@ function Dashboard() {
                     <Col xs={24} xl={8}>
                       <Card size="small" className="subtle-card" title="页面3头像">
                         <Space direction="vertical" size={16} className="control-stack">
+                          {!activeMatch ? (
+                            <Alert showIcon type="warning" message="请先创建或选择一场赛事，再设置头像" />
+                          ) : null}
                           {(['left', 'right'] as PanelSide[]).map((side) => {
                             const avatar = avatars[side];
                             const previewSrc = avatar.exists
@@ -2542,19 +2548,26 @@ function Dashboard() {
                             return (
                               <Card key={side} size="small" className="avatar-card">
                                 <Space direction="vertical" size={12} className="control-stack">
-                                  <Text strong>{side === 'left' ? '左侧头像' : '右侧头像'}</Text>
+                                  <Text strong>
+                                    {side === 'left' ? '左侧头像' : '右侧头像'}
+                                    {activeMatch ? `（${activeMatch.leftPlayer || side === 'left' ? activeMatch.leftPlayer || '左侧' : activeMatch.rightPlayer || '右侧'}）` : ''}
+                                  </Text>
                                   <Image preview={false} src={previewSrc} className="avatar-preview-image" />
                                   <Space wrap>
                                     <Upload
                                       showUploadList={false}
                                       beforeUpload={(file) => {
+                                        if (!activeMatch) {
+                                          message.warning('请先创建或选择一场赛事');
+                                          return false;
+                                        }
                                         void uploadAvatarFile(side, file as File);
                                         return false;
                                       }}
                                     >
-                                      <Button>选择头像</Button>
+                                      <Button disabled={!activeMatch}>选择头像</Button>
                                     </Upload>
-                                    <Button danger onClick={() => void deleteAvatarFile(side)}>删除</Button>
+                                    <Button danger disabled={!activeMatch} onClick={() => void deleteAvatarFile(side)}>删除</Button>
                                   </Space>
                                 </Space>
                               </Card>

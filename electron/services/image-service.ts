@@ -70,16 +70,16 @@ function isAllowedAvatarMimeType(mimeType: string): boolean {
   return ALLOWED_AVATAR_MIME_TYPES.has(mimeType);
 }
 
-function avatarFilePath(paths: AppPaths, side: AvatarSide): string {
-  return side === 'left' ? paths.leftAvatarFile : paths.rightAvatarFile;
+function avatarFilePath(paths: AppPaths, side: AvatarSide, matchId: string | null): string {
+  return paths.avatarFile(side, matchId);
 }
 
-function avatarMetaFilePath(paths: AppPaths, side: AvatarSide): string {
-  return side === 'left' ? paths.leftAvatarMetaFile : paths.rightAvatarMetaFile;
+function avatarMetaFilePath(paths: AppPaths, side: AvatarSide, matchId: string | null): string {
+  return paths.avatarMetaFile(side, matchId);
 }
 
-export function getAvatarState(paths: AppPaths, side: AvatarSide): AvatarState {
-  const filePath = avatarFilePath(paths, side);
+export function getAvatarState(paths: AppPaths, side: AvatarSide, matchId: string | null): AvatarState {
+  const filePath = avatarFilePath(paths, side, matchId);
   if (!fs.existsSync(filePath)) {
     return { side, exists: false };
   }
@@ -94,14 +94,20 @@ export function getAvatarState(paths: AppPaths, side: AvatarSide): AvatarState {
   };
 }
 
-export function getAvatarStates(paths: AppPaths): AvatarCollectionState {
+export function getAvatarStates(paths: AppPaths, matchId: string | null): AvatarCollectionState {
   return {
-    left: getAvatarState(paths, 'left'),
-    right: getAvatarState(paths, 'right'),
+    left: getAvatarState(paths, 'left', matchId),
+    right: getAvatarState(paths, 'right', matchId),
   };
 }
 
-export async function saveAvatar(paths: AppPaths, side: AvatarSide, buffer: Buffer, _mimeType?: string): Promise<AvatarState> {
+export async function saveAvatar(
+  paths: AppPaths,
+  side: AvatarSide,
+  matchId: string | null,
+  buffer: Buffer,
+  _mimeType?: string,
+): Promise<AvatarState> {
   // Authoritative validation based on the actual file content, never on the
   // client-supplied mimetype. Non-image payloads are rejected outright so they
   // can never be stored and later served back with a controllable Content-Type.
@@ -111,6 +117,7 @@ export async function saveAvatar(paths: AppPaths, side: AvatarSide, buffer: Buff
   }
 
   ensureRuntimeDirs(paths);
+  fs.mkdirSync(paths.avatarDir(matchId), { recursive: true });
   // 等比缩放并裁剪为正方形头像，统一压缩为 PNG 落盘
   const resized = await sharp(buffer)
     .rotate()
@@ -118,18 +125,18 @@ export async function saveAvatar(paths: AppPaths, side: AvatarSide, buffer: Buff
     .png({ compressionLevel: 9 })
     .toBuffer();
 
-  fs.writeFileSync(avatarFilePath(paths, side), resized);
+  fs.writeFileSync(avatarFilePath(paths, side, matchId), resized);
   fs.writeFileSync(
-    avatarMetaFilePath(paths, side),
+    avatarMetaFilePath(paths, side, matchId),
     JSON.stringify({ mimeType: AVATAR_OUTPUT_MIME }, null, 2),
     'utf-8',
   );
-  return getAvatarState(paths, side);
+  return getAvatarState(paths, side, matchId);
 }
 
-export function deleteAvatar(paths: AppPaths, side: AvatarSide): AvatarState {
-  const filePath = avatarFilePath(paths, side);
-  const metaFilePath = avatarMetaFilePath(paths, side);
+export function deleteAvatar(paths: AppPaths, side: AvatarSide, matchId: string | null): AvatarState {
+  const filePath = avatarFilePath(paths, side, matchId);
+  const metaFilePath = avatarMetaFilePath(paths, side, matchId);
 
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
@@ -138,11 +145,11 @@ export function deleteAvatar(paths: AppPaths, side: AvatarSide): AvatarState {
     fs.unlinkSync(metaFilePath);
   }
 
-  return getAvatarState(paths, side);
+  return getAvatarState(paths, side, matchId);
 }
 
-export function readAvatarMimeType(paths: AppPaths, side: AvatarSide): string {
-  const metaFilePath = avatarMetaFilePath(paths, side);
+export function readAvatarMimeType(paths: AppPaths, side: AvatarSide, matchId: string | null): string {
+  const metaFilePath = avatarMetaFilePath(paths, side, matchId);
   if (!fs.existsSync(metaFilePath)) {
     return 'image/png';
   }

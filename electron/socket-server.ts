@@ -69,11 +69,12 @@ declare module 'express-session' {
 const upload = multer({ storage: multer.memoryStorage() });
 
 function snapshotPayload(paths: AppPaths): SnapshotPayload {
+  const activeMatchId = getMatchStore(paths).activeMatchId;
   return {
     panels: [getPanelState(paths, 'left'), getPanelState(paths, 'right')],
     page4: getPage4State(paths),
     scoreboard: getScoreboardState(paths),
-    avatars: getAvatarStates(paths),
+    avatars: getAvatarStates(paths, activeMatchId),
     matches: getMatchStore(paths),
     stage: getStageState(paths),
   };
@@ -215,6 +216,12 @@ export async function createLocalServer(
     },
   });
 
+  // 广播当前赛事对应的头像（活跃赛事变化时推流页等需要同步）
+  const emitAvatarUpdate = (): void => {
+    const matchId = getMatchStore(paths).activeMatchId;
+    io.emit(SOCKET_EVENTS.avatarUpdate, { matchId, avatars: getAvatarStates(paths, matchId) });
+  };
+
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));
 
@@ -337,7 +344,7 @@ export async function createLocalServer(
   });
 
   app.get('/api/avatars', (_request, response) => {
-    response.json(getAvatarStates(paths));
+    response.json(getAvatarStates(paths, getMatchStore(paths).activeMatchId));
   });
 
   app.get('/api/scoreboard', (_request, response) => {
@@ -372,6 +379,7 @@ export async function createLocalServer(
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
       response.json({ success: true, matches, scoreboard, panels });
@@ -408,6 +416,7 @@ export async function createLocalServer(
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
       response.json({ success: true, matches, scoreboard, panels });
@@ -422,6 +431,7 @@ export async function createLocalServer(
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
       response.json({ success: true, matches, scoreboard, panels });
@@ -436,6 +446,7 @@ export async function createLocalServer(
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
       response.json({ success: true, matches, scoreboard, panels });
@@ -450,6 +461,7 @@ export async function createLocalServer(
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
       response.json({ success: true, matches, scoreboard, panels });
@@ -496,6 +508,7 @@ export async function createLocalServer(
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
       response.json({ success: true, matches, scoreboard, panels });
@@ -510,6 +523,7 @@ export async function createLocalServer(
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
       response.json({ success: true, matches, scoreboard, panels });
@@ -765,14 +779,20 @@ export async function createLocalServer(
       response.status(400).json({ success: false, error: 'No file data' });
       return;
     }
+    const matchId = getMatchStore(paths).activeMatchId;
+    if (!matchId) {
+      response.status(400).json({ success: false, error: '请先创建或选择一场赛事再设置头像' });
+      return;
+    }
 
     try {
       // saveAvatar now validates the payload's magic bytes and only accepts
       // real raster images, then resizes/compresses to a square PNG, so
-      // HTML/etc. payloads are rejected before storage.
-      const avatar = await saveAvatar(paths, side, request.file.buffer);
-      io.emit(SOCKET_EVENTS.avatarUpdate, { side, avatar, avatars: getAvatarStates(paths) });
-      response.json({ success: true, side, avatar });
+      // HTML/etc. payloads are rejected before storage. Avatars are scoped
+      // to the active match (cache/avatars/{matchId}).
+      const avatar = await saveAvatar(paths, side, matchId, request.file.buffer);
+      io.emit(SOCKET_EVENTS.avatarUpdate, { matchId, avatar, avatars: getAvatarStates(paths, matchId) });
+      response.json({ success: true, side, matchId, avatar });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -784,10 +804,15 @@ export async function createLocalServer(
       response.status(400).json({ success: false, error: 'Invalid avatar side' });
       return;
     }
+    const matchId = getMatchStore(paths).activeMatchId;
+    if (!matchId) {
+      response.status(400).json({ success: false, error: '请先创建或选择一场赛事再设置头像' });
+      return;
+    }
 
-    const avatar = deleteAvatar(paths, side);
-    io.emit(SOCKET_EVENTS.avatarUpdate, { side, avatar, avatars: getAvatarStates(paths) });
-    response.json({ success: true, side, avatar });
+    const avatar = deleteAvatar(paths, side, matchId);
+    io.emit(SOCKET_EVENTS.avatarUpdate, { matchId, side, avatar, avatars: getAvatarStates(paths, matchId) });
+    response.json({ success: true, side, matchId, avatar });
   });
 
   app.get('/api/runtime-config', (_request, response) => {
@@ -802,21 +827,25 @@ export async function createLocalServer(
   });
 
   app.get('/api/avatar/left-avatar.png', (_request, response) => {
-    if (!fs.existsSync(paths.leftAvatarFile)) {
+    const matchId = getMatchStore(paths).activeMatchId;
+    const file = matchId ? paths.avatarFile('left', matchId) : null;
+    if (!file || !fs.existsSync(file)) {
       response.status(404).end();
       return;
     }
-    response.type(readAvatarMimeType(paths, 'left'));
-    response.sendFile(paths.leftAvatarFile);
+    response.type(readAvatarMimeType(paths, 'left', matchId));
+    response.sendFile(file);
   });
 
   app.get('/api/avatar/right-avatar.png', (_request, response) => {
-    if (!fs.existsSync(paths.rightAvatarFile)) {
+    const matchId = getMatchStore(paths).activeMatchId;
+    const file = matchId ? paths.avatarFile('right', matchId) : null;
+    if (!file || !fs.existsSync(file)) {
       response.status(404).end();
       return;
     }
-    response.type(readAvatarMimeType(paths, 'right'));
-    response.sendFile(paths.rightAvatarFile);
+    response.type(readAvatarMimeType(paths, 'right', matchId));
+    response.sendFile(file);
   });
 
   io.on('connection', (socket) => {
