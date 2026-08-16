@@ -62,3 +62,35 @@
 |-------------|-------|------|------|
 | 加载运行时配置 | loadRuntimeConfig | (paths: AppPaths) => RuntimeConfig | 加载运行时配置（port） |
 | 保存运行时配置 | saveRuntimeConfig | (paths: AppPaths, config: RuntimeConfig) => RuntimeConfig | 保存运行时配置 |
+
+## 仅显阵容 (page4-service.ts)
+
+| 自然语言描述 | 函数名 | 签名 | 说明 |
+|-------------|-------|------|------|
+| 获取 page4 状态 | getPage4State | (paths: AppPaths) => Page4State | 获取 page4 双面板状态 |
+| 保存 page4 面板 | savePage4State | (paths: AppPaths, position, selectedSlots) => Page4PanelState | 保存 page4 面板 |
+| 更新 page4 格子 | savePage4SlotState | (paths: AppPaths, position, slotIndex, slotData) => Page4PanelState | 保存 page4 单个格子 |
+| 清空 page4 面板 | clearPage4State | (paths: AppPaths, position) => Page4PanelState | 清空 page4 面板 |
+
+## 直播推流 (stage-service.ts)
+
+| 自然语言描述 | 函数名 | 签名 | 说明 |
+|-------------|-------|------|------|
+| 获取推流配置 | getStageState | (paths: AppPaths) => StageConfig | 获取 stage 配置 |
+| 保存推流配置 | saveStageState | (paths: AppPaths, payload) => StageConfig | 保存 stage 配置 |
+
+## 数据统计 (stats-service.ts)
+
+| 自然语言描述 | 函数名 | 签名 | 说明 |
+|-------------|-------|------|------|
+| 获取精灵排行 | getSpriteRanking | (paths: AppPaths, params) => ... | 计算精灵使用率/上场率/胜率排行 |
+
+## 桌面悬浮窗 (float-window.ts)
+
+| 自然语言描述 | 函数名 | 签名 | 说明 |
+|-------------|-------|------|------|
+| 注册悬浮窗 IPC | registerFloatWindow | (getPort: () => number) => void | 注册 float:toggle/close/menu/menu-close/shape |
+| 创建/获取悬浮窗 | createFloatWindow | (getPort) => BrowserWindow | 透明置顶 587×56 阵容悬浮窗 |
+| 切换悬浮窗显隐 | toggleFloatWindow | (getPort) => void | 显示并聚焦已有悬浮窗 |
+| 打开更换精灵菜单 | openFloatMenuWindow | (payload, parentBoundsOverride?) => void | 在对应精灵上方打开 240×240 菜单窗口 |
+| 关闭更换精灵菜单 | closeFloatMenuWindow | () => void | 关闭菜单窗口 |

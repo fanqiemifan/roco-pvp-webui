@@ -13,18 +13,27 @@
 |------|-----------|---------|
 | 创建比赛 | createMatch | electron/services/match-service.ts |
 | 更新面板 | savePanelState | electron/services/state-service.ts |
+| 更新仅显阵容 | savePage4State | electron/services/page4-service.ts |
+| 更新推流配置 | saveStageState | electron/services/stage-service.ts |
+| 精灵排行统计 | getSpriteRanking | electron/services/stats-service.ts |
 | 搜索精灵 | listSprites | electron/services/sprite-service.ts |
 | 上传头像 | saveAvatar | electron/services/image-service.ts |
 | 发送 Socket 事件 | socket.emit | electron/socket-server.ts |
+| 悬浮窗/菜单窗口 | openFloatMenuWindow / createFloatWindow | electron/float-window.ts |
+| 数据统计聚合 | buildUsageStats | src/admin-antd/lib/stats.ts |
+| 管理后台视图 | RosterPanelEditor / StatsView | src/admin-antd/views/ |
 
 ## 类型引用
 
 所有类型定义集中在 shared/types.ts，使用时直接引用。核心类型：
 - PanelState - 面板状态
+- Page4State / Page4PanelState / Page4SlotState - 仅显阵容状态
 - ScoreboardState - 记分牌状态
 - MatchRecord - 比赛记录
 - SlotState - 格子状态
 - SpriteRecord - 精灵记录
+- StageConfig / StagePageKey / StageTransitionType - 直播推流配置
+- SpriteUsageRow / StatsMetricKey / StatsRangeKey（管理后台统计，src/admin-antd/lib/stats.ts）
 
 ## 文件索引
 

@@ -41,6 +41,28 @@
 | 批量删除比赛 | POST | /api/matches/history/delete | 批量删除比赛 | electron/socket-server.ts |
 | 撤销删除 | POST | /api/matches/history/undo-delete | 撤销删除 | electron/socket-server.ts |
 
+## 仅显阵容（page4）接口
+
+| 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
+|-------------|------|------|------|------|
+| 获取 page4 状态 | GET | /api/page4 | 获取 page4 双面板状态 | electron/socket-server.ts |
+| 保存 page4 面板 | POST | /api/page4/:position | 保存 page4 面板（left/right） | electron/socket-server.ts |
+| 更新 page4 格子 | PATCH | /api/page4/:position/slots/:slot | 更新 page4 单个格子 | electron/socket-server.ts |
+| 清空 page4 面板 | DELETE | /api/page4/:position | 清空 page4 面板 | electron/socket-server.ts |
+
+## 直播推流（stage）接口
+
+| 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
+|-------------|------|------|------|------|
+| 获取推流配置 | GET | /api/stage | 获取 stage 配置 | electron/socket-server.ts |
+| 保存推流配置 | POST | /api/stage | 保存 stage 配置 | electron/socket-server.ts |
+
+## 统计接口
+
+| 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
+|-------------|------|------|------|------|
+| 精灵排行 | GET | /api/stats/ranking | 精灵使用率/上场率/胜率排行 | electron/socket-server.ts |
+
 ## 精灵接口
 
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
@@ -56,6 +78,8 @@
 | 获取头像 | GET | /api/avatars | 获取左右头像状态 | electron/socket-server.ts |
 | 上传头像 | POST | /api/upload/avatar/:side | 上传头像（side: left/right） | electron/socket-server.ts |
 | 删除头像 | DELETE | /api/delete/avatar/:side | 删除头像 | electron/socket-server.ts |
+| 读取左头像图片 | GET | /api/avatar/left-avatar.png | 输出左侧头像图片 | electron/socket-server.ts |
+| 读取右头像图片 | GET | /api/avatar/right-avatar.png | 输出右侧头像图片 | electron/socket-server.ts |
 
 ## 配置接口
 

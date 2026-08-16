@@ -4,9 +4,11 @@
 |-------------|---------|------|------|---------|
 | 获取完整状态快照 | snapshot | Server → Client | 完整状态快照 | { panels, page4, scoreboard, avatars, matches, stage } |
 | 面板更新通知 | panel:update | Server → Client | 面板更新 | { panel: PanelState } |
+| 仅显阵容更新通知 | page4:update | Server → Client | page4 面板更新 | { panel: Page4PanelState } |
 | 记分牌更新通知 | scoreboard:update | Server → Client | 记分牌更新 | { scoreboard: ScoreboardState } |
 | 头像更新通知 | avatar:update | Server → Client | 头像更新 | { side, avatar, avatars } |
 | 比赛记录更新通知 | matches:update | Server → Client | 比赛记录更新 | { matches: MatchStoreState } |
+| 推流配置更新通知 | stage:update | Server → Client | stage 配置更新 | { stage: StageConfig } |
 
 # 数据流图
 
