@@ -61,7 +61,7 @@ function normalizeFontSize(value: unknown, defaultValue = 64, minimum = 12, maxi
 }
 
 function normalizePage2LineupDisplayMode(value: unknown): 'default' | 'avatar-only' {
-  return value === 'avatar-only' ? 'avatar-only' : 'default';
+  return value === 'default' ? 'default' : 'avatar-only';
 }
 
 function normalizeBool(value: unknown, defaultValue = true): boolean {
@@ -163,7 +163,7 @@ function defaultScoreboardState(): ScoreboardState {
     scoreboardEnabled: true,
     eventTitle: DEFAULT_EVENT_TITLE,
     eventTitleEnabled: true,
-    page2LineupDisplayMode: 'default',
+    page2LineupDisplayMode: 'avatar-only',
     nameFontSize: 64,
     scoreFontSize: 64,
     mtime: null,

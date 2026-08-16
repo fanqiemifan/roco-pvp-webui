@@ -7,7 +7,7 @@
     const DEFAULT_BEST_OF = 7;
     const ROUND_BOX_WIDTH = 32;
     const ROUND_BOX_GAP = 4;
-    const DEFAULT_LINEUP_DISPLAY_MODE = 'default';
+    const DEFAULT_LINEUP_DISPLAY_MODE = 'avatar-only';
     const PESTDIV2_SLOT_SIZES = {
         default: 78,
         'avatar-only': 98
