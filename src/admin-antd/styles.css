@@ -1096,6 +1096,15 @@ a {
   min-width: 200px;
 }
 
+/* 统计口径与过渡效果两个卡片等高对齐 */
+.stage-config-cards .ant-col {
+  display: flex;
+}
+
+.stage-config-cards .ant-card {
+  flex: 1;
+}
+
 .stage-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(90, 55, 26, 0.16);

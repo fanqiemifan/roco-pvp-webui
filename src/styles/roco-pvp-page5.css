@@ -1,7 +1,24 @@
-/* 推流页面5：使用率/胜率排行 · 暖色调 + YouSheBiaoTiHei */
+/* 推流页面5：使用率/胜率排行 · 暖色调（参考 live-standby-demo）+ YouSheBiaoTiHei */
 @font-face {
     font-family: "YouSheBiaoTiHei";
     src: url("/assets/fonts/YouSheBiaoTiHei-2.ttf") format("truetype");
+    font-display: swap;
+}
+
+:root {
+    --paper: #f2ede1;
+    --paper-strong: #fbf8f0;
+    --paper-warm: #ede4d1;
+    --ink: #31291f;
+    --ink-soft: #6f6355;
+    --gold: #b6844f;
+    --gold-deep: #8f6133;
+    --green: #2f9e62;
+    --line: rgba(104, 81, 55, 0.14);
+    --line-strong: rgba(104, 81, 55, 0.22);
+    --shadow: 0 22px 48px rgba(87, 67, 46, 0.12);
+    --title-font: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    --body-font: "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 * {
@@ -16,7 +33,7 @@ body {
     height: 100%;
     overflow: hidden;
     background: transparent !important;
-    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-family: var(--body-font);
 }
 
 .page5-screen {
@@ -25,8 +42,10 @@ body {
     height: 1080px;
     overflow: hidden;
     background:
-        radial-gradient(circle at 50% 12%, #fff7e6 0%, #f6e3c3 46%, #e9c98f 100%);
-    color: #3f2b18;
+        radial-gradient(circle at top left, rgba(197, 167, 127, 0.26), transparent 26%),
+        radial-gradient(circle at right 18% top 10%, rgba(182, 132, 79, 0.12), transparent 24%),
+        linear-gradient(135deg, #f8f3e8 0%, var(--paper) 46%, #ebe2d0 100%);
+    color: var(--ink);
     display: flex;
     flex-direction: column;
     padding: 48px 96px 56px;
@@ -37,8 +56,8 @@ body {
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(120deg, rgba(255, 255, 255, 0.45) 0%, transparent 42%),
-        linear-gradient(-60deg, rgba(160, 100, 40, 0.12) 0%, transparent 55%);
+        linear-gradient(120deg, rgba(255, 255, 255, 0.4) 0%, transparent 42%),
+        linear-gradient(-60deg, rgba(182, 132, 79, 0.1) 0%, transparent 55%);
     pointer-events: none;
 }
 
@@ -53,11 +72,11 @@ body {
 }
 
 .page5-title {
-    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-family: var(--title-font);
     font-size: 92px;
     line-height: 0.9;
     letter-spacing: 2px;
-    color: #4a2e14;
+    color: var(--ink);
     text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.55);
     white-space: nowrap;
     overflow: hidden;
@@ -71,13 +90,13 @@ body {
 }
 
 .page5-badge {
-    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-family: var(--title-font);
     font-size: 46px;
-    background: linear-gradient(135deg, #a8602a, #8a3f14);
-    color: #fff;
+    background: linear-gradient(135deg, #c79a67, #a86e3d);
+    color: #fffaf2;
     padding: 8px 30px;
     border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(138, 63, 20, 0.28);
+    box-shadow: 0 14px 24px rgba(168, 110, 61, 0.22);
     transform: skewX(-6deg);
 }
 
@@ -94,6 +113,13 @@ body {
     min-height: 0;
     display: flex;
     gap: 56px;
+    padding: 26px 30px;
+    border-radius: 28px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 251, 244, 0.86)),
+        var(--paper-strong);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
 }
 
 .page5-column {
@@ -109,7 +135,7 @@ body {
     align-items: flex-end;
     height: 58px;
     padding: 0 24px 12px 116px;
-    border-bottom: 3px solid #6b4520;
+    border-bottom: 3px solid rgba(143, 97, 51, 0.32);
     margin-bottom: 12px;
 }
 
@@ -117,9 +143,9 @@ body {
     width: 190px;
     flex: none;
     text-align: center;
-    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-family: var(--title-font);
     font-size: 30px;
-    color: #6b4520;
+    color: var(--gold-deep);
     letter-spacing: 4px;
 }
 
@@ -147,26 +173,25 @@ body {
     display: flex;
     align-items: center;
     padding: 0 24px;
-    border-radius: 14px;
-    background: rgba(255, 252, 246, 0.82);
-    border: 1px solid rgba(138, 63, 20, 0.12);
-    box-shadow: 0 8px 22px rgba(120, 70, 30, 0.1);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(250, 246, 238, 0.9), rgba(240, 232, 216, 0.92));
+    border: 1px solid var(--line);
     min-height: 0;
 }
 
 .page5-row.is-top {
-    background: linear-gradient(90deg, #ffe9b8 0%, #ffd98a 100%);
-    border-color: rgba(180, 110, 30, 0.35);
-    box-shadow: 0 10px 26px rgba(200, 140, 50, 0.28);
+    background: linear-gradient(90deg, rgba(198, 162, 115, 0.28), rgba(255, 251, 244, 0.94));
+    border-color: rgba(182, 132, 79, 0.28);
+    box-shadow: 0 14px 24px rgba(182, 132, 79, 0.14);
 }
 
 .page5-rank {
     flex: none;
     width: 76px;
-    font-family: "YouSheBiaoTiHei", sans-serif;
+    font-family: var(--title-font);
     font-size: 54px;
     font-style: italic;
-    color: #5a3514;
+    color: var(--gold-deep);
     text-align: center;
     line-height: 1;
 }
@@ -211,9 +236,9 @@ body {
 .page5-data {
     flex: none;
     width: 190px;
-    font-family: "YouSheBiaoTiHei", sans-serif;
+    font-family: var(--title-font);
     font-size: 48px;
-    color: #3f2b18;
+    color: var(--ink);
     text-align: center;
     line-height: 1;
     font-variant-numeric: tabular-nums;
@@ -221,9 +246,9 @@ body {
 
 .page5-data-count {
     font-size: 42px;
-    color: #6b4520;
+    color: var(--gold-deep);
 }
 
 .page5-data-wins {
-    color: #2d7a58;
+    color: var(--green);
 }

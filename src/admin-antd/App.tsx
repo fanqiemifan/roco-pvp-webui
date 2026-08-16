@@ -2573,7 +2573,7 @@ function Dashboard() {
                   <Paragraph type="secondary" style={{ marginBottom: 0 }}>
                     推流软件（OBS 等）只需固定捕获根路径 <code>/</code>。在此切换后，推流页面会实时加载所选画面，无需修改推流来源。
                   </Paragraph>
-                  <Row gutter={[16, 16]}>
+                  <Row gutter={[16, 16]} className="stage-config-cards">
                     <Col xs={24} md={12}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
@@ -2619,13 +2619,6 @@ function Dashboard() {
                       </Card>
                     </Col>
                   </Row>
-                  <Segmented
-                    block
-                    value={stage?.page ?? 'page3'}
-                    disabled={stageSaving}
-                    options={STAGE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                    onChange={(value) => { void saveStage(value as StagePageKey); }}
-                  />
                   <Row gutter={[16, 16]}>
                     {STAGE_OPTIONS.map((option) => {
                       const active = (stage?.page ?? null) === option.value;
