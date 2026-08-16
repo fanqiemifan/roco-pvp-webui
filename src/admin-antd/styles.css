@@ -514,8 +514,8 @@ a {
 }
 
 .match-list-scroll {
-  height: calc((72px * 6) + (12px * 5));
-  max-height: calc((72px * 6) + (12px * 5));
+  height: calc((72px * 5) + (12px * 4));
+  max-height: calc((72px * 5) + (12px * 4));
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 4px;
