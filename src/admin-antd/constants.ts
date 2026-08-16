@@ -116,7 +116,7 @@ export const theme = {
     colorWarning: '#d38b2d',
     colorError: '#c24635',
     colorBgBase: '#f6efe6',
-    colorBgContainer: '#ffffff',
+    colorBgContainer: '#fbf5ec',
     colorTextBase: '#2f2418',
     colorBorder: 'rgba(91, 67, 43, 0.14)',
     borderRadius: 12,
@@ -153,10 +153,10 @@ export const theme = {
       colorFillAlter: 'rgba(255, 250, 245, 0.9)',
     },
     Table: {
-      borderColor: '#EBEEF5',
-      headerBg: '#FAFAFA',
-      headerSplitColor: '#EBEEF5',
-      rowHoverBg: '#F5F7FA',
+      borderColor: '#ece2d5',
+      headerBg: '#f7f0e8',
+      headerSplitColor: '#ece2d5',
+      rowHoverBg: '#f8f1e8',
     },
   },
 };

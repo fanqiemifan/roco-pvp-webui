@@ -169,7 +169,7 @@ export function StatsView({
       title: <StatsColumnTitle text="登场只次" tip="登场只次 = 精灵在局内阵容中出现的次数（同名精灵同局重复携带按只次逐只计）" />,
       dataIndex: 'picks',
       key: 'picks',
-      width: 96,
+      width: 128,
       align: 'right',
       showSorterTooltip: false,
       sorter: (a, b) => a.picks - b.picks,
@@ -178,7 +178,7 @@ export function StatsView({
       title: <StatsColumnTitle text="登场场次" tip="登场场次 = 精灵登场的场次数（同局同侧重复携带同名精灵只计 1 次）" />,
       dataIndex: 'games',
       key: 'games',
-      width: 96,
+      width: 128,
       align: 'right',
       showSorterTooltip: false,
       sorter: (a, b) => a.games - b.games,
@@ -202,7 +202,7 @@ export function StatsView({
     {
       title: <StatsColumnTitle text="趋势" tip="趋势 = 本周期登场场次 − 上一等长周期登场场次（范围选择“全部”时不显示）" />,
       key: 'trend',
-      width: 80,
+      width: 96,
       align: 'center',
       render: (_: unknown, record: SpriteUsageRow) => (
         record.trendDelta > 0 ? (
