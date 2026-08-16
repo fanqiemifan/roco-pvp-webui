@@ -116,12 +116,17 @@
         return el;
     }
 
+    let menuPopupWindow = null;
+
     function openSpriteMenu(side, slotIndex) {
         if (window.rocoFloat && typeof window.rocoFloat.openMenu === 'function') {
             window.rocoFloat.openMenu({ side, slot: slotIndex });
             return;
         }
-        window.open(
+        if (menuPopupWindow && !menuPopupWindow.closed) {
+            menuPopupWindow.close();
+        }
+        menuPopupWindow = window.open(
             `/float-menu.html?side=${encodeURIComponent(side)}&slot=${encodeURIComponent(String(slotIndex))}`,
             '_blank',
             'width=360,height=180,popup=yes',
