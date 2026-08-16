@@ -2496,7 +2496,7 @@ function Dashboard() {
               <Card title="显示设置">
                 <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
                   <Row gutter={[16, 16]}>
-                    <Col xs={24} md={12} xl={8}>
+                    <Col xs={24} md={12} xl={12}>
                       <Card size="small" className="subtle-card" title="比分栏显示">
                         <Space direction="vertical" size={14} className="control-stack">
                           <Form.Item label="顶部比分栏显示" name="scoreboardEnabled" valuePropName="checked">
@@ -2505,7 +2505,7 @@ function Dashboard() {
                         </Space>
                       </Card>
                     </Col>
-                    <Col xs={24} md={12} xl={8}>
+                    <Col xs={24} md={12} xl={12}>
                       <Card size="small" className="subtle-card" title="文字与页面2">
                         <Space direction="vertical" size={14} className="control-stack">
                           <Form.Item label="页面2赛事标题显示" name="eventTitleEnabled" valuePropName="checked">
@@ -2528,51 +2528,6 @@ function Dashboard() {
                           <Form.Item label="比分字号" name="scoreFontSize">
                             <InputNumber min={12} max={160} className="full-width-number" />
                           </Form.Item>
-                        </Space>
-                      </Card>
-                    </Col>
-                    <Col xs={24} xl={8}>
-                      <Card size="small" className="subtle-card" title="页面3头像">
-                        <Space direction="vertical" size={16} className="control-stack">
-                          {!activeMatch ? (
-                            <Alert showIcon type="warning" message="请先创建或选择一场赛事，再设置头像" />
-                          ) : null}
-                          {(['left', 'right'] as PanelSide[]).map((side) => {
-                            const avatar = avatars[side];
-                            const previewSrc = avatar.exists
-                              ? `${avatar.path}?t=${avatar.mtime ?? Date.now()}`
-                              : side === 'left'
-                                ? '/assets/ui/left-avatar.png'
-                                : '/assets/ui/right-avatar.png';
-
-                            return (
-                              <Card key={side} size="small" className="avatar-card">
-                                <Space direction="vertical" size={12} className="control-stack">
-                                  <Text strong>
-                                    {side === 'left' ? '左侧头像' : '右侧头像'}
-                                    {activeMatch ? `（${activeMatch.leftPlayer || side === 'left' ? activeMatch.leftPlayer || '左侧' : activeMatch.rightPlayer || '右侧'}）` : ''}
-                                  </Text>
-                                  <Image preview={false} src={previewSrc} className="avatar-preview-image" />
-                                  <Space wrap>
-                                    <Upload
-                                      showUploadList={false}
-                                      beforeUpload={(file) => {
-                                        if (!activeMatch) {
-                                          message.warning('请先创建或选择一场赛事');
-                                          return false;
-                                        }
-                                        void uploadAvatarFile(side, file as File);
-                                        return false;
-                                      }}
-                                    >
-                                      <Button disabled={!activeMatch}>选择头像</Button>
-                                    </Upload>
-                                    <Button danger disabled={!activeMatch} onClick={() => void deleteAvatarFile(side)}>删除</Button>
-                                  </Space>
-                                </Space>
-                              </Card>
-                            );
-                          })}
                         </Space>
                       </Card>
                     </Col>
