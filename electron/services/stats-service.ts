@@ -9,6 +9,9 @@ export type Page5StatsRange = 'today' | '7d' | '30d' | 'all';
 export type StatsRankingRow = {
   key: string;
   name: string;
+  cardName: string;
+  displayName: string;
+  filename: string;
   spritePath: string;
   thumbnailId: string;
   picks: number;
@@ -55,6 +58,13 @@ function spriteDisplayName(sprite: unknown): string {
     ?? record.filename
     ?? '',
   ).trim();
+}
+
+function spriteField(sprite: unknown, key: string): string {
+  if (!sprite || typeof sprite !== 'object') {
+    return '';
+  }
+  return String((sprite as Record<string, unknown>)[key] ?? '').trim();
 }
 
 /**
@@ -124,6 +134,9 @@ export function getSpriteRanking(
     rows.push({
       key,
       name: sprite ? spriteDisplayName(sprite) : basename(key),
+      cardName: sprite ? spriteField(sprite, 'cardName') : '',
+      displayName: sprite ? spriteField(sprite, 'displayName') : '',
+      filename: sprite ? basename(spriteField(sprite, 'filename') || spriteField(sprite, 'id')) : '',
       spritePath: sprite ? sprite.path : '',
       thumbnailId: sprite ? sprite.thumbnailId : '',
       picks: entry.picks,

@@ -37,7 +37,14 @@
         if (!thumbnailId) {
             return [];
         }
-        const candidateNames = [row && row.name].filter(Boolean).map((name) => sanitizeFilenameSegment(name));
+        const candidateNames = [
+            row && row.cardName,
+            row && row.displayName,
+            row && row.name,
+            row && row.filename ? basename(row.filename) : '',
+        ]
+            .map((value) => sanitizeFilenameSegment(value))
+            .filter(Boolean);
         return Array.from(new Set(candidateNames)).map((name) => `${THUMBNAIL_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
     }
 
