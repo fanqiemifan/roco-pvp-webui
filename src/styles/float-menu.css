@@ -187,13 +187,13 @@ body {
     border-color: #e6b34e;
 }
 
-/* 固定为 4 列 × 1 行可见（4 个精灵），超出横向/纵向滚动 */
+/* 精灵网格：随窗口大小自适应列数与行数，超出纵向滚动 */
 .picker-grid {
-    flex: none;
+    flex: 1;
+    min-height: 0;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
     gap: 4px;
-    max-height: 56px;
     overflow-x: hidden;
     overflow-y: auto;
     align-content: start;
