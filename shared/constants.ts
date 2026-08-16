@@ -6,7 +6,7 @@ export const DEFAULT_SATURATION = 1.0;
 export const DEFAULT_HEALTH_PERCENT = 100;
 export const DEFAULT_ENERGY_VALUE = 10;
 export const DEFAULT_BEST_OF = 7;
-export const DEFAULT_EVENT_TITLE = 'S2洛克联赛';
+export const DEFAULT_EVENT_TITLE = '';
 export const SUPPORTED_IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
 export const SUPPORTED_BEST_OF = new Set([1, 3, 5, 7]);
 

@@ -3,7 +3,7 @@
 
     const MAX_SLOTS = 6;
     const SPIRIT_INDEX_URL = '/resources/data/sprites.json';
-    const DEFAULT_EVENT_TITLE = 'S2洛克联赛';
+    const DEFAULT_EVENT_TITLE = '';
     const DEFAULT_BEST_OF = 7;
     const ROUND_BOX_WIDTH = 32;
     const ROUND_BOX_GAP = 4;
@@ -647,8 +647,9 @@
         document.getElementById('matchScore').textContent = buildScoreValue(data);
         const eventTitleEl = document.getElementById('eventTitle');
         const eventTitleEnabled = data.eventTitleEnabled !== false;
-        eventTitleEl.textContent = data.eventTitle || DEFAULT_EVENT_TITLE;
-        eventTitleEl.style.display = eventTitleEnabled ? '' : 'none';
+        const eventTitleText = data.eventTitle || DEFAULT_EVENT_TITLE;
+        eventTitleEl.textContent = eventTitleText;
+        eventTitleEl.style.display = eventTitleEnabled && eventTitleText ? '' : 'none';
 
         updateRoundBoxes(
             document.querySelector('.player-summary-left .player-rounds'),
