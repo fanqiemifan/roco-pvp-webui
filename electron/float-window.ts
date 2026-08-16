@@ -7,8 +7,8 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const FLOAT_WINDOW_WIDTH = 900;
-const FLOAT_WINDOW_HEIGHT = 118;
+const FLOAT_WINDOW_WIDTH = 782;
+const FLOAT_WINDOW_HEIGHT = 74;
 const DEFAULT_FLOAT_SHAPE = { x: 0, y: 0, width: FLOAT_WINDOW_WIDTH, height: FLOAT_WINDOW_HEIGHT };
 
 let floatWindow: BrowserWindow | null = null;

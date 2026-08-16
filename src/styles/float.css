@@ -1,4 +1,4 @@
-/* 阵容悬浮窗样式：Electron 透明无边框置顶窗口 */
+/* 阵容悬浮窗样式：复用 roco-pvp-page1 的 lineup-all-div 设计 + 透明窗口框架 */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -15,133 +15,49 @@ body {
     user-select: none;
 }
 
-/* 舞台：整个区域可拖动窗口，占满窗口避免出现透明边角 */
+/* 舞台：与 lineup-all-div 等大（782×74），整块可拖动窗口 */
 .float-stage {
     -webkit-app-region: drag;
     position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    gap: 12px;
-    padding: 8px 12px;
-    border-radius: 12px;
-    background: rgba(34, 25, 16, 0.94);
-    border: 1px solid rgba(255, 235, 205, 0.16);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    overflow: hidden;
+    width: 782px;
+    height: 74px;
 }
 
-.float-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1;
-    min-width: 0;
-}
-
-.float-panel-title {
-    color: rgba(255, 235, 205, 0.72);
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-align: center;
-}
-
-.float-slots {
-    display: flex;
-    gap: 8px;
-    flex: 1;
-}
-
-.float-slot {
-    -webkit-app-region: no-drag;
-    position: relative;
-    flex: 1;
-    min-width: 0;
-    padding: 0;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    border-radius: 9px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    cursor: pointer;
-    overflow: hidden;
-    transition: transform 0.08s ease, background 0.15s ease;
-}
-
-.float-slot:hover {
-    background: rgba(255, 255, 255, 0.18);
-    transform: translateY(-1px);
-}
-
-.float-slot:active {
-    transform: scale(0.96);
-}
-
-.float-slot.is-empty {
-    cursor: default;
-    opacity: 0.38;
-}
-
-.float-slot img {
-    width: 42px;
-    height: 42px;
-    object-fit: contain;
-    border-radius: 6px;
-    pointer-events: none;
-}
-
-.float-slot-name {
-    max-width: 100%;
-    font-size: 10px;
-    line-height: 1.2;
-    color: rgba(255, 255, 255, 0.9);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    pointer-events: none;
-}
-
-/* 阵亡状态：灰度 + 红色遮罩 */
-.float-slot.is-dead {
-    opacity: 0.6;
-}
-
-.float-slot.is-dead img {
-    filter: grayscale(1);
-}
-
-.float-slot.is-dead::after {
-    content: "阵亡";
+/* 覆盖 roco-pvp-page4.css 中针对 1920×1080 舞台的定位，直接铺满悬浮窗 */
+.float-stage .lineup-all-div {
     position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: #ffe3de;
-    background: rgba(190, 46, 34, 0.38);
-    pointer-events: none;
+    left: 0;
+    top: 0;
+    bottom: auto;
+    transform: none;
+    width: 782px;
+    height: 74px;
+}
+
+/* 精灵槽可点击阵亡，需排除在拖动区域外 */
+.float-stage .petsdiv3 {
+    -webkit-app-region: no-drag;
+    cursor: pointer;
+}
+
+.float-stage .petsdiv3.is-empty {
+    cursor: default;
 }
 
 /* 关闭按钮 */
 .float-close {
     -webkit-app-region: no-drag;
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: 3px;
+    right: 3px;
     z-index: 10;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border: none;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.16);
-    color: #fff;
-    font-size: 14px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.85);
+    color: #6b4a20;
+    font-size: 12px;
     line-height: 1;
     cursor: pointer;
     padding: 0;

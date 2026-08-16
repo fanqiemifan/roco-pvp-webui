@@ -4,17 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>阵容悬浮窗</title>
+    <link rel="stylesheet" href="/styles/roco-pvp-page4.css">
     <link rel="stylesheet" href="/styles/float.css">
 </head>
 <body>
     <main id="floatStage" class="float-stage">
-        <section class="float-panel float-panel-left">
-            <div class="float-panel-title">左侧阵容</div>
-            <div class="float-slots" data-side="left"></div>
-        </section>
-        <section class="float-panel float-panel-right">
-            <div class="float-panel-title">右侧阵容</div>
-            <div class="float-slots" data-side="right"></div>
+        <section class="lineup-all-div" aria-label="双方阵容展示">
+            <div class="lineup-bg lineup-bg-left" aria-hidden="true"></div>
+            <div class="lineup-outline" aria-hidden="true"></div>
+            <section class="lineup lineup-left" aria-label="左侧阵容"></section>
+            <section class="lineup lineup-right" aria-label="右侧阵容"></section>
         </section>
         <button id="floatCloseBtn" class="float-close" type="button" title="关闭悬浮窗">×</button>
     </main>

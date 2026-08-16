@@ -2,6 +2,7 @@
     'use strict';
 
     const MAX_SLOTS = 6;
+    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
     const FALLBACK_IMG = '/assets/ui/back.png';
 
     const state = {
@@ -11,65 +12,134 @@
     };
 
     const stage = document.getElementById('floatStage');
+    const lineupDiv = document.querySelector('.lineup-all-div');
     const closeBtn = document.getElementById('floatCloseBtn');
-    const slotContainers = {
-        left: document.querySelector('.float-slots[data-side="left"]'),
-        right: document.querySelector('.float-slots[data-side="right"]'),
+    const lineupSections = {
+        left: document.querySelector('.lineup-left'),
+        right: document.querySelector('.lineup-right'),
     };
 
-    function spriteName(sprite) {
+    const unavailableThumbnailPaths = new Set();
+
+    function basename(value) {
+        return String(value || '').split('/').filter(Boolean).pop() || '';
+    }
+
+    function sanitizeFilenameSegment(value, fallback = '') {
+        const normalized = String(value ?? '')
+            .normalize('NFC')
+            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
+            .replace(/\s+/g, '')
+            .replace(/\.+$/g, '')
+            .trim();
+        return normalized || fallback;
+    }
+
+    function getSpriteDisplayName(sprite) {
         if (!sprite || typeof sprite !== 'object') {
             return '';
         }
-        return String(sprite.displayName || sprite.chineseName || sprite.cardName || sprite.name || '').trim();
+        return String(sprite.cardName || sprite.displayName || sprite.chineseName || sprite.name || basename(sprite.path) || '').trim();
+    }
+
+    function buildThumbnailCandidates(sprite) {
+        const thumbnailId = String(sprite && sprite.thumbnailId ? sprite.thumbnailId : '').trim();
+        if (!thumbnailId) {
+            return [];
+        }
+        const candidateNames = [
+            sprite && sprite.cardName,
+            sprite && sprite.displayName,
+            sprite && sprite.chineseName,
+            sprite && sprite.name,
+            sprite && sprite.path ? basename(sprite.path) : '',
+        ]
+            .map((value) => sanitizeFilenameSegment(value))
+            .filter(Boolean);
+        return Array.from(new Set(candidateNames)).map((name) => `${THUMBNAIL_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
+    }
+
+    function applySpriteImage(imgEl, sprite) {
+        const fallbackSrc = sprite && sprite.path ? String(sprite.path) : '';
+        const thumbnailCandidates = buildThumbnailCandidates(sprite).filter((path) => !unavailableThumbnailPaths.has(path));
+        const sourceQueue = [...thumbnailCandidates, ...(fallbackSrc ? [fallbackSrc] : [])];
+
+        if (sourceQueue.length === 0) {
+            imgEl.removeAttribute('src');
+            imgEl.onerror = null;
+            return;
+        }
+
+        const imageSignature = JSON.stringify(sourceQueue);
+        if (imgEl.dataset.imageSignature === imageSignature) {
+            return;
+        }
+
+        imgEl.dataset.imageSignature = imageSignature;
+        let currentIndex = 0;
+
+        const assignNext = () => {
+            imgEl.dataset.currentSrc = sourceQueue[currentIndex];
+            imgEl.src = sourceQueue[currentIndex];
+        };
+
+        imgEl.onerror = () => {
+            const failedSrc = imgEl.dataset.currentSrc || '';
+            if (failedSrc.startsWith(THUMBNAIL_RESOURCE_BASE)) {
+                unavailableThumbnailPaths.add(failedSrc);
+            }
+            currentIndex += 1;
+            if (currentIndex >= sourceQueue.length) {
+                imgEl.onerror = null;
+                imgEl.src = FALLBACK_IMG;
+                return;
+            }
+            assignNext();
+        };
+
+        assignNext();
     }
 
     function buildSlotEl(side, index) {
-        const el = document.createElement('button');
-        el.type = 'button';
-        el.className = 'float-slot is-empty';
-        el.innerHTML = '<img alt="" /><span class="float-slot-name"></span>';
+        const el = document.createElement('div');
+        el.className = 'petsdiv3 is-empty';
+        el.dataset.side = side;
+        el.dataset.slot = String(index);
+        el.innerHTML = '<img alt="" />';
         el.addEventListener('click', () => {
             void toggleDead(side, index);
         });
         return el;
     }
 
+    function renderSlot(slotEl, slotData) {
+        const sprite = slotData && slotData.sprite ? slotData.sprite : null;
+        const isDead = Boolean(sprite && Number(slotData.healthPercent) <= 0);
+
+        slotEl.classList.toggle('is-active', Boolean(sprite));
+        slotEl.classList.toggle('is-empty', !sprite);
+        slotEl.classList.toggle('is-dead', isDead);
+
+        const imgEl = slotEl.querySelector('img');
+        if (sprite) {
+            imgEl.alt = getSpriteDisplayName(sprite);
+            applySpriteImage(imgEl, sprite);
+            slotEl.title = `${getSpriteDisplayName(sprite)}（点击${isDead ? '复活' : '阵亡'}）`;
+        } else {
+            imgEl.removeAttribute('src');
+            imgEl.onerror = null;
+            imgEl.alt = '';
+            slotEl.title = '';
+        }
+    }
+
     function renderPanel(side) {
         const panel = state[side];
-        const container = slotContainers[side];
+        const section = lineupSections[side];
         const selected = panel && Array.isArray(panel.selected) ? panel.selected : [];
-        const slotEls = container.children;
 
         for (let index = 0; index < MAX_SLOTS; index += 1) {
-            const slotEl = slotEls[index];
-            const slotData = selected[index] || null;
-            const sprite = slotData && slotData.sprite ? slotData.sprite : null;
-            const imgEl = slotEl.querySelector('img');
-            const nameEl = slotEl.querySelector('.float-slot-name');
-
-            slotEl.classList.toggle('is-empty', !sprite);
-            slotEl.classList.toggle('is-dead', Boolean(sprite && Number(slotData.healthPercent) <= 0));
-
-            if (sprite) {
-                const name = spriteName(sprite);
-                imgEl.alt = name;
-                if (imgEl.src !== sprite.path) {
-                    imgEl.src = sprite.path || FALLBACK_IMG;
-                }
-                imgEl.onerror = () => {
-                    if (imgEl.src !== FALLBACK_IMG) {
-                        imgEl.src = FALLBACK_IMG;
-                    }
-                };
-                nameEl.textContent = name;
-                slotEl.title = `${name}（点击${Number(slotData.healthPercent) <= 0 ? '复活' : '阵亡'}）`;
-            } else {
-                imgEl.removeAttribute('src');
-                imgEl.onerror = null;
-                nameEl.textContent = '空位';
-                slotEl.title = '';
-            }
+            renderSlot(section.children[index], selected[index] || null);
         }
     }
 
@@ -158,7 +228,7 @@
         if (!window.rocoFloat || typeof window.rocoFloat.reportShape !== 'function') {
             return;
         }
-        const rect = stage.getBoundingClientRect();
+        const rect = lineupDiv.getBoundingClientRect();
         window.rocoFloat.reportShape({
             x: Math.floor(rect.left),
             y: Math.floor(rect.top),
@@ -168,11 +238,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        slotContainers.left.innerHTML = '';
-        slotContainers.right.innerHTML = '';
         for (let index = 0; index < MAX_SLOTS; index += 1) {
-            slotContainers.left.appendChild(buildSlotEl('left', index));
-            slotContainers.right.appendChild(buildSlotEl('right', index));
+            lineupSections.left.appendChild(buildSlotEl('left', index));
+            lineupSections.right.appendChild(buildSlotEl('right', index));
         }
         connectSocket();
         window.requestAnimationFrame(() => {
