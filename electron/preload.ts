@@ -34,6 +34,12 @@ const rocoFloat = {
   reportShape(rect: { x: number; y: number; width: number; height: number }) {
     ipcRenderer.send('float:shape', rect);
   },
+  openMenu(payload: { side: string; slot: number }) {
+    ipcRenderer.send('float:menu', payload);
+  },
+  closeMenu() {
+    ipcRenderer.send('float:menu-close');
+  },
 };
 
 contextBridge.exposeInMainWorld('rocoDesktop', rocoDesktop);

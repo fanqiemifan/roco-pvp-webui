@@ -1,0 +1,237 @@
+/* 更换精灵浮窗：独立小窗，深色主题 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+    font-family: "Microsoft YaHei", "PingFang SC", "Avenir Next", sans-serif;
+    user-select: none;
+}
+
+.view {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    background: rgba(52, 38, 24, 0.98);
+    border: 1px solid rgba(255, 235, 205, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+}
+
+/* ---------- 形态菜单 ---------- */
+.menu-view {
+    padding: 8px;
+    gap: 6px;
+}
+
+.menu-title {
+    flex: none;
+    padding: 2px 6px;
+    font-size: 12px;
+    color: #e6b34e;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.menu-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.menu-section {
+    padding: 6px 6px 2px;
+    font-size: 10px;
+    color: rgba(255, 235, 205, 0.6);
+    letter-spacing: 1px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #fff;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.menu-item img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 5px;
+    flex: none;
+}
+
+.menu-item-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.menu-item-form {
+    flex: none;
+    font-size: 10px;
+    color: rgba(255, 235, 205, 0.65);
+    border: 1px solid rgba(255, 235, 205, 0.25);
+    border-radius: 5px;
+    padding: 0 6px;
+}
+
+.menu-hint {
+    padding: 8px 6px;
+    font-size: 12px;
+    color: rgba(255, 235, 205, 0.5);
+}
+
+.menu-footer {
+    flex: none;
+}
+
+.menu-primary-btn {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #d9a234;
+    border-radius: 9px;
+    background: #e6b34e;
+    color: #4a3410;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.menu-primary-btn:hover {
+    background: #f0c96b;
+}
+
+/* ---------- 全新精灵选择器 ---------- */
+.picker-view {
+    padding: 6px;
+    gap: 6px;
+}
+
+.picker-head {
+    flex: none;
+    display: flex;
+    gap: 5px;
+}
+
+.picker-back {
+    flex: none;
+    width: 28px;
+    height: 26px;
+    border: none;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+
+.picker-back:hover {
+    background: rgba(255, 255, 255, 0.26);
+}
+
+.picker-search {
+    flex: 1;
+    min-width: 0;
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 235, 205, 0.22);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+}
+
+.picker-search::placeholder {
+    color: rgba(255, 235, 205, 0.45);
+}
+
+.picker-search:focus {
+    border-color: #e6b34e;
+}
+
+.picker-grid {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    align-content: start;
+}
+
+.picker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 5px 2px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+}
+
+.picker-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.picker-item img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    border-radius: 5px;
+    pointer-events: none;
+}
+
+.picker-item span {
+    max-width: 100%;
+    font-size: 10px;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+}
+
+.picker-empty {
+    grid-column: 1 / -1;
+    padding: 24px 0;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255, 235, 205, 0.5);
+}

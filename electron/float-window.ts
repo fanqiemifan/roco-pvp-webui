@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, screen } from 'electron';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,10 +10,14 @@ const __dirname = path.dirname(__filename);
 const FLOAT_WINDOW_WIDTH = 782;
 const FLOAT_WINDOW_HEIGHT = 74;
 const DEFAULT_FLOAT_SHAPE = { x: 0, y: 0, width: FLOAT_WINDOW_WIDTH, height: FLOAT_WINDOW_HEIGHT };
+const FLOAT_MENU_WIDTH = 340;
+const FLOAT_MENU_HEIGHT = 460;
 
 let floatWindow: BrowserWindow | null = null;
+let floatMenuWindow: BrowserWindow | null = null;
 let floatShapeSet = false;
 let registered = false;
+let getServerPort: () => number = () => 0;
 
 function floatPosFile(): string {
   return path.join(app.getPath('userData'), 'float-window-pos.json');
@@ -108,6 +112,7 @@ function createFloatWindow(getPort: () => number): BrowserWindow {
 
   floatWindow.on('closed', () => {
     floatWindow = null;
+    closeFloatMenuWindow();
   });
 
   floatShapeSet = false;
@@ -147,14 +152,82 @@ function closeFloatWindow(): void {
   }
 }
 
+function closeFloatMenuWindow(): void {
+  if (floatMenuWindow && !floatMenuWindow.isDestroyed()) {
+    floatMenuWindow.close();
+  }
+  floatMenuWindow = null;
+}
+
+function openFloatMenuWindow(payload: { side: string; slot: number }): void {
+  if (payload.side !== 'left' && payload.side !== 'right') {
+    return;
+  }
+  const slot = Number.parseInt(String(payload.slot), 10);
+  if (!Number.isInteger(slot) || slot < 0 || slot >= 6) {
+    return;
+  }
+
+  closeFloatMenuWindow();
+
+  const parentBounds = floatWindow && !floatWindow.isDestroyed() ? floatWindow.getBounds() : null;
+  const display = parentBounds
+    ? screen.getDisplayMatching(parentBounds)
+    : screen.getPrimaryDisplay();
+  const area = display.workArea;
+
+  let x = parentBounds ? parentBounds.x + parentBounds.width + 4 : area.x + 60;
+  let y = parentBounds ? parentBounds.y : area.y + 60;
+  x = Math.max(area.x, Math.min(x, area.x + area.width - FLOAT_MENU_WIDTH));
+  y = Math.max(area.y, Math.min(y, area.y + area.height - FLOAT_MENU_HEIGHT));
+
+  floatMenuWindow = new BrowserWindow({
+    width: FLOAT_MENU_WIDTH,
+    height: FLOAT_MENU_HEIGHT,
+    x,
+    y,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    alwaysOnTop: true,
+    resizable: false,
+    maximizable: false,
+    minimizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    hasShadow: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  floatMenuWindow.setAlwaysOnTop(true, 'screen-saver');
+  void floatMenuWindow
+    .loadURL(`http://127.0.0.1:${getServerPort()}/float-menu.html?side=${encodeURIComponent(payload.side)}&slot=${slot}`)
+    .catch((error) => {
+      console.error('Failed to open float menu window:', error);
+      closeFloatMenuWindow();
+    });
+  floatMenuWindow.on('closed', () => {
+    floatMenuWindow = null;
+  });
+}
+
 export function registerFloatWindow(getPort: () => number): void {
   if (registered) {
     return;
   }
   registered = true;
+  getServerPort = getPort;
 
   ipcMain.on('float:toggle', () => toggleFloatWindow(getPort));
   ipcMain.on('float:close', () => closeFloatWindow());
+  ipcMain.on('float:menu-close', () => closeFloatMenuWindow());
+  ipcMain.on('float:menu', (_event, payload) => {
+    openFloatMenuWindow(payload);
+  });
   ipcMain.on('float:shape', (event, rect) => {
     if (!floatWindow || floatWindow.isDestroyed() || event.sender !== floatWindow.webContents) {
       return;

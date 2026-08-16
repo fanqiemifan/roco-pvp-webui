@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更换精灵</title>
+    <link rel="stylesheet" href="/styles/float-menu.css">
+</head>
+<body>
+    <div id="menuView" class="view menu-view">
+        <div id="menuTitle" class="menu-title"></div>
+        <div id="menuBody" class="menu-body"></div>
+        <div class="menu-footer">
+            <button id="openPickerBtn" class="menu-primary-btn" type="button">更换一只全新精灵…</button>
+        </div>
+    </div>
+
+    <div id="pickerView" class="view picker-view" hidden>
+        <div class="picker-head">
+            <button id="backBtn" class="picker-back" type="button" title="返回">←</button>
+            <input id="searchInput" class="picker-search" type="text" placeholder="搜索精灵…" spellcheck="false" />
+        </div>
+        <div id="pickerGrid" class="picker-grid"></div>
+    </div>
+
+    <script src="/scripts/float-menu.js"></script>
+</body>
+</html>

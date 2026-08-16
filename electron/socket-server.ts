@@ -261,6 +261,7 @@ export async function createLocalServer(
   app.get('/live-standby-demo.html', (_request, response) => sendPage(paths, response, 'live-standby-demo.html'));
   app.get('/roco-pvp-page1.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page1.html'));
   app.get('/float.html', (_request, response) => sendPage(paths, response, 'float.html'));
+  app.get('/float-menu.html', (_request, response) => sendPage(paths, response, 'float-menu.html'));
 
   // Auth API — always public
   app.post('/api/auth/login', async (req, res) => {
@@ -312,7 +313,7 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/live-standby-demo.html', '/float.html'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/live-standby-demo.html', '/float.html', '/float-menu.html'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 

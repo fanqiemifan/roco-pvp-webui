@@ -95,6 +95,8 @@ declare global {
       toggle?: () => void;
       close?: () => void;
       reportShape?: (rect: { x: number; y: number; width: number; height: number }) => void;
+      openMenu?: (payload: { side: string; slot: number }) => void;
+      closeMenu?: () => void;
     };
     showOpenFilePicker?: (options?: unknown) => Promise<Array<{ getFile: () => Promise<File>; queryPermission?: (options?: unknown) => Promise<string>; requestPermission?: (options?: unknown) => Promise<string>; createWritable?: () => Promise<{ write: (text: string) => Promise<void>; close: () => Promise<void> }> }>>;
     showSaveFilePicker?: (options?: unknown) => Promise<{ getFile: () => Promise<File>; queryPermission?: (options?: unknown) => Promise<string>; requestPermission?: (options?: unknown) => Promise<string>; createWritable: () => Promise<{ write: (text: string) => Promise<void>; close: () => Promise<void> }> }>;
