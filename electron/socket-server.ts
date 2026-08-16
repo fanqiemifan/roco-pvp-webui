@@ -755,7 +755,7 @@ export async function createLocalServer(
     }
   });
 
-  app.post('/api/upload/avatar/:side', upload.single('file'), (request, response) => {
+  app.post('/api/upload/avatar/:side', upload.single('file'), async (request, response) => {
     const side = request.params.side;
     if (side !== 'left' && side !== 'right') {
       response.status(400).json({ success: false, error: 'Invalid avatar side' });
@@ -768,8 +768,9 @@ export async function createLocalServer(
 
     try {
       // saveAvatar now validates the payload's magic bytes and only accepts
-      // real raster images, so HTML/etc. payloads are rejected before storage.
-      const avatar = saveAvatar(paths, side, request.file.buffer);
+      // real raster images, then resizes/compresses to a square PNG, so
+      // HTML/etc. payloads are rejected before storage.
+      const avatar = await saveAvatar(paths, side, request.file.buffer);
       io.emit(SOCKET_EVENTS.avatarUpdate, { side, avatar, avatars: getAvatarStates(paths) });
       response.json({ success: true, side, avatar });
     } catch (error) {

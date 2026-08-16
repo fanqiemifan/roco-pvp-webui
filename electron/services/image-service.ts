@@ -1,7 +1,13 @@
 import fs from 'node:fs';
 
+import sharp from 'sharp';
+
 import type { AvatarCollectionState, AvatarState } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
+
+// 上传头像统一缩放并压缩到该尺寸（64/72px 圆形显示，2x 兼顾高清屏）
+const AVATAR_OUTPUT_SIZE = 128;
+const AVATAR_OUTPUT_MIME = 'image/png';
 
 export function ensureRuntimeDirs(paths: AppPaths): void {
   fs.mkdirSync(paths.runtimeDir, { recursive: true });
@@ -95,7 +101,7 @@ export function getAvatarStates(paths: AppPaths): AvatarCollectionState {
   };
 }
 
-export function saveAvatar(paths: AppPaths, side: AvatarSide, buffer: Buffer, _mimeType?: string): AvatarState {
+export async function saveAvatar(paths: AppPaths, side: AvatarSide, buffer: Buffer, _mimeType?: string): Promise<AvatarState> {
   // Authoritative validation based on the actual file content, never on the
   // client-supplied mimetype. Non-image payloads are rejected outright so they
   // can never be stored and later served back with a controllable Content-Type.
@@ -105,10 +111,17 @@ export function saveAvatar(paths: AppPaths, side: AvatarSide, buffer: Buffer, _m
   }
 
   ensureRuntimeDirs(paths);
-  fs.writeFileSync(avatarFilePath(paths, side), buffer);
+  // 等比缩放并裁剪为正方形头像，统一压缩为 PNG 落盘
+  const resized = await sharp(buffer)
+    .rotate()
+    .resize(AVATAR_OUTPUT_SIZE, AVATAR_OUTPUT_SIZE, { fit: 'cover' })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+
+  fs.writeFileSync(avatarFilePath(paths, side), resized);
   fs.writeFileSync(
     avatarMetaFilePath(paths, side),
-    JSON.stringify({ mimeType: detectedMimeType }, null, 2),
+    JSON.stringify({ mimeType: AVATAR_OUTPUT_MIME }, null, 2),
     'utf-8',
   );
   return getAvatarState(paths, side);
