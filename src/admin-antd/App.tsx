@@ -31,6 +31,7 @@ import {
   Switch,
   Table,
   Tag,
+  Timeline,
   Typography,
   Upload,
 } from 'antd';
@@ -134,6 +135,50 @@ import type {
 const { Header, Sider, Content } = Layout;
 const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
+
+const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
+  {
+    version: '1.5.1',
+    date: '2026-08',
+    items: [
+      '新增桌面阵容悬浮窗：透明置顶小窗实时展示双方阵容，点击精灵可设置阵亡（HP=0）/复活，悬浮时显示关闭按钮',
+      '右键精灵可按文件名基名匹配同系列多形态（如 岚鸟-1/-2）并一键切换，或打开更换精灵小窗；更换窗自动定位到精灵上方、更换后自动关闭、同时仅保留一个',
+      '数据统计增强：属性分布胶囊化并显示属性图标；使用率/上场率/登场只次/登场场次/趋势列头悬浮说明口径；前三名金/银/铜徽章；表格白底 + 淡色表头 + 细腻分割线',
+      '配置 antd 中文 locale，内置文本（如“点击排序”）本地化',
+      '修复：缩略图文件名零宽空格导致霹雳迪迪未使用缩略图；多形态列表显示精灵原始名称（如 卡瓦重（草地附近的样子））',
+    ],
+  },
+  {
+    version: '1.5.0',
+    date: '',
+    items: [
+      '新增直播推流（导播台）：实时 iframe 缩略预览、页面切换、百叶窗/缩放冲击过渡动效、黑场/等待页',
+      '推流页面 1 改为 page4 式阵容展示并使用赛事面板数据',
+      '头像上传增加魔数校验，杜绝同源存储型 XSS',
+      '内置 Alibaba PuHuiTi 2.0 字体，修复精灵名字依赖系统字体导致变形',
+    ],
+  },
+  {
+    version: '1.4.0',
+    date: '',
+    items: [
+      '管理后台重构：拆分 App.tsx，纯逻辑下沉 lib/、常量类型独立、视图组件化',
+      '新增数据统计页：按赛事历史聚合精灵使用率/上场率/胜率/属性分布/登场趋势',
+      '比赛历史支持 CSV 导出，阵容精灵名统一使用 sprites.json 精灵名称',
+      '新增页面4（仅显阵容）与快速填充阵容功能',
+    ],
+  },
+  {
+    version: '1.3.0',
+    date: '',
+    items: [
+      '赛事管理：创建赛事、BO 赛制、逐小局记录胜负、撤销/重做、历史与删除',
+      '阵容编辑：左右两侧独立配置，调节血量/能量/透明度/饱和度，精灵筛选（属性/形态/最终形态）',
+      '推流页面 2 / 3 与赛事标题、比分栏、头像设置',
+      '新增后台账号密码登录验证与单会话管理',
+    ],
+  },
+];
 
 function Dashboard() {
   const { message, modal } = App.useApp();
@@ -2590,6 +2635,28 @@ function Dashboard() {
                           </Card>
                         </Col>
                       </Row>
+                      <Card size="small" className="subtle-card" title="更新日志">
+                        <Timeline
+                          items={CHANGELOG.map((entry) => ({
+                            color: entry.version === '1.5.1' ? 'gold' : 'gray',
+                            children: (
+                              <Space direction="vertical" size={4}>
+                                <Space wrap>
+                                  <Text strong>v{entry.version}</Text>
+                                  {entry.date ? <Text type="secondary">{entry.date}</Text> : null}
+                                </Space>
+                                <ul className="changelog-list">
+                                  {entry.items.map((item) => (
+                                    <li key={item}>
+                                      <Text type="secondary">{item}</Text>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </Space>
+                            ),
+                          }))}
+                        />
+                      </Card>
                     </Space>
                   </Card>
                 </Col>

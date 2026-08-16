@@ -1238,3 +1238,13 @@ a {
   border-radius: 50%;
   vertical-align: middle;
 }
+
+.changelog-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.changelog-list li {
+  margin-bottom: 3px;
+  line-height: 1.6;
+}
