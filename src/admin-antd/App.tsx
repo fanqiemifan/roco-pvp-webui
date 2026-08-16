@@ -2003,40 +2003,35 @@ function Dashboard() {
                   >
                     {activeMatch ? (
                       <Space direction="vertical" size={18} className="page-stack">
-                        <div className="roster-avatar-editor">
-                          {(['left', 'right'] as PanelSide[]).map((side) => {
-                            const avatar = avatars[side];
-                            const previewSrc = getAvatarPreviewSrc(side);
-                            return (
-                              <div key={side} className="roster-avatar-item">
-                                <div className="player-avatar-circular">
-                                  <Image preview={false} src={previewSrc} alt={side === 'left' ? '左侧选手头像' : '右侧选手头像'} />
-                                </div>
-                                <Text type="secondary">{side === 'left' ? '左侧选手' : '右侧选手'}</Text>
-                                <Space wrap size={6}>
-                                  <Upload
-                                    showUploadList={false}
-                                    beforeUpload={(file) => {
-                                      void uploadAvatarFile(side, file as File);
-                                      return false;
-                                    }}
-                                  >
-                                    <Button size="small">更换头像</Button>
-                                  </Upload>
-                                  {avatar.exists ? (
-                                    <Button size="small" danger onClick={() => void deleteAvatarFile(side)}>删除</Button>
-                                  ) : null}
-                                </Space>
-                              </div>
-                            );
-                          })}
-                        </div>
                         <div className="current-match-overview">
                           <div className="current-match-player current-match-player-left">
-                            <div className="player-avatar-circular current-match-player-avatar">
-                              <Image preview={false} src={getAvatarPreviewSrc('left')} alt="左侧选手头像" />
+                            <div className="player-avatar-wrap">
+                              <Upload
+                                showUploadList={false}
+                                beforeUpload={(file) => {
+                                  void uploadAvatarFile('left', file as File);
+                                  return false;
+                                }}
+                              >
+                                <div className="player-avatar-circular current-match-player-avatar">
+                                  <Image preview={false} src={getAvatarPreviewSrc('left')} alt="左侧选手头像" />
+                                  <span className="player-avatar-hint">更换</span>
+                                </div>
+                              </Upload>
+                              {avatars.left.exists ? (
+                                <Button
+                                  className="player-avatar-delete"
+                                  size="small"
+                                  danger
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    void deleteAvatarFile('left');
+                                  }}
+                                >
+                                  删除
+                                </Button>
+                              ) : null}
                             </div>
-                            <Text type="secondary" className="current-match-player-label">左侧选手</Text>
                             <Text strong className="current-match-player-name current-match-player-name-left">
                               {activeMatch.leftPlayer || '未设置'}
                             </Text>
@@ -2060,10 +2055,33 @@ function Dashboard() {
                             </Text>
                           </div>
                           <div className="current-match-player current-match-player-right">
-                            <div className="player-avatar-circular current-match-player-avatar">
-                              <Image preview={false} src={getAvatarPreviewSrc('right')} alt="右侧选手头像" />
+                            <div className="player-avatar-wrap">
+                              <Upload
+                                showUploadList={false}
+                                beforeUpload={(file) => {
+                                  void uploadAvatarFile('right', file as File);
+                                  return false;
+                                }}
+                              >
+                                <div className="player-avatar-circular current-match-player-avatar">
+                                  <Image preview={false} src={getAvatarPreviewSrc('right')} alt="右侧选手头像" />
+                                  <span className="player-avatar-hint">更换</span>
+                                </div>
+                              </Upload>
+                              {avatars.right.exists ? (
+                                <Button
+                                  className="player-avatar-delete"
+                                  size="small"
+                                  danger
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    void deleteAvatarFile('right');
+                                  }}
+                                >
+                                  删除
+                                </Button>
+                              ) : null}
                             </div>
-                            <Text type="secondary" className="current-match-player-label">右侧选手</Text>
                             <Text strong className="current-match-player-name current-match-player-name-right">
                               {activeMatch.rightPlayer || '未设置'}
                             </Text>

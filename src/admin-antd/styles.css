@@ -277,25 +277,53 @@ a {
   display: block;
 }
 
-/* 赛事面板：current-match-overview 上方的头像编辑 */
-.roster-avatar-editor {
-  display: flex;
-  justify-content: center;
-  gap: 32px;
-  flex-wrap: wrap;
-  padding-bottom: 4px;
-}
-
-.roster-avatar-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+/* 赛事面板：current-match-overview 内点击头像更换 */
+.player-avatar-wrap {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
 }
 
 .current-match-player-avatar {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
+}
+
+.player-avatar-hint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.player-avatar-wrap:hover .player-avatar-hint {
+  opacity: 1;
+}
+
+.player-avatar-delete.ant-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  z-index: 2;
+  height: 20px;
+  padding: 0 7px;
+  font-size: 11px;
+  line-height: 18px;
+  border-radius: 10px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.player-avatar-wrap:hover .player-avatar-delete.ant-btn {
+  opacity: 1;
 }
 
 /* 创建赛事弹窗的头像选择 */
