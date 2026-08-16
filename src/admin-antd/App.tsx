@@ -1929,7 +1929,7 @@ function Dashboard() {
                 if (window.rocoFloat?.toggle) {
                   window.rocoFloat.toggle();
                 } else {
-                  window.open('/float.html', '_blank');
+                  window.open('/float.html', '_blank', 'width=587,height=56,popup=yes,noopener=yes');
                 }
               }}
             >

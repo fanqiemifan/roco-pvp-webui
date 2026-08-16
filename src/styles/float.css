@@ -15,21 +15,23 @@ body {
     user-select: none;
 }
 
-/* 舞台：与 lineup-all-div 等大（782×74），整块可拖动窗口 */
+/* 舞台：透明窗口与可见内容等大（587×56），无空白区，整块可拖动窗口 */
 .float-stage {
     -webkit-app-region: drag;
     position: relative;
-    width: 782px;
-    height: 74px;
+    width: 587px;
+    height: 56px;
 }
 
-/* 覆盖 roco-pvp-page4.css 中针对 1920×1080 舞台的定位，直接铺满悬浮窗 */
+/* 覆盖 roco-pvp-page4.css 中针对 1920×1080 舞台的定位：
+   阵容条按原尺寸 782×74 布局后用 zoom 缩放到 0.75（=587×56），铺满窗口 */
 .float-stage .lineup-all-div {
     position: absolute;
     left: 0;
     top: 0;
     bottom: auto;
     transform: none;
+    zoom: 0.75;
     width: 782px;
     height: 74px;
 }

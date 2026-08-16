@@ -15,6 +15,8 @@
     const backBtn = document.getElementById('backBtn');
     const searchInput = document.getElementById('searchInput');
     const pickerGrid = document.getElementById('pickerGrid');
+    const menuCloseBtn = document.getElementById('menuCloseBtn');
+    const pickerCurrent = document.getElementById('pickerCurrent');
 
     let slotData = null;
     let spriteCache = [];
@@ -124,12 +126,32 @@
         }, 50);
     }
 
-    function renderMenu() {
+    // 点击窗口外部（页面失焦）时自动关闭；仅在本窗口曾获得焦点后生效，避免打开瞬间误关
+    let hasHadFocus = false;
+    window.addEventListener('focus', () => {
+        hasHadFocus = true;
+    });
+    window.addEventListener('blur', () => {
+        if (hasHadFocus) {
+            closeWindow();
+        }
+    });
+
+    function getCurrentSpriteLabel() {
         const currentSprite = slotData && slotData.sprite ? slotData.sprite : null;
         const slotLabel = `${side === 'left' ? '左侧' : '右侧'} 第 ${slotIndex + 1} 位`;
-        menuTitle.textContent = currentSprite
+        return currentSprite
             ? `正在编辑：${getSpriteDisplayName(currentSprite)}${getSpriteForm(currentSprite) ? `（${getSpriteForm(currentSprite)}）` : ''} · ${slotLabel}`
             : `正在编辑：空槽位 · ${slotLabel}`;
+    }
+
+    function renderPickerCurrent() {
+        pickerCurrent.textContent = getCurrentSpriteLabel();
+    }
+
+    function renderMenu() {
+        const currentSprite = slotData && slotData.sprite ? slotData.sprite : null;
+        menuTitle.textContent = getCurrentSpriteLabel();
 
         menuBody.innerHTML = '';
 
@@ -225,6 +247,7 @@
     function showPicker() {
         menuView.hidden = true;
         pickerView.hidden = false;
+        renderPickerCurrent();
         searchInput.focus();
         renderPickerGrid();
     }
@@ -237,6 +260,7 @@
     openPickerBtn.addEventListener('click', showPicker);
     backBtn.addEventListener('click', showMenu);
     searchInput.addEventListener('input', renderPickerGrid);
+    menuCloseBtn.addEventListener('click', closeWindow);
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {

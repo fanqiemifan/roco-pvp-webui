@@ -77,6 +77,14 @@ export function StatsView({
   onSearchChange,
 }: StatsViewProps) {
   const { message } = App.useApp();
+  const [isFullscreenWide, setIsFullscreenWide] = React.useState(false);
+  React.useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1920px)');
+    const update = () => setIsFullscreenWide(mql.matches);
+    update();
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
   const stats = buildUsageStats(matches, spriteMap, {
     range,
     player,
@@ -305,7 +313,7 @@ export function StatsView({
       </Row>
 
       <Row gutter={[18, 18]}>
-        <Col xs={24} xl={18}>
+        <Col xs={24} xxl={isFullscreenWide ? 18 : 24} order={isFullscreenWide ? 1 : 2}>
           <Card
             title={metric === 'pickRate' ? '精灵使用率排行' : '精灵上场率排行'}
             extra={(
@@ -337,72 +345,75 @@ export function StatsView({
             </Text>
           </Card>
         </Col>
-        <Col xs={24} xl={6}>
-          <Space direction="vertical" size={18} className="page-stack stats-side-stack">
-            <Card title="属性分布" extra={<Text type="secondary">按登场只次</Text>}>
-              {stats.attributeRows.length ? (
-                <Space direction="vertical" size={10} className="page-stack">
-                  {stats.attributeRows.slice(0, 8).map((row) => {
-                    const iconPath = ATTRIBUTE_ICON_BY_LABEL.get(row.attribute);
-                    return (
-                      <div key={row.attribute} className="stats-attribute-row">
-                        <span className="stats-attribute-pill">
-                          {iconPath && (
-                            <img
-                              src={iconPath}
-                              alt={row.attribute}
-                              width={16}
-                              height={16}
-                            />
-                          )}
-                          <span className="stats-attribute-pill-text">{row.attribute}</span>
-                        </span>
-                        <Progress
-                          percent={row.percent}
-                          showInfo={false}
-                          size="small"
-                          className="stats-usage-bar"
-                        />
-                        <Text className="stats-usage-value">{row.percent.toFixed(1)}%</Text>
-                      </div>
-                    );
-                  })}
-                </Space>
-              ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
-              )}
-            </Card>
-
-            <Card title="Top 3 登场趋势" extra={<Text type="secondary">按日聚合</Text>}>
-              {topTrendRows.length && dailyKeys.length > 1 ? (
-                <Space direction="vertical" size={10} className="page-stack">
-                  <svg viewBox={`0 0 ${Math.max(dailyKeys.length * 40, 120)} 140`} className="stats-trend-svg" preserveAspectRatio="none">
-                    {topTrendRows.map((row, rowIndex) => {
-                      const points = dailyKeys.map((key, index) => {
-                        const games = row.dailyGames.get(key) ?? 0;
-                        const x = dailyKeys.length > 1 ? (index / (dailyKeys.length - 1)) * 100 : 0;
-                        const y = 130 - (games / topUsageForTrend) * 120;
-                        return `${x},${Math.max(4, y)}`;
-                      }).join(' ');
+        <Col xs={24} xxl={isFullscreenWide ? 6 : 24} order={isFullscreenWide ? 2 : 1}>
+          <Row gutter={[18, 18]}>
+            <Col xs={isFullscreenWide ? 24 : 12}>
+              <Card title="属性分布" extra={<Text type="secondary">按登场只次</Text>}>
+                {stats.attributeRows.length ? (
+                  <Space direction="vertical" size={10} className="page-stack">
+                    {stats.attributeRows.slice(0, 8).map((row) => {
+                      const iconPath = ATTRIBUTE_ICON_BY_LABEL.get(row.attribute);
                       return (
-                        <polyline key={row.key} points={points} fill="none" stroke={trendColors[rowIndex]} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+                        <div key={row.attribute} className="stats-attribute-row">
+                          <span className="stats-attribute-pill">
+                            {iconPath && (
+                              <img
+                                src={iconPath}
+                                alt={row.attribute}
+                                width={16}
+                                height={16}
+                              />
+                            )}
+                            <span className="stats-attribute-pill-text">{row.attribute}</span>
+                          </span>
+                          <Progress
+                            percent={row.percent}
+                            showInfo={false}
+                            size="small"
+                            className="stats-usage-bar"
+                          />
+                          <Text className="stats-usage-value">{row.percent.toFixed(1)}%</Text>
+                        </div>
                       );
                     })}
-                  </svg>
-                  <Space wrap size={14}>
-                    {topTrendRows.map((row, rowIndex) => (
-                      <Text key={row.key} type="secondary">
-                        <span className="stats-trend-dot" style={{ background: trendColors[rowIndex] }} />
-                        {row.name}
-                      </Text>
-                    ))}
                   </Space>
-                </Space>
-              ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="需要至少两天的登场数据" />
-              )}
-            </Card>
-          </Space>
+                ) : (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
+                )}
+              </Card>
+            </Col>
+            <Col xs={isFullscreenWide ? 24 : 12}>
+              <Card title="Top 3 登场趋势" extra={<Text type="secondary">按日聚合</Text>}>
+                {topTrendRows.length && dailyKeys.length > 1 ? (
+                  <Space direction="vertical" size={10} className="page-stack">
+                    <svg viewBox={`0 0 ${Math.max(dailyKeys.length * 40, 120)} 140`} className="stats-trend-svg" preserveAspectRatio="none">
+                      {topTrendRows.map((row, rowIndex) => {
+                        const points = dailyKeys.map((key, index) => {
+                          const games = row.dailyGames.get(key) ?? 0;
+                          const x = dailyKeys.length > 1 ? (index / (dailyKeys.length - 1)) * 100 : 0;
+                          const y = 130 - (games / topUsageForTrend) * 120;
+                          return `${x},${Math.max(4, y)}`;
+                        }).join(' ');
+                        return (
+                          <polyline key={row.key} points={points} fill="none" stroke={trendColors[rowIndex]} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+                        );
+                      })}
+                    </svg>
+                    <Space wrap size={14}>
+                      {topTrendRows.map((row, rowIndex) => (
+                        <Text key={row.key} type="secondary">
+                          <span className="stats-trend-dot" style={{ background: trendColors[rowIndex] }} />
+                          {row.name}
+                        </Text>
+                      ))}
+                    </Space>
+                  </Space>
+                ) : (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="需要至少两天的登场数据" />
+                )}
+              </Card>
+            </Col>
+          </Row>
         </Col>
       </Row>
     </Space>

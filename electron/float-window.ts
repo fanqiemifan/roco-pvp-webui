@@ -7,11 +7,11 @@ import { app, BrowserWindow, ipcMain, screen } from 'electron';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const FLOAT_WINDOW_WIDTH = 782;
-const FLOAT_WINDOW_HEIGHT = 74;
+const FLOAT_WINDOW_WIDTH = 587;
+const FLOAT_WINDOW_HEIGHT = 56;
 const DEFAULT_FLOAT_SHAPE = { x: 0, y: 0, width: FLOAT_WINDOW_WIDTH, height: FLOAT_WINDOW_HEIGHT };
-const FLOAT_MENU_WIDTH = 360;
-const FLOAT_MENU_HEIGHT = 180;
+const FLOAT_MENU_WIDTH = 240;
+const FLOAT_MENU_HEIGHT = 240;
 
 let floatWindow: BrowserWindow | null = null;
 let floatMenuWindow: BrowserWindow | null = null;
@@ -57,6 +57,12 @@ function applyFloatShape(rect: { x: number; y: number; width: number; height: nu
   floatShapeSet = true;
 }
 
+function reassertFloatOnTop(): void {
+  if (floatWindow && !floatWindow.isDestroyed()) {
+    floatWindow.setAlwaysOnTop(true, 'screen-saver');
+  }
+}
+
 function createFloatWindow(getPort: () => number): BrowserWindow {
   if (floatWindow && !floatWindow.isDestroyed()) {
     return floatWindow;
@@ -85,6 +91,7 @@ function createFloatWindow(getPort: () => number): BrowserWindow {
     },
   });
 
+  floatWindow.removeMenu();
   floatWindow.setAlwaysOnTop(true, 'screen-saver');
   floatWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
@@ -102,6 +109,13 @@ function createFloatWindow(getPort: () => number): BrowserWindow {
       });
   };
   tryLoad(0);
+
+  floatWindow.webContents.on('did-finish-load', () => {
+    reassertFloatOnTop();
+  });
+
+  floatWindow.on('blur', reassertFloatOnTop);
+  floatWindow.on('show', reassertFloatOnTop);
 
   floatWindow.on('moved', () => {
     if (floatWindow && !floatWindow.isDestroyed()) {
@@ -159,11 +173,14 @@ function closeFloatMenuWindow(): void {
   floatMenuWindow = null;
 }
 
-function openFloatMenuWindow(payload: {
-  side: string;
-  slot: number;
-  rect?: { x: number; y: number; width: number; height: number };
-}): void {
+function openFloatMenuWindow(
+  payload: {
+    side: string;
+    slot: number;
+    rect?: { x: number; y: number; width: number; height: number };
+  },
+  parentBoundsOverride?: { x: number; y: number; width: number; height: number } | null,
+): void {
   if (payload.side !== 'left' && payload.side !== 'right') {
     return;
   }
@@ -174,7 +191,8 @@ function openFloatMenuWindow(payload: {
 
   closeFloatMenuWindow();
 
-  const parentBounds = floatWindow && !floatWindow.isDestroyed() ? floatWindow.getContentBounds() : null;
+  const parentBounds = parentBoundsOverride
+    || (floatWindow && !floatWindow.isDestroyed() ? floatWindow.getContentBounds() : null);
   const display = parentBounds
     ? screen.getDisplayMatching(parentBounds)
     : screen.getPrimaryDisplay();
@@ -227,7 +245,17 @@ function openFloatMenuWindow(payload: {
     },
   });
 
+  floatMenuWindow.removeMenu();
   floatMenuWindow.setAlwaysOnTop(true, 'screen-saver');
+  // 点击窗口外部（失焦）时自动关闭
+  floatMenuWindow.on('blur', () => {
+    closeFloatMenuWindow();
+  });
+  floatMenuWindow.webContents.on('did-finish-load', () => {
+    if (floatMenuWindow && !floatMenuWindow.isDestroyed()) {
+      floatMenuWindow.focus();
+    }
+  });
   void floatMenuWindow
     .loadURL(`http://127.0.0.1:${getServerPort()}/float-menu.html?side=${encodeURIComponent(payload.side)}&slot=${slot}`)
     .catch((error) => {
@@ -249,8 +277,11 @@ export function registerFloatWindow(getPort: () => number): void {
   ipcMain.on('float:toggle', () => toggleFloatWindow(getPort));
   ipcMain.on('float:close', () => closeFloatWindow());
   ipcMain.on('float:menu-close', () => closeFloatMenuWindow());
-  ipcMain.on('float:menu', (_event, payload) => {
-    openFloatMenuWindow(payload);
+  ipcMain.on('float:menu', (event, payload) => {
+    // 用发送者窗口（可能不是专用悬浮窗）的边界定位，保证菜单出现在精灵上方
+    const senderWindow = BrowserWindow.fromWebContents(event.sender);
+    const senderBounds = senderWindow && !senderWindow.isDestroyed() ? senderWindow.getContentBounds() : null;
+    openFloatMenuWindow(payload, senderBounds);
   });
   ipcMain.on('float:shape', (event, rect) => {
     if (!floatWindow || floatWindow.isDestroyed() || event.sender !== floatWindow.webContents) {

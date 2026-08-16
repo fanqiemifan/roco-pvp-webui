@@ -5,6 +5,13 @@
     const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
     const FALLBACK_IMG = '/assets/ui/back.png';
 
+    // 阵容条原始尺寸与整体缩放：内容按 782×74 布局，缩放到 0.75 后为 587×56
+    const LINEUP_W = 782;
+    const LINEUP_H = 74;
+    const ZOOM = 0.75;
+    const STAGE_W = Math.round(LINEUP_W * ZOOM); // 587
+    const STAGE_H = Math.round(LINEUP_H * ZOOM); // 56
+
     const state = {
         left: null,
         right: null,
@@ -129,9 +136,9 @@
             menuPopupWindow.close();
         }
         const url = `/float-menu.html?side=${encodeURIComponent(side)}&slot=${encodeURIComponent(String(slotIndex))}`;
-        const left = Math.max(0, Math.round(window.screenX + rect.x + rect.width / 2 - 180));
-        const top = Math.max(0, Math.round(window.screenY + rect.y - 186));
-        menuPopupWindow = window.open(url, '_blank', `width=360,height=180,popup=yes,left=${left},top=${top}`);
+        const left = Math.max(0, Math.round(window.screenX + rect.x + rect.width / 2 - 120));
+        const top = Math.max(0, Math.round(window.screenY + rect.y - 246));
+        menuPopupWindow = window.open(url, '_blank', `width=240,height=240,popup=yes,left=${left},top=${top}`);
     }
 
     function renderSlot(slotEl, slotData) {
@@ -263,8 +270,8 @@
         window.rocoFloat.reportShape({
             x: Math.floor(rect.left),
             y: Math.floor(rect.top),
-            width: Math.ceil(rect.right) - Math.floor(rect.left),
-            height: Math.ceil(rect.bottom) - Math.floor(rect.top),
+            width: STAGE_W,
+            height: STAGE_H,
         });
     }
 
@@ -273,6 +280,7 @@
             lineupSections.left.appendChild(buildSlotEl('left', index));
             lineupSections.right.appendChild(buildSlotEl('right', index));
         }
+        lineupDiv.style.zoom = String(ZOOM);
         connectSocket();
         window.requestAnimationFrame(() => {
             reportStageShape();

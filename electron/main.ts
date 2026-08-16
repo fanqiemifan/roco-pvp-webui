@@ -79,12 +79,39 @@ function getChildWindowKey(targetUrl: string): string {
   }
 }
 
+function getWindowPath(targetUrl: string): string {
+  try {
+    return new URL(targetUrl).pathname;
+  } catch {
+    return targetUrl;
+  }
+}
+
 function getWindowPreset(targetUrl: string): WindowPreset {
+  const pathname = getWindowPath(targetUrl);
+  if (pathname.endsWith('/float.html')) {
+    return {
+      width: 587,
+      height: 56,
+      zoomFactor: 1,
+      autoHideMenuBar: true,
+      title: '阵容悬浮窗',
+    };
+  }
+  if (pathname.endsWith('/float-menu.html')) {
+    return {
+      width: 240,
+      height: 240,
+      zoomFactor: 1,
+      autoHideMenuBar: true,
+      title: '更换精灵',
+    };
+  }
   if (
-    targetUrl.endsWith('/live-standby-demo.html')
-    || targetUrl.endsWith('/roco-pvp-page2.html')
-    || targetUrl.endsWith('/roco-pvp-page3.html')
-    || targetUrl.endsWith('/')
+    pathname.endsWith('/live-standby-demo.html')
+    || pathname.endsWith('/roco-pvp-page2.html')
+    || pathname.endsWith('/roco-pvp-page3.html')
+    || pathname.endsWith('/')
   ) {
     return {
       width: 1920,
@@ -107,8 +134,17 @@ function getWindowPreset(targetUrl: string): WindowPreset {
   };
 }
 
+function parseFeatureNumber(features: string, key: string): number | undefined {
+  const match = features.split(',').map((part) => part.trim().toLowerCase()).find((part) => part.startsWith(`${key}=`));
+  if (!match) {
+    return undefined;
+  }
+  const value = Number(match.split('=')[1]);
+  return Number.isFinite(value) ? value : undefined;
+}
+
 function configureWindowOpenHandler(window: BrowserWindow): void {
-  window.webContents.setWindowOpenHandler(({ url }) => {
+  window.webContents.setWindowOpenHandler(({ url, features }) => {
     const childWindowKey = getChildWindowKey(url);
     const existingChildWindow = childWindows.get(childWindowKey);
     if (existingChildWindow && !existingChildWindow.isDestroyed()) {
@@ -117,6 +153,8 @@ function configureWindowOpenHandler(window: BrowserWindow): void {
     }
 
     const preset = getWindowPreset(url);
+    const pathname = getWindowPath(url);
+    const isFloatPage = pathname.endsWith('/float.html') || pathname.endsWith('/float-menu.html');
     const childWindow = new BrowserWindow({
       useContentSize: true,
       width: preset.width,
@@ -124,18 +162,40 @@ function configureWindowOpenHandler(window: BrowserWindow): void {
       minWidth: preset.minWidth,
       minHeight: preset.minHeight,
       autoHideMenuBar: preset.autoHideMenuBar ?? true,
-      backgroundColor: '#f4efe6',
+      frame: !isFloatPage,
+      transparent: isFloatPage,
+      backgroundColor: isFloatPage ? '#00000000' : '#f4efe6',
       title: preset.title,
+      resizable: !isFloatPage,
+      maximizable: !isFloatPage,
+      minimizable: !isFloatPage,
+      fullscreenable: !isFloatPage,
+      skipTaskbar: isFloatPage,
+      hasShadow: !isFloatPage,
+      alwaysOnTop: isFloatPage,
+      x: parseFeatureNumber(features ?? '', 'left'),
+      y: parseFeatureNumber(features ?? '', 'top'),
       webPreferences: {
         preload: path.join(__dirname, 'preload.js'),
         contextIsolation: true,
         nodeIntegration: false,
       },
     });
+    if (isFloatPage) {
+      childWindow.setAlwaysOnTop(true, 'screen-saver');
+    }
+    if (pathname.endsWith('/float-menu.html')) {
+      childWindow.on('blur', () => {
+        if (!childWindow.isDestroyed()) {
+          childWindow.close();
+        }
+      });
+    }
 
     childWindows.set(childWindowKey, childWindow);
     childWindow.removeMenu();
     registerWindowIpc();
+    configureWindowOpenHandler(childWindow);
     childWindow.on('closed', () => {
       if (childWindows.get(childWindowKey) === childWindow) {
         childWindows.delete(childWindowKey);

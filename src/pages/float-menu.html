@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/styles/float-menu.css">
 </head>
 <body>
+    <button id="menuCloseBtn" class="menu-close" type="button" title="关闭">×</button>
+
     <div id="menuView" class="view menu-view">
         <div id="menuTitle" class="menu-title"></div>
         <div id="menuBody" class="menu-body"></div>
@@ -16,6 +18,7 @@
     </div>
 
     <div id="pickerView" class="view picker-view" hidden>
+        <div id="pickerCurrent" class="picker-current"></div>
         <div class="picker-head">
             <button id="backBtn" class="picker-back" type="button" title="返回">←</button>
             <input id="searchInput" class="picker-search" type="text" placeholder="搜索精灵…" spellcheck="false" />
