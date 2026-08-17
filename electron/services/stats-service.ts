@@ -70,7 +70,7 @@ function spriteField(sprite: unknown, key: string): string {
 /**
  * 按时间范围 + 赛事标签计算精灵使用率/胜率排行（Top 10，按使用率降序）。
  * - 使用率 = 登场只次 ÷ 总登场只次（同名精灵同局重复携带按只次计）
- * - 胜率 = 该精灵所在一侧获胜场次 ÷ 登场场次（同局同侧重复携带只计 1 次）
+ * - 胜率 = 该精灵所在一侧获胜场次 ÷ 登场场次（同局左右双方携带同名精灵只计 1 场；镜像局双方同时携带按 0.5 胜计）
  */
 export function getSpriteRanking(
   paths: AppPaths,
@@ -103,9 +103,8 @@ export function getSpriteRanking(
         continue;
       }
 
+      const appearances = new Map<string, { onLeft: boolean; onRight: boolean }>();
       for (const { lineup, side } of sides) {
-        const won = game.winner === side;
-        const seen = new Set<string>();
         for (const spriteId of lineup) {
           const sprite = lookup.get(basename(spriteId)) ?? null;
           const key = sprite ? sprite.id : basename(spriteId);
@@ -116,13 +115,32 @@ export function getSpriteRanking(
           }
           entry.picks += 1;
           totalPicks += 1;
-          if (!seen.has(key)) {
-            seen.add(key);
-            entry.games += 1;
-            if (won) {
-              entry.wins += 1;
-            }
+          let appearance = appearances.get(key);
+          if (!appearance) {
+            appearance = { onLeft: false, onRight: false };
+            appearances.set(key, appearance);
           }
+          if (side === 'left') {
+            appearance.onLeft = true;
+          } else {
+            appearance.onRight = true;
+          }
+        }
+      }
+
+      for (const [key, appearance] of appearances) {
+        const entry = acc.get(key);
+        if (!entry) {
+          continue;
+        }
+        entry.games += 1;
+        if (appearance.onLeft && appearance.onRight) {
+          entry.wins += 0.5;
+        } else if (
+          (appearance.onLeft && game.winner === 'left') ||
+          (appearance.onRight && game.winner === 'right')
+        ) {
+          entry.wins += 1;
         }
       }
     }

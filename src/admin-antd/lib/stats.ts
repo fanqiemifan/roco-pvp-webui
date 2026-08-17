@@ -106,9 +106,8 @@ function collectUsageStats(
       }
 
       let gameCounted = false;
+      const appearances = new Map<string, { onLeft: boolean; onRight: boolean }>();
       sides.forEach(({ lineup, side }) => {
-        const won = game.winner === side;
-        const seen = new Set<string>();
         lineup.forEach((spriteId) => {
           const sprite = spriteMap.get(spriteId);
           const name = resolveSpriteStatsName(sprite, spriteId);
@@ -126,21 +125,15 @@ function collectUsageStats(
 
           acc.picks += 1;
           totalPicks += 1;
-          if (!seen.has(name)) {
-            seen.add(name);
-            acc.games += 1;
-            if (won) {
-              acc.wins += 1;
-            }
-            if (dateKey) {
-              acc.dailyGames.set(dateKey, (acc.dailyGames.get(dateKey) ?? 0) + 1);
-              let dayMap = dailySprites.get(dateKey);
-              if (!dayMap) {
-                dayMap = new Map();
-                dailySprites.set(dateKey, dayMap);
-              }
-              dayMap.set(name, (dayMap.get(name) ?? 0) + 1);
-            }
+          let appearance = appearances.get(name);
+          if (!appearance) {
+            appearance = { onLeft: false, onRight: false };
+            appearances.set(name, appearance);
+          }
+          if (side === 'left') {
+            appearance.onLeft = true;
+          } else {
+            appearance.onRight = true;
           }
           (spriteMeta.get(name)?.attributes ?? []).forEach((attribute) => {
             attributeAcc.set(attribute, (attributeAcc.get(attribute) ?? 0) + 1);
@@ -152,6 +145,30 @@ function collectUsageStats(
 
       if (gameCounted) {
         totalGames += 1;
+        for (const [name, appearance] of appearances) {
+          const acc = spriteAcc.get(name);
+          if (!acc) {
+            continue;
+          }
+          acc.games += 1;
+          if (appearance.onLeft && appearance.onRight) {
+            acc.wins += 0.5;
+          } else if (
+            (appearance.onLeft && game.winner === 'left') ||
+            (appearance.onRight && game.winner === 'right')
+          ) {
+            acc.wins += 1;
+          }
+          if (dateKey) {
+            acc.dailyGames.set(dateKey, (acc.dailyGames.get(dateKey) ?? 0) + 1);
+            let dayMap = dailySprites.get(dateKey);
+            if (!dayMap) {
+              dayMap = new Map();
+              dailySprites.set(dateKey, dayMap);
+            }
+            dayMap.set(name, (dayMap.get(name) ?? 0) + 1);
+          }
+        }
       }
     });
   });

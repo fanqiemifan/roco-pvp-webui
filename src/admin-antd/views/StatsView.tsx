@@ -183,7 +183,7 @@ export function StatsView({
       sorter: (a, b) => a.picks - b.picks,
     },
     {
-      title: <StatsColumnTitle text="登场场次" tip="登场场次 = 精灵登场的场次数（同局同侧重复携带同名精灵只计 1 次）" />,
+      title: <StatsColumnTitle text="登场场次" tip="登场场次 = 精灵登场的场次数（同局左右双方携带同名精灵只计 1 次）" />,
       dataIndex: 'games',
       key: 'games',
       width: 136,
@@ -340,8 +340,8 @@ export function StatsView({
             <Text type="secondary" className="stats-footnote">
               {metric === 'pickRate'
                 ? '使用率 = 登场只次 ÷ 总登场只次（同局重复携带按只次计）'
-                : '上场率 = 登场场次 ÷ 总场次（同局同侧重复携带只计 1 次）'}
-              {' · 胜率 = 该精灵所在一侧获胜场次 ÷ 登场场次'}
+                : '上场率 = 登场场次 ÷ 总场次（同局左右双方携带同名精灵只计 1 次）'}
+              {' · 胜率 = 该精灵所在一侧获胜场次 ÷ 登场场次（镜像局双方同携按 0.5 胜计）'}
             </Text>
           </Card>
         </Col>
