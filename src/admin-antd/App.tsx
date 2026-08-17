@@ -190,6 +190,8 @@ type HistorySortState = {
   order: 'asc' | 'desc' | null;
 };
 
+const UNCATEGORIZED_HISTORY_TAG = '__uncategorized__';
+
 const HISTORY_STATUS_RANK: Record<MatchRecord['status'], number> = {
   in_progress: 0,
   pending: 1,
@@ -318,7 +320,11 @@ function Dashboard() {
   ]).filter(Boolean)));
   const normalizedHistorySearch = historySearch.trim().toLowerCase();
   const filteredMatches = matchStore.matches.filter((match) => {
-    if (historyTagFilter && !(match.tags ?? []).includes(historyTagFilter)) {
+    if (historyTagFilter === UNCATEGORIZED_HISTORY_TAG) {
+      if ((match.tags ?? []).length > 0) {
+        return false;
+      }
+    } else if (historyTagFilter && !(match.tags ?? []).includes(historyTagFilter)) {
       return false;
     }
     if (!normalizedHistorySearch) {
@@ -2467,6 +2473,12 @@ function Dashboard() {
                     allowClear
                     className="history-search-input"
                   />
+                  <Tag
+                    color={historyTagFilter === UNCATEGORIZED_HISTORY_TAG ? 'processing' : 'default'}
+                    onClick={() => setHistoryTagFilter(historyTagFilter === UNCATEGORIZED_HISTORY_TAG ? null : UNCATEGORIZED_HISTORY_TAG)}
+                  >
+                    未分类赛事
+                  </Tag>
                   <Tag color={!historyTagFilter ? 'processing' : 'default'} onClick={() => setHistoryTagFilter(null)}>全部</Tag>
                   {allHistoryTags.map((tag) => (
                     <Tag key={tag} color={historyTagFilter === tag ? 'processing' : 'default'} onClick={() => setHistoryTagFilter(historyTagFilter === tag ? null : tag)}>
