@@ -1,12 +1,6 @@
 (function () {
     'use strict';
 
-    const RANGE_LABELS = {
-        today: '今日',
-        '7d': '近7天',
-        '30d': '近30天',
-        all: '全部',
-    };
     const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
     const FALLBACK_IMG = '/assets/ui/back.png';
     const DEFAULT_TITLE = '使用率 · 胜率排行';
@@ -138,10 +132,17 @@
             rightRowsEl.appendChild(buildRow(row, index + 5));
         });
 
-        const rangeLabel = RANGE_LABELS[data && data.range] || '全部';
         const tagLabel = data && data.tag ? data.tag : '';
-        // 只显示具体口径：有赛事标签显示标签，否则显示时间范围
-        const scopeLabel = tagLabel || rangeLabel;
+        const playerLabel = data && data.player ? data.player : '';
+        // 口径标签：赛事标签 · 选手（都有则组合，只有一个显示单值，都没有显示「全部」）
+        let scopeLabel = '全部';
+        if (tagLabel && playerLabel) {
+            scopeLabel = `${tagLabel} · ${playerLabel}`;
+        } else if (tagLabel) {
+            scopeLabel = tagLabel;
+        } else if (playerLabel) {
+            scopeLabel = playerLabel;
+        }
         badgeEl.innerHTML = '';
         const inner = document.createElement('span');
         inner.textContent = scopeLabel;
@@ -153,11 +154,13 @@
         titleEl.textContent = text || DEFAULT_TITLE;
     }
 
-    async function fetchRanking(range, tag) {
+    async function fetchRanking(tag, player) {
         const query = new URLSearchParams();
-        query.set('range', range || 'all');
         if (tag) {
             query.set('tag', tag);
+        }
+        if (player) {
+            query.set('player', player);
         }
         try {
             const response = await fetch(`/api/stats/ranking?${query.toString()}`, { credentials: 'same-origin' });
@@ -178,19 +181,19 @@
                 fetch('/api/scoreboard', { credentials: 'same-origin' }).then((r) => r.json()),
             ]);
             applyTitle(scoreboard && scoreboard.page5Title);
-            await fetchRanking(stage && stage.page5Range, stage && stage.page5Tag);
+            await fetchRanking(stage && stage.page5Tag, stage && stage.page5Player);
         } catch (error) {
             console.error('page5 初始加载失败:', error);
         }
     }
 
     let refreshTimer = null;
-    function scheduleRefresh(range, tag) {
+    function scheduleRefresh(tag, player) {
         if (refreshTimer) {
             window.clearTimeout(refreshTimer);
         }
         refreshTimer = window.setTimeout(() => {
-            void fetchRanking(range, tag);
+            void fetchRanking(tag, player);
         }, 250);
     }
 
@@ -207,14 +210,14 @@
                 applyTitle(scoreboard.page5Title);
             }
             if (stage) {
-                void fetchRanking(stage.page5Range, stage.page5Tag);
+                void fetchRanking(stage.page5Tag, stage.page5Player);
             }
         });
 
         socket.on('stage:update', (payload) => {
             const stage = payload && payload.stage ? payload.stage : null;
             if (stage) {
-                scheduleRefresh(stage.page5Range, stage.page5Tag);
+                scheduleRefresh(stage.page5Tag, stage.page5Player);
             }
         });
 
@@ -227,7 +230,7 @@
 
         socket.on('matchesUpdate', (payload) => {
             const stage = payload && payload.stage ? payload.stage : null;
-            scheduleRefresh(stage ? stage.page5Range : undefined, stage ? stage.page5Tag : undefined);
+            scheduleRefresh(stage ? stage.page5Tag : undefined, stage ? stage.page5Player : undefined);
         });
     }
 

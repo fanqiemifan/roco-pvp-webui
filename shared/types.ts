@@ -152,14 +152,11 @@ export type StagePageKey =
 
 export type StageTransitionType = 'none' | 'blinds' | 'zoom';
 
-/** 推流页面5 统计口径：时间范围 */
-export type Page5RangeKey = 'today' | '7d' | '30d' | 'all';
-
 export interface StageConfig {
   page: StagePageKey;
   transition: StageTransitionType;
-  /** 推流页面5：统计时间范围（默认 all = 全部时间） */
-  page5Range: Page5RangeKey;
+  /** 推流页面5：选手过滤（空字符串 = 全部选手） */
+  page5Player: string;
   /** 推流页面5：赛事标签过滤（空字符串 = 全部标签） */
   page5Tag: string;
   mtime: number | null;

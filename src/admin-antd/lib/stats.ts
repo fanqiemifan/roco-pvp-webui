@@ -1,28 +1,20 @@
 import type { MatchStoreState, SpriteRecord } from '../../../shared/types';
+import { DEFAULT_TAGS } from '../constants';
 import { resolveSpriteStatsName, splitSpriteAttributes } from './sprite';
 
-export type StatsRangeKey = 'today' | '7d' | '30d' | 'all';
 export type StatsMetricKey = 'pickRate' | 'gameRate';
-
-export const STATS_RANGE_OPTIONS: Array<{ value: StatsRangeKey; label: string }> = [
-  { value: 'today', label: '今日' },
-  { value: '7d', label: '近7天' },
-  { value: '30d', label: '近30天' },
-  { value: 'all', label: '全部' },
-];
 
 export const STATS_METRIC_OPTIONS: Array<{ value: StatsMetricKey; label: string }> = [
   { value: 'pickRate', label: '使用率' },
   { value: 'gameRate', label: '上场率' },
 ];
 
-export type StatsWindow = { sinceMs: number; untilMs: number; player: string | null; tag: string | null };
+export type StatsWindow = { player: string | null; tag: string | null };
 
 export type SpriteUsageAccumulator = {
   picks: number;
   games: number;
   wins: number;
-  dailyGames: Map<string, number>;
 };
 
 export type SpriteUsageRow = {
@@ -36,8 +28,7 @@ export type SpriteUsageRow = {
   winRate: number | null;
   usageRate: number;
   usagePercent: number;
-  trendDelta: number;
-  dailyGames: Map<string, number>;
+  tagTrendDelta: number | null;
 };
 
 export type UsageStatsResult = {
@@ -46,20 +37,23 @@ export type UsageStatsResult = {
   distinctSprites: number;
   playerCount: number;
   attributeRows: Array<{ attribute: string; count: number; percent: number }>;
-  dailyKeys: string[];
+  tagOrder: string[];
+  spriteTagRate: Map<string, Map<string, number>>;
   rows: SpriteUsageRow[];
   spriteAcc: Map<string, SpriteUsageAccumulator>;
   spriteMeta: Map<string, { path: string; attributes: string[] }>;
 };
 
-function getStatsDateKey(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
+function orderTags(tags: string[]): string[] {
+  const tagSet = new Set(tags);
+  const ordered: string[] = [];
+  DEFAULT_TAGS.forEach((tag) => {
+    if (tagSet.has(tag)) {
+      ordered.push(tag);
+      tagSet.delete(tag);
+    }
+  });
+  return [...ordered, ...Array.from(tagSet).sort((a, b) => a.localeCompare(b, 'zh-CN'))];
 }
 
 function collectUsageStats(
@@ -70,17 +64,12 @@ function collectUsageStats(
   const spriteAcc = new Map<string, SpriteUsageAccumulator>();
   const spriteMeta = new Map<string, { path: string; attributes: string[] }>();
   const attributeAcc = new Map<string, number>();
-  const dailySprites = new Map<string, Map<string, number>>();
   const players = new Set<string>();
   let totalGames = 0;
   let totalPicks = 0;
   let attributeTotal = 0;
 
   matches.forEach((match) => {
-    const time = new Date(match.createdAt).getTime();
-    if (Number.isNaN(time) || time < window.sinceMs || time >= window.untilMs) {
-      return;
-    }
     if (window.player && match.leftPlayer !== window.player && match.rightPlayer !== window.player) {
       return;
     }
@@ -93,8 +82,6 @@ function collectUsageStats(
     if (match.rightPlayer) {
       players.add(match.rightPlayer);
     }
-
-    const dateKey = getStatsDateKey(match.createdAt);
 
     match.games.forEach((game) => {
       const sides: Array<{ lineup: string[]; side: 'left' | 'right' }> = [
@@ -113,7 +100,7 @@ function collectUsageStats(
           const name = resolveSpriteStatsName(sprite, spriteId);
           let acc = spriteAcc.get(name);
           if (!acc) {
-            acc = { picks: 0, games: 0, wins: 0, dailyGames: new Map() };
+            acc = { picks: 0, games: 0, wins: 0 };
             spriteAcc.set(name, acc);
           }
           if (!spriteMeta.has(name)) {
@@ -159,15 +146,6 @@ function collectUsageStats(
           ) {
             acc.wins += 1;
           }
-          if (dateKey) {
-            acc.dailyGames.set(dateKey, (acc.dailyGames.get(dateKey) ?? 0) + 1);
-            let dayMap = dailySprites.get(dateKey);
-            if (!dayMap) {
-              dayMap = new Map();
-              dailySprites.set(dateKey, dayMap);
-            }
-            dayMap.set(name, (dayMap.get(name) ?? 0) + 1);
-          }
         }
       }
     });
@@ -185,7 +163,8 @@ function collectUsageStats(
         percent: attributeTotal > 0 ? (count / attributeTotal) * 100 : 0,
       }))
       .sort((a, b) => b.count - a.count),
-    dailyKeys: Array.from(dailySprites.keys()).sort(),
+    tagOrder: [],
+    spriteTagRate: new Map(),
     rows: [],
     spriteAcc,
     spriteMeta,
@@ -195,48 +174,47 @@ function collectUsageStats(
 export function buildUsageStats(
   matches: MatchStoreState['matches'],
   spriteMap: Map<string, SpriteRecord>,
-  options: { range: StatsRangeKey; player: string | null; tag: string | null; metric: StatsMetricKey },
+  options: { player: string | null; tag: string | null; metric: StatsMetricKey },
 ): UsageStatsResult {
-  const now = Date.now();
-  let sinceMs = 0;
-  let spanMs = 0;
-  if (options.range === 'today') {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    sinceMs = start.getTime();
-    spanMs = Math.max(1, now - sinceMs);
-  } else if (options.range === '7d') {
-    spanMs = 7 * 86400000;
-    sinceMs = now - spanMs;
-  } else if (options.range === '30d') {
-    spanMs = 30 * 86400000;
-    sinceMs = now - spanMs;
+  const { player, tag, metric } = options;
+
+  const current = collectUsageStats(matches, spriteMap, { player, tag });
+  const all = collectUsageStats(matches, spriteMap, { player: null, tag: null });
+  const tagOnly = collectUsageStats(matches, spriteMap, { player: null, tag });
+
+  const rateOf = (result: UsageStatsResult, name: string): number => {
+    const acc = result.spriteAcc.get(name);
+    if (!acc) {
+      return 0;
+    }
+    const denominator = metric === 'pickRate' ? result.totalPicks : result.totalGames;
+    if (!denominator) {
+      return 0;
+    }
+    return (metric === 'pickRate' ? acc.picks : acc.games) / denominator;
+  };
+
+  const tagNames = Array.from(new Set(matches.flatMap((match) => match.tags ?? [])));
+  const tagOrder = orderTags(tagNames);
+  const spriteTagRate = new Map<string, Map<string, number>>();
+  for (const tagName of tagOrder) {
+    const tagStats = collectUsageStats(matches, spriteMap, { player: null, tag: tagName });
+    for (const [name, acc] of tagStats.spriteAcc) {
+      const denominator = metric === 'pickRate' ? tagStats.totalPicks : tagStats.totalGames;
+      const rate = denominator > 0 ? (metric === 'pickRate' ? acc.picks : acc.games) / denominator : 0;
+      let rates = spriteTagRate.get(name);
+      if (!rates) {
+        rates = new Map();
+        spriteTagRate.set(name, rates);
+      }
+      rates.set(tagName, rate);
+    }
   }
 
-  const current = collectUsageStats(matches, spriteMap, {
-    sinceMs,
-    untilMs: Number.MAX_SAFE_INTEGER,
-    player: options.player,
-    tag: options.tag,
-  });
-
-  let prevGamesByName = new Map<string, number>();
-  let prevGamesTotal = 0;
-  if (options.range !== 'all' && spanMs > 0) {
-    const previous = collectUsageStats(matches, spriteMap, {
-      sinceMs: sinceMs - spanMs,
-      untilMs: sinceMs,
-      player: options.player,
-      tag: options.tag,
-    });
-    previous.spriteAcc.forEach((acc, name) => prevGamesByName.set(name, acc.games));
-    prevGamesTotal = previous.totalGames;
-  }
-
-  const denominator = options.metric === 'pickRate' ? current.totalPicks || 1 : current.totalGames || 1;
+  const denominator = metric === 'pickRate' ? current.totalPicks || 1 : current.totalGames || 1;
   const rows: SpriteUsageRow[] = Array.from(current.spriteAcc.entries()).map(([name, acc]) => {
-    const usageRate = (options.metric === 'pickRate' ? acc.picks : acc.games) / denominator;
-    const trendDelta = prevGamesTotal > 0 ? acc.games - (prevGamesByName.get(name) ?? 0) : 0;
+    const usageRate = (metric === 'pickRate' ? acc.picks : acc.games) / denominator;
+    const tagTrendDelta = tag ? Math.round((rateOf(tagOnly, name) - rateOf(all, name)) * 1000) / 10 : null;
     const meta = current.spriteMeta.get(name);
     return {
       key: name,
@@ -249,14 +227,13 @@ export function buildUsageStats(
       winRate: acc.games > 0 ? acc.wins / acc.games : null,
       usageRate,
       usagePercent: Math.round(usageRate * 1000) / 10,
-      trendDelta,
-      dailyGames: acc.dailyGames,
+      tagTrendDelta,
     };
   });
 
   rows.sort((a, b) => b.usageRate - a.usageRate || b.picks - a.picks || a.name.localeCompare(b.name, 'zh-CN'));
 
-  return { ...current, rows };
+  return { ...current, rows, tagOrder, spriteTagRate };
 }
 
 export function buildStatsCsv(rows: SpriteUsageRow[], metric: StatsMetricKey): string {

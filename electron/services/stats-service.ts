@@ -4,8 +4,6 @@ import { getMatchStore } from './match-service.js';
 import { spriteLookup } from './sprite-service.js';
 import type { AppPaths } from './path-service.js';
 
-export type Page5StatsRange = 'today' | '7d' | '30d' | 'all';
-
 export type StatsRankingRow = {
   key: string;
   name: string;
@@ -20,26 +18,6 @@ export type StatsRankingRow = {
   usagePercent: number;
   winRate: number | null;
 };
-
-const SUPPORTED_RANGES = new Set<Page5StatsRange>(['today', '7d', '30d', 'all']);
-
-function normalizeRange(value: unknown): Page5StatsRange {
-  return typeof value === 'string' && SUPPORTED_RANGES.has(value as Page5StatsRange)
-    ? (value as Page5StatsRange)
-    : 'all';
-}
-
-function getWindow(range: Page5StatsRange): { sinceMs: number; untilMs: number } {
-  const now = Date.now();
-  if (range === 'today') {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    return { sinceMs: start.getTime(), untilMs: now };
-  }
-  if (range === '7d') return { sinceMs: now - 7 * 86400000, untilMs: now };
-  if (range === '30d') return { sinceMs: now - 30 * 86400000, untilMs: now };
-  return { sinceMs: 0, untilMs: Number.MAX_SAFE_INTEGER };
-}
 
 function basename(value: string): string {
   return path.basename(String(value ?? '').trim());
@@ -68,29 +46,30 @@ function spriteField(sprite: unknown, key: string): string {
 }
 
 /**
- * 按时间范围 + 赛事标签计算精灵使用率/胜率排行（Top 10，按使用率降序）。
+ * 按选手 + 赛事标签计算精灵使用率/胜率排行（Top 10，按使用率降序），统计范围为全部历史对局。
  * - 使用率 = 登场只次 ÷ 总登场只次（同名精灵同局重复携带按只次计）
  * - 胜率 = 该精灵所在一侧获胜场次 ÷ 登场场次（同局左右双方携带同名精灵只计 1 场；镜像局双方同时携带按 0.5 胜计）
  */
 export function getSpriteRanking(
   paths: AppPaths,
-  options: { range: string; tag: string | null },
-): { range: Page5StatsRange; tag: string | null; totalPicks: number; rows: StatsRankingRow[] } {
+  options: { player: string | null; tag: string | null },
+): { player: string | null; tag: string | null; totalPicks: number; rows: StatsRankingRow[] } {
   const lookup = spriteLookup(paths);
   const store = getMatchStore(paths);
-  const range = normalizeRange(options.range);
-  const window = getWindow(range);
+  const player = typeof options.player === 'string' && options.player.trim() ? options.player.trim() : null;
   const tag = typeof options.tag === 'string' && options.tag.trim() ? options.tag.trim() : null;
 
   const acc = new Map<string, { picks: number; games: number; wins: number }>();
   let totalPicks = 0;
 
   const matches = store.matches.filter((match) => {
+    if (player && match.leftPlayer !== player && match.rightPlayer !== player) {
+      return false;
+    }
     if (tag && !(match.tags ?? []).includes(tag)) {
       return false;
     }
-    const time = new Date(match.createdAt).getTime();
-    return !Number.isNaN(time) && time >= window.sinceMs && time < window.untilMs;
+    return true;
   });
 
   for (const match of matches) {
@@ -167,5 +146,5 @@ export function getSpriteRanking(
 
   rows.sort((a, b) => b.usagePercent - a.usagePercent || b.picks - a.picks);
 
-  return { range, tag, totalPicks, rows: rows.slice(0, 10) };
+  return { player, tag, totalPicks, rows: rows.slice(0, 10) };
 }

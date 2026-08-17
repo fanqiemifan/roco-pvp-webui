@@ -48,7 +48,6 @@ import type {
   Page4PanelState,
   Page4SlotState,
   Page4State,
-  Page5RangeKey,
   PanelState,
   ScoreboardState,
   SlotState,
@@ -118,7 +117,7 @@ import { Page4PanelEditor } from './views/Page4PanelEditor';
 import { RosterPanelEditor } from './views/RosterPanelEditor';
 import { StatsView } from './views/StatsView';
 
-import { STATS_RANGE_OPTIONS, type StatsMetricKey, type StatsRangeKey } from './lib/stats';
+import { type StatsMetricKey } from './lib/stats';
 import type {
   CreateMatchValues,
   LiveField,
@@ -234,7 +233,6 @@ function Dashboard() {
   const [selectedHistoryKeys, setSelectedHistoryKeys] = useState<React.Key[]>([]);
   const [expandedHistoryKeys, setExpandedHistoryKeys] = useState<React.Key[]>([]);
   const [historyTagFilter, setHistoryTagFilter] = useState<string | null>(null);
-  const [statsRange, setStatsRange] = useState<StatsRangeKey>('7d');
   const [statsMetric, setStatsMetric] = useState<StatsMetricKey>('pickRate');
   const [statsPlayer, setStatsPlayer] = useState<string | null>(null);
   const [statsTag, setStatsTag] = useState<string | null>(null);
@@ -269,6 +267,10 @@ function Dashboard() {
   const lineupLocked = activeMatch?.status === 'completed';
   const progress = buildProgressItems(activeMatch);
   const allHistoryTags = buildHistoryTags(matchStore.matches);
+  const allPlayers = Array.from(new Set(matchStore.matches.flatMap((match) => [
+    match.leftPlayer,
+    match.rightPlayer,
+  ]).filter(Boolean)));
   const filteredMatches = historyTagFilter
     ? matchStore.matches.filter((match) => (match.tags ?? []).includes(historyTagFilter))
     : matchStore.matches;
@@ -1211,20 +1213,20 @@ function Dashboard() {
 
   async function saveStage(
     nextPage: StagePageKey,
-    options?: { silent?: boolean; transition?: StageTransitionType; page5Range?: Page5RangeKey; page5Tag?: string },
+    options?: { silent?: boolean; transition?: StageTransitionType; page5Player?: string; page5Tag?: string },
   ) {
     const silent = options?.silent ?? false;
     const normalized = normalizeStagePage(nextPage);
     const transition = normalizeStageTransition(options?.transition ?? stage?.transition);
-    const page5Range = options?.page5Range ?? stage?.page5Range ?? 'all';
+    const page5Player = options?.page5Player ?? stage?.page5Player ?? '';
     const page5Tag = options?.page5Tag ?? stage?.page5Tag ?? '';
     // 乐观更新，避免切换回弹
-    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page5Range, page5Tag } : prev));
+    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page5Player, page5Tag } : prev));
     setStageSaving(true);
     try {
       const data = await requestJson<{ success: boolean; stage: StageConfig }>('/api/stage', {
         method: 'POST',
-        json: { page: normalized, transition, page5Range, page5Tag },
+        json: { page: normalized, transition, page5Player, page5Tag },
       });
       applyServerState({ stage: data.stage });
       if (!silent) {
@@ -2383,12 +2385,10 @@ function Dashboard() {
             <StatsView
               matches={matchStore.matches}
               spriteMap={spriteMap}
-              range={statsRange}
               metric={statsMetric}
               player={statsPlayer}
               tag={statsTag}
               search={statsSearch}
-              onRangeChange={setStatsRange}
               onMetricChange={setStatsMetric}
               onPlayerChange={setStatsPlayer}
               onTagChange={setStatsTag}
@@ -2579,16 +2579,6 @@ function Dashboard() {
                         <Space direction="vertical" size={12} className="control-stack">
                           <Text strong>推流页面5 统计口径</Text>
                           <div>
-                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>时间范围：</Text>
-                            <Segmented
-                              block
-                              value={stage?.page5Range ?? 'all'}
-                              disabled={stageSaving}
-                              options={STATS_RANGE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                              onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page5Range: value as Page5RangeKey }); }}
-                            />
-                          </div>
-                          <div>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>赛事标签：</Text>
                             <Select
                               className="stage-page5-tag-select"
@@ -2599,6 +2589,20 @@ function Dashboard() {
                                 ...allHistoryTags.map((tag) => ({ value: tag, label: tag })),
                               ]}
                               onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page5Tag: value ?? '' }); }}
+                            />
+                          </div>
+                          <div>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>选手：</Text>
+                            <Select
+                              showSearch
+                              className="stage-page5-tag-select"
+                              value={stage?.page5Player || undefined}
+                              disabled={stageSaving}
+                              options={[
+                                { value: '', label: '全部' },
+                                ...allPlayers.map((playerName) => ({ value: playerName, label: playerName })),
+                              ]}
+                              onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page5Player: value ?? '' }); }}
                             />
                           </div>
                         </Space>

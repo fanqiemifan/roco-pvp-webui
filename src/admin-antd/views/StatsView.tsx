@@ -24,9 +24,8 @@ import {
   buildStatsCsv,
   buildUsageStats,
   STATS_METRIC_OPTIONS,
-  STATS_RANGE_OPTIONS,
 } from '../lib/stats';
-import type { SpriteUsageRow, StatsMetricKey, StatsRangeKey } from '../lib/stats';
+import type { SpriteUsageRow, StatsMetricKey } from '../lib/stats';
 
 const { Text } = Typography;
 
@@ -50,12 +49,10 @@ function StatsColumnTitle({ text, tip }: { text: string; tip: string }) {
 type StatsViewProps = {
   matches: MatchStoreState['matches'];
   spriteMap: Map<string, SpriteRecord>;
-  range: StatsRangeKey;
   metric: StatsMetricKey;
   player: string | null;
   tag: string | null;
   search: string;
-  onRangeChange: (value: StatsRangeKey) => void;
   onMetricChange: (value: StatsMetricKey) => void;
   onPlayerChange: (value: string | null) => void;
   onTagChange: (value: string | null) => void;
@@ -65,12 +62,10 @@ type StatsViewProps = {
 export function StatsView({
   matches,
   spriteMap,
-  range,
   metric,
   player,
   tag,
   search,
-  onRangeChange,
   onMetricChange,
   onPlayerChange,
   onTagChange,
@@ -86,7 +81,6 @@ export function StatsView({
     return () => mql.removeEventListener('change', update);
   }, []);
   const stats = buildUsageStats(matches, spriteMap, {
-    range,
     player,
     tag,
     metric,
@@ -103,8 +97,11 @@ export function StatsView({
   const tagOptions = Array.from(new Set(matches.flatMap((match) => match.tags ?? [])));
   const trendColors = ['#d38b2d', '#4f8cff', '#c24635'];
   const topTrendRows = stats.rows.slice(0, 3);
-  const dailyKeys = stats.dailyKeys.slice(-14);
-  const topUsageForTrend = Math.max(1, ...topTrendRows.flatMap((row) => dailyKeys.map((key) => row.dailyGames.get(key) ?? 0)));
+  const tagOrder = stats.tagOrder;
+  const topUsageForTrend = Math.max(
+    1,
+    ...topTrendRows.flatMap((row) => tagOrder.map((tag) => (stats.spriteTagRate.get(row.name)?.get(tag) ?? 0) * 100)),
+  );
 
   const statsColumns: ColumnsType<SpriteUsageRow> = [
     {
@@ -155,7 +152,7 @@ export function StatsView({
           text={metric === 'pickRate' ? '使用率' : '上场率'}
           tip={metric === 'pickRate'
             ? '使用率 = 登场只次 ÷ 总登场只次（同局重复携带按只次计）'
-            : '上场率 = 登场场次 ÷ 总场次（同局同侧重复携带只计 1 次）'}
+            : '上场率 = 登场场次 ÷ 总场次（同局左右双方携带同名精灵只计 1 次）'}
         />
       ),
       key: 'usage',
@@ -216,17 +213,24 @@ export function StatsView({
       ),
     },
     {
-      title: <StatsColumnTitle text="趋势" tip="趋势 = 本周期登场场次 − 上一等长周期登场场次（范围选择“全部”时不显示）" />,
-      key: 'trend',
-      width: 104,
+      title: (
+        <StatsColumnTitle
+          text="标签趋势"
+          tip={`标签趋势 = 当前所选赛事标签下该精灵${metric === 'pickRate' ? '使用率' : '上场率'} − 全量${metric === 'pickRate' ? '使用率' : '上场率'}（百分点）；未选择赛事标签时不显示`}
+        />
+      ),
+      key: 'tagTrend',
+      width: 112,
       align: 'center',
       render: (_: unknown, record: SpriteUsageRow) => (
-        record.trendDelta > 0 ? (
-          <Text type="success">▲{record.trendDelta}</Text>
-        ) : record.trendDelta < 0 ? (
-          <Text type="danger">▼{Math.abs(record.trendDelta)}</Text>
-        ) : (
+        record.tagTrendDelta === null ? (
           <Text type="secondary">—</Text>
+        ) : record.tagTrendDelta > 0 ? (
+          <Text type="success">▲{record.tagTrendDelta.toFixed(1)}</Text>
+        ) : record.tagTrendDelta < 0 ? (
+          <Text type="danger">▼{Math.abs(record.tagTrendDelta).toFixed(1)}</Text>
+        ) : (
+          <Text type="secondary">0.0</Text>
         )
       ),
     },
@@ -248,11 +252,6 @@ export function StatsView({
     <Space direction="vertical" size={18} className="page-stack">
       <Card title="统计口径">
         <Space wrap size={12}>
-          <Segmented
-            value={range}
-            options={STATS_RANGE_OPTIONS}
-            onChange={(value) => onRangeChange(value as StatsRangeKey)}
-          />
           <Segmented
             value={metric}
             options={STATS_METRIC_OPTIONS}
@@ -385,15 +384,19 @@ export function StatsView({
               </Card>
             </Col>
             <Col xs={isFullscreenWide ? 24 : 12}>
-              <Card title="Top 3 登场趋势" extra={<Text type="secondary">按日聚合</Text>} className="stats-equal-card">
-                {topTrendRows.length && dailyKeys.length > 1 ? (
+              <Card
+                title={metric === 'pickRate' ? 'Top 3 各赛事阶段使用率' : 'Top 3 各赛事阶段上场率'}
+                extra={<Text type="secondary">按赛事标签</Text>}
+                className="stats-equal-card"
+              >
+                {topTrendRows.length && tagOrder.length > 1 ? (
                   <Space direction="vertical" size={10} className="page-stack stats-trend-stack">
-                    <svg viewBox={`0 0 ${Math.max(dailyKeys.length * 40, 120)} 140`} className="stats-trend-svg" preserveAspectRatio="none">
+                    <svg viewBox={`0 0 ${Math.max(tagOrder.length * 40, 120)} 140`} className="stats-trend-svg" preserveAspectRatio="none">
                       {topTrendRows.map((row, rowIndex) => {
-                        const points = dailyKeys.map((key, index) => {
-                          const games = row.dailyGames.get(key) ?? 0;
-                          const x = dailyKeys.length > 1 ? (index / (dailyKeys.length - 1)) * 100 : 0;
-                          const y = 130 - (games / topUsageForTrend) * 120;
+                        const points = tagOrder.map((tag, index) => {
+                          const rate = (stats.spriteTagRate.get(row.name)?.get(tag) ?? 0) * 100;
+                          const x = tagOrder.length > 1 ? (index / (tagOrder.length - 1)) * 100 : 0;
+                          const y = 130 - (rate / topUsageForTrend) * 120;
                           return `${x},${Math.max(4, y)}`;
                         }).join(' ');
                         return (
@@ -412,7 +415,7 @@ export function StatsView({
                   </Space>
                 ) : (
                   <div className="stats-card-empty">
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="需要至少两天的登场数据" />
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="需要至少两个赛事阶段的登场数据" />
                   </div>
                 )}
               </Card>

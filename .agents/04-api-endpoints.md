@@ -61,7 +61,7 @@
 
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
 |-------------|------|------|------|------|
-| 精灵排行 | GET | /api/stats/ranking | 精灵使用率/上场率/胜率排行 | electron/socket-server.ts |
+| 精灵排行 | GET | /api/stats/ranking | 精灵使用率/上场率/胜率排行（支持 tag / player 参数，统计全部历史对局） | electron/socket-server.ts |
 
 ## 精灵接口
 

@@ -619,9 +619,9 @@ export async function createLocalServer(
   });
 
   app.get('/api/stats/ranking', (request, response) => {
-    const range = typeof request.query.range === 'string' ? request.query.range : 'all';
+    const player = typeof request.query.player === 'string' ? request.query.player : '';
     const tag = typeof request.query.tag === 'string' ? request.query.tag : '';
-    response.json(getSpriteRanking(paths, { range, tag: tag || null }));
+    response.json(getSpriteRanking(paths, { player: player || null, tag: tag || null }));
   });
 
   app.post('/api/panels/:position', (request, response) => {
