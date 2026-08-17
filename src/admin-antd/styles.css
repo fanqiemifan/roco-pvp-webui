@@ -881,6 +881,32 @@ a {
   margin-bottom: 16px;
 }
 
+.history-search-input {
+  width: 240px;
+}
+
+.history-sort-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.history-sort-triangle {
+  display: inline-block;
+  font-size: 10px;
+  line-height: 1;
+  width: 10px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.history-sort-triangle.is-asc,
+.history-sort-triangle.is-desc {
+  color: #1677ff;
+}
+
 .history-notice {
   margin-bottom: 16px;
 }

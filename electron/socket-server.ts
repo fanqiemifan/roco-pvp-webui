@@ -45,6 +45,7 @@ import {
   undoMatchAction,
   updateMatch,
   updateMatchTags,
+  updateMatchesTags,
 } from './services/match-service.js';
 import {
   clearPanelState,
@@ -407,6 +408,17 @@ export async function createLocalServer(
   app.patch('/api/matches/:matchId/tags', (request, response) => {
     try {
       const matches = updateMatchTags(paths, request.params.matchId, request.body ?? {});
+      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      response.json({ success: true, matches });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/matches/batch-tags', (request, response) => {
+    try {
+      const body = (request.body ?? {}) as { matchIds?: unknown; tags?: unknown };
+      const matches = updateMatchesTags(paths, body.matchIds, { tags: body.tags });
       io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
       response.json({ success: true, matches });
     } catch (error) {
