@@ -2822,15 +2822,7 @@ function Dashboard() {
                           </Form.Item>
                         </Col>
                       </Row>
-                      <Space wrap>
-                        <Button type="primary" htmlType="submit">保存显示设置</Button>
-                        <Tag color="blue">
-                          当前比分：{scoreboard?.leftScore ?? '0'} : {scoreboard?.rightScore ?? '0'}
-                        </Tag>
-                        <Tag color="gold">
-                          当前赛制：BO{scoreboard?.bestOf ?? '-'}
-                        </Tag>
-                      </Space>
+                      <Button type="primary" htmlType="submit">保存显示设置</Button>
                     </Form>
                   </Card>
                 </Space>
