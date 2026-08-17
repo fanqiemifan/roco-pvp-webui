@@ -1,95 +1,102 @@
 (function () {
     'use strict';
 
-    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
     const FALLBACK_IMG = '/assets/ui/back.png';
-    const DEFAULT_TITLE = '使用率 · 胜率排行';
+    const DEFAULT_TITLE = '登场 · 胜率排行';
 
     const titleEl = document.getElementById('page5Title');
     const badgeEl = document.getElementById('page5Badge');
     const leftRowsEl = document.getElementById('page5RowsLeft');
     const rightRowsEl = document.getElementById('page5RowsRight');
 
-    const unavailableThumbnailPaths = new Set();
-
-    function basename(value) {
-        return String(value || '').split('/').filter(Boolean).pop() || '';
+    function normalizeDisplayName(value) {
+        return String(value || '').trim().replace(/[-_－—]\d+$/, '');
     }
 
-    function sanitizeFilenameSegment(value, fallback = '') {
-        const normalized = String(value ?? '')
-            .normalize('NFC')
-            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
-            .replace(/\s+/g, '')
-            .replace(/\.+$/g, '')
-            .trim();
-        return normalized || fallback;
+    function getSpriteName(row) {
+        return normalizeDisplayName(row && (row.cardName || row.displayName || row.name) || '');
     }
 
-    function buildThumbnailCandidates(row) {
-        const thumbnailId = String(row && row.thumbnailId ? row.thumbnailId : '').trim();
-        if (!thumbnailId) {
-            return [];
+    function getCardNameLeft(nameLength) {
+        switch (nameLength) {
+            case 2:
+                return 44;
+            case 3:
+                return 40;
+            case 4:
+                return 37;
+            case 5:
+                return 34;
+            default:
+                return nameLength <= 2 ? 44 : 37;
         }
-        const candidateNames = [
-            row && row.cardName,
-            row && row.displayName,
-            row && row.name,
-            row && row.filename ? basename(row.filename) : '',
-        ]
-            .map((value) => sanitizeFilenameSegment(value))
-            .filter(Boolean);
-        return Array.from(new Set(candidateNames)).map((name) => `${THUMBNAIL_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
     }
 
-    function applySpriteImage(imgEl, row) {
-        const fallbackSrc = row && row.spritePath ? String(row.spritePath) : '';
-        const thumbnailCandidates = buildThumbnailCandidates(row).filter((path) => !unavailableThumbnailPaths.has(path));
-        const sourceQueue = [...thumbnailCandidates, ...(fallbackSrc ? [fallbackSrc] : [])];
+    // 复用 roco-pvp-page3 的 petsdiv（sprite-pet-card）128×128
+    function buildPetCard(row) {
+        const name = getSpriteName(row);
+        const attr1 = row && row.attributeIcon1 ? String(row.attributeIcon1) : '';
+        const attr2 = row && row.attributeIcon2 ? String(row.attributeIcon2) : '';
+        const spriteSrc = row && row.spritePath ? String(row.spritePath) : FALLBACK_IMG;
 
-        if (sourceQueue.length === 0) {
-            imgEl.removeAttribute('src');
-            imgEl.onerror = null;
-            return;
-        }
+        const card = document.createElement('div');
+        card.className = 'sprite-pet-card';
+        card.style.setProperty('--pet-card-size', '128px');
+        card.style.setProperty('--pet-name-left', String(getCardNameLeft(name.length)));
 
-        const imageSignature = JSON.stringify(sourceQueue);
-        if (imgEl.dataset.imageSignature === imageSignature) {
-            return;
-        }
+        card.innerHTML = `
+            <div class="sprite-pet-card-bg"></div>
+            ${attr2 ? '<div class="sprite-pet-card-attr-circle"></div>' : ''}
+            <img class="sprite-pet-card-sprite" alt="">
+            ${attr1 ? '<img class="sprite-pet-card-attr sprite-pet-card-attr-1" alt="">' : ''}
+            ${attr2 ? '<img class="sprite-pet-card-attr sprite-pet-card-attr-2" alt="">' : ''}
+            <div class="sprite-pet-card-name-bg"></div>
+            <span class="sprite-pet-card-name"></span>
+        `;
 
-        imgEl.dataset.imageSignature = imageSignature;
-        let currentIndex = 0;
-
-        const assignNext = () => {
-            imgEl.dataset.currentSrc = sourceQueue[currentIndex];
-            imgEl.src = sourceQueue[currentIndex];
+        const spriteImage = card.querySelector('.sprite-pet-card-sprite');
+        spriteImage.src = spriteSrc;
+        spriteImage.alt = name;
+        spriteImage.onerror = () => {
+            spriteImage.onerror = null;
+            spriteImage.src = FALLBACK_IMG;
         };
 
-        imgEl.onerror = () => {
-            const failedSrc = imgEl.dataset.currentSrc || '';
-            if (failedSrc.startsWith(THUMBNAIL_RESOURCE_BASE)) {
-                unavailableThumbnailPaths.add(failedSrc);
-            }
-            currentIndex += 1;
-            if (currentIndex >= sourceQueue.length) {
-                imgEl.onerror = null;
-                imgEl.src = FALLBACK_IMG;
-                return;
-            }
-            assignNext();
-        };
+        if (attr1) {
+            const icon = card.querySelector('.sprite-pet-card-attr-1');
+            icon.src = attr1;
+            icon.onerror = () => {
+                icon.onerror = null;
+                icon.remove();
+            };
+        }
 
-        assignNext();
+        if (attr2) {
+            const icon = card.querySelector('.sprite-pet-card-attr-2');
+            icon.src = attr2;
+            icon.onerror = () => {
+                icon.onerror = null;
+                icon.remove();
+            };
+        }
+
+        const nameEl = card.querySelector('.sprite-pet-card-name');
+        nameEl.textContent = name;
+
+        return card;
     }
 
-    function formatPercent(value) {
-        return `${value.toFixed(1)}%`;
+    // 胜率仅显示 2 位整数百分比，如 47%
+    function formatWinRate(value) {
+        if (typeof value !== 'number') {
+            return '-';
+        }
+        return `${Math.round(value * 100)}%`;
     }
 
     function buildRow(row, index) {
         const el = document.createElement('div');
-        el.className = 'page5-row' + (index === 0 ? ' is-top' : '');
+        el.className = 'page5-row';
 
         const rank = document.createElement('div');
         rank.className = 'page5-rank';
@@ -97,25 +104,19 @@
 
         const sprite = document.createElement('div');
         sprite.className = 'page5-sprite';
-        sprite.innerHTML = '<img alt="" />';
-        applySpriteImage(sprite.querySelector('img'), row);
+        sprite.appendChild(buildPetCard(row));
 
         const count = document.createElement('div');
         count.className = 'page5-data page5-data-count';
         count.textContent = String(row.picks || 0);
 
-        const usage = document.createElement('div');
-        usage.className = 'page5-data';
-        usage.textContent = formatPercent(row.usagePercent || 0);
-
         const wins = document.createElement('div');
         wins.className = 'page5-data page5-data-wins';
-        wins.textContent = typeof row.winRate === 'number' ? formatPercent(row.winRate * 100) : '-';
+        wins.textContent = formatWinRate(row.winRate);
 
         el.appendChild(rank);
         el.appendChild(sprite);
         el.appendChild(count);
-        el.appendChild(usage);
         el.appendChild(wins);
         return el;
     }
@@ -143,10 +144,7 @@
         } else if (playerLabel) {
             scopeLabel = playerLabel;
         }
-        badgeEl.innerHTML = '';
-        const inner = document.createElement('span');
-        inner.textContent = scopeLabel;
-        badgeEl.appendChild(inner);
+        badgeEl.textContent = scopeLabel;
     }
 
     function applyTitle(eventTitle) {

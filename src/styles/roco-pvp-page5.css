@@ -1,24 +1,8 @@
-/* 推流页面5：使用率/胜率排行 · 暖色调（参考 live-standby-demo）+ YouSheBiaoTiHei */
+/* 推流页面5：登场/胜率排行 · 蓝色主题 */
 @font-face {
     font-family: "YouSheBiaoTiHei";
     src: url("/assets/fonts/YouSheBiaoTiHei-2.ttf") format("truetype");
     font-display: swap;
-}
-
-:root {
-    --paper: #f2ede1;
-    --paper-strong: #fbf8f0;
-    --paper-warm: #ede4d1;
-    --ink: #31291f;
-    --ink-soft: #6f6355;
-    --gold: #b6844f;
-    --gold-deep: #8f6133;
-    --green: #2f9e62;
-    --line: rgba(104, 81, 55, 0.14);
-    --line-strong: rgba(104, 81, 55, 0.22);
-    --shadow: 0 22px 48px rgba(87, 67, 46, 0.12);
-    --title-font: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
-    --body-font: "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 * {
@@ -33,7 +17,6 @@ body {
     height: 100%;
     overflow: hidden;
     background: transparent !important;
-    font-family: var(--body-font);
 }
 
 .page5-screen {
@@ -41,214 +24,147 @@ body {
     width: 1920px;
     height: 1080px;
     overflow: hidden;
-    background:
-        radial-gradient(circle at top left, rgba(197, 167, 127, 0.26), transparent 26%),
-        radial-gradient(circle at right 18% top 10%, rgba(182, 132, 79, 0.12), transparent 24%),
-        linear-gradient(135deg, #f8f3e8 0%, var(--paper) 46%, #ebe2d0 100%);
-    color: var(--ink);
-    display: flex;
-    flex-direction: column;
-    padding: 48px 96px 56px;
+    background: url("/assets/ui/back-for-page5.png") no-repeat center / 100% 100%;
 }
 
-/* 光影装饰 */
-.page5-bg {
+/* 标题：YouSheBiaoTiHei 96px 居中 Y35 */
+.page5-title {
+    position: absolute;
+    left: 50%;
+    top: 35px;
+    transform: translateX(-50%);
+    z-index: 2;
+    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-size: 96px;
+    line-height: 1;
+    color: #ffffff;
+    text-align: center;
+    white-space: nowrap;
+    letter-spacing: 4px;
+    text-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* 口径标签 */
+.page5-badge {
+    position: absolute;
+    right: 40px;
+    top: 40px;
+    z-index: 2;
+    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-size: 36px;
+    color: #ffffff;
+    background: rgba(0, 47, 255, 0.55);
+    padding: 6px 24px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.page5-content {
     position: absolute;
     inset: 0;
-    background:
-        linear-gradient(120deg, rgba(255, 255, 255, 0.4) 0%, transparent 42%),
-        linear-gradient(-60deg, rgba(182, 132, 79, 0.1) 0%, transparent 55%);
-    pointer-events: none;
 }
 
-/* 头部 */
-.page5-header {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 28px;
-}
-
-.page5-title {
-    font-family: var(--title-font);
-    font-size: 92px;
-    line-height: 0.9;
-    letter-spacing: 2px;
-    color: var(--gold-deep);
-    text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.55);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.page5-badge-row {
-    flex: none;
-    display: flex;
-    align-items: center;
-}
-
-.page5-badge {
-    font-family: var(--title-font);
-    font-size: 46px;
-    background: linear-gradient(135deg, #c79a67, #a86e3d);
-    color: #fffaf2;
-    padding: 8px 30px;
-    border-radius: 12px;
-    box-shadow: 0 14px 24px rgba(168, 110, 61, 0.22);
-    transform: skewX(-6deg);
-}
-
-.page5-badge > span {
-    display: inline-block;
-    transform: skewX(6deg);
-}
-
-/* 内容区 */
-.page5-content {
-    position: relative;
-    z-index: 1;
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    gap: 56px;
-    padding: 26px 30px;
-    border-radius: 28px;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 251, 244, 0.86)),
-        var(--paper-strong);
-    border: 1px solid var(--line);
-    box-shadow: var(--shadow);
-}
-
+/* 双列：左 x115 右 x1012，y178 起，宽 812 */
 .page5-column {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
+    position: absolute;
+    top: 178px;
+    width: 812px;
 }
 
-/* 表头 */
+.page5-column-left {
+    left: 115px;
+}
+
+.page5-column-right {
+    left: 1012px;
+}
+
+/* 表头：812×120 背景 002FFF */
 .page5-table-header {
-    display: flex;
-    align-items: flex-end;
-    height: 58px;
-    padding: 0 24px 12px 116px;
-    border-bottom: 3px solid rgba(143, 97, 51, 0.32);
-    margin-bottom: 12px;
+    position: relative;
+    width: 812px;
+    height: 120px;
+    background: #002fff;
 }
 
 .page5-header-item {
-    width: 190px;
-    flex: none;
+    position: absolute;
+    top: 19px;
+    width: 118px;
+    height: 83px;
+    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-size: 64px;
+    color: #ccd5ff;
     text-align: center;
-    font-family: var(--title-font);
-    font-size: 30px;
-    color: var(--gold-deep);
-    letter-spacing: 4px;
 }
 
-.page5-header-rank {
-    width: 76px;
-    flex: none;
+.page5-header-count {
+    left: 402px;
 }
 
-.page5-header-sprite {
-    flex: 1;
-    text-align: left;
+.page5-header-wins {
+    left: 602px;
 }
 
-/* 行 */
+/* 行：最多5条，812×136 */
 .page5-rows {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    width: 812px;
 }
 
 .page5-row {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    padding: 0 24px;
-    border-radius: 18px;
-    background: linear-gradient(180deg, rgba(250, 246, 238, 0.9), rgba(240, 232, 216, 0.92));
-    border: 1px solid var(--line);
-    min-height: 0;
-}
-
-.page5-row.is-top {
-    background: linear-gradient(90deg, rgba(198, 162, 115, 0.28), rgba(255, 251, 244, 0.94));
-    border-color: rgba(182, 132, 79, 0.28);
-    box-shadow: 0 14px 24px rgba(182, 132, 79, 0.14);
-}
-
-.page5-rank {
-    flex: none;
-    width: 76px;
-    font-family: var(--title-font);
-    font-size: 54px;
-    font-style: italic;
-    color: var(--gold-deep);
-    text-align: center;
-    line-height: 1;
-}
-
-/* 精灵头像：复用 roco-pvp-page1 的 petsdiv3 圆环样式 */
-.page5-sprite {
-    --petsdiv3-scale: 0.9;
     position: relative;
-    flex: none;
-    width: calc(98px * var(--petsdiv3-scale));
-    height: calc(98px * var(--petsdiv3-scale));
-    overflow: visible;
-    margin-right: 26px;
+    width: 812px;
+    height: 136px;
+    background: 
+        linear-gradient(270deg, rgba(0, 47, 255, 0.2), rgba(0, 47, 255, 0.5)),
+        linear-gradient(90deg, rgb(126 126 126 / 0.35) 0%, rgb(228 228 228 / 0.35) 100%) 0 100% / 100% 1px no-repeat;
+    border-left: 12px solid #002fff;
 }
 
-.page5-sprite::before {
-    content: "";
+/* 名次 */
+.page5-rank {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    width: calc(80px * var(--petsdiv3-scale));
-    height: calc(80px * var(--petsdiv3-scale));
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    background: #424442;
-    border: calc(3px * var(--petsdiv3-scale)) solid #5d5d5d;
-    overflow: hidden;
-}
-
-.page5-sprite img {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: calc(110px * var(--petsdiv3-scale));
-    height: calc(110px * var(--petsdiv3-scale));
-    transform: translate(-50%, -50%);
-    object-fit: contain;
-    display: block;
-    pointer-events: none;
-}
-
-.page5-data {
-    flex: none;
-    width: 190px;
-    font-family: var(--title-font);
-    font-size: 48px;
-    color: var(--gold-deep);
+    left: 48px;
+    top: 26px;
+    width: 56px;
+    height: 82px;
+    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-size: 64px;
+    color: #ffffff;
     text-align: center;
-    line-height: 1;
+}
+
+/* 精灵卡片：复用 page3 的 petsdiv（sprite-pet-card）128×128 */
+.page5-sprite {
+    position: absolute;
+    left: 118px;
+    top: 4px;
+    width: 128px;
+    height: 128px;
+}
+
+.page5-sprite .sprite-pet-card {
+    --pet-card-size: 128px;
+}
+
+/* 登场 / 胜率 */
+.page5-data {
+    position: absolute;
+    top: 26px;
+    width: 120px;
+    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-size: 64px;
+    color: #ffffff;
+    text-align: center;
     font-variant-numeric: tabular-nums;
 }
 
 .page5-data-count {
-    font-size: 42px;
-    color: var(--gold-deep);
+    left: 381px;
 }
 
 .page5-data-wins {
-    color: var(--gold-deep);
+    left: 577px;
 }

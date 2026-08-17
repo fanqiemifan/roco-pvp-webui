@@ -61,7 +61,7 @@ pvp-webUI-for-roco/
 | electron/services/path-service.ts | 文件路径管理和路径工厂 |
 | electron/services/page4-service.ts | 仅显阵容页（page4）状态管理 |
 | electron/services/stage-service.ts | 直播推流载体配置管理 |
-| electron/services/stats-service.ts | 精灵使用率/胜率排行统计（/api/stats/ranking） |
+| electron/services/stats-service.ts | 精灵精灵登场/胜率排行统计（/api/stats/ranking） |
 
 ### 共享模块
 
@@ -79,7 +79,7 @@ pvp-webUI-for-roco/
 | views/RosterPanelEditor.tsx | 阵容编辑（左右面板、精灵搜索、快速填充） |
 | views/Page4PanelEditor.tsx | 仅显阵容（page4）面板编辑 |
 | views/Page4DeathPanel.tsx | page4 阵亡面板 |
-| views/StatsView.tsx | 数据统计视图（使用率/胜率排行、属性分布、Top 3 趋势） |
+| views/StatsView.tsx | 数据统计视图（使用率/胜率排行、属性分布、标签趋势） |
 | components/ | Page4SlotVisual、SpritePetCard、StageThumb 等小组件 |
 | lib/ | format、history、live、match、panel、preview、request、sprite、stats 通用逻辑 |
 | constants.ts / types.ts | 管理后台本地常量与类型 |
@@ -93,7 +93,7 @@ pvp-webUI-for-roco/
 | lineup-display.js | 推流页面2（全局阵容展示）脚本 |
 | page3-display.js | 推流页面3（头像比分阵容）脚本 |
 | page4-display.js | 仅显阵容页（page4）脚本 |
-| page5-display.js | 使用率/胜率排行页（page5）脚本 |
+| page5-display.js | 登场/胜率排行页（page5）脚本 |
 | stage-carrier.js | 推流载体页（index.html）脚本，按 stage 配置加载对应页面 |
 | live-standby-demo.js | 等待页脚本 |
 | float.js | 桌面阵容悬浮窗脚本 |
@@ -108,7 +108,7 @@ pvp-webUI-for-roco/
 | roco-pvp-page2.html | 推流页面2（全局阵容展示） |
 | roco-pvp-page3.html | 推流页面3（头像比分阵容） |
 | roco-pvp-page4.html | 仅显阵容页 |
-| roco-pvp-page5.html | 使用率/胜率排行页 |
+| roco-pvp-page5.html | 登场/胜率排行页 |
 | live-standby-demo.html | 等待页 |
 | float.html | 桌面阵容悬浮窗 |
 | float-menu.html | 更换精灵菜单 |

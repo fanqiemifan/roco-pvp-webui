@@ -54,7 +54,7 @@
 - roco-pvp-page2.html + lineup-display.js — 全局阵容展示
 - roco-pvp-page3.html + page3-display.js — 头像比分阵容
 - roco-pvp-page4.html + page4-display.js — 仅显阵容
-- roco-pvp-page5.html + page5-display.js — 使用率/胜率排行
+- roco-pvp-page5.html + page5-display.js — 登场/胜率排行
 - live-standby-demo.html + live-standby-demo.js — 等待页
 - float.html + float.js — 桌面阵容悬浮窗（透明置顶小窗）
 - float-menu.html + float-menu.js — 更换精灵菜单（形态选择 / 全新精灵选择器）

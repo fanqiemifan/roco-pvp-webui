@@ -3,39 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>洛克王国PVP - 推流页面5（使用率/胜率排行）</title>
+    <title>洛克王国PVP - 推流页面5（登场/胜率排行）</title>
+    <link rel="stylesheet" href="/styles/sprite-pet-card.css">
     <link rel="stylesheet" href="/styles/roco-pvp-page5.css">
 </head>
 <body>
-    <main class="page5-screen" aria-label="洛克王国PVP使用率胜率排行">
-        <div class="page5-bg" aria-hidden="true"></div>
-
-        <header class="page5-header">
-            <h1 id="page5Title" class="page5-title">使用率 · 胜率排行</h1>
-            <div class="page5-badge-row">
-                <span id="page5Badge" class="page5-badge">全部 · 全部</span>
-            </div>
-        </header>
+    <main class="page5-screen" aria-label="洛克王国PVP登场胜率排行">
+        <h1 id="page5Title" class="page5-title">登场 · 胜率排行</h1>
+        <div class="page5-badge" id="page5Badge">全部</div>
 
         <div class="page5-content">
-            <section class="page5-column" aria-label="第1-5名">
+            <section class="page5-column page5-column-left" aria-label="第1-5名">
                 <div class="page5-table-header">
-                    <div class="page5-header-item page5-header-rank"></div>
-                    <div class="page5-header-item page5-header-sprite"></div>
-                    <div class="page5-header-item">登场次数</div>
-                    <div class="page5-header-item">使用率</div>
-                    <div class="page5-header-item">胜率</div>
+                    <span class="page5-header-item page5-header-count">登场</span>
+                    <span class="page5-header-item page5-header-wins">胜率</span>
                 </div>
                 <div class="page5-rows" id="page5RowsLeft"></div>
             </section>
 
-            <section class="page5-column" aria-label="第6-10名">
+            <section class="page5-column page5-column-right" aria-label="第6-10名">
                 <div class="page5-table-header">
-                    <div class="page5-header-item page5-header-rank"></div>
-                    <div class="page5-header-item page5-header-sprite"></div>
-                    <div class="page5-header-item">登场次数</div>
-                    <div class="page5-header-item">使用率</div>
-                    <div class="page5-header-item">胜率</div>
+                    <span class="page5-header-item page5-header-count">登场</span>
+                    <span class="page5-header-item page5-header-wins">胜率</span>
                 </div>
                 <div class="page5-rows" id="page5RowsRight"></div>
             </section>

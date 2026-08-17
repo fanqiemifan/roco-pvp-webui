@@ -25,7 +25,7 @@
 | /roco-pvp-page2.html | roco-pvp-page2.html | 推流页面2（全局阵容展示） |
 | /roco-pvp-page3.html | roco-pvp-page3.html | 推流页面3（头像比分阵容） |
 | /page4.html、/roco-pvp-page4.html | roco-pvp-page4.html | 仅显阵容页 |
-| /roco-pvp-page5.html | roco-pvp-page5.html | 使用率/胜率排行页 |
+| /roco-pvp-page5.html | roco-pvp-page5.html | 登场/胜率排行页 |
 | /live-standby-demo.html | live-standby-demo.html | 等待页 |
 | /float.html | float.html | 桌面阵容悬浮窗 |
 | /float-menu.html | float-menu.html | 更换精灵菜单 |
