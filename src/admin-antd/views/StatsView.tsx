@@ -215,6 +215,19 @@ export function StatsView({
     {
       title: (
         <StatsColumnTitle
+          text="阵亡次数"
+          tip="阵亡次数 = 已结束小局中该精灵 HP=0 的登场只数（重复携带的多只各计 1 次；同局双方同时阵亡各计 1 次）"
+        />
+      ),
+      dataIndex: 'deaths',
+      key: 'deaths',
+      width: 108,
+      align: 'right',
+      sorter: (a, b) => a.deaths - b.deaths,
+    },
+    {
+      title: (
+        <StatsColumnTitle
           text="标签趋势"
           tip={`标签趋势 = 当前所选赛事标签下该精灵${metric === 'pickRate' ? '使用率' : '上场率'} − 全量${metric === 'pickRate' ? '使用率' : '上场率'}（百分点）；未选择赛事标签时不显示`}
         />
@@ -341,6 +354,7 @@ export function StatsView({
                 ? '使用率 = 登场只次 ÷ 总登场只次（同局重复携带按只次计）'
                 : '上场率 = 登场场次 ÷ 总场次（同局左右双方携带同名精灵只计 1 次）'}
               {' · 胜率 = 该精灵所在一侧获胜场次 ÷ 登场场次（镜像局双方同携按 0.5 胜计）'}
+              {' · 阵亡次数 = 已结束小局中 HP=0 的登场只数'}
             </Text>
           </Card>
         </Col>

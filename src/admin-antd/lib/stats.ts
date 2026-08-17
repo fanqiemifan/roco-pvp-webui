@@ -15,6 +15,7 @@ export type SpriteUsageAccumulator = {
   picks: number;
   games: number;
   wins: number;
+  deaths: number;
 };
 
 export type SpriteUsageRow = {
@@ -25,6 +26,7 @@ export type SpriteUsageRow = {
   picks: number;
   games: number;
   wins: number;
+  deaths: number;
   winRate: number | null;
   usageRate: number;
   usagePercent: number;
@@ -100,7 +102,7 @@ function collectUsageStats(
           const name = resolveSpriteStatsName(sprite, spriteId);
           let acc = spriteAcc.get(name);
           if (!acc) {
-            acc = { picks: 0, games: 0, wins: 0 };
+            acc = { picks: 0, games: 0, wins: 0, deaths: 0 };
             spriteAcc.set(name, acc);
           }
           if (!spriteMeta.has(name)) {
@@ -145,6 +147,23 @@ function collectUsageStats(
             (appearance.onRight && game.winner === 'right')
           ) {
             acc.wins += 1;
+          }
+        }
+      }
+
+      if (game.status === 'completed') {
+        for (const slots of [game.leftSlots, game.rightSlots]) {
+          for (const slot of slots) {
+            if (!slot.spriteId || slot.healthEnabled === false || slot.healthPercent !== 0) {
+              continue;
+            }
+            const name = resolveSpriteStatsName(spriteMap.get(slot.spriteId), slot.spriteId);
+            let acc = spriteAcc.get(name);
+            if (!acc) {
+              acc = { picks: 0, games: 0, wins: 0, deaths: 0 };
+              spriteAcc.set(name, acc);
+            }
+            acc.deaths += 1;
           }
         }
       }
@@ -224,6 +243,7 @@ export function buildUsageStats(
       picks: acc.picks,
       games: acc.games,
       wins: acc.wins,
+      deaths: acc.deaths,
       winRate: acc.games > 0 ? acc.wins / acc.games : null,
       usageRate,
       usagePercent: Math.round(usageRate * 1000) / 10,
@@ -237,7 +257,7 @@ export function buildUsageStats(
 }
 
 export function buildStatsCsv(rows: SpriteUsageRow[], metric: StatsMetricKey): string {
-  const header = ['排名', '精灵', '属性', metric === 'pickRate' ? '使用率(%)' : '上场率(%)', '登场只次', '登场场次', '获胜场次', '胜率(%)'];
+  const header = ['排名', '精灵', '属性', metric === 'pickRate' ? '使用率(%)' : '上场率(%)', '登场只次', '登场场次', '获胜场次', '胜率(%)', '阵亡次数'];
   const lines = rows.map((row, index) => [
     String(index + 1),
     row.name,
@@ -247,6 +267,7 @@ export function buildStatsCsv(rows: SpriteUsageRow[], metric: StatsMetricKey): s
     String(row.games),
     String(row.wins),
     row.winRate === null ? '' : (row.winRate * 100).toFixed(1),
+    String(row.deaths),
   ]);
   return [header, ...lines].map((cells) => cells.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
 }
