@@ -1033,6 +1033,49 @@ export function updateMatchTags(paths: AppPaths, matchId: string, payload: unkno
   return getMatchStore(paths);
 }
 
+export function updateMatchesTags(paths: AppPaths, matchIds: unknown, payload: unknown): MatchStoreState {
+  if (!Array.isArray(matchIds)) {
+    throw new Error('matchIds must be a list');
+  }
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('tags payload must be an object');
+  }
+
+  const uniqueMatchIds = Array.from(new Set(
+    matchIds
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean),
+  ));
+  if (!uniqueMatchIds.length) {
+    throw new Error('请选择至少一条赛事记录');
+  }
+
+  const { store } = readStoreFile(paths);
+  const indexById = new Map(store.matches.map((match, index) => [match.id, index]));
+  const missing = uniqueMatchIds.filter((id) => !indexById.has(id));
+  if (missing.length) {
+    throw new Error('部分比赛不存在');
+  }
+
+  const raw = payload as Record<string, unknown>;
+  const addTags = normalizeTags(raw.tags);
+  const now = new Date().toISOString();
+
+  for (const id of uniqueMatchIds) {
+    const index = indexById.get(id) as number;
+    const existing = store.matches[index].tags ?? [];
+    const merged = Array.from(new Set([...existing, ...addTags]));
+    store.matches[index] = {
+      ...store.matches[index],
+      tags: merged,
+      updatedAt: now,
+    };
+  }
+
+  writeStoreFile(paths, store);
+  return getMatchStore(paths);
+}
+
 export function setActiveMatch(paths: AppPaths, matchId: string): MatchStoreState {
   const { store } = readStoreFile(paths);
   const match = store.matches.find((item) => item.id === matchId);

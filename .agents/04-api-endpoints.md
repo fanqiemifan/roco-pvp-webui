@@ -32,6 +32,7 @@
 | 创建比赛 | POST | /api/matches | 创建新比赛 | electron/socket-server.ts |
 | 更新比赛 | PATCH | /api/matches/:matchId | 更新比赛信息 | electron/socket-server.ts |
 | 更新比赛标签 | PATCH | /api/matches/:matchId/tags | 更新比赛标签 | electron/socket-server.ts |
+| 批量添加标签 | POST | /api/matches/batch-tags | 为多场比赛追加标签（合并保留原有，body: matchIds/tags） | electron/socket-server.ts |
 | 删除比赛 | DELETE | /api/matches/:matchId | 删除单个比赛 | electron/socket-server.ts |
 | 选择活动比赛 | POST | /api/matches/:matchId/select | 选择活动比赛 | electron/socket-server.ts |
 | 开始小局 | POST | /api/matches/:matchId/start | 开始当前小局 | electron/socket-server.ts |

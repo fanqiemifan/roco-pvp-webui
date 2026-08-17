@@ -183,6 +183,46 @@ const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
   },
 ];
 
+type HistorySortKey = 'updatedAt' | 'score' | 'bestOf' | 'status';
+
+type HistorySortState = {
+  key: HistorySortKey | null;
+  order: 'asc' | 'desc' | null;
+};
+
+const HISTORY_STATUS_RANK: Record<MatchRecord['status'], number> = {
+  in_progress: 0,
+  pending: 1,
+  completed: 2,
+};
+
+function HistorySortHeader({ text, sortKey, activeOrder, onSort }: {
+  text: string;
+  sortKey: HistorySortKey;
+  activeOrder: 'asc' | 'desc' | null;
+  onSort: (key: HistorySortKey) => void;
+}) {
+  return (
+    <span
+      className="history-sort-header"
+      role="button"
+      tabIndex={0}
+      onClick={() => onSort(sortKey)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSort(sortKey);
+        }
+      }}
+    >
+      {text}
+      <span className={`history-sort-triangle${activeOrder ? ` is-${activeOrder}` : ''}`}>
+        {activeOrder === 'asc' ? '▲' : activeOrder === 'desc' ? '▼' : ''}
+      </span>
+    </span>
+  );
+}
+
 function Dashboard() {
   const { message, modal } = App.useApp();
   const [view, setView] = useState<ViewKey>('roster');
@@ -233,6 +273,11 @@ function Dashboard() {
   const [selectedHistoryKeys, setSelectedHistoryKeys] = useState<React.Key[]>([]);
   const [expandedHistoryKeys, setExpandedHistoryKeys] = useState<React.Key[]>([]);
   const [historyTagFilter, setHistoryTagFilter] = useState<string | null>(null);
+  const [historySearch, setHistorySearch] = useState('');
+  const [historySort, setHistorySort] = useState<HistorySortState>({ key: 'updatedAt', order: 'desc' });
+  const [batchTagOpen, setBatchTagOpen] = useState(false);
+  const [batchTagValue, setBatchTagValue] = useState<string | null>(null);
+  const [batchTagSaving, setBatchTagSaving] = useState(false);
   const [statsMetric, setStatsMetric] = useState<StatsMetricKey>('pickRate');
   const [statsPlayer, setStatsPlayer] = useState<string | null>(null);
   const [statsTag, setStatsTag] = useState<string | null>(null);
@@ -271,9 +316,21 @@ function Dashboard() {
     match.leftPlayer,
     match.rightPlayer,
   ]).filter(Boolean)));
-  const filteredMatches = historyTagFilter
-    ? matchStore.matches.filter((match) => (match.tags ?? []).includes(historyTagFilter))
-    : matchStore.matches;
+  const normalizedHistorySearch = historySearch.trim().toLowerCase();
+  const filteredMatches = matchStore.matches.filter((match) => {
+    if (historyTagFilter && !(match.tags ?? []).includes(historyTagFilter)) {
+      return false;
+    }
+    if (!normalizedHistorySearch) {
+      return true;
+    }
+    return [
+      String(match.leftPlayer || ''),
+      String(match.rightPlayer || ''),
+      String(match.id || ''),
+    ].some((value) => value.toLowerCase().includes(normalizedHistorySearch));
+  });
+  const sortedMatches = [...filteredMatches].sort(compareHistoryMatches);
 
   const deferredLeftSearch = useDeferredValue(panels.left.search);
   const deferredRightSearch = useDeferredValue(panels.right.search);
@@ -1134,6 +1191,83 @@ function Dashboard() {
     }
   }
 
+  function compareHistoryMatches(a: MatchRecord, b: MatchRecord): number {
+    if (!historySort.key || !historySort.order) {
+      return 0;
+    }
+    let value = 0;
+    switch (historySort.key) {
+      case 'updatedAt': {
+        const ta = new Date(a.updatedAt).getTime() || 0;
+        const tb = new Date(b.updatedAt).getTime() || 0;
+        value = ta - tb;
+        break;
+      }
+      case 'score': {
+        const da = Math.abs((a.leftScore ?? 0) - (a.rightScore ?? 0));
+        const db = Math.abs((b.leftScore ?? 0) - (b.rightScore ?? 0));
+        value = da - db;
+        break;
+      }
+      case 'bestOf': {
+        value = (a.bestOf ?? 0) - (b.bestOf ?? 0);
+        break;
+      }
+      case 'status': {
+        value = HISTORY_STATUS_RANK[a.status] - HISTORY_STATUS_RANK[b.status];
+        break;
+      }
+    }
+    return historySort.order === 'asc' ? value : -value;
+  }
+
+  function cycleHistorySort(key: HistorySortKey) {
+    setHistorySort((prev) => {
+      if (prev.key !== key) {
+        return { key, order: 'asc' };
+      }
+      if (prev.order === 'asc') {
+        return { key, order: 'desc' };
+      }
+      return { key: null, order: null };
+    });
+  }
+
+  async function handleBatchTag() {
+    const ids = selectedHistoryKeys.map(String);
+    const selected = matchStore.matches.filter((match) => ids.includes(match.id));
+    if (!selected.length) {
+      return;
+    }
+    setBatchTagValue(null);
+    setBatchTagOpen(true);
+  }
+
+  async function submitBatchTag() {
+    const ids = selectedHistoryKeys.map(String);
+    if (!ids.length || !batchTagValue) {
+      return;
+    }
+    setBatchTagSaving(true);
+    try {
+      const data = await requestJson<{ success: boolean; matches?: MatchStoreState }>('/api/matches/batch-tags', {
+        method: 'POST',
+        json: { matchIds: ids, tags: [batchTagValue] },
+      });
+      applyServerState({ matches: data.matches });
+      const added = batchTagValue;
+      setSelectedHistoryKeys([]);
+      setBatchTagOpen(false);
+      setBatchTagValue(null);
+      setHistoryNotice({ tone: 'success', text: `已为 ${ids.length} 场赛事添加标签「${added}」` });
+      message.success(`已为 ${ids.length} 场赛事添加标签「${added}」`);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setBatchTagSaving(false);
+    }
+  }
+
   async function runMatchAction(action: 'start' | 'undo' | 'redo' | 'winner', extra?: Record<string, unknown>) {
     if (!activeMatch) {
       return;
@@ -1782,7 +1916,14 @@ function Dashboard() {
       render: (value: MatchRecord['leftPlayer']) => <Text strong>{value || '左侧'}</Text>,
     },
     {
-      title: '比分',
+      title: (
+        <HistorySortHeader
+          text="比分"
+          sortKey="score"
+          activeOrder={historySort.key === 'score' ? historySort.order : null}
+          onSort={cycleHistorySort}
+        />
+      ),
       key: 'score',
       render: (_: unknown, record: MatchRecord) => (
         <Text strong>{record.leftScore} : {record.rightScore}</Text>
@@ -1795,7 +1936,14 @@ function Dashboard() {
       render: (value: MatchRecord['rightPlayer']) => <Text strong>{value || '右侧'}</Text>,
     },
     {
-      title: '赛制',
+      title: (
+        <HistorySortHeader
+          text="赛制"
+          sortKey="bestOf"
+          activeOrder={historySort.key === 'bestOf' ? historySort.order : null}
+          onSort={cycleHistorySort}
+        />
+      ),
       dataIndex: 'bestOf',
       key: 'bestOf',
       render: (value: MatchRecord['bestOf']) => <Tag color="gold">BO{value}</Tag>,
@@ -1849,13 +1997,27 @@ function Dashboard() {
       ),
     },
     {
-      title: '状态',
+      title: (
+        <HistorySortHeader
+          text="状态"
+          sortKey="status"
+          activeOrder={historySort.key === 'status' ? historySort.order : null}
+          onSort={cycleHistorySort}
+        />
+      ),
       dataIndex: 'status',
       key: 'status',
       render: (status: MatchRecord['status']) => <Tag color={getMatchStatusColor(status)}>{getMatchStatusLabel(status)}</Tag>,
     },
     {
-      title: '更新时间',
+      title: (
+        <HistorySortHeader
+          text="更新时间"
+          sortKey="updatedAt"
+          activeOrder={historySort.key === 'updatedAt' ? historySort.order : null}
+          onSort={cycleHistorySort}
+        />
+      ),
       dataIndex: 'updatedAt',
       key: 'updatedAt',
       render: (value: MatchRecord['updatedAt']) => formatDateTime(value),
@@ -1885,7 +2047,7 @@ function Dashboard() {
   ];
 
   function exportHistoryCsv() {
-    const csv = buildHistoryCsv(filteredMatches, spriteMap);
+    const csv = buildHistoryCsv(sortedMatches, spriteMap);
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -1893,7 +2055,7 @@ function Dashboard() {
     link.download = '比赛历史.csv';
     link.click();
     URL.revokeObjectURL(url);
-    message.success(`已导出 ${filteredMatches.length} 场赛事历史`);
+    message.success(`已导出 ${sortedMatches.length} 场赛事历史`);
   }
 
   return (
@@ -2275,6 +2437,9 @@ function Dashboard() {
                 extra={(
                   <Space wrap>
                     <Button onClick={exportHistoryCsv} disabled={!filteredMatches.length}>导出 CSV</Button>
+                    {selectedHistoryKeys.length > 1 ? (
+                      <Button onClick={() => void handleBatchTag()}>批量添加标签</Button>
+                    ) : null}
                     <Button danger disabled={!selectedHistoryKeys.length} onClick={() => void deleteHistoryMatches(selectedHistoryKeys.map(String))}>
                       删除选中赛事
                     </Button>
@@ -2295,6 +2460,13 @@ function Dashboard() {
                   />
                 ) : null}
                 <Space wrap className="history-filter-row">
+                  <Input.Search
+                    placeholder="搜索选手名或赛事ID"
+                    value={historySearch}
+                    onChange={(event) => setHistorySearch(event.target.value)}
+                    allowClear
+                    className="history-search-input"
+                  />
                   <Tag color={!historyTagFilter ? 'processing' : 'default'} onClick={() => setHistoryTagFilter(null)}>全部</Tag>
                   {allHistoryTags.map((tag) => (
                     <Tag key={tag} color={historyTagFilter === tag ? 'processing' : 'default'} onClick={() => setHistoryTagFilter(historyTagFilter === tag ? null : tag)}>
@@ -2305,7 +2477,7 @@ function Dashboard() {
                 <Table
                   rowKey={(record) => record.id}
                   columns={historyColumns}
-                  dataSource={filteredMatches}
+                  dataSource={sortedMatches}
                   rowSelection={{
                     selectedRowKeys: selectedHistoryKeys,
                     onChange: (keys) => setSelectedHistoryKeys(keys),
@@ -2378,6 +2550,28 @@ function Dashboard() {
                   locale={{ emptyText: '暂无历史赛事' }}
                 />
               </Card>
+              <Modal
+                title="批量添加标签"
+                open={batchTagOpen}
+                onCancel={() => setBatchTagOpen(false)}
+                onOk={() => void submitBatchTag()}
+                okButtonProps={{ disabled: !batchTagValue }}
+                confirmLoading={batchTagSaving}
+              >
+                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  <Text>已选中 {selectedHistoryKeys.length} 场赛事，选择要添加的赛事标签（仅可选择一个）：</Text>
+                  <Select
+                    showSearch
+                    autoFocus
+                    value={batchTagValue ?? undefined}
+                    placeholder="选择赛事标签"
+                    options={allHistoryTags.map((tag) => ({ value: tag, label: tag }))}
+                    onChange={setBatchTagValue}
+                    className="history-tag-select"
+                    optionFilterProp="label"
+                  />
+                </Space>
+              </Modal>
             </Space>
           ) : null}
 
