@@ -323,10 +323,12 @@ export async function createLocalServer(
         req.path === p || req.path.startsWith(p + '/')
       );
       const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/live-standby-demo.html', '/float.html', '/float-menu.html'].includes(req.path);
+      // 推流页面5 仅用于展示，所需的数据 GET 接口公开（写操作仍受保护）
+      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 
-      if (isPublicStatic || isPublicPage || isAuthApi || isFavicon) return next();
+      if (isPublicStatic || isPublicPage || isPublicPage5Api || isAuthApi || isFavicon) return next();
       // Verify both authenticated flag AND single-session ID match
       if (req.session?.isAuthenticated && req.session.sessionId === activeSessionId) return next();
 

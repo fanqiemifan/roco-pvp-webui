@@ -2,12 +2,33 @@
     'use strict';
 
     const FALLBACK_IMG = '/assets/ui/back.png';
-    const DEFAULT_TITLE = '登场 · 胜率排行';
+    const DEFAULT_TITLE = '精灵出场胜率';
 
     const titleEl = document.getElementById('page5Title');
-    const badgeEl = document.getElementById('page5Badge');
     const leftRowsEl = document.getElementById('page5RowsLeft');
     const rightRowsEl = document.getElementById('page5RowsRight');
+
+    let currentEventTitle = '';
+    let currentTag = '';
+
+    function setTag(tag) {
+        currentTag = String(tag || '').trim();
+    }
+
+    // 标题 = 赛事标题 + 赛事标签口径 + 「精灵出场胜率」（无 · 符号）
+    function composeTitle() {
+        const part = [currentEventTitle, currentTag].filter(Boolean).join('');
+        return part ? `${part}精灵出场胜率` : DEFAULT_TITLE;
+    }
+
+    function applyTitle(eventTitle) {
+        currentEventTitle = String(eventTitle || '').trim();
+        titleEl.textContent = composeTitle();
+    }
+
+    function refreshTitle() {
+        titleEl.textContent = composeTitle();
+    }
 
     function normalizeDisplayName(value) {
         return String(value || '').trim().replace(/[-_－—]\d+$/, '');
@@ -132,24 +153,6 @@
         rows.slice(5, 10).forEach((row, index) => {
             rightRowsEl.appendChild(buildRow(row, index + 5));
         });
-
-        const tagLabel = data && data.tag ? data.tag : '';
-        const playerLabel = data && data.player ? data.player : '';
-        // 口径标签：赛事标签 · 选手（都有则组合，只有一个显示单值，都没有显示「全部」）
-        let scopeLabel = '全部';
-        if (tagLabel && playerLabel) {
-            scopeLabel = `${tagLabel} · ${playerLabel}`;
-        } else if (tagLabel) {
-            scopeLabel = tagLabel;
-        } else if (playerLabel) {
-            scopeLabel = playerLabel;
-        }
-        badgeEl.textContent = scopeLabel;
-    }
-
-    function applyTitle(eventTitle) {
-        const text = String(eventTitle || '').trim();
-        titleEl.textContent = text || DEFAULT_TITLE;
     }
 
     async function fetchRanking(tag, player) {
@@ -178,6 +181,7 @@
                 fetch('/api/stage', { credentials: 'same-origin' }).then((r) => r.json()),
                 fetch('/api/scoreboard', { credentials: 'same-origin' }).then((r) => r.json()),
             ]);
+            setTag(stage && stage.page5Tag);
             applyTitle(scoreboard && scoreboard.page5Title);
             await fetchRanking(stage && stage.page5Tag, stage && stage.page5Player);
         } catch (error) {
@@ -204,8 +208,11 @@
         socket.on('snapshot', (payload) => {
             const stage = payload && payload.stage ? payload.stage : null;
             const scoreboard = payload && payload.scoreboard ? payload.scoreboard : null;
+            setTag(stage && stage.page5Tag);
             if (scoreboard) {
                 applyTitle(scoreboard.page5Title);
+            } else {
+                refreshTitle();
             }
             if (stage) {
                 void fetchRanking(stage.page5Tag, stage.page5Player);
@@ -215,6 +222,8 @@
         socket.on('stage:update', (payload) => {
             const stage = payload && payload.stage ? payload.stage : null;
             if (stage) {
+                setTag(stage.page5Tag);
+                refreshTitle();
                 scheduleRefresh(stage.page5Tag, stage.page5Player);
             }
         });
@@ -228,6 +237,8 @@
 
         socket.on('matchesUpdate', (payload) => {
             const stage = payload && payload.stage ? payload.stage : null;
+            setTag(stage ? stage.page5Tag : undefined);
+            refreshTitle();
             scheduleRefresh(stage ? stage.page5Tag : undefined, stage ? stage.page5Player : undefined);
         });
     }

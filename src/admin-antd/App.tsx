@@ -2530,7 +2530,7 @@ function Dashboard() {
                             />
                           </Form.Item>
                           <Form.Item label="推流页面5标题" name="page5Title">
-                            <Input maxLength={40} placeholder="例如：登场 · 胜率排行" />
+                            <Input maxLength={40} placeholder="例如：仙王杯（自动拼上赛事标签与“精灵出场胜率”）" />
                           </Form.Item>
                           <Form.Item label="选手名字字号" name="nameFontSize">
                             <InputNumber min={12} max={160} className="full-width-number" />

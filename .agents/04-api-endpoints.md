@@ -63,6 +63,8 @@
 |-------------|------|------|------|------|
 | 精灵排行 | GET | /api/stats/ranking | 精灵使用率/上场率/胜率排行（支持 tag / player 参数，统计全部历史对局） | electron/socket-server.ts |
 
+> 推流页面5 仅用于展示：`GET /api/stage`、`GET /api/scoreboard`、`GET /api/stats/ranking` 公开免鉴权；同名 POST 写操作仍受保护。
+
 ## 精灵接口
 
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |

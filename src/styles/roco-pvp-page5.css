@@ -36,29 +36,11 @@ body {
     z-index: 2;
     font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
     font-size: 96px;
-    line-height: 1;
     color: #ffffff;
     text-align: center;
     white-space: nowrap;
     letter-spacing: 4px;
     text-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-}
-
-/* 口径标签 */
-.page5-badge {
-    position: absolute;
-    right: 40px;
-    top: 40px;
-    z-index: 2;
-    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
-    font-size: 36px;
-    color: #ffffff;
-    background: rgba(0, 47, 255, 0.55);
-    padding: 6px 24px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    text-align: center;
-    white-space: nowrap;
 }
 
 .page5-content {
