@@ -22,7 +22,6 @@ export type ScoreboardFormValues = {
   eventTitle: string;
   page2LineupDisplayMode: 'default' | 'avatar-only';
   page5Title: string;
-  scoreFontSize: number;
 };
 
 export type PanelEditorState = {

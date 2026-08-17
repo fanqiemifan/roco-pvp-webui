@@ -15,7 +15,6 @@ import {
   Form,
   Image,
   Input,
-  InputNumber,
   Layout,
   List,
   Menu,
@@ -512,7 +511,6 @@ function Dashboard() {
       eventTitle: scoreboard.eventTitle,
       page2LineupDisplayMode: scoreboard.page2LineupDisplayMode,
       page5Title: scoreboard.page5Title,
-      scoreFontSize: scoreboard.scoreFontSize,
     });
   }, [view, scoreboard, scoreboardForm]);
 
@@ -1340,6 +1338,7 @@ function Dashboard() {
           scoreboardEnabled: scoreboard.scoreboardEnabled,
           eventTitleEnabled: scoreboard.eventTitleEnabled,
           nameFontSize: scoreboard.nameFontSize,
+          scoreFontSize: scoreboard.scoreFontSize,
           ...values,
         },
       });
@@ -2820,11 +2819,6 @@ function Dashboard() {
                         <Col xs={24} md={12} xl={8}>
                           <Form.Item label="推流页面5标题" name="page5Title">
                             <Input maxLength={40} placeholder="例如：仙王杯（自动拼上赛事标签与“精灵出场胜率”）" />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={12} xl={8}>
-                          <Form.Item label="比分字号" name="scoreFontSize">
-                            <InputNumber min={12} max={160} className="full-width-number" />
                           </Form.Item>
                         </Col>
                       </Row>
