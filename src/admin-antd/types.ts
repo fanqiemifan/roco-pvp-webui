@@ -1,7 +1,7 @@
 import type { QuickFillMatch, Page4SlotState, SlotState } from '../../shared/types';
 
 export type PanelSide = 'left' | 'right';
-export type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'stats' | 'scoreboard' | 'preview' | 'stage' | 'about';
+export type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'stats' | 'preview' | 'stage' | 'about';
 
 export type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'page5' | 'standby';
 
@@ -19,12 +19,9 @@ export type MatchFormValues = {
 export type CreateMatchValues = MatchFormValues;
 
 export type ScoreboardFormValues = {
-  scoreboardEnabled: boolean;
-  eventTitleEnabled: boolean;
   eventTitle: string;
   page2LineupDisplayMode: 'default' | 'avatar-only';
   page5Title: string;
-  nameFontSize: number;
   scoreFontSize: number;
 };
 

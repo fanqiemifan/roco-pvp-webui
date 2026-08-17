@@ -75,7 +75,7 @@ pvp-webUI-for-roco/
 
 | 文件路径 | 说明 |
 |---------|------|
-| App.tsx | 主组件：视图分发（roster/live/history/stats/scoreboard/stage/preview/about）、工具栏 |
+| App.tsx | 主组件：视图分发（roster/live/history/stats/stage/preview/about）、工具栏 |
 | views/RosterPanelEditor.tsx | 阵容编辑（左右面板、精灵搜索、快速填充） |
 | views/Page4PanelEditor.tsx | 仅显阵容（page4）面板编辑 |
 | views/Page4DeathPanel.tsx | page4 阵亡面板 |

@@ -28,7 +28,6 @@ import {
   Spin,
   Statistic,
   Steps,
-  Switch,
   Table,
   Tag,
   Timeline,
@@ -505,20 +504,17 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (!scoreboard) {
+    if (view !== 'stage' || !scoreboard) {
       return;
     }
 
     scoreboardForm.setFieldsValue({
-      scoreboardEnabled: scoreboard.scoreboardEnabled,
-      eventTitleEnabled: scoreboard.eventTitleEnabled,
       eventTitle: scoreboard.eventTitle,
       page2LineupDisplayMode: scoreboard.page2LineupDisplayMode,
       page5Title: scoreboard.page5Title,
-      nameFontSize: scoreboard.nameFontSize,
       scoreFontSize: scoreboard.scoreFontSize,
     });
-  }, [scoreboard, scoreboardForm]);
+  }, [view, scoreboard, scoreboardForm]);
 
   useEffect(() => {
     if (!activeMatch) {
@@ -1341,6 +1337,9 @@ function Dashboard() {
           rightName: scoreboard.rightName,
           rightScore: scoreboard.rightScore,
           bestOf: scoreboard.bestOf,
+          scoreboardEnabled: scoreboard.scoreboardEnabled,
+          eventTitleEnabled: scoreboard.eventTitleEnabled,
+          nameFontSize: scoreboard.nameFontSize,
           ...values,
         },
       });
@@ -1908,7 +1907,6 @@ function Dashboard() {
     { key: 'live', label: '实时控制' },
     { key: 'history', label: '比赛历史' },
     { key: 'stats', label: '数据统计' },
-    { key: 'scoreboard', label: '显示设置' },
     { key: 'preview', label: '页面预览' },
     { key: 'page4', label: '仅显阵容' },
     { key: 'about', label: '关于项目' },
@@ -2090,7 +2088,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'stats' ? '数据统计' : view === 'scoreboard' ? '显示设置' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'stats' ? '数据统计' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -2704,65 +2702,6 @@ function Dashboard() {
             </Space>
           ) : null}
 
-          {view === 'scoreboard' ? (
-            <Space direction="vertical" size={18} className="page-stack">
-              <Card title="显示设置">
-                <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24} md={12} xl={12}>
-                      <Card size="small" className="subtle-card" title="比分栏显示">
-                        <Space direction="vertical" size={14} className="control-stack">
-                          <Form.Item label="顶部比分栏显示" name="scoreboardEnabled" valuePropName="checked">
-                            <Switch />
-                          </Form.Item>
-                        </Space>
-                      </Card>
-                    </Col>
-                    <Col xs={24} md={12} xl={12}>
-                      <Card size="small" className="subtle-card" title="文字与页面2">
-                        <Space direction="vertical" size={14} className="control-stack">
-                          <Form.Item label="页面2赛事标题显示" name="eventTitleEnabled" valuePropName="checked">
-                            <Switch />
-                          </Form.Item>
-                          <Form.Item label="页面2赛事标题" name="eventTitle">
-                            <Input maxLength={40} />
-                          </Form.Item>
-                          <Form.Item label="页面2阵容展示" name="page2LineupDisplayMode">
-                            <Select
-                              options={[
-                                { value: 'default', label: '默认血量展示' },
-                                { value: 'avatar-only', label: '仅头像展示' },
-                              ]}
-                            />
-                          </Form.Item>
-                          <Form.Item label="推流页面5标题" name="page5Title">
-                            <Input maxLength={40} placeholder="例如：仙王杯（自动拼上赛事标签与“精灵出场胜率”）" />
-                          </Form.Item>
-                          <Form.Item label="选手名字字号" name="nameFontSize">
-                            <InputNumber min={12} max={160} className="full-width-number" />
-                          </Form.Item>
-                          <Form.Item label="比分字号" name="scoreFontSize">
-                            <InputNumber min={12} max={160} className="full-width-number" />
-                          </Form.Item>
-                        </Space>
-                      </Card>
-                    </Col>
-                  </Row>
-                  <Divider />
-                  <Space wrap>
-                    <Button type="primary" htmlType="submit">保存显示设置</Button>
-                    <Tag color="blue">
-                      当前比分：{scoreboard?.leftScore ?? '0'} : {scoreboard?.rightScore ?? '0'}
-                    </Tag>
-                    <Tag color="gold">
-                      当前赛制：BO{scoreboard?.bestOf ?? '-'}
-                    </Tag>
-                  </Space>
-                </Form>
-              </Card>
-            </Space>
-          ) : null}
-
           {view === 'stage' ? (
             <Space direction="vertical" size={18} className="page-stack">
               <Card
@@ -2860,6 +2799,46 @@ function Dashboard() {
                       );
                     })}
                   </Row>
+                  <Card size="small" className="subtle-card stage-settings-card" title="显示设置">
+                    <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
+                      <Row gutter={[16, 16]}>
+                        <Col xs={24} md={12} xl={8}>
+                          <Form.Item label="页面2赛事标题" name="eventTitle">
+                            <Input maxLength={40} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12} xl={8}>
+                          <Form.Item label="页面2阵容展示" name="page2LineupDisplayMode">
+                            <Select
+                              options={[
+                                { value: 'default', label: '默认血量展示' },
+                                { value: 'avatar-only', label: '仅头像展示' },
+                              ]}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12} xl={8}>
+                          <Form.Item label="推流页面5标题" name="page5Title">
+                            <Input maxLength={40} placeholder="例如：仙王杯（自动拼上赛事标签与“精灵出场胜率”）" />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12} xl={8}>
+                          <Form.Item label="比分字号" name="scoreFontSize">
+                            <InputNumber min={12} max={160} className="full-width-number" />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Space wrap>
+                        <Button type="primary" htmlType="submit">保存显示设置</Button>
+                        <Tag color="blue">
+                          当前比分：{scoreboard?.leftScore ?? '0'} : {scoreboard?.rightScore ?? '0'}
+                        </Tag>
+                        <Tag color="gold">
+                          当前赛制：BO{scoreboard?.bestOf ?? '-'}
+                        </Tag>
+                      </Space>
+                    </Form>
+                  </Card>
                 </Space>
               </Card>
             </Space>
