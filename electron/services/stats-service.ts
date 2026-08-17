@@ -103,9 +103,9 @@ export function getSpriteRanking(
         continue;
       }
 
-      const seen = new Set<string>();
       for (const { lineup, side } of sides) {
         const won = game.winner === side;
+        const seen = new Set<string>();
         for (const spriteId of lineup) {
           const sprite = lookup.get(basename(spriteId)) ?? null;
           const key = sprite ? sprite.id : basename(spriteId);
