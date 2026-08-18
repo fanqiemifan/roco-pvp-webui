@@ -141,9 +141,10 @@ const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
     version: '1.5.2',
     date: '2026-08',
     items: [
-      '精灵名字字体改为 MiSans-Medium（移除阿里普惠字体打包）；推流页面3 选手名字使用 MiSans-Regular',
-      'YouSheBiaoTiHei 改用系统已安装字体（@font-face local()），未安装时回退 MiSans，移除字体打包',
+      '精灵名字字体改为 MiSans-Medium；推流页面3 选手名字使用 MiSans-Regular',
+      'YouSheBiaoTiHei 改用系统已安装字体（@font-face local()），未安装时回退 MiSans',
       '新增推流页面6（比赛结果）：比赛历史中勾选已结束比赛（最多 8 场）并推送展示，支持赛事标签筛选；展示双方选手、比分与胜者高亮',
+      '关于项目新增字体说明：注明使用 MiSans，并列出使用 YouSheBiaoTiHei 的页面与下载链接，引导用户自行安装',
     ],
   },
   {
@@ -3026,6 +3027,25 @@ function Dashboard() {
                           </Card>
                         </Col>
                       </Row>
+                      <Card size="small" className="subtle-card" title="字体说明">
+                        <Space direction="vertical" size={8} className="page-stack">
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            本项目内置了 <Text strong>MiSans</Text> 系列字体（精灵名字使用 MiSans-Medium、推流页面3 选手名字使用 MiSans-Regular 等）。
+                          </Paragraph>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            以下推流页面使用了 <Text strong>YouSheBiaoTiHei</Text>（优设标题黑）字体，该字体<Text strong>未随软件打包</Text>，需要您在电脑上自行安装后才能正常显示，未安装时页面会自动回退到 MiSans：
+                          </Paragraph>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            · 推流页面2（比分栏等标题）· 推流页面5（登场/胜率排行）· 推流页面6（比赛结果）· 等待页
+                          </Paragraph>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            下载 YouSheBiaoTiHei：
+                            <Link href="https://www.fonts.net.cn/font-38213257557.html" target="_blank">免登录下载</Link>
+                            &nbsp;·&nbsp;
+                            <Link href="https://www.uisdc.com/uisdc-first-free-font" target="_blank">官网下载（需登录）</Link>
+                          </Paragraph>
+                        </Space>
+                      </Card>
                       <Card size="small" className="subtle-card" title="更新日志">
                         <Timeline
                           items={CHANGELOG.map((entry) => ({
