@@ -90,6 +90,7 @@ export function StatsView({
     ? stats.rows.filter((row) => row.name.toLowerCase().includes(keyword))
     : stats.rows;
   const maxUsagePercent = stats.rows[0]?.usagePercent ?? 0;
+  const maxAttributePercent = stats.attributeRows[0]?.percent ?? 0;
   const playerOptions = Array.from(new Set(matches.flatMap((match) => [
     match.leftPlayer,
     match.rightPlayer,
@@ -102,6 +103,18 @@ export function StatsView({
     1,
     ...topTrendRows.flatMap((row) => tagOrder.map((tag) => (stats.spriteTagRate.get(row.name)?.get(tag) ?? 0) * 100)),
   );
+  const trendTickStep = (() => {
+    const raw = topUsageForTrend / 4;
+    for (const nice of [1, 2, 5, 10, 20, 25, 50, 100]) {
+      if (raw <= nice) return nice;
+    }
+    return Math.ceil(raw / 100) * 100;
+  })();
+  const trendTicks: number[] = [];
+  for (let v = 0; v < topUsageForTrend; v += trendTickStep) {
+    trendTicks.push(Math.round(v * 10) / 10);
+  }
+  trendTicks.push(topUsageForTrend);
 
   const statsColumns: ColumnsType<SpriteUsageRow> = [
     {
@@ -380,7 +393,7 @@ export function StatsView({
                             <span className="stats-attribute-pill-text">{row.attribute}</span>
                           </span>
                           <Progress
-                            percent={row.percent}
+                            percent={maxAttributePercent > 0 ? (row.percent / maxAttributePercent) * 100 : 0}
                             showInfo={false}
                             size="small"
                             className="stats-usage-bar"
@@ -405,19 +418,55 @@ export function StatsView({
               >
                 {topTrendRows.length && tagOrder.length > 1 ? (
                   <Space direction="vertical" size={10} className="page-stack stats-trend-stack">
-                    <svg viewBox={`0 0 ${Math.max(tagOrder.length * 40, 120)} 140`} className="stats-trend-svg" preserveAspectRatio="none">
-                      {topTrendRows.map((row, rowIndex) => {
-                        const points = tagOrder.map((tag, index) => {
-                          const rate = (stats.spriteTagRate.get(row.name)?.get(tag) ?? 0) * 100;
-                          const x = tagOrder.length > 1 ? (index / (tagOrder.length - 1)) * 100 : 0;
-                          const y = 130 - (rate / topUsageForTrend) * 120;
-                          return `${x},${Math.max(4, y)}`;
-                        }).join(' ');
-                        return (
-                          <polyline key={row.key} points={points} fill="none" stroke={trendColors[rowIndex]} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-                        );
-                      })}
-                    </svg>
+                    <div className="stats-trend-chart">
+                      <div className="stats-trend-y" aria-hidden>
+                        {trendTicks.map((tick) => (
+                          <span
+                            key={tick}
+                            className="stats-trend-ytick"
+                            style={{ top: `${100 - (tick / topUsageForTrend) * 100}%` }}
+                          >
+                            {Number.isInteger(tick) ? tick.toFixed(0) : tick.toFixed(1)}%
+                          </span>
+                        ))}
+                      </div>
+                      <div className="stats-trend-plot">
+                        <svg viewBox="0 0 100 100" className="stats-trend-svg" preserveAspectRatio="none">
+                          {trendTicks.filter((tick) => tick > 0).map((tick) => {
+                            const y = 100 - (tick / topUsageForTrend) * 100;
+                            return <line key={tick} x1="0" x2="100" y1={y} y2={y} className="stats-trend-grid" />;
+                          })}
+                          {topTrendRows.map((row, rowIndex) => {
+                            const points = tagOrder.map((tag, index) => {
+                              const rate = (stats.spriteTagRate.get(row.name)?.get(tag) ?? 0) * 100;
+                              const x = tagOrder.length > 1 ? (index / (tagOrder.length - 1)) * 100 : 0;
+                              const y = 100 - (rate / topUsageForTrend) * 100;
+                              return `${x},${Math.max(2, y)}`;
+                            }).join(' ');
+                            return (
+                              <polyline key={row.key} points={points} fill="none" stroke={trendColors[rowIndex]} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+                            );
+                          })}
+                        </svg>
+                      </div>
+                      <div className="stats-trend-x">
+                        {tagOrder.map((tag, index) => {
+                          const pct = tagOrder.length > 1 ? (index / (tagOrder.length - 1)) * 100 : 0;
+                          return (
+                            <span
+                              key={tag}
+                              className="stats-trend-xtick"
+                              style={{
+                                left: `${pct}%`,
+                                transform: `translateX(${index === 0 ? '0%' : index === tagOrder.length - 1 ? '-100%' : '-50%'})`,
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
                     <Space wrap size={14}>
                       {topTrendRows.map((row, rowIndex) => (
                         <Text key={row.key} type="secondary">

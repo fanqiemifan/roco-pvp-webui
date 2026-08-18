@@ -1339,9 +1339,68 @@ a {
   flex-direction: column;
 }
 
-.stats-trend-stack .stats-trend-svg {
+.stats-trend-chart {
   flex: 1 1 auto;
   min-height: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 1fr auto;
+  column-gap: 6px;
+  row-gap: 4px;
+}
+
+.stats-trend-y {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.stats-trend-ytick {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  color: #9c948a;
+}
+
+.stats-trend-plot {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 120px;
+  border-left: 1px solid rgba(199, 99, 47, 0.25);
+  border-bottom: 1px solid rgba(199, 99, 47, 0.25);
+}
+
+.stats-trend-plot .stats-trend-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.stats-trend-grid {
+  stroke: rgba(0, 0, 0, 0.08);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.stats-trend-x {
+  position: relative;
+  height: 14px;
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.stats-trend-xtick {
+  position: absolute;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  color: #9c948a;
 }
 
 .stats-column-title {
@@ -1389,8 +1448,7 @@ a {
 }
 
 .stats-trend-svg {
-  width: 100%;
-  height: 140px;
+  display: block;
 }
 
 .stats-trend-dot {
