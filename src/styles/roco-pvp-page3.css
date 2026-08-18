@@ -1,3 +1,11 @@
+@font-face {
+    font-family: "MiSans-Regular";
+    src: url("/assets/fonts/MiSans-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -174,6 +182,7 @@ body {
 .page3-player-name {
     min-width: 0;
     flex: 1;
+    font-family: "MiSans-Regular", "PingFang SC", "Microsoft YaHei", sans-serif;
     font-size: var(--page3-name-size);
     line-height: 1;
     white-space: nowrap;

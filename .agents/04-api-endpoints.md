@@ -58,14 +58,20 @@
 | 获取推流配置 | GET | /api/stage | 获取 stage 配置 | electron/socket-server.ts |
 | 保存推流配置 | POST | /api/stage | 保存 stage 配置 | electron/socket-server.ts |
 
+## 比赛结果（page6）接口
+
+| 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
+|-------------|------|------|------|------|
+| 获取比赛结果页状态与已选比赛 | GET | /api/page6 | 获取 page6 状态与完整比赛数据（公开 GET） | electron/socket-server.ts |
+| 保存比赛结果配置 | POST | /api/page6 | 保存 page6 配置（matchIds 最多 8 个已结束比赛 / title 副标题） | electron/socket-server.ts |
+
 ## 统计接口
 
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
 |-------------|------|------|------|------|
 | 精灵排行 | GET | /api/stats/ranking | 精灵使用率/上场率/胜率排行（支持 tag / player 参数，统计全部历史对局） | electron/socket-server.ts |
 
-> 推流页面5 仅用于展示：`GET /api/stage`、`GET /api/scoreboard`、`GET /api/stats/ranking` 公开免鉴权；同名 POST 写操作仍受保护。
-
+> 推流页面5/页面6 仅用于展示：`GET /api/stage`、`GET /api/scoreboard`、`GET /api/stats/ranking`、`GET /api/page6` 公开免鉴权；同名 POST 写操作仍受保护。
 ## 精灵接口
 
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |

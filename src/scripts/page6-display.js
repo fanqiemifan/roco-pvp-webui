@@ -1,0 +1,106 @@
+(function () {
+    'use strict';
+
+    const subtitleEl = document.getElementById('page6Subtitle');
+    const gridEl = document.getElementById('page6Grid');
+
+    function renderGrid(matches) {
+        gridEl.innerHTML = '';
+        (matches || []).forEach((match) => {
+            const leftScore = match.leftScore ?? 0;
+            const rightScore = match.rightScore ?? 0;
+            const leftIsWinner = match.winner === 'left';
+            const rightIsWinner = match.winner === 'right';
+
+            const card = document.createElement('div');
+            card.className = 'page6-result';
+
+            const leftName = document.createElement('div');
+            leftName.className = 'page6-name page6-name-left';
+            leftName.textContent = match.leftPlayer || '左侧';
+
+            const rightName = document.createElement('div');
+            rightName.className = 'page6-name page6-name-right';
+            rightName.textContent = match.rightPlayer || '右侧';
+
+            const scoreDiv = document.createElement('div');
+            scoreDiv.className = 'page6-score-div';
+
+            const leftScoreEl = document.createElement('div');
+            leftScoreEl.className = `page6-score${leftIsWinner ? ' is-winner' : ''}`;
+            leftScoreEl.textContent = String(leftScore);
+
+            const icon = document.createElement('div');
+            icon.className = 'page6-icon';
+            icon.textContent = 'VS';
+
+            const rightScoreEl = document.createElement('div');
+            rightScoreEl.className = `page6-score${rightIsWinner ? ' is-winner' : ''}`;
+            rightScoreEl.textContent = String(rightScore);
+
+            scoreDiv.appendChild(leftScoreEl);
+            scoreDiv.appendChild(icon);
+            scoreDiv.appendChild(rightScoreEl);
+
+            card.appendChild(leftName);
+            card.appendChild(scoreDiv);
+            card.appendChild(rightName);
+            gridEl.appendChild(card);
+        });
+    }
+
+    function applySubtitle(title) {
+        const text = String(title || '').trim();
+        subtitleEl.textContent = text;
+    }
+
+    async function loadData() {
+        try {
+            const [page6Res, scoreboard] = await Promise.all([
+                fetch('/api/page6', { credentials: 'same-origin' }).then((r) => r.json()),
+                fetch('/api/scoreboard', { credentials: 'same-origin' }).then((r) => r.json()),
+            ]);
+            applySubtitle(scoreboard && scoreboard.page6Title);
+            renderGrid(page6Res && page6Res.matches);
+        } catch (error) {
+            console.error('page6 初始加载失败:', error);
+        }
+    }
+
+    function connectSocket() {
+        if (typeof io !== 'function') {
+            return;
+        }
+        const socket = io({ transports: ['websocket', 'polling'] });
+
+        socket.on('snapshot', (payload) => {
+            if (payload && payload.scoreboard) {
+                applySubtitle(payload.scoreboard.page6Title);
+            }
+            if (payload && payload.page6) {
+                // 页面6 状态变更后重新拉取完整比赛数据
+                void loadData();
+            }
+        });
+
+        socket.on('page6:update', () => {
+            void loadData();
+        });
+
+        socket.on('scoreboardUpdate', (payload) => {
+            const scoreboard = payload && payload.scoreboard ? payload.scoreboard : null;
+            if (scoreboard) {
+                applySubtitle(scoreboard.page6Title);
+            }
+        });
+
+        socket.on('matchesUpdate', () => {
+            void loadData();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        void loadData();
+        connectSocket();
+    });
+})();

@@ -66,6 +66,7 @@ export interface ScoreboardState {
   eventTitleEnabled: boolean;
   page2LineupDisplayMode: 'default' | 'avatar-only';
   page5Title: string;
+  page6Title: string;
   nameFontSize: number;
   scoreFontSize: number;
   mtime: number | null;
@@ -139,6 +140,7 @@ export interface AvatarCollectionState {
  * - page2: 推流页面2（全局阵容展示）
  * - page3: 推流页面3（头像比分阵容）
  * - page5: 推流页面5（使用率/胜率排行）
+ * - page6: 推流页面6（比赛结果）
  * - standby: 等待页
  * - blank: 黑场（不加载任何画面）
  */
@@ -147,6 +149,7 @@ export type StagePageKey =
   | 'page2'
   | 'page3'
   | 'page5'
+  | 'page6'
   | 'standby'
   | 'blank';
 
@@ -162,6 +165,17 @@ export interface StageConfig {
   mtime: number | null;
 }
 
+/**
+ * 比赛结果（page6）状态：展示哪些已结束的比赛，以及副标题（标题2）。
+ */
+export interface Page6State {
+  /** 已选中的已结束比赛 id（最多 8 个，顺序即展示顺序） */
+  matchIds: string[];
+  /** 标题2 内容（后端输入，空字符串则隐藏） */
+  title: string;
+  mtime: number | null;
+}
+
 export interface SnapshotPayload {
   panels: [PanelState, PanelState];
   page4: Page4State;
@@ -169,6 +183,7 @@ export interface SnapshotPayload {
   avatars: AvatarCollectionState;
   matches: MatchStoreState;
   stage: StageConfig;
+  page6: Page6State;
 }
 
 export interface QuickFillMatch {

@@ -1,7 +1,20 @@
 /* 推流页面5：登场/胜率排行 · 蓝色主题 */
+/* YouSheBiaoTiHei 不再打包字体文件，改用系统安装字体，未安装时回退 MiSans */
 @font-face {
     font-family: "YouSheBiaoTiHei";
-    src: url("/assets/fonts/YouSheBiaoTiHei-2.ttf") format("truetype");
+    src: local("YouSheBiaoTiHei");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MiSans-Regular";
+    src: url("/assets/fonts/MiSans-Regular.otf") format("opentype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MiSans-Heavy";
+    src: url("/assets/fonts/MiSans-Heavy.otf") format("opentype");
     font-display: swap;
 }
 
@@ -34,7 +47,7 @@ body {
     top: 35px;
     transform: translateX(-50%);
     z-index: 2;
-    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-family: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
     font-size: 96px;
     color: #ffffff;
     text-align: center;
@@ -75,7 +88,7 @@ body {
     top: 19px;
     width: 118px;
     height: 83px;
-    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-family: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
     font-size: 64px;
     color: #ccd5ff;
     text-align: center;
@@ -111,7 +124,7 @@ body {
     top: 26px;
     width: 56px;
     height: 82px;
-    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-family: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
     font-size: 64px;
     color: #ffffff;
     text-align: center;
@@ -135,7 +148,7 @@ body {
     position: absolute;
     top: 26px;
     width: 120px;
-    font-family: "YouSheBiaoTiHei", "Microsoft YaHei", sans-serif;
+    font-family: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
     font-size: 64px;
     color: #ffffff;
     text-align: center;

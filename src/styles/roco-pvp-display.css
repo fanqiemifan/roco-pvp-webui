@@ -1,6 +1,19 @@
+/* YouSheBiaoTiHei 不再打包字体文件，改用系统安装字体，未安装时回退 MiSans */
 @font-face {
     font-family: "YouSheBiaoTiHei";
-    src: url("/assets/fonts/YouSheBiaoTiHei-2.ttf") format("truetype");
+    src: local("YouSheBiaoTiHei");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MiSans-Regular";
+    src: url("/assets/fonts/MiSans-Regular.otf") format("opentype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MiSans-Heavy";
+    src: url("/assets/fonts/MiSans-Heavy.otf") format("opentype");
     font-display: swap;
 }
 
@@ -61,7 +74,7 @@ html, body {
     left: 50%;
     top: 38px;
     transform: translateX(-50%);
-    font-family: "Inter", "YouSheBiaoTiHei", sans-serif;
+    font-family: "Inter", "YouSheBiaoTiHei", "MiSans-Regular", sans-serif;
     font-size: 64px;
     font-weight: 600;
     line-height: 1;

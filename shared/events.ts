@@ -6,4 +6,5 @@ export const SOCKET_EVENTS = {
   avatarUpdate: 'avatar:update',
   matchesUpdate: 'matches:update',
   stageUpdate: 'stage:update',
+  page6Update: 'page6:update',
 } as const;

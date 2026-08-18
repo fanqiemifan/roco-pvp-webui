@@ -36,6 +36,7 @@
 | StagePageKey | 推流页面 key：page1-overlay / page2 / page3 / page5 / standby / blank | shared/types.ts |
 | StageTransitionType | 过渡效果：none / blinds / zoom | shared/types.ts |
 | StageConfig | 推流载体配置（page, transition, page5Title, page5Player, page5Tag, mtime） | shared/types.ts |
+| Page6State | 比赛结果页配置（matchIds 最多 8 个已结束比赛, title 副标题, mtime） | shared/types.ts |
 
 
 ## 比赛记录

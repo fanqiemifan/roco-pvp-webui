@@ -8,6 +8,7 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   Col,
   ConfigProvider,
   Divider,
@@ -46,6 +47,7 @@ import type {
   Page4PanelState,
   Page4SlotState,
   Page4State,
+  Page6State,
   PanelState,
   ScoreboardState,
   SlotState,
@@ -136,6 +138,15 @@ const { TextArea } = Input;
 
 const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
   {
+    version: '1.5.2',
+    date: '2026-08',
+    items: [
+      '精灵名字字体改为 MiSans-Medium（移除阿里普惠字体打包）；推流页面3 选手名字使用 MiSans-Regular',
+      'YouSheBiaoTiHei 改用系统已安装字体（@font-face local()），未安装时回退 MiSans，移除字体打包',
+      '新增推流页面6（比赛结果）：比赛历史中勾选已结束比赛（最多 8 场）并推送展示，支持赛事标签筛选；展示双方选手、比分与胜者高亮',
+    ],
+  },
+  {
     version: '1.5.1',
     date: '2026-08',
     items: [
@@ -156,7 +167,7 @@ const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
       '新增直播推流（导播台）：实时 iframe 缩略预览、页面切换、百叶窗/缩放冲击过渡动效、黑场/等待页',
       '推流页面 1 改为 page4 式阵容展示并使用赛事面板数据',
       '头像上传增加魔数校验，杜绝同源存储型 XSS',
-      '内置 Alibaba PuHuiTi 2.0 字体，修复精灵名字依赖系统字体导致变形',
+      '内置 MiSans-Heavy 字体，修复精灵名字依赖系统字体导致变形',
     ],
   },
   {
@@ -195,6 +206,8 @@ const HISTORY_STATUS_RANK: Record<MatchRecord['status'], number> = {
   pending: 1,
   completed: 2,
 };
+
+const PAGE6_MAX_MATCHES = 8;
 
 function HistorySortHeader({ text, sortKey, activeOrder, onSort }: {
   text: string;
@@ -287,6 +300,9 @@ function Dashboard() {
   const [previewShellSize, setPreviewShellSize] = useState({ width: 960, height: 540 });
   const [stage, setStage] = useState<StageConfig | null>(null);
   const [stageSaving, setStageSaving] = useState(false);
+  const [page6, setPage6] = useState<Page6State | null>(null);
+  const [page6Draft, setPage6Draft] = useState<string[]>([]);
+  const [page6Pushing, setPage6Pushing] = useState(false);
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
   const [page4Notice, setPage4Notice] = useState<NoticeState>(null);
   const [historyNotice, setHistoryNotice] = useState<NoticeState>(null);
@@ -412,6 +428,7 @@ function Dashboard() {
     page4?: Page4State;
     page4Panel?: Page4PanelState;
     stage?: StageConfig;
+    page6?: Page6State;
   }) {
     startTransition(() => {
       if (payload.scoreboard) {
@@ -446,6 +463,9 @@ function Dashboard() {
       if (payload.stage) {
         setStage(payload.stage);
       }
+      if (payload.page6) {
+        setPage6(payload.page6);
+      }
     });
   }
 
@@ -454,7 +474,7 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
@@ -463,6 +483,7 @@ function Dashboard() {
         requestJson<Page4State>('/api/page4'),
         requestJson<{ sprites: SpriteRecord[] }>('/api/sprites'),
         requestJson<StageConfig>('/api/stage'),
+        requestJson<{ state: Page6State }>('/api/page6'),
       ]);
 
       if (!auth.authenticated) {
@@ -476,6 +497,8 @@ function Dashboard() {
         setAvatars(nextAvatars);
         setSprites(nextSprites.sprites);
         setStage(nextStage);
+        setPage6(nextPage6.state);
+        setPage6Draft(nextPage6.state.matchIds);
         syncPanelFromApi('left', nextPanels.images[0]);
         syncPanelFromApi('right', nextPanels.images[1]);
         syncPage4PanelFromApi('left', nextPage4.panels[0]);
@@ -511,8 +534,9 @@ function Dashboard() {
       eventTitle: scoreboard.eventTitle,
       page2LineupDisplayMode: scoreboard.page2LineupDisplayMode,
       page5Title: scoreboard.page5Title,
+      page6Title: page6?.title ?? '',
     });
-  }, [view, scoreboard, scoreboardForm]);
+  }, [view, scoreboard, scoreboardForm, page6]);
 
   useEffect(() => {
     if (!activeMatch) {
@@ -569,6 +593,12 @@ function Dashboard() {
     socket.on(SOCKET_EVENTS.stageUpdate, (payload) => {
       if (payload?.stage) {
         applyServerState({ stage: payload.stage });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.page6Update, (payload) => {
+      if (payload?.state) {
+        applyServerState({ page6: payload.state });
       }
     });
 
@@ -1191,6 +1221,36 @@ function Dashboard() {
     }
   }
 
+  function togglePage6Draft(matchId: string, checked: boolean) {
+    setPage6Draft((prev) => {
+      if (checked) {
+        if (prev.includes(matchId) || prev.length >= PAGE6_MAX_MATCHES) {
+          return prev;
+        }
+        return [...prev, matchId];
+      }
+      return prev.filter((id) => id !== matchId);
+    });
+  }
+
+  async function pushPage6Matches() {
+    setPage6Pushing(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page6State }>('/api/page6', {
+        method: 'POST',
+        json: { matchIds: page6Draft },
+      });
+      applyServerState({ page6: data.state });
+      setPage6Draft(data.state.matchIds);
+      setHistoryNotice({ tone: 'success', text: `已推送 ${data.state.matchIds.length} 场比赛结果到推流页面6` });
+      message.success(`已推送 ${data.state.matchIds.length} 场比赛结果到推流页面6`);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setPage6Pushing(false);
+    }
+  }
+
   function compareHistoryMatches(a: MatchRecord, b: MatchRecord): number {
     if (!historySort.key || !historySort.order) {
       return 0;
@@ -1343,6 +1403,13 @@ function Dashboard() {
         },
       });
       applyServerState({ scoreboard: data.scoreboard });
+      if (page6) {
+        const page6Data = await requestJson<{ success: boolean; state: Page6State }>('/api/page6', {
+          method: 'POST',
+          json: { title: values.page6Title ?? '' },
+        });
+        applyServerState({ page6: page6Data.state });
+      }
       message.success('显示设置已保存');
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
@@ -1913,6 +1980,29 @@ function Dashboard() {
 
   const historyColumns: ColumnsType<MatchRecord> = [
     {
+      title: (
+        <span>
+          推送
+          <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+            已选 {page6Draft.length}/{PAGE6_MAX_MATCHES}
+          </Text>
+        </span>
+      ),
+      key: 'page6',
+      width: 92,
+      render: (_: unknown, record: MatchRecord) => {
+        const isSelected = page6Draft.includes(record.id);
+        const isFull = page6Draft.length >= PAGE6_MAX_MATCHES && !isSelected;
+        return (
+          <Checkbox
+            checked={isSelected}
+            disabled={record.status !== 'completed' || isFull}
+            onChange={(event) => togglePage6Draft(record.id, event.target.checked)}
+          />
+        );
+      },
+    },
+    {
       title: '左侧选手',
       dataIndex: 'leftPlayer',
       key: 'leftPlayer',
@@ -2449,6 +2539,14 @@ function Dashboard() {
                     <Button onClick={() => void undoDeletedHistoryMatches()} disabled={!matchStore.history.canUndoDelete}>
                       撤回最近删除
                     </Button>
+                    <Button
+                      type="primary"
+                      loading={page6Pushing}
+                      disabled={!page6Draft.length}
+                      onClick={() => void pushPage6Matches()}
+                    >
+                      推送比赛结果（{page6Draft.length}/{PAGE6_MAX_MATCHES}）
+                    </Button>
                   </Space>
                 )}
               >
@@ -2818,7 +2916,12 @@ function Dashboard() {
                         </Col>
                         <Col xs={24} md={12} xl={8}>
                           <Form.Item label="推流页面5标题" name="page5Title">
-                            <Input maxLength={40} placeholder="例如：仙王杯（自动拼上赛事标签与“精灵出场胜率”）" />
+                            <Input maxLength={40} placeholder="例如：仙王杯（自动拼上赛事标签与精灵出场胜率）" />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12} xl={8}>
+                          <Form.Item label="推流页面6副标题" name="page6Title">
+                            <Input maxLength={40} placeholder="页面6比赛结果页标题2内容，可留空" />
                           </Form.Item>
                         </Col>
                       </Row>
@@ -2847,6 +2950,7 @@ function Dashboard() {
                       { value: 'page3', label: '推流页面3' },
                       { value: 'page4', label: '仅显阵容' },
                       { value: 'page5', label: '推流页面5' },
+                      { value: 'page6', label: '推流页面6' },
                       { value: 'standby', label: '等待页 Demo' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}

@@ -14,6 +14,7 @@
      *   - page2         : 推流页面2（全局阵容展示）       -> /roco-pvp-page2.html
      *   - page3         : 推流页面3（头像比分阵容）       -> /roco-pvp-page3.html
      *   - page5         : 推流页面5（使用率/胜率排行）    -> /roco-pvp-page5.html
+     *   - page6         : 推流页面6（比赛结果）           -> /roco-pvp-page6.html
      *   - standby       : 等待页                          -> /live-standby-demo.html
      *   - blank         : 黑场（不加载任何画面）
      */
@@ -23,6 +24,7 @@
         'page2': { label: '推流页面2', path: '/roco-pvp-page2.html' },
         'page3': { label: '推流页面3', path: '/roco-pvp-page3.html' },
         'page5': { label: '推流页面5', path: '/roco-pvp-page5.html' },
+        'page6': { label: '推流页面6', path: '/roco-pvp-page6.html' },
         'standby': { label: '等待页', path: '/live-standby-demo.html' },
         'blank': { label: '黑场', path: null }
     };

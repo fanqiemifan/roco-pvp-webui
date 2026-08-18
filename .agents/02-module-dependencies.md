@@ -10,6 +10,7 @@ main.ts
 │   ├── config-service.ts     → shared/constants, path-service
 │   ├── page4-service.ts      → shared/types, path-service
 │   ├── stage-service.ts      → shared/types, shared/constants, path-service
+│   ├── page6-service.ts      → shared/types, match-service, path-service
 │   └── stats-service.ts      → shared/types, path-service
 ├── float-window.ts           → preload.js（rocoFloat IPC 通道）
 ├── ipc/window-ipc.ts         → preload.js（rocoDesktop IPC 通道）

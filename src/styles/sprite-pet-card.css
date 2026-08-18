@@ -1,6 +1,6 @@
 @font-face {
-  font-family: "Alibaba PuHuiTi 2.0";
-  src: url("/assets/fonts/Alibaba_PuHuiTi_2.0_65_Medium_65_Medium.ttf") format("truetype");
+  font-family: "MiSans-Medium";
+  src: url("/assets/fonts/MiSans-Medium.otf") format("opentype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -85,7 +85,7 @@
   top: calc(var(--pet-card-size) * 73.5 / 96);
   z-index: 7;
   color: #fff;
-  font-family: "Alibaba PuHuiTi 2.0", "Alibaba PuHuiTi", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "MiSans-Medium", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: calc(var(--pet-card-size) * 8 / 96);
   font-weight: 500;
   line-height: calc(var(--pet-card-size) * 14 / 96);

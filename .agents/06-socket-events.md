@@ -9,6 +9,7 @@
 | 头像更新通知 | avatar:update | Server → Client | 头像更新 | { side, avatar, avatars } |
 | 比赛记录更新通知 | matches:update | Server → Client | 比赛记录更新 | { matches: MatchStoreState } |
 | 推流配置更新通知 | stage:update | Server → Client | stage 配置更新 | { stage: StageConfig } |
+| 比赛结果页更新通知 | page6:update | Server → Client | page6 配置更新 | { state: Page6State } |
 
 # 数据流图
 
