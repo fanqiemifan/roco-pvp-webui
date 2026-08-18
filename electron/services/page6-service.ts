@@ -12,8 +12,13 @@ function defaultPage6State(): Page6State {
   return {
     matchIds: [],
     title: '',
+    background: 'image',
     mtime: null,
   };
+}
+
+function normalizeBackground(value: unknown): 'image' | 'video' {
+  return value === 'video' ? 'video' : 'image';
 }
 
 function normalizeMatchIds(value: unknown): string[] {
@@ -53,6 +58,7 @@ export function getPage6State(paths: AppPaths): Page6State {
     return {
       matchIds: normalizeMatchIds(metadata.matchIds),
       title: normalizeTitle(metadata.title),
+      background: normalizeBackground(metadata.background),
       mtime: stat.mtimeMs,
     };
   } catch {
@@ -74,6 +80,7 @@ export function savePage6State(paths: AppPaths, payload: unknown): Page6State {
   const raw = payload as Record<string, unknown>;
   const rawMatchIds = raw.matchIds === undefined ? getPage6State(paths).matchIds : normalizeMatchIds(raw.matchIds);
   const title = raw.title === undefined ? getPage6State(paths).title : normalizeTitle(raw.title);
+  const background = raw.background === undefined ? getPage6State(paths).background : normalizeBackground(raw.background);
 
   const completedIds = new Set(
     getMatchStore(paths).matches
@@ -82,7 +89,7 @@ export function savePage6State(paths: AppPaths, payload: unknown): Page6State {
   );
   const matchIds = rawMatchIds.filter((id) => completedIds.has(id)).slice(0, PAGE6_MAX_MATCHES);
 
-  const metadata = { matchIds, title };
+  const metadata = { matchIds, title, background };
   fs.writeFileSync(paths.page6File, JSON.stringify(metadata, null, 2), 'utf-8');
   return getPage6State(paths);
 }

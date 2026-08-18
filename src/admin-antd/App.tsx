@@ -537,6 +537,7 @@ function Dashboard() {
       page2LineupDisplayMode: scoreboard.page2LineupDisplayMode,
       page5Title: scoreboard.page5Title,
       page6Title: page6?.title ?? '',
+      page6Background: page6?.background ?? 'image',
     });
   }, [view, scoreboard, scoreboardForm, page6]);
 
@@ -1408,7 +1409,10 @@ function Dashboard() {
       if (page6) {
         const page6Data = await requestJson<{ success: boolean; state: Page6State }>('/api/page6', {
           method: 'POST',
-          json: { title: values.page6Title ?? '' },
+          json: {
+            title: values.page6Title ?? '',
+            background: values.page6Background ?? 'image',
+          },
         });
         applyServerState({ page6: page6Data.state });
       }
@@ -2924,6 +2928,17 @@ function Dashboard() {
                         <Col xs={24} md={12} xl={8}>
                           <Form.Item label="推流页面6副标题" name="page6Title">
                             <Input maxLength={40} placeholder="页面6比赛结果页标题2内容，可留空" />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12} xl={8}>
+                          <Form.Item label="推流页面6背景" name="page6Background">
+                            <Segmented
+                              block
+                              options={[
+                                { value: 'image', label: '图片' },
+                                { value: 'video', label: '视频' },
+                              ]}
+                            />
                           </Form.Item>
                         </Col>
                       </Row>

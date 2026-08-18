@@ -3,6 +3,22 @@
 
     const subtitleEl = document.getElementById('page6Subtitle');
     const gridEl = document.getElementById('page6Grid');
+    const screenEl = document.getElementById('page6Screen');
+    const backVideoEl = document.getElementById('page6BackVideo');
+
+    function applyBackground(mode) {
+        const isVideo = mode === 'video';
+        if (!screenEl) {
+            return;
+        }
+        screenEl.classList.toggle('page6-mode-video', isVideo);
+        if (isVideo && backVideoEl) {
+            const playPromise = backVideoEl.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(() => {});
+            }
+        }
+    }
 
     function renderGrid(matches) {
         gridEl.innerHTML = '';
@@ -66,6 +82,7 @@
             ]);
             applySubtitle(scoreboard && scoreboard.page6Title);
             renderGrid(page6Res && page6Res.matches);
+            applyBackground(page6Res && page6Res.state && page6Res.state.background);
         } catch (error) {
             console.error('page6 初始加载失败:', error);
         }

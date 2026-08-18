@@ -173,6 +173,8 @@ export interface Page6State {
   matchIds: string[];
   /** 标题2 内容（后端输入，空字符串则隐藏） */
   title: string;
+  /** 页面6背景类型：image=图片，video=视频 */
+  background: 'image' | 'video';
   mtime: number | null;
 }
 

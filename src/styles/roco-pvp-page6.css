@@ -40,6 +40,21 @@ body {
     background: url("/assets/ui/back.for-page6.jpg") no-repeat center / 100% 100%;
 }
 
+/* 背景视频：仅在后台选择「视频」背景时显示，覆盖在图片背景之上 */
+.page6-back-video {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.page6-screen.page6-mode-video .page6-back-video {
+    display: block;
+}
+
 /* 标题1：内容固定“比赛结果”，YouSheBiaoTiHei 128 白色 x76 y78 */
 .page6-title {
     position: absolute;

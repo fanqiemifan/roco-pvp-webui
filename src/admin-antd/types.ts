@@ -23,6 +23,7 @@ export type ScoreboardFormValues = {
   page2LineupDisplayMode: 'default' | 'avatar-only';
   page5Title: string;
   page6Title: string;
+  page6Background: 'image' | 'video';
 };
 
 export type PanelEditorState = {
