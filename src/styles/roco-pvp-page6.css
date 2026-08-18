@@ -123,6 +123,12 @@ body {
     overflow: hidden;
 }
 
+/* 第一列/第二列的第 4 个卡片背景不透明（100%）：列优先填充下为第 4 个与第 8 个 */
+.page6-result:nth-child(4),
+.page6-result:nth-child(8) {
+    background: #1d2e34;
+}
+
 /* 左侧选手名字：YouSheBiaoTiHei 48 右对齐，距比分 12px，内容从右到左输入显示 */
 .page6-name {
     position: absolute;
