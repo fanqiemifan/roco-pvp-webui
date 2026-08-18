@@ -44,7 +44,7 @@ body {
 .page6-title {
     position: absolute;
     left: 76px;
-    top: 78px;
+    top: 108px;
     z-index: 2;
     font-family: "YouSheBiaoTiHei", "MiSans-Heavy", "Microsoft YaHei", sans-serif;
     font-size: 128px;
@@ -57,7 +57,7 @@ body {
 .page6-subtitle {
     position: absolute;
     left: 76px;
-    top: 228px;
+    top: 238px;
     z-index: 2;
     font-family: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
     font-size: 48px;
@@ -85,10 +85,10 @@ body {
     line-height: 1.15;
 }
 
-/* 装饰文案2：ROCO x1658 y78 右对齐 */
+/* 装饰文案2：ROCO x1658 y108 右对齐 */
 .page6-decor-2 {
     left: 1658px;
-    top: 78px;
+    top: 108px;
     text-align: right;
 }
 
@@ -99,7 +99,7 @@ body {
     text-align: right;
 }
 
-/* 比分结果区：x76 y304，最多 4 行 2 列 */
+/* 比分结果区：x76 y304，最多 4 行 2 列；先填满第一列(4个)再开始第二列 */
 .page6-grid {
     position: absolute;
     left: 76px;
@@ -107,7 +107,8 @@ body {
     z-index: 3;
     display: grid;
     grid-template-columns: 860px 860px;
-    grid-auto-rows: 118px;
+    grid-template-rows: repeat(4, 118px);
+    grid-auto-flow: column;
     column-gap: 48px;
     row-gap: 18px;
 }
@@ -138,7 +139,6 @@ body {
 
 /* 名字基于居中的比分区(score-div)隔开：左边名字止于 score-div 左侧 12px */
 .page6-name-left {
-    left: 24px;
     right: calc(50% + 110px + 12px);
     justify-content: flex-end;
     text-align: right;
