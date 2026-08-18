@@ -11,6 +11,7 @@
         },
         scoreboard: null,
         matches: null,
+        page6MatchIds: [],
         sprites: new Map(),
         historyScrollTimer: null,
         recentGamesScrollTimer: null
@@ -216,6 +217,30 @@
                 const rightTime = new Date(right.completedAt || right.updatedAt || right.createdAt || 0).getTime();
                 return rightTime - leftTime;
             });
+    }
+
+    // 仅展示后台「比赛结果」推送选中（page6 matchIds）的已结束比赛，按推送顺序排列
+    function getPushedMatches(store) {
+        if (!store || !Array.isArray(store.matches) || !Array.isArray(state.page6MatchIds)) {
+            return [];
+        }
+
+        const byId = new Map();
+        store.matches.forEach(match => {
+            if (match && match.id) {
+                byId.set(match.id, match);
+            }
+        });
+
+        const pushed = [];
+        state.page6MatchIds.forEach(id => {
+            const match = byId.get(id);
+            if (match && match.status === 'completed') {
+                pushed.push(match);
+            }
+        });
+
+        return pushed;
     }
 
     function getCompletedGames(match) {
@@ -668,20 +693,20 @@
 
     function renderHistory() {
         const historyList = document.getElementById('historyList');
-        const completedMatches = getCompletedMatches(state.matches);
+        const pushedMatches = getPushedMatches(state.matches);
 
         historyList.innerHTML = '';
 
-        if (completedMatches.length === 0) {
+        if (pushedMatches.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'empty-state';
-            empty.textContent = '当前还没有可展示的历史对局结果。';
+            empty.textContent = '后台尚未推送任何比赛结果。';
             historyList.appendChild(empty);
             clearHistoryAutoScroll();
             return;
         }
 
-        completedMatches.forEach((match, index) => {
+        pushedMatches.forEach((match, index) => {
             historyList.appendChild(createHistoryCard(match, index === 0));
         });
 
@@ -699,29 +724,35 @@
         state.panels.right = panels.find(panel => panel && panel.position === 'right') || null;
         state.scoreboard = payload ? payload.scoreboard || null : null;
         state.matches = payload ? payload.matches || null : null;
+        if (payload && payload.page6 && Array.isArray(payload.page6.matchIds)) {
+            state.page6MatchIds = payload.page6.matchIds;
+        }
         renderAll();
     }
 
     async function loadInitialState() {
-        const [imagesResponse, scoreboardResponse, matchesResponse, spritesResponse] = await Promise.all([
+        const [imagesResponse, scoreboardResponse, matchesResponse, spritesResponse, page6Response] = await Promise.all([
             fetch('/api/images'),
             fetch('/api/scoreboard'),
             fetch('/api/matches'),
-            fetch('/api/sprites')
+            fetch('/api/sprites'),
+            fetch('/api/page6')
         ]);
 
-        const [imagesData, scoreboardData, matchesData, spritesData] = await Promise.all([
+        const [imagesData, scoreboardData, matchesData, spritesData, page6Data] = await Promise.all([
             imagesResponse.json(),
             scoreboardResponse.json(),
             matchesResponse.json(),
-            spritesResponse.json()
+            spritesResponse.json(),
+            page6Response.json()
         ]);
 
         state.sprites = buildSpriteLookup(spritesData.sprites || []);
         applySnapshot({
             panels: imagesData.images || [],
             scoreboard: scoreboardData,
-            matches: matchesData
+            matches: matchesData,
+            page6: page6Data && page6Data.state ? page6Data.state : null
         });
     }
 
@@ -754,6 +785,13 @@
         socket.on('matches:update', payload => {
             state.matches = payload ? payload.matches || null : null;
             renderAll();
+        });
+
+        socket.on('page6:update', payload => {
+            if (payload && payload.state && Array.isArray(payload.state.matchIds)) {
+                state.page6MatchIds = payload.state.matchIds;
+            }
+            renderHistory();
         });
 
         socket.on('connect_error', error => {

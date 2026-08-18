@@ -17,7 +17,7 @@ export const SUPPORTED_BEST_OF = new Set([1, 3, 5, 7]);
  * - page3: 推流页面3（头像比分阵容）
  * - page5: 推流页面5（使用率/胜率排行）
  * - page6: 推流页面6（比赛结果）
- * - standby: 等待页
+ * - page7: 推流页面7（等待页）
  * - blank: 黑场
  */
 export const DEFAULT_STAGE_PAGE = 'page3';
@@ -27,7 +27,7 @@ export const SUPPORTED_STAGE_PAGES = new Set([
   'page3',
   'page5',
   'page6',
-  'standby',
+  'page7',
   'blank',
 ]);
 

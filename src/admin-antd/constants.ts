@@ -40,10 +40,10 @@ export const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     fileName: 'roco-pvp-page6.html',
     path: '/roco-pvp-page6.html',
   },
-  standby: {
-    title: '等待页 Demo',
-    fileName: 'live-standby-demo.html',
-    path: '/live-standby-demo.html',
+  page7: {
+    title: '推流页面7',
+    fileName: 'roco-pvp-page7.html',
+    path: '/roco-pvp-page7.html',
   },
 };
 
@@ -79,10 +79,10 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
     previewPath: '/roco-pvp-page6.html',
   },
   {
-    value: 'standby',
-    label: '等待页',
+    value: 'page7',
+    label: '推流页面7',
     description: '直播等待 / 间歇展示页',
-    previewPath: '/live-standby-demo.html',
+    previewPath: '/roco-pvp-page7.html',
   },
   {
     value: 'blank',

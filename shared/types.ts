@@ -141,7 +141,7 @@ export interface AvatarCollectionState {
  * - page3: 推流页面3（头像比分阵容）
  * - page5: 推流页面5（使用率/胜率排行）
  * - page6: 推流页面6（比赛结果）
- * - standby: 等待页
+ * - page7: 推流页面7（等待页）
  * - blank: 黑场（不加载任何画面）
  */
 export type StagePageKey =
@@ -150,7 +150,7 @@ export type StagePageKey =
   | 'page3'
   | 'page5'
   | 'page6'
-  | 'standby'
+  | 'page7'
   | 'blank';
 
 export type StageTransitionType = 'none' | 'blinds' | 'zoom';

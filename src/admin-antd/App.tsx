@@ -145,6 +145,7 @@ const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
       'YouSheBiaoTiHei 改用系统已安装字体（@font-face local()），未安装时回退 MiSans',
       '新增推流页面6（比赛结果）：比赛历史中勾选已结束比赛（最多 8 场）并推送展示，支持赛事标签筛选；展示双方选手、比分与胜者高亮',
       '关于项目新增字体说明：注明使用 MiSans，并列出使用 YouSheBiaoTiHei 的页面与下载链接，引导用户自行安装',
+      '等待页改名为推流页面7（公开免鉴权），其历史面板改为展示后台「比赛结果」推送选中的比赛',
     ],
   },
   {
@@ -2952,7 +2953,7 @@ function Dashboard() {
                       { value: 'page4', label: '仅显阵容' },
                       { value: 'page5', label: '推流页面5' },
                       { value: 'page6', label: '推流页面6' },
-                      { value: 'standby', label: '等待页 Demo' },
+                      { value: 'page7', label: '推流页面7' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}
                   />
