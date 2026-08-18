@@ -30,9 +30,13 @@
             leftScoreEl.className = `page6-score${leftIsWinner ? ' is-winner' : ''}`;
             leftScoreEl.textContent = String(leftScore);
 
-            const icon = document.createElement('div');
+            const icon = document.createElement('img');
             icon.className = 'page6-icon';
-            icon.textContent = 'VS';
+            icon.src = '/assets/ui/icon-for-page6.png';
+            icon.alt = 'VS';
+            icon.onerror = function () {
+                icon.style.display = 'none';
+            };
 
             const rightScoreEl = document.createElement('div');
             rightScoreEl.className = `page6-score${rightIsWinner ? ' is-winner' : ''}`;
