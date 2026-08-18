@@ -376,7 +376,7 @@ body[data-page2-lineup-display-mode="avatar-only"] .pestdiv2 {
 .player-summary-name {
     position: absolute;
     top: 0;
-    font-family: "Inter", "Microsoft YaHei", sans-serif;
+    font-family: "MiSans-Regular", "Microsoft YaHei", sans-serif;
     font-size: 32px;
     line-height: 39px;
     white-space: nowrap;

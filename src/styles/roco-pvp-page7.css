@@ -32,7 +32,7 @@
     --line-strong: rgba(104, 81, 55, 0.22);
     --shadow: 0 22px 48px rgba(87, 67, 46, 0.12);
     --title-font: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
-    --body-font: "PingFang SC", "Microsoft YaHei", sans-serif;
+    --body-font: "MiSans-Regular", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 * {
@@ -506,6 +506,10 @@ img {
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
+}
+
+.recent-game-card .recent-side-top strong {
+    font-family: "MiSans-Regular", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 .recent-side-top strong {

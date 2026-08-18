@@ -6,6 +6,14 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: "MiSans-Medium";
+    src: url("/assets/fonts/MiSans-Medium.otf") format("opentype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -116,8 +124,9 @@ body {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
+    font-family: "MiSans-Medium", "Microsoft YaHei", sans-serif;
     font-size: var(--page3-score-size);
-    font-weight: 800;
+    font-weight: 500;
     line-height: 1;
     color: #fff;
 }
@@ -146,13 +155,15 @@ body {
 }
 
 .page3-versus-main {
+    font-family: "MiSans-Medium", "Microsoft YaHei", sans-serif;
     font-size: 36px;
-    font-weight: 800;
+    font-weight: 500;
     line-height: 1;
 }
 
 .page3-versus-sub {
     margin-top: 4px;
+    font-family: "MiSans-Regular", "Microsoft YaHei", sans-serif;
     font-size: 20px;
     line-height: 1;
     opacity: 0.88;
