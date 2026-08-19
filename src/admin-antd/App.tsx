@@ -3082,7 +3082,7 @@ function Dashboard() {
                     })}
                   </Row>
                   <Row gutter={[16, 16]}>
-                    <Col xs={24} md={12}>
+                    <Col xs={24}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
                           <Text strong>切换过渡效果</Text>

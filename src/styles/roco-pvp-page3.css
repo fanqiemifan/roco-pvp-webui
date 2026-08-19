@@ -259,6 +259,36 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    /* 进场动画：从右到左滑入，先慢后快，最终固定在设定位置 */
+    animation: page3-nextgame-enter 0.55s cubic-bezier(0.2, 0.6, 0.3, 1);
+}
+
+/* 从右到左滑入动画（先慢后快） */
+@keyframes page3-nextgame-enter {
+    from {
+        transform: translateX(320px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 退场：向左到右滑出并淡出（先慢后快） */
+.page3-nextgame.is-exiting {
+    animation: page3-nextgame-exit 0.4s cubic-bezier(0.2, 0.6, 0.3, 1) forwards;
+}
+
+@keyframes page3-nextgame-exit {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(320px);
+        opacity: 0;
+    }
 }
 
 .page3-nextgame[hidden] {

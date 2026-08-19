@@ -301,11 +301,29 @@
 
         const el = document.getElementById('page3NextGame');
         const isVisible = Boolean(state.visible) && Boolean(match);
+        const wasVisible = !el.hidden;
 
-        el.hidden = !isVisible;
-        if (!isVisible) {
+        // 退场：先播放滑出动画，动画结束后再真正隐藏
+        if (!isVisible && wasVisible) {
+            el.hidden = false;
+            el.classList.add('is-exiting');
+            el.addEventListener('animationend', function handleExit() {
+                el.classList.remove('is-exiting');
+                el.hidden = true;
+                el.removeEventListener('animationend', handleExit);
+            });
             return;
         }
+
+        if (!isVisible) {
+            el.hidden = true;
+            el.classList.remove('is-exiting');
+            return;
+        }
+
+        // 进场：显示并触发从右到左滑入动画
+        el.hidden = false;
+        el.classList.remove('is-exiting');
 
         setNextGameName(document.getElementById('page3NextLeftName'), match.leftPlayer || '');
         setNextGameName(document.getElementById('page3NextRightName'), match.rightPlayer || '');
