@@ -74,12 +74,14 @@
 
         if (sourceQueue.length === 0) {
             imgEl.removeAttribute('src');
+            delete imgEl.dataset.imageSignature;
+            delete imgEl.dataset.currentSrc;
             imgEl.onerror = null;
             return;
         }
 
         const imageSignature = JSON.stringify(sourceQueue);
-        if (imgEl.dataset.imageSignature === imageSignature) {
+        if (imgEl.dataset.imageSignature === imageSignature && imgEl.getAttribute('src')) {
             return;
         }
 
@@ -156,6 +158,8 @@
             slotEl.title = `${getSpriteDisplayName(sprite)}（点击${isDead ? '复活' : '阵亡'} · 右键更换）`;
         } else {
             imgEl.removeAttribute('src');
+            delete imgEl.dataset.imageSignature;
+            delete imgEl.dataset.currentSrc;
             imgEl.onerror = null;
             imgEl.alt = '';
             slotEl.title = '右键添加精灵';

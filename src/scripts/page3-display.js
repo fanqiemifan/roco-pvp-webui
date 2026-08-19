@@ -16,6 +16,10 @@
     let scoreboardSignature = null;
     let avatarSignature = null;
     let nextGameSignature = null;
+    let matchPhaseSignature = null;
+    let lineupAnimationTimer = null;
+
+    const LINEUP_ANIMATION_MS = 760;
 
     function clamp(value, min, max, fallback) {
         if (value === null || value === undefined || value === '') {
@@ -171,9 +175,90 @@
                 return;
             }
 
+            // 胜负登记后先保留卡片完成退场，动画结束再清空 DOM。
+            if (!slotData && slotEl.classList.contains('is-lineup-exiting')) {
+                panelStates[position].signatures[index] = nextSignature;
+                return;
+            }
+
             renderSlot(slotEl, slotData, panelData ? panelData.mtime : null);
             panelStates[position].signatures[index] = nextSignature;
         });
+    }
+
+    function getMatchPhase(payload) {
+        const store = payload && payload.matches;
+        const matches = store && Array.isArray(store.matches) ? store.matches : [];
+        const activeMatch = matches.find(match => match && match.id === store.activeMatchId);
+        if (!activeMatch) {
+            return 'none';
+        }
+
+        const currentGame = Array.isArray(activeMatch.games)
+            ? activeMatch.games.find(game => game && game.status !== 'completed')
+            : null;
+        return currentGame && currentGame.status === 'in_progress' ? 'in_progress' : 'waiting';
+    }
+
+    function finishLineupAnimation() {
+        if (lineupAnimationTimer) {
+            window.clearTimeout(lineupAnimationTimer);
+            lineupAnimationTimer = null;
+        }
+        document.querySelectorAll('.page3-spirit-slot.is-lineup-exiting').forEach(slotEl => {
+            renderEmptySlot(slotEl);
+        });
+        panelStates.left.signatures.fill(getSlotSignature(null));
+        panelStates.right.signatures.fill(getSlotSignature(null));
+    }
+
+    function animateLineup(mode) {
+        if (lineupAnimationTimer) {
+            window.clearTimeout(lineupAnimationTimer);
+            lineupAnimationTimer = null;
+        }
+
+        const slots = document.querySelectorAll('.page3-spirit-slot');
+        slots.forEach(slotEl => {
+            const side = slotEl.dataset.side;
+            const slot = Number(slotEl.dataset.slot || 0);
+            const delayIndex = side === 'right' ? MAX_SLOTS - 1 - slot : slot;
+            slotEl.style.setProperty('--page3-lineup-delay', `${delayIndex * 72}ms`);
+            slotEl.classList.remove('is-lineup-entering', 'is-lineup-exiting');
+            void slotEl.offsetWidth;
+            slotEl.classList.add(mode === 'enter' ? 'is-lineup-entering' : 'is-lineup-exiting');
+        });
+
+        if (mode === 'exit') {
+            lineupAnimationTimer = window.setTimeout(finishLineupAnimation, LINEUP_ANIMATION_MS + 6 * 72 + 40);
+        } else {
+            lineupAnimationTimer = window.setTimeout(() => {
+                document.querySelectorAll('.page3-spirit-slot.is-lineup-entering').forEach(slotEl => {
+                    slotEl.classList.remove('is-lineup-entering');
+                });
+                lineupAnimationTimer = null;
+            }, LINEUP_ANIMATION_MS + 6 * 72 + 40);
+        }
+    }
+
+    function observeMatchPhase(payload) {
+        const nextPhase = getMatchPhase(payload);
+        if (matchPhaseSignature === null) {
+            matchPhaseSignature = nextPhase;
+            return;
+        }
+        if (matchPhaseSignature === nextPhase) {
+            return;
+        }
+
+        const previousPhase = matchPhaseSignature;
+        matchPhaseSignature = nextPhase;
+        if (previousPhase === 'in_progress' && nextPhase !== 'in_progress') {
+            animateLineup('exit');
+        } else if (previousPhase !== 'in_progress' && nextPhase === 'in_progress') {
+            // 开始本局时 matches:update 先于 panel:update 到达，等阵容 DOM 更新后再播放。
+            window.setTimeout(() => animateLineup('enter'), 0);
+        }
     }
 
     function scaleNameFont(value) {
@@ -259,6 +344,7 @@
 
     function applySnapshot(payload) {
         const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
+        observeMatchPhase(payload);
         renderScoreboard(payload ? payload.scoreboard : null);
         renderAvatars(payload ? payload.avatars : null);
         renderNextGame(payload ? payload.nextgame : null);
@@ -397,6 +483,10 @@
 
         socket.on('avatar:update', payload => {
             renderAvatars(payload ? payload.avatars : null);
+        });
+
+        socket.on('matches:update', payload => {
+            observeMatchPhase({ matches: payload ? payload.matches : null });
         });
 
         socket.on('nextgame:update', payload => {

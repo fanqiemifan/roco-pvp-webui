@@ -64,6 +64,84 @@ body {
     transform: scale(1);
 }
 
+/* 本局开始时双方阵容错开入场；左侧由左向右，右侧由右向左。 */
+.page3-spirit-slot.is-lineup-entering {
+    animation-duration: 760ms;
+    animation-delay: var(--page3-lineup-delay, 0ms);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.25, 1);
+    animation-fill-mode: both;
+    animation-iteration-count: 1;
+}
+
+.page3-spirit-slot[data-side="left"].is-lineup-entering {
+    animation-name: page3-lineup-left-enter;
+}
+
+.page3-spirit-slot[data-side="right"].is-lineup-entering {
+    animation-name: page3-lineup-right-enter;
+}
+
+/* 登记胜负后退回屏幕外，左右方向与入场相反。 */
+.page3-spirit-slot.is-lineup-exiting {
+    animation-duration: 520ms;
+    animation-delay: var(--page3-lineup-delay, 0ms);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.25, 1);
+    animation-fill-mode: forwards;
+    animation-iteration-count: 1;
+}
+
+.page3-spirit-slot[data-side="left"].is-lineup-exiting {
+    animation-name: page3-lineup-left-exit;
+}
+
+.page3-spirit-slot[data-side="right"].is-lineup-exiting {
+    animation-name: page3-lineup-right-exit;
+}
+
+@keyframes page3-lineup-left-enter {
+    from {
+        opacity: 0;
+        transform: translateX(-320px) scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes page3-lineup-right-enter {
+    from {
+        opacity: 0;
+        transform: translateX(320px) scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes page3-lineup-left-exit {
+    from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-320px) scale(0.92);
+    }
+}
+
+@keyframes page3-lineup-right-exit {
+    from {
+        opacity: 1;
+        transform: translateX(320px) scale(0.92);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(640px) scale(0.92);
+    }
+}
+
 .page3-spirit-slot[data-side="left"][data-slot="0"] { left: 106px; top: 196px; }
 .page3-spirit-slot[data-side="left"][data-slot="1"] { left: 68px; top: 312px; }
 .page3-spirit-slot[data-side="left"][data-slot="2"] { left: 44px; top: 428px; }

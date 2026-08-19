@@ -193,7 +193,7 @@ function configureWindowOpenHandler(window: BrowserWindow): void {
     if (isFloatPage) {
       childWindow.setAlwaysOnTop(true, 'screen-saver');
     }
-    if (pathname.endsWith('/float-menu.html')) {
+    if (pathname.endsWith('/float-menu.html') || pathname.endsWith('/float-nextgame.html')) {
       childWindow.on('blur', () => {
         if (!childWindow.isDestroyed()) {
           childWindow.close();
