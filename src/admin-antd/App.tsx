@@ -148,6 +148,7 @@ const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
       '阵容悬浮窗中央新增圆形小按钮：点击弹出待开始比赛选择小窗，支持按选手名称搜索，确认后自动在推流页面3 显示',
       '修复下场对局头像：按所选比赛分别读取各自头像（按赛事隔离），未设置时回退默认头像',
       '下场对局停留时长默认单位为分钟，不再支持秒；直播推流页将「下场对局」与「切换过渡效果」设置位置互换',
+      '直播推流设置：推流页面5标题 / 推流页面6副标题、背景 独立成卡，与「下场对局」「切换过渡效果」同行三列控制',
     ],
   },
   {
@@ -560,9 +561,6 @@ function Dashboard() {
     scoreboardForm.setFieldsValue({
       eventTitle: scoreboard.eventTitle,
       page2LineupDisplayMode: scoreboard.page2LineupDisplayMode,
-      page5Title: scoreboard.page5Title,
-      page6Title: page6?.title ?? '',
-      page6Background: page6?.background ?? 'image',
     });
   }, [view, scoreboard, scoreboardForm, page6]);
 
@@ -1437,17 +1435,32 @@ function Dashboard() {
         },
       });
       applyServerState({ scoreboard: data.scoreboard });
-      if (page6) {
+      message.success('显示设置已保存');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  // 推流页面5标题 / 推流页面6副标题、背景（独立卡片，改动即保存）
+  async function savePage5Page6Settings(fields: Partial<{ page5Title: string; page6Title: string; page6Background: 'image' | 'video' }>) {
+    try {
+      if (fields.page5Title !== undefined && scoreboard) {
+        const data = await requestJson<{ success: boolean; scoreboard: ScoreboardState }>('/api/scoreboard', {
+          method: 'POST',
+          json: { ...scoreboard, page5Title: fields.page5Title },
+        });
+        applyServerState({ scoreboard: data.scoreboard });
+      }
+      if (fields.page6Title !== undefined || fields.page6Background !== undefined) {
         const page6Data = await requestJson<{ success: boolean; state: Page6State }>('/api/page6', {
           method: 'POST',
           json: {
-            title: values.page6Title ?? '',
-            background: values.page6Background ?? 'image',
+            title: fields.page6Title ?? page6?.title ?? '',
+            background: fields.page6Background ?? page6?.background ?? 'image',
           },
         });
         applyServerState({ page6: page6Data.state });
       }
-      message.success('显示设置已保存');
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
     }
@@ -2940,7 +2953,77 @@ function Dashboard() {
                         </Space>
                       </Card>
                     </Col>
-                    <Col xs={24} md={12}>
+                  </Row>
+                  <Row gutter={[16, 16]}>
+                    {STAGE_OPTIONS.map((option) => {
+                      const active = (stage?.page ?? null) === option.value;
+                      const isBlank = option.value === 'blank';
+                      return (
+                        <Col xs={24} sm={12} md={8} key={option.value}>
+                          <Card
+                            size="small"
+                            hoverable
+                            className={`stage-card ${active ? 'stage-card-active' : ''} ${isBlank ? 'stage-card-blank' : ''}`}
+                            onClick={() => void saveStage(option.value)}
+                          >
+                            <Space direction="vertical" size={6} className="page-stack" style={{ width: '100%' }}>
+                              <Space style={{ justifyContent: 'space-between', width: '100%' }}>
+                                <Text strong>{option.label}</Text>
+                                {active ? <Tag color="green">当前画面</Tag> : null}
+                              </Space>
+                              <Text type="secondary" style={{ fontSize: 12 }}>{option.description}</Text>
+                              {isBlank ? (
+                                <div className="stage-card-thumb stage-card-thumb-blank">
+                                  <span className="stage-card-thumb-mark">黑场</span>
+                                </div>
+                              ) : (
+                                <StageThumb label={option.label} previewPath={option.previewPath} />
+                              )}
+                            </Space>
+                          </Card>
+                        </Col>
+                      );
+                    })}
+                  </Row>
+                  <Row gutter={[16, 16]}>
+                    <Col xs={24} md={12} xl={8}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>推流页面5/6 标题与背景</Text>
+                          <div>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>推流页面5标题：</Text>
+                            <Input
+                              maxLength={40}
+                              placeholder="例如：仙王杯（自动拼上赛事标签与精灵出场胜率）"
+                              value={scoreboard?.page5Title ?? ''}
+                              onChange={(event) => { void savePage5Page6Settings({ page5Title: event.target.value }); }}
+                            />
+                          </div>
+                          <div>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>推流页面6副标题：</Text>
+                            <Input
+                              maxLength={40}
+                              placeholder="页面6比赛结果页标题2内容，可留空"
+                              value={page6?.title ?? ''}
+                              onChange={(event) => { void savePage5Page6Settings({ page6Title: event.target.value }); }}
+                            />
+                          </div>
+                          <div>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>推流页面6背景：</Text>
+                            <Segmented
+                              block
+                              value={page6?.background ?? 'image'}
+                              options={[
+                                { value: 'image', label: '图片' },
+                                { value: 'video', label: '视频' },
+                              ]}
+                              onChange={(value) => { void savePage5Page6Settings({ page6Background: value as 'image' | 'video' }); }}
+                            />
+                          </div>
+                        </Space>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
                           <Text strong>下场对局（推流页面3）</Text>
@@ -2999,37 +3082,23 @@ function Dashboard() {
                         </Space>
                       </Card>
                     </Col>
-                  </Row>
-                  <Row gutter={[16, 16]}>
-                    {STAGE_OPTIONS.map((option) => {
-                      const active = (stage?.page ?? null) === option.value;
-                      const isBlank = option.value === 'blank';
-                      return (
-                        <Col xs={24} sm={12} md={8} key={option.value}>
-                          <Card
-                            size="small"
-                            hoverable
-                            className={`stage-card ${active ? 'stage-card-active' : ''} ${isBlank ? 'stage-card-blank' : ''}`}
-                            onClick={() => void saveStage(option.value)}
-                          >
-                            <Space direction="vertical" size={6} className="page-stack" style={{ width: '100%' }}>
-                              <Space style={{ justifyContent: 'space-between', width: '100%' }}>
-                                <Text strong>{option.label}</Text>
-                                {active ? <Tag color="green">当前画面</Tag> : null}
-                              </Space>
-                              <Text type="secondary" style={{ fontSize: 12 }}>{option.description}</Text>
-                              {isBlank ? (
-                                <div className="stage-card-thumb stage-card-thumb-blank">
-                                  <span className="stage-card-thumb-mark">黑场</span>
-                                </div>
-                              ) : (
-                                <StageThumb label={option.label} previewPath={option.previewPath} />
-                              )}
-                            </Space>
-                          </Card>
-                        </Col>
-                      );
-                    })}
+                    <Col xs={24} md={12} xl={8}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>切换过渡效果</Text>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            切换直播推流画面时的过渡动效。
+                          </Paragraph>
+                          <Segmented
+                            block
+                            value={normalizeStageTransition(stage?.transition)}
+                            disabled={stageSaving}
+                            options={STAGE_TRANSITION_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                            onChange={(value) => { void saveStage(stage?.page ?? 'page3', { transition: value as StageTransitionType }); }}
+                          />
+                        </Space>
+                      </Card>
+                    </Col>
                   </Row>
                   <Card size="small" className="subtle-card stage-settings-card" title="显示设置">
                     <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
@@ -3049,44 +3118,9 @@ function Dashboard() {
                             />
                           </Form.Item>
                         </Col>
-                        <Col xs={24} md={12} xl={8}>
-                          <Form.Item label="推流页面5标题" name="page5Title">
-                            <Input maxLength={40} placeholder="例如：仙王杯（自动拼上赛事标签与精灵出场胜率）" />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={12} xl={8}>
-                          <Form.Item label="推流页面6副标题" name="page6Title">
-                            <Input maxLength={40} placeholder="页面6比赛结果页标题2内容，可留空" />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={12} xl={8}>
-                          <Form.Item label="推流页面6背景" name="page6Background">
-                            <Segmented
-                              block
-                              options={[
-                                { value: 'image', label: '图片' },
-                                { value: 'video', label: '视频' },
-                              ]}
-                            />
-                          </Form.Item>
-                        </Col>
                       </Row>
                       <Button type="primary" htmlType="submit">保存显示设置</Button>
                     </Form>
-                  </Card>
-                  <Card size="small" className="subtle-card stage-settings-card" title="切换过渡效果">
-                    <Space direction="vertical" size={12} className="control-stack" style={{ width: '100%' }}>
-                      <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                        切换直播推流画面时的过渡动效。
-                      </Paragraph>
-                      <Segmented
-                        block
-                        value={normalizeStageTransition(stage?.transition)}
-                        disabled={stageSaving}
-                        options={STAGE_TRANSITION_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                        onChange={(value) => { void saveStage(stage?.page ?? 'page3', { transition: value as StageTransitionType }); }}
-                      />
-                    </Space>
                   </Card>
                 </Space>
               </Card>
