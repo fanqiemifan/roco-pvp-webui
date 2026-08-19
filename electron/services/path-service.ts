@@ -18,6 +18,7 @@ export interface AppPaths {
   matchesFile: string;
   stageFile: string;
   page6File: string;
+  nextgameFile: string;
   configFile: string;
   panelStatePath(position: 'left' | 'right'): string;
   avatarDir(matchId: string | null): string;
@@ -47,6 +48,7 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     matchesFile: path.join(cacheDir, 'matches.json'),
     stageFile: path.join(cacheDir, 'stage.json'),
     page6File: path.join(cacheDir, 'page6.json'),
+    nextgameFile: path.join(cacheDir, 'nextgame.json'),
     configFile: path.join(runtimeDir, 'config.json'),
     panelStatePath(position: 'left' | 'right') {
       return path.join(cacheDir, `${position}.json`);

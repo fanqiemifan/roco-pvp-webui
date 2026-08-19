@@ -16,6 +16,7 @@ import {
   Form,
   Image,
   Input,
+  InputNumber,
   Layout,
   List,
   Menu,
@@ -44,6 +45,8 @@ import type {
   AvatarCollectionState,
   MatchRecord,
   MatchStoreState,
+  NextGamePayload,
+  NextGameState,
   Page4PanelState,
   Page4SlotState,
   Page4State,
@@ -137,6 +140,14 @@ const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
 
 const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
+  {
+    version: '1.5.3',
+    date: '2026-08',
+    items: [
+      '新增「下场对局」：推流页面3 右下角展示下一场待开始比赛（选手头像 + 名字）；直播推流可控制出现/关闭，并可设置开启后停留时长（默认 1 分钟，单位可切秒/分钟，到期自动隐藏）',
+      '阵容悬浮窗中央新增圆形小按钮：点击弹出待开始比赛选择小窗，支持按选手名称搜索，确认后自动在推流页面3 显示',
+    ],
+  },
   {
     version: '1.5.2',
     date: '2026-08',
@@ -302,6 +313,9 @@ function Dashboard() {
   const [previewShellSize, setPreviewShellSize] = useState({ width: 960, height: 540 });
   const [stage, setStage] = useState<StageConfig | null>(null);
   const [stageSaving, setStageSaving] = useState(false);
+  const [nextgame, setNextgame] = useState<NextGameState | null>(null);
+  const [nextgameMatch, setNextgameMatch] = useState<MatchRecord | null>(null);
+  const [nextgameSaving, setNextgameSaving] = useState(false);
   const [page6, setPage6] = useState<Page6State | null>(null);
   const [page6Draft, setPage6Draft] = useState<string[]>([]);
   const [page6Pushing, setPage6Pushing] = useState(false);
@@ -330,6 +344,7 @@ function Dashboard() {
   const lineupLocked = activeMatch?.status === 'completed';
   const progress = buildProgressItems(activeMatch);
   const allHistoryTags = buildHistoryTags(matchStore.matches);
+  const pendingMatches = matchStore.matches.filter((match) => match.status === 'pending');
   const allPlayers = Array.from(new Set(matchStore.matches.flatMap((match) => [
     match.leftPlayer,
     match.rightPlayer,
@@ -431,6 +446,7 @@ function Dashboard() {
     page4Panel?: Page4PanelState;
     stage?: StageConfig;
     page6?: Page6State;
+    nextgame?: NextGamePayload;
   }) {
     startTransition(() => {
       if (payload.scoreboard) {
@@ -441,6 +457,10 @@ function Dashboard() {
       }
       if (payload.avatars) {
         setAvatars(payload.avatars);
+      }
+      if (payload.nextgame) {
+        setNextgame(payload.nextgame.state);
+        setNextgameMatch(payload.nextgame.match ?? null);
       }
       if (Array.isArray(payload.panels)) {
         payload.panels.forEach((panel) => {
@@ -476,7 +496,7 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextNextgame] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
@@ -486,6 +506,7 @@ function Dashboard() {
         requestJson<{ sprites: SpriteRecord[] }>('/api/sprites'),
         requestJson<StageConfig>('/api/stage'),
         requestJson<{ state: Page6State }>('/api/page6'),
+        requestJson<NextGamePayload>('/api/nextgame'),
       ]);
 
       if (!auth.authenticated) {
@@ -501,6 +522,8 @@ function Dashboard() {
         setStage(nextStage);
         setPage6(nextPage6.state);
         setPage6Draft(nextPage6.state.matchIds);
+        setNextgame(nextNextgame.state);
+        setNextgameMatch(nextNextgame.match ?? null);
         syncPanelFromApi('left', nextPanels.images[0]);
         syncPanelFromApi('right', nextPanels.images[1]);
         syncPage4PanelFromApi('left', nextPage4.panels[0]);
@@ -602,6 +625,12 @@ function Dashboard() {
     socket.on(SOCKET_EVENTS.page6Update, (payload) => {
       if (payload?.state) {
         applyServerState({ page6: payload.state });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.nextgameUpdate, (payload) => {
+      if (payload?.state) {
+        applyServerState({ nextgame: payload });
       }
     });
 
@@ -1454,6 +1483,59 @@ function Dashboard() {
       }
     } finally {
       setStageSaving(false);
+    }
+  }
+
+  async function saveNextGame(payload: {
+    matchId?: string | null;
+    duration?: number;
+    durationUnit?: 'seconds' | 'minutes';
+  }) {
+    setNextgameSaving(true);
+    try {
+      const data = await requestJson<{ success: boolean } & NextGamePayload>('/api/nextgame', {
+        method: 'POST',
+        json: payload,
+      });
+      applyServerState({ nextgame: data });
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setNextgameSaving(false);
+    }
+  }
+
+  async function showNextGame(payload: {
+    matchId?: string | null;
+    duration?: number;
+    durationUnit?: 'seconds' | 'minutes';
+  }) {
+    setNextgameSaving(true);
+    try {
+      const data = await requestJson<{ success: boolean } & NextGamePayload>('/api/nextgame/show', {
+        method: 'POST',
+        json: payload,
+      });
+      applyServerState({ nextgame: data });
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setNextgameSaving(false);
+    }
+  }
+
+  async function hideNextGameFromAdmin() {
+    setNextgameSaving(true);
+    try {
+      const data = await requestJson<{ success: boolean } & NextGamePayload>('/api/nextgame/hide', {
+        method: 'POST',
+        json: {},
+      });
+      applyServerState({ nextgame: data });
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setNextgameSaving(false);
     }
   }
 
@@ -2944,6 +3026,78 @@ function Dashboard() {
                       </Row>
                       <Button type="primary" htmlType="submit">保存显示设置</Button>
                     </Form>
+                  </Card>
+                  <Card size="small" className="subtle-card stage-settings-card" title="下场对局（推流页面3）">
+                    <Space direction="vertical" size={12} className="control-stack" style={{ width: '100%' }}>
+                      <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                        选择一场待开始的比赛，控制其在推流页面3右下角的「下场对局」面板出现与关闭；开启后默认停留 {nextgame?.duration ?? 1} {nextgame?.durationUnit === 'seconds' ? '秒' : '分钟'} 后自动隐藏。
+                      </Paragraph>
+                      <div>
+                        <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>待开始比赛：</Text>
+                        <Select
+                          className="stage-page5-tag-select"
+                          style={{ width: '100%' }}
+                          showSearch
+                          optionFilterProp="label"
+                          placeholder="选择待开始的比赛"
+                          value={nextgame?.matchId || undefined}
+                          disabled={nextgameSaving}
+                          options={pendingMatches.map((match) => ({
+                            value: match.id,
+                            label: `${match.leftPlayer || '左侧'} vs ${match.rightPlayer || '右侧'}（BO${match.bestOf}）`,
+                          }))}
+                          onChange={(value) => { void saveNextGame({ matchId: value ?? null }); }}
+                        />
+                      </div>
+                      <div>
+                        <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>开启后停留时长：</Text>
+                        <Space.Compact style={{ width: '100%' }}>
+                          <InputNumber
+                            style={{ width: '60%' }}
+                            min={1}
+                            max={nextgame?.durationUnit === 'seconds' ? 3600 : 60}
+                            value={nextgame?.duration ?? 1}
+                            disabled={nextgameSaving}
+                            onChange={(value) => {
+                              void saveNextGame({
+                                duration: value === null || value === undefined ? 1 : Number(value),
+                                durationUnit: nextgame?.durationUnit ?? 'minutes',
+                              });
+                            }}
+                          />
+                          <Segmented
+                            block
+                            style={{ width: '40%' }}
+                            value={nextgame?.durationUnit ?? 'minutes'}
+                            disabled={nextgameSaving}
+                            options={[
+                              { value: 'seconds', label: '秒' },
+                              { value: 'minutes', label: '分钟' },
+                            ]}
+                            onChange={(value) => { void saveNextGame({ durationUnit: value as 'seconds' | 'minutes' }); }}
+                          />
+                        </Space.Compact>
+                      </div>
+                      <Space wrap>
+                        <Button
+                          type="primary"
+                          disabled={!nextgame?.matchId}
+                          loading={nextgameSaving}
+                          onClick={() => void showNextGame({})}
+                        >
+                          显示下场对局
+                        </Button>
+                        <Button
+                          danger
+                          disabled={!nextgame?.visible}
+                          loading={nextgameSaving}
+                          onClick={() => void hideNextGameFromAdmin()}
+                        >
+                          关闭
+                        </Button>
+                        {nextgame?.visible ? <Tag color="green">正在显示</Tag> : <Tag>已隐藏</Tag>}
+                      </Space>
+                    </Space>
                   </Card>
                 </Space>
               </Card>

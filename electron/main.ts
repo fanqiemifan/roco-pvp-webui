@@ -107,6 +107,15 @@ function getWindowPreset(targetUrl: string): WindowPreset {
       title: '更换精灵',
     };
   }
+  if (pathname.endsWith('/float-nextgame.html')) {
+    return {
+      width: 300,
+      height: 320,
+      zoomFactor: 1,
+      autoHideMenuBar: true,
+      title: '下场对局',
+    };
+  }
   if (
     pathname.endsWith('/roco-pvp-page7.html')
     || pathname.endsWith('/roco-pvp-page2.html')
@@ -154,7 +163,7 @@ function configureWindowOpenHandler(window: BrowserWindow): void {
 
     const preset = getWindowPreset(url);
     const pathname = getWindowPath(url);
-    const isFloatPage = pathname.endsWith('/float.html') || pathname.endsWith('/float-menu.html');
+    const isFloatPage = pathname.endsWith('/float.html') || pathname.endsWith('/float-menu.html') || pathname.endsWith('/float-nextgame.html');
     const childWindow = new BrowserWindow({
       useContentSize: true,
       width: preset.width,

@@ -178,6 +178,31 @@ export interface Page6State {
   mtime: number | null;
 }
 
+/**
+ * 下一局比赛（page3 下场对局）配置：
+ * - matchId：所选待开始比赛
+ * - visible：当前是否正在显示
+ * - duration / durationUnit：开启后停留时长（默认 1 分钟，可切秒/分钟）
+ * - shownAt：本次开启的时间戳（用于自动隐藏倒计时）
+ */
+export type NextGameDurationUnit = 'seconds' | 'minutes';
+
+export interface NextGameState {
+  matchId: string | null;
+  visible: boolean;
+  duration: number;
+  durationUnit: NextGameDurationUnit;
+  shownAt: number | null;
+  mtime: number | null;
+}
+
+/** 推流页面3 / 后台/悬浮窗共用的下一局比赛完整载荷 */
+export interface NextGamePayload {
+  state: NextGameState;
+  match: MatchRecord | null;
+  avatars: AvatarCollectionState;
+}
+
 export interface SnapshotPayload {
   panels: [PanelState, PanelState];
   page4: Page4State;
@@ -186,6 +211,7 @@ export interface SnapshotPayload {
   matches: MatchStoreState;
   stage: StageConfig;
   page6: Page6State;
+  nextgame: NextGamePayload;
 }
 
 export interface QuickFillMatch {

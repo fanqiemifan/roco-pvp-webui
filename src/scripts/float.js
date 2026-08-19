@@ -262,6 +262,22 @@
         window.close();
     });
 
+    // 下场对局：点击中央圆形按钮打开比赛选择小窗
+    let nextGameMenuWindow = null;
+    const nextGameBtn = document.getElementById('floatNextGameBtn');
+    if (nextGameBtn) {
+        nextGameBtn.addEventListener('click', () => {
+            if (nextGameMenuWindow && !nextGameMenuWindow.closed) {
+                nextGameMenuWindow.focus();
+                return;
+            }
+            const rect = nextGameBtn.getBoundingClientRect();
+            const left = Math.max(0, Math.round(window.screenX + rect.left + rect.width / 2 - 150));
+            const top = Math.max(0, Math.round(window.screenY + rect.top - 340));
+            nextGameMenuWindow = window.open('/float-nextgame.html', '_blank', `width=300,height=320,popup=yes,left=${left},top=${top}`);
+        });
+    }
+
     function reportStageShape() {
         if (!window.rocoFloat || typeof window.rocoFloat.reportShape !== 'function') {
             return;

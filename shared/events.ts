@@ -7,4 +7,5 @@ export const SOCKET_EVENTS = {
   matchesUpdate: 'matches:update',
   stageUpdate: 'stage:update',
   page6Update: 'page6:update',
+  nextgameUpdate: 'nextgame:update',
 } as const;

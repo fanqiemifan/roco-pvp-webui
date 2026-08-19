@@ -77,3 +77,37 @@ body {
     background: #d9534f;
     color: #fff;
 }
+
+/* 下场对局按钮：悬浮于阵容条中央的圆形小按钮（不显示文字） */
+.float-nextgame-btn {
+    -webkit-app-region: no-drag;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 12;
+    width: 22px;
+    height: 22px;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    background: rgba(30, 22, 14, 0.55);
+    cursor: pointer;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.float-stage:hover .float-nextgame-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.float-nextgame-btn:hover {
+    background: rgba(199, 99, 47, 0.85);
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.float-nextgame-btn:active {
+    transform: translate(-50%, -50%) scale(0.95);
+}

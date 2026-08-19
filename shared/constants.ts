@@ -39,3 +39,11 @@ export const SUPPORTED_STAGE_PAGES = new Set([
  */
 export const DEFAULT_STAGE_TRANSITION = 'blinds';
 export const SUPPORTED_STAGE_TRANSITIONS = new Set(['none', 'blinds', 'zoom']);
+
+/**
+ * 下一局比赛（page3 下场对局）默认停留时长：
+ * 默认 1 分钟，单位为分钟；单位可切换为秒。
+ */
+export const DEFAULT_NEXTGAME_DURATION = 1;
+export const DEFAULT_NEXTGAME_DURATION_UNIT = 'minutes' as const;
+export const SUPPORTED_NEXTGAME_DURATION_UNITS = new Set<string>(['seconds', 'minutes']);

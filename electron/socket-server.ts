@@ -28,6 +28,12 @@ import {
   savePage6State,
 } from './services/page6-service.js';
 import {
+  getNextGamePayload,
+  hideNextGame,
+  saveNextGameState,
+  showNextGame,
+} from './services/nextgame-service.js';
+import {
   clearPage4State,
   getPage4State,
   savePage4SlotState,
@@ -84,6 +90,7 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     matches: getMatchStore(paths),
     stage: getStageState(paths),
     page6: getPage6State(paths),
+    nextgame: getNextGamePayload(paths),
   };
 }
 
@@ -278,6 +285,7 @@ export async function createLocalServer(
   app.get('/roco-pvp-page1.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page1.html'));
   app.get('/float.html', (_request, response) => sendPage(paths, response, 'float.html'));
   app.get('/float-menu.html', (_request, response) => sendPage(paths, response, 'float-menu.html'));
+  app.get('/float-nextgame.html', (_request, response) => sendPage(paths, response, 'float-nextgame.html'));
 
   // Auth API — always public
   app.post('/api/auth/login', async (req, res) => {
@@ -329,9 +337,9 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/float.html', '/float-menu.html'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
       // 推流页面5/6/7 仅用于展示，所需的数据 GET 接口公开（写操作仍受保护）
-      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page6', '/api/images', '/api/matches', '/api/sprites'].includes(req.path);
+      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page6', '/api/images', '/api/matches', '/api/sprites', '/api/nextgame'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 
@@ -401,6 +409,70 @@ export async function createLocalServer(
 
   app.get('/api/matches', (_request, response) => {
     response.json(getMatchStore(paths));
+  });
+
+  app.get('/api/nextgame', (_request, response) => {
+    response.json(getNextGamePayload(paths));
+  });
+
+  // 下一局比赛自动隐藏定时器：当显示开启后按停留时长到期自动关闭
+  let nextgameTimer: NodeJS.Timeout | null = null;
+  function scheduleNextGameAutoHide(): void {
+    if (nextgameTimer) {
+      clearTimeout(nextgameTimer);
+      nextgameTimer = null;
+    }
+    const payload = getNextGamePayload(paths);
+    if (!payload.state.visible || !payload.state.shownAt) {
+      return;
+    }
+    const unit = payload.state.durationUnit;
+    const durationMs = (unit === 'seconds' ? payload.state.duration : payload.state.duration * 60) * 1000;
+    const elapsed = Date.now() - payload.state.shownAt;
+    const remaining = durationMs - elapsed;
+    if (remaining <= 0) {
+      const next = hideNextGame(paths);
+      io.emit(SOCKET_EVENTS.nextgameUpdate, next);
+      return;
+    }
+    nextgameTimer = setTimeout(() => {
+      const next = hideNextGame(paths);
+      io.emit(SOCKET_EVENTS.nextgameUpdate, next);
+    }, remaining);
+  }
+  scheduleNextGameAutoHide();
+
+  app.post('/api/nextgame', (request, response) => {
+    try {
+      const payload = saveNextGameState(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.nextgameUpdate, payload);
+      scheduleNextGameAutoHide();
+      response.json({ success: true, ...payload });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/nextgame/show', (request, response) => {
+    try {
+      const payload = showNextGame(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.nextgameUpdate, payload);
+      scheduleNextGameAutoHide();
+      response.json({ success: true, ...payload });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/nextgame/hide', (_request, response) => {
+    try {
+      const payload = hideNextGame(paths);
+      io.emit(SOCKET_EVENTS.nextgameUpdate, payload);
+      scheduleNextGameAutoHide();
+      response.json({ success: true, ...payload });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
   });
 
   app.post('/api/matches', (request, response) => {
@@ -912,6 +984,10 @@ export async function createLocalServer(
     server,
     io,
     async close() {
+      if (nextgameTimer) {
+        clearTimeout(nextgameTimer);
+        nextgameTimer = null;
+      }
       await new Promise<void>((resolve, reject) => {
         io.close(() => {
           server.close((error) => {

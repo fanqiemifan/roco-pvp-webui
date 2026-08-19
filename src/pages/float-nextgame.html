@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下场对局</title>
+    <link rel="stylesheet" href="/styles/float-nextgame.css">
+</head>
+<body>
+    <main class="nextgame-popup">
+        <div class="nextgame-header">
+            <div class="nextgame-title">选择下场对局</div>
+            <button id="nextgameCloseBtn" class="nextgame-close" type="button" title="关闭">×</button>
+        </div>
+        <input id="nextgameSearch" class="nextgame-search" type="text" placeholder="搜索选手名称">
+        <div id="nextgameList" class="nextgame-list"></div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/float-nextgame.js"></script>
+</body>
+</html>

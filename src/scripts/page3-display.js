@@ -15,6 +15,7 @@
 
     let scoreboardSignature = null;
     let avatarSignature = null;
+    let nextGameSignature = null;
 
     function clamp(value, min, max, fallback) {
         if (value === null || value === undefined || value === '') {
@@ -260,27 +261,95 @@
         const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
         renderScoreboard(payload ? payload.scoreboard : null);
         renderAvatars(payload ? payload.avatars : null);
+        renderNextGame(payload ? payload.nextgame : null);
         renderPanel('left', panels.find(panel => panel && panel.position === 'left'));
         renderPanel('right', panels.find(panel => panel && panel.position === 'right'));
     }
 
+    // 设置下场对局选手名字：超过 5 个字时开启横向滚动
+    function setNextGameName(nameEl, text) {
+        const inner = nameEl.querySelector('.page3-nextgame-name-inner');
+        if (inner) {
+            inner.textContent = text;
+        } else {
+            nameEl.textContent = text;
+        }
+        nameEl.classList.toggle('is-scrolling', String(text || '').length > 5);
+    }
+
+    function renderNextGame(payload) {
+        const data = payload || {};
+        const state = data.state || {};
+        const match = data.match || null;
+        const avatars = data.avatars || {};
+
+        const nextSignature = JSON.stringify({
+            visible: Boolean(state.visible),
+            matchId: state.matchId || '',
+            leftName: match ? match.leftPlayer || '' : '',
+            rightName: match ? match.rightPlayer || '' : '',
+            leftAvatar: avatars.left && avatars.left.exists ? (avatars.left.path || '') : '',
+            leftMtime: avatars.left && avatars.left.exists ? avatars.left.mtime : null,
+            rightAvatar: avatars.right && avatars.right.exists ? (avatars.right.path || '') : '',
+            rightMtime: avatars.right && avatars.right.exists ? avatars.right.mtime : null,
+        });
+
+        if (nextGameSignature === nextSignature) {
+            return;
+        }
+        nextGameSignature = nextSignature;
+
+        const el = document.getElementById('page3NextGame');
+        const isVisible = Boolean(state.visible) && Boolean(match);
+
+        el.hidden = !isVisible;
+        if (!isVisible) {
+            return;
+        }
+
+        setNextGameName(document.getElementById('page3NextLeftName'), match.leftPlayer || '');
+        setNextGameName(document.getElementById('page3NextRightName'), match.rightPlayer || '');
+
+        const leftImg = document.getElementById('page3NextLeftAvatarImage');
+        const rightImg = document.getElementById('page3NextRightAvatarImage');
+        const leftAvatar = avatars.left || {};
+        const rightAvatar = avatars.right || {};
+
+        if (leftAvatar.exists && leftAvatar.path) {
+            const cacheBuster = leftAvatar.mtime ? Math.floor(leftAvatar.mtime) : Date.now();
+            leftImg.src = `${leftAvatar.path}?t=${cacheBuster}`;
+        } else {
+            leftImg.removeAttribute('src');
+        }
+
+        if (rightAvatar.exists && rightAvatar.path) {
+            const cacheBuster = rightAvatar.mtime ? Math.floor(rightAvatar.mtime) : Date.now();
+            rightImg.src = `${rightAvatar.path}?t=${cacheBuster}`;
+        } else {
+            rightImg.removeAttribute('src');
+        }
+    }
+
     async function loadInitialState() {
-        const [imagesResponse, scoreboardResponse, avatarsResponse] = await Promise.all([
+        const [imagesResponse, scoreboardResponse, avatarsResponse, nextgameResponse] = await Promise.all([
             fetch('api/images'),
             fetch('api/scoreboard'),
-            fetch('api/avatars')
+            fetch('api/avatars'),
+            fetch('api/nextgame')
         ]);
 
-        const [imagesData, scoreboardData, avatarsData] = await Promise.all([
+        const [imagesData, scoreboardData, avatarsData, nextgameData] = await Promise.all([
             imagesResponse.json(),
             scoreboardResponse.json(),
-            avatarsResponse.json()
+            avatarsResponse.json(),
+            nextgameResponse.json()
         ]);
 
         applySnapshot({
             panels: imagesData.images || [],
             scoreboard: scoreboardData,
-            avatars: avatarsData
+            avatars: avatarsData,
+            nextgame: nextgameData
         });
     }
 
@@ -310,6 +379,10 @@
 
         socket.on('avatar:update', payload => {
             renderAvatars(payload ? payload.avatars : null);
+        });
+
+        socket.on('nextgame:update', payload => {
+            renderNextGame(payload || null);
         });
 
         socket.on('connect_error', error => {

@@ -9,6 +9,13 @@ files:
   - src/**
   - resources/**
   - package.json
+  # 不打包非 MiSans 字体（阿里普惠 / YouSheBiaoTiHei 等改用系统已安装字体，未安装时回退 MiSans）
+  - "!src/assets/fonts/**"
+  - "!src/**/*.ttf"
+  - "!src/**/*.ttc"
+  - "!src/**/*.woff"
+  - "!src/**/*.woff2"
+  - "src/assets/fonts/MiSans-*.otf"
 extraMetadata:
   main: dist-electron/electron/main.js
 mac:

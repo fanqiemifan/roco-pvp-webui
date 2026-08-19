@@ -1,0 +1,172 @@
+/* 下场对局选择浮窗：独立小窗，深色主题 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+    font-family: "Microsoft YaHei", "PingFang SC", "Avenir Next", sans-serif;
+    user-select: none;
+}
+
+.nextgame-popup {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    background: rgba(52, 38, 24, 0.98);
+    border: 1px solid rgba(255, 235, 205, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+    padding: 8px;
+    gap: 6px;
+}
+
+.nextgame-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nextgame-title {
+    flex: 1;
+    padding: 2px 6px;
+    font-size: 12px;
+    color: #e6b34e;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nextgame-close {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+
+.nextgame-close:hover {
+    background: #d9534f;
+    color: #fff;
+}
+
+.nextgame-search {
+    flex: none;
+    width: 100%;
+    height: 26px;
+    padding: 0 9px;
+    border: 1px solid rgba(255, 235, 205, 0.22);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 12px;
+    outline: none;
+}
+
+.nextgame-search::placeholder {
+    color: rgba(255, 235, 205, 0.45);
+}
+
+.nextgame-search:focus {
+    border-color: #e6b34e;
+}
+
+.nextgame-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nextgame-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
+    padding: 7px 8px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.nextgame-item:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.nextgame-item.is-active {
+    background: rgba(230, 179, 78, 0.28);
+    border: 1px solid #e6b34e;
+}
+
+.nextgame-item-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+}
+
+.nextgame-item-players {
+    font-size: 12px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nextgame-item-meta {
+    font-size: 10px;
+    color: rgba(255, 235, 205, 0.6);
+}
+
+.nextgame-item-check {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 235, 205, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #fff;
+}
+
+.nextgame-item.is-active .nextgame-item-check {
+    background: #e6b34e;
+    border-color: #e6b34e;
+    color: #4a3410;
+}
+
+.nextgame-empty {
+    padding: 14px 0;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255, 235, 205, 0.5);
+}
