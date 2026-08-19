@@ -967,6 +967,23 @@ export async function createLocalServer(
     response.sendFile(file);
   });
 
+  // 按赛事隔离的头像：/api/avatar/{matchId}/{side}-avatar.png
+  app.get('/api/avatar/:matchId/:sideName', (request, response) => {
+    const { matchId, sideName } = request.params;
+    if (sideName !== 'left-avatar.png' && sideName !== 'right-avatar.png') {
+      response.status(404).end();
+      return;
+    }
+    const side = sideName === 'left-avatar.png' ? 'left' : 'right';
+    const file = paths.avatarFile(side, matchId);
+    if (!fs.existsSync(file)) {
+      response.status(404).end();
+      return;
+    }
+    response.type(readAvatarMimeType(paths, side, matchId));
+    response.sendFile(file);
+  });
+
   io.on('connection', (socket) => {
     socket.emit(SOCKET_EVENTS.snapshot, snapshotPayload(paths));
   });

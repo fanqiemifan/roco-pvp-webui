@@ -287,6 +287,8 @@ body {
     height: 128px;
     background: #F2ECDF;
     border: 4px solid #C9C9C9;
+    border-radius: 30px;
+    overflow: hidden;
     position: relative;
     display: flex;
 }
@@ -382,8 +384,9 @@ body {
 .page3-nextgame-deco {
     position: absolute;
     left: 130px;
-    top: 0;
+    top: 34px;
     width: 34px;
     height: 128px;
     pointer-events: none;
+    z-index: 2;
 }

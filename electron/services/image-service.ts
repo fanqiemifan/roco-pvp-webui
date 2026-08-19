@@ -88,10 +88,21 @@ export function getAvatarState(paths: AppPaths, side: AvatarSide, matchId: strin
   return {
     side,
     exists: true,
-    path: `/api/avatar/${side}-avatar.png`,
+    path: avatarRequestPath(side, matchId),
     size: stat.size,
     mtime: stat.mtimeMs,
   };
+}
+
+/**
+ * 构造头像请求 URL。无 matchId 时使用旧的通用路径（服务当前活动赛事），
+ * 否则使用按赛事隔离的路径，保证不同比赛可展示各自头像。
+ */
+export function avatarRequestPath(side: AvatarSide, matchId: string | null): string {
+  if (!matchId) {
+    return `/api/avatar/${side}-avatar.png`;
+  }
+  return `/api/avatar/${encodeURIComponent(matchId)}/${side}-avatar.png`;
 }
 
 export function getAvatarStates(paths: AppPaths, matchId: string | null): AvatarCollectionState {

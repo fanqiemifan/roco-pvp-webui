@@ -146,6 +146,8 @@ const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
     items: [
       '新增「下场对局」：推流页面3 右下角展示下一场待开始比赛（选手头像 + 名字）；直播推流可控制出现/关闭，并可设置开启后停留时长（默认 1 分钟，单位可切秒/分钟，到期自动隐藏）',
       '阵容悬浮窗中央新增圆形小按钮：点击弹出待开始比赛选择小窗，支持按选手名称搜索，确认后自动在推流页面3 显示',
+      '修复下场对局头像：按所选比赛分别读取各自头像（按赛事隔离），未设置时回退默认头像',
+      '下场对局停留时长默认单位为分钟，不再支持秒；直播推流页将「下场对局」与「切换过渡效果」设置位置互换',
     ],
   },
   {
@@ -2941,14 +2943,59 @@ function Dashboard() {
                     <Col xs={24} md={12}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
-                          <Text strong>切换过渡效果</Text>
-                          <Segmented
-                            block
-                            value={normalizeStageTransition(stage?.transition)}
-                            disabled={stageSaving}
-                            options={STAGE_TRANSITION_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                            onChange={(value) => { void saveStage(stage?.page ?? 'page3', { transition: value as StageTransitionType }); }}
-                          />
+                          <Text strong>下场对局（推流页面3）</Text>
+                          <div>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>待开始比赛：</Text>
+                            <Select
+                              className="stage-page5-tag-select"
+                              style={{ width: '100%' }}
+                              showSearch
+                              optionFilterProp="label"
+                              placeholder="选择待开始的比赛"
+                              value={nextgame?.matchId || undefined}
+                              disabled={nextgameSaving}
+                              options={pendingMatches.map((match) => ({
+                                value: match.id,
+                                label: `${match.leftPlayer || '左侧'} vs ${match.rightPlayer || '右侧'}（BO${match.bestOf}）`,
+                              }))}
+                              onChange={(value) => { void saveNextGame({ matchId: value ?? null }); }}
+                            />
+                          </div>
+                          <div>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>开启后停留时长（分钟）：</Text>
+                            <InputNumber
+                              style={{ width: '100%' }}
+                              min={1}
+                              max={60}
+                              value={nextgame?.duration ?? 1}
+                              disabled={nextgameSaving}
+                              onChange={(value) => {
+                                void saveNextGame({
+                                  duration: value === null || value === undefined ? 1 : Number(value),
+                                  durationUnit: 'minutes',
+                                });
+                              }}
+                            />
+                          </div>
+                          <Space wrap>
+                            <Button
+                              type="primary"
+                              disabled={!nextgame?.matchId}
+                              loading={nextgameSaving}
+                              onClick={() => void showNextGame({})}
+                            >
+                              显示下场对局
+                            </Button>
+                            <Button
+                              danger
+                              disabled={!nextgame?.visible}
+                              loading={nextgameSaving}
+                              onClick={() => void hideNextGameFromAdmin()}
+                            >
+                              关闭
+                            </Button>
+                            {nextgame?.visible ? <Tag color="green">正在显示</Tag> : <Tag>已隐藏</Tag>}
+                          </Space>
                         </Space>
                       </Card>
                     </Col>
@@ -3027,76 +3074,18 @@ function Dashboard() {
                       <Button type="primary" htmlType="submit">保存显示设置</Button>
                     </Form>
                   </Card>
-                  <Card size="small" className="subtle-card stage-settings-card" title="下场对局（推流页面3）">
+                  <Card size="small" className="subtle-card stage-settings-card" title="切换过渡效果">
                     <Space direction="vertical" size={12} className="control-stack" style={{ width: '100%' }}>
                       <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                        选择一场待开始的比赛，控制其在推流页面3右下角的「下场对局」面板出现与关闭；开启后默认停留 {nextgame?.duration ?? 1} {nextgame?.durationUnit === 'seconds' ? '秒' : '分钟'} 后自动隐藏。
+                        切换直播推流画面时的过渡动效。
                       </Paragraph>
-                      <div>
-                        <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>待开始比赛：</Text>
-                        <Select
-                          className="stage-page5-tag-select"
-                          style={{ width: '100%' }}
-                          showSearch
-                          optionFilterProp="label"
-                          placeholder="选择待开始的比赛"
-                          value={nextgame?.matchId || undefined}
-                          disabled={nextgameSaving}
-                          options={pendingMatches.map((match) => ({
-                            value: match.id,
-                            label: `${match.leftPlayer || '左侧'} vs ${match.rightPlayer || '右侧'}（BO${match.bestOf}）`,
-                          }))}
-                          onChange={(value) => { void saveNextGame({ matchId: value ?? null }); }}
-                        />
-                      </div>
-                      <div>
-                        <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>开启后停留时长：</Text>
-                        <Space.Compact style={{ width: '100%' }}>
-                          <InputNumber
-                            style={{ width: '60%' }}
-                            min={1}
-                            max={nextgame?.durationUnit === 'seconds' ? 3600 : 60}
-                            value={nextgame?.duration ?? 1}
-                            disabled={nextgameSaving}
-                            onChange={(value) => {
-                              void saveNextGame({
-                                duration: value === null || value === undefined ? 1 : Number(value),
-                                durationUnit: nextgame?.durationUnit ?? 'minutes',
-                              });
-                            }}
-                          />
-                          <Segmented
-                            block
-                            style={{ width: '40%' }}
-                            value={nextgame?.durationUnit ?? 'minutes'}
-                            disabled={nextgameSaving}
-                            options={[
-                              { value: 'seconds', label: '秒' },
-                              { value: 'minutes', label: '分钟' },
-                            ]}
-                            onChange={(value) => { void saveNextGame({ durationUnit: value as 'seconds' | 'minutes' }); }}
-                          />
-                        </Space.Compact>
-                      </div>
-                      <Space wrap>
-                        <Button
-                          type="primary"
-                          disabled={!nextgame?.matchId}
-                          loading={nextgameSaving}
-                          onClick={() => void showNextGame({})}
-                        >
-                          显示下场对局
-                        </Button>
-                        <Button
-                          danger
-                          disabled={!nextgame?.visible}
-                          loading={nextgameSaving}
-                          onClick={() => void hideNextGameFromAdmin()}
-                        >
-                          关闭
-                        </Button>
-                        {nextgame?.visible ? <Tag color="green">正在显示</Tag> : <Tag>已隐藏</Tag>}
-                      </Space>
+                      <Segmented
+                        block
+                        value={normalizeStageTransition(stage?.transition)}
+                        disabled={stageSaving}
+                        options={STAGE_TRANSITION_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                        onChange={(value) => { void saveStage(stage?.page ?? 'page3', { transition: value as StageTransitionType }); }}
+                      />
                     </Space>
                   </Card>
                 </Space>

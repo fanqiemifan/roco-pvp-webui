@@ -319,14 +319,14 @@
             const cacheBuster = leftAvatar.mtime ? Math.floor(leftAvatar.mtime) : Date.now();
             leftImg.src = `${leftAvatar.path}?t=${cacheBuster}`;
         } else {
-            leftImg.removeAttribute('src');
+            leftImg.src = DEFAULT_AVATARS.left;
         }
 
         if (rightAvatar.exists && rightAvatar.path) {
             const cacheBuster = rightAvatar.mtime ? Math.floor(rightAvatar.mtime) : Date.now();
             rightImg.src = `${rightAvatar.path}?t=${cacheBuster}`;
         } else {
-            rightImg.removeAttribute('src');
+            rightImg.src = DEFAULT_AVATARS.right;
         }
     }
 
