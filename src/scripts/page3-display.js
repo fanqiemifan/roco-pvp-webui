@@ -12,12 +12,18 @@
         left: { signatures: new Array(MAX_SLOTS).fill(null) },
         right: { signatures: new Array(MAX_SLOTS).fill(null) }
     };
+    const lastRenderedSlots = {
+        left: new Array(MAX_SLOTS).fill(null),
+        right: new Array(MAX_SLOTS).fill(null)
+    };
+    const exitLayer = document.getElementById('page3LineupExitLayer');
 
     let scoreboardSignature = null;
     let avatarSignature = null;
     let nextGameSignature = null;
     let matchPhaseSignature = null;
     let lineupAnimationTimer = null;
+    let lineupAnimationMode = null;
 
     const LINEUP_ANIMATION_MS = 760;
 
@@ -161,6 +167,9 @@
         const imageSrc = `${sprite.path}${sprite.path.includes('?') ? '&' : '?'}t=${cacheBuster}`;
 
         slotEl.className = `page3-spirit-slot is-active${isDone ? ' is-done' : ''}`;
+        if (lineupAnimationMode === 'enter') {
+            slotEl.classList.add('is-lineup-entering');
+        }
         buildSlotCard(slotEl, sprite, spiritName, imageSrc);
     }
 
@@ -171,18 +180,32 @@
         slotEls.forEach((slotEl, index) => {
             const slotData = selected[index] || null;
             const nextSignature = getSlotSignature(slotData);
+
+            // 面板清空可能先于 matches:update 到达。先复制到独立退场层，
+            // 原阵容可以立即按业务状态清空，动画不受影响。
+            if (!slotData && slotEl.classList.contains('is-active') && lineupAnimationMode !== 'exit') {
+                animateLineup('exit');
+                panelStates[position].signatures[index] = nextSignature;
+                return;
+            }
+
             if (panelStates[position].signatures[index] === nextSignature) {
                 return;
             }
 
-            // 胜负登记后先保留卡片完成退场，动画结束再清空 DOM。
-            if (!slotData && slotEl.classList.contains('is-lineup-exiting')) {
+            if (!slotData && lineupAnimationMode === 'exit') {
+                renderEmptySlot(slotEl);
                 panelStates[position].signatures[index] = nextSignature;
                 return;
             }
 
             renderSlot(slotEl, slotData, panelData ? panelData.mtime : null);
             panelStates[position].signatures[index] = nextSignature;
+            if (slotData && slotEl.classList.contains('is-active')) {
+                lastRenderedSlots[position][index] = slotEl.cloneNode(true);
+            } else if (!slotData) {
+                lastRenderedSlots[position][index] = null;
+            }
         });
     }
 
@@ -205,17 +228,54 @@
             window.clearTimeout(lineupAnimationTimer);
             lineupAnimationTimer = null;
         }
-        document.querySelectorAll('.page3-spirit-slot.is-lineup-exiting').forEach(slotEl => {
-            renderEmptySlot(slotEl);
-        });
+        lineupAnimationMode = null;
+        if (exitLayer) {
+            exitLayer.innerHTML = '';
+        }
         panelStates.left.signatures.fill(getSlotSignature(null));
         panelStates.right.signatures.fill(getSlotSignature(null));
+    }
+
+    function buildExitLayer() {
+        if (!exitLayer) {
+            return;
+        }
+        exitLayer.innerHTML = '';
+        ['left', 'right'].forEach(side => {
+            lastRenderedSlots[side].forEach((savedSlot, index) => {
+                if (!savedSlot) {
+                    return;
+                }
+                const clone = savedSlot.cloneNode(true);
+                clone.dataset.side = side;
+                clone.dataset.slot = String(index);
+                clone.classList.remove('is-lineup-entering', 'is-lineup-exiting');
+                clone.classList.add('page3-lineup-exit-slot');
+                const sourceSlot = document.querySelector(`.page3-spirit-slot[data-side="${side}"][data-slot="${index}"]`);
+                const left = sourceSlot ? sourceSlot.offsetLeft : 0;
+                const top = sourceSlot ? sourceSlot.offsetTop : 0;
+                const width = sourceSlot ? sourceSlot.offsetWidth : 108;
+                const height = sourceSlot ? sourceSlot.offsetHeight : 108;
+                clone.style.left = `${left}px`;
+                clone.style.top = `${top}px`;
+                clone.style.width = `${width}px`;
+                clone.style.height = `${height}px`;
+                exitLayer.appendChild(clone);
+            });
+        });
     }
 
     function animateLineup(mode) {
         if (lineupAnimationTimer) {
             window.clearTimeout(lineupAnimationTimer);
             lineupAnimationTimer = null;
+        }
+        lineupAnimationMode = mode;
+
+        if (mode === 'exit') {
+            buildExitLayer();
+        } else if (exitLayer) {
+            exitLayer.innerHTML = '';
         }
 
         const slots = document.querySelectorAll('.page3-spirit-slot');
@@ -226,8 +286,22 @@
             slotEl.style.setProperty('--page3-lineup-delay', `${delayIndex * 72}ms`);
             slotEl.classList.remove('is-lineup-entering', 'is-lineup-exiting');
             void slotEl.offsetWidth;
-            slotEl.classList.add(mode === 'enter' ? 'is-lineup-entering' : 'is-lineup-exiting');
+            if (mode === 'enter') {
+                slotEl.classList.add('is-lineup-entering');
+            }
         });
+
+        if (mode === 'exit' && exitLayer) {
+            const exitSlots = exitLayer.querySelectorAll('.page3-lineup-exit-slot');
+            exitSlots.forEach(slotEl => {
+                const side = slotEl.dataset.side;
+                const slot = Number(slotEl.dataset.slot || 0);
+                const delayIndex = side === 'right' ? MAX_SLOTS - 1 - slot : slot;
+                slotEl.style.setProperty('--page3-lineup-delay', `${delayIndex * 72}ms`);
+                void slotEl.offsetWidth;
+                slotEl.classList.add('is-lineup-exiting');
+            });
+        }
 
         if (mode === 'exit') {
             lineupAnimationTimer = window.setTimeout(finishLineupAnimation, LINEUP_ANIMATION_MS + 6 * 72 + 40);
@@ -236,6 +310,7 @@
                 document.querySelectorAll('.page3-spirit-slot.is-lineup-entering').forEach(slotEl => {
                     slotEl.classList.remove('is-lineup-entering');
                 });
+                lineupAnimationMode = null;
                 lineupAnimationTimer = null;
             }, LINEUP_ANIMATION_MS + 6 * 72 + 40);
         }
@@ -435,25 +510,28 @@
     }
 
     async function loadInitialState() {
-        const [imagesResponse, scoreboardResponse, avatarsResponse, nextgameResponse] = await Promise.all([
+        const [imagesResponse, scoreboardResponse, avatarsResponse, nextgameResponse, matchesResponse] = await Promise.all([
             fetch('api/images'),
             fetch('api/scoreboard'),
             fetch('api/avatars'),
-            fetch('api/nextgame')
+            fetch('api/nextgame'),
+            fetch('api/matches')
         ]);
 
-        const [imagesData, scoreboardData, avatarsData, nextgameData] = await Promise.all([
+        const [imagesData, scoreboardData, avatarsData, nextgameData, matchesData] = await Promise.all([
             imagesResponse.json(),
             scoreboardResponse.json(),
             avatarsResponse.json(),
-            nextgameResponse.json()
+            nextgameResponse.json(),
+            matchesResponse.json()
         ]);
 
         applySnapshot({
             panels: imagesData.images || [],
             scoreboard: scoreboardData,
             avatars: avatarsData,
-            nextgame: nextgameData
+            nextgame: nextgameData,
+            matches: matchesData
         });
     }
 

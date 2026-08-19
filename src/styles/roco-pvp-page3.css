@@ -64,6 +64,19 @@ body {
     transform: scale(1);
 }
 
+.page3-lineup-exit-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.page3-lineup-exit-slot {
+    position: absolute;
+    opacity: 1;
+    transform: scale(1);
+}
+
 /* 本局开始时双方阵容错开入场；左侧由左向右，右侧由右向左。 */
 .page3-spirit-slot.is-lineup-entering {
     animation-duration: 760ms;
@@ -90,11 +103,13 @@ body {
     animation-iteration-count: 1;
 }
 
-.page3-spirit-slot[data-side="left"].is-lineup-exiting {
+.page3-spirit-slot[data-side="left"].is-lineup-exiting,
+.page3-lineup-exit-slot[data-side="left"].is-lineup-exiting {
     animation-name: page3-lineup-left-exit;
 }
 
-.page3-spirit-slot[data-side="right"].is-lineup-exiting {
+.page3-spirit-slot[data-side="right"].is-lineup-exiting,
+.page3-lineup-exit-slot[data-side="right"].is-lineup-exiting {
     animation-name: page3-lineup-right-exit;
 }
 
@@ -134,11 +149,11 @@ body {
 @keyframes page3-lineup-right-exit {
     from {
         opacity: 1;
-        transform: translateX(320px) scale(0.92);
+        transform: translateX(0) scale(1);
     }
     to {
         opacity: 0;
-        transform: translateX(640px) scale(0.92);
+        transform: translateX(320px) scale(0.92);
     }
 }
 
