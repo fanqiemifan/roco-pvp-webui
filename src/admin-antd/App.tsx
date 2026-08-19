@@ -148,7 +148,7 @@ const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
       '阵容悬浮窗中央新增圆形小按钮：点击弹出待开始比赛选择小窗，支持按选手名称搜索，确认后自动在推流页面3 显示',
       '修复下场对局头像：按所选比赛分别读取各自头像（按赛事隔离），未设置时回退默认头像',
       '下场对局停留时长默认单位为分钟，不再支持秒；直播推流页将「下场对局」与「切换过渡效果」设置位置互换',
-      '直播推流设置：推流页面5标题 / 推流页面6副标题、背景 独立成卡，与「下场对局」「切换过渡效果」同行三列控制',
+      '直播推流设置：推流页面5统计口径、推流页面5/6标题与背景、下场对局 同行三列；切换过渡效果独立一行',
     ],
   },
   {
@@ -2919,7 +2919,7 @@ function Dashboard() {
                     推流软件（OBS 等）只需固定捕获根路径 <code>/</code>。在此切换后，推流页面会实时加载所选画面，无需修改推流来源。
                   </Paragraph>
                   <Row gutter={[16, 16]} className="stage-config-cards">
-                    <Col xs={24} md={12}>
+                    <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
                           <Text strong>推流页面5 统计口径</Text>
@@ -2953,39 +2953,6 @@ function Dashboard() {
                         </Space>
                       </Card>
                     </Col>
-                  </Row>
-                  <Row gutter={[16, 16]}>
-                    {STAGE_OPTIONS.map((option) => {
-                      const active = (stage?.page ?? null) === option.value;
-                      const isBlank = option.value === 'blank';
-                      return (
-                        <Col xs={24} sm={12} md={8} key={option.value}>
-                          <Card
-                            size="small"
-                            hoverable
-                            className={`stage-card ${active ? 'stage-card-active' : ''} ${isBlank ? 'stage-card-blank' : ''}`}
-                            onClick={() => void saveStage(option.value)}
-                          >
-                            <Space direction="vertical" size={6} className="page-stack" style={{ width: '100%' }}>
-                              <Space style={{ justifyContent: 'space-between', width: '100%' }}>
-                                <Text strong>{option.label}</Text>
-                                {active ? <Tag color="green">当前画面</Tag> : null}
-                              </Space>
-                              <Text type="secondary" style={{ fontSize: 12 }}>{option.description}</Text>
-                              {isBlank ? (
-                                <div className="stage-card-thumb stage-card-thumb-blank">
-                                  <span className="stage-card-thumb-mark">黑场</span>
-                                </div>
-                              ) : (
-                                <StageThumb label={option.label} previewPath={option.previewPath} />
-                              )}
-                            </Space>
-                          </Card>
-                        </Col>
-                      );
-                    })}
-                  </Row>
-                  <Row gutter={[16, 16]}>
                     <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
@@ -3082,7 +3049,40 @@ function Dashboard() {
                         </Space>
                       </Card>
                     </Col>
-                    <Col xs={24} md={12} xl={8}>
+                  </Row>
+                  <Row gutter={[16, 16]}>
+                    {STAGE_OPTIONS.map((option) => {
+                      const active = (stage?.page ?? null) === option.value;
+                      const isBlank = option.value === 'blank';
+                      return (
+                        <Col xs={24} sm={12} md={8} key={option.value}>
+                          <Card
+                            size="small"
+                            hoverable
+                            className={`stage-card ${active ? 'stage-card-active' : ''} ${isBlank ? 'stage-card-blank' : ''}`}
+                            onClick={() => void saveStage(option.value)}
+                          >
+                            <Space direction="vertical" size={6} className="page-stack" style={{ width: '100%' }}>
+                              <Space style={{ justifyContent: 'space-between', width: '100%' }}>
+                                <Text strong>{option.label}</Text>
+                                {active ? <Tag color="green">当前画面</Tag> : null}
+                              </Space>
+                              <Text type="secondary" style={{ fontSize: 12 }}>{option.description}</Text>
+                              {isBlank ? (
+                                <div className="stage-card-thumb stage-card-thumb-blank">
+                                  <span className="stage-card-thumb-mark">黑场</span>
+                                </div>
+                              ) : (
+                                <StageThumb label={option.label} previewPath={option.previewPath} />
+                              )}
+                            </Space>
+                          </Card>
+                        </Col>
+                      );
+                    })}
+                  </Row>
+                  <Row gutter={[16, 16]}>
+                    <Col xs={24} md={12}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
                           <Text strong>切换过渡效果</Text>
