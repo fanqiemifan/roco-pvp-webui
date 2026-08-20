@@ -318,7 +318,7 @@ export function spriteLookup(paths: AppPaths): Map<string, SpriteRecord> {
 
 function collectSpriteMatches(query: string, sprites: SpriteRecord[]): Array<{
   sprite: SpriteRecord;
-  rank: [number, number, string] | [number, number, number, string];
+  rank: [number, ...number[], string];
   matchType: string;
 }> {
   const normalizedQuery = normalizeSearchName(query);
@@ -328,7 +328,7 @@ function collectSpriteMatches(query: string, sprites: SpriteRecord[]): Array<{
 
   const matches: Array<{
     sprite: SpriteRecord;
-    rank: [number, number, string] | [number, number, number, string];
+    rank: [number, ...number[], string];
     matchType: string;
   }> = [];
 
@@ -343,7 +343,7 @@ function collectSpriteMatches(query: string, sprites: SpriteRecord[]): Array<{
     const aliasNames = sprite.aliases.map((alias) => normalizeSearchName(alias));
     const exactNames = [displayName, chineseName, rawName, filename, pathName, stemName].filter(Boolean);
 
-    let rank: [number, number, string] | [number, number, number, string] | null = null;
+    let rank: [number, ...number[], string] | null = null;
     let matchType = '';
 
     if (exactNames.includes(normalizedQuery)) {
@@ -356,18 +356,30 @@ function collectSpriteMatches(query: string, sprites: SpriteRecord[]): Array<{
       rank = [2, normalizedQuery.length, sprite.path];
       matchType = 'exact-alias';
     } else if (pathName.includes(normalizedQuery)) {
-      rank = [3, pathName.length, sprite.path];
+      rank = [3, sprite.isFinalForm ? 0 : 1, pathName.length, sprite.path];
       matchType = 'contains-path';
     } else if (displayName.startsWith(normalizedQuery)) {
-      rank = [4, displayName.length, sprite.path];
+      rank = [4, sprite.isFinalForm ? 0 : 1, displayName.length, sprite.path];
       matchType = 'prefix-display-name';
     } else if (displayName.includes(normalizedQuery)) {
-      rank = [5, displayName.indexOf(normalizedQuery), displayName.length, sprite.path];
+      rank = [
+        5,
+        sprite.isFinalForm ? 0 : 1,
+        displayName.indexOf(normalizedQuery),
+        displayName.length,
+        sprite.path,
+      ];
       matchType = 'contains-display-name';
     } else {
       const aliasHit = aliasNames.find((alias) => alias.includes(normalizedQuery));
       if (aliasHit) {
-        rank = [6, aliasHit.indexOf(normalizedQuery), aliasHit.length, sprite.path];
+        rank = [
+          6,
+          sprite.isFinalForm ? 0 : 1,
+          aliasHit.indexOf(normalizedQuery),
+          aliasHit.length,
+          sprite.path,
+        ];
         matchType = 'contains-alias';
       }
     }
