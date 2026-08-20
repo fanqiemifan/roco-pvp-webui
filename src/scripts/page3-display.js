@@ -430,12 +430,30 @@
     // 设置下场对局选手名字：超过 5 个字时开启横向滚动
     function setNextGameName(nameEl, text) {
         const inner = nameEl.querySelector('.page3-nextgame-name-inner');
+        const nameText = String(text || '');
+
         if (inner) {
-            inner.textContent = text;
+            inner.textContent = nameText;
         } else {
-            nameEl.textContent = text;
+            nameEl.textContent = nameText;
         }
-        nameEl.classList.toggle('is-scrolling', String(text || '').length > 5);
+
+        nameEl.classList.toggle('is-scrolling', nameText.length > 5);
+
+        if (!inner || !nameEl.classList.contains('is-scrolling')) {
+            nameEl.style.removeProperty('--marquee-offset');
+            return;
+        }
+
+        // The text remains centered at rest, so only half of its overflow is
+        // needed to bring either edge into view.
+        const overflow = inner.scrollWidth - nameEl.clientWidth;
+        if (overflow > 0) {
+            const offset = Math.ceil(overflow / 2);
+            nameEl.style.setProperty('--marquee-offset', `-${offset}px`);
+        } else {
+            nameEl.style.removeProperty('--marquee-offset');
+        }
     }
 
     function renderNextGame(payload) {
