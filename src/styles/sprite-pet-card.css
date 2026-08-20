@@ -89,11 +89,18 @@
   top: calc(var(--pet-card-size) * 73.5 / 96);
   z-index: 7;
   color: #fff;
-  font-family: "MiSans-Medium", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "MiSans-Medium", "Microsoft YaHei", sans-serif;
   font-size: calc(var(--pet-card-size) * 8 / 96);
   font-weight: 500;
   line-height: calc(var(--pet-card-size) * 14 / 96);
   white-space: nowrap;
+}
+
+.sprite-pet-card-name-image {
+  display: block;
+  height: calc(var(--pet-card-size) * 14 / 96);
+  font-size: 0;
+  line-height: 0;
 }
 
 .sprite-pet-card-has-attr2 .sprite-pet-card-attr-circle,

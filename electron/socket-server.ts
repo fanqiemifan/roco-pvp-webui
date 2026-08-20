@@ -119,7 +119,7 @@ function sendAdminAntdPage(paths: AppPaths, response: Response): void {
         place-items: center;
         background: linear-gradient(135deg, #f7efe3 0%, #f0e0c7 100%);
         color: #3f2b1d;
-        font: 16px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+        font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
       }
       main {
         width: min(640px, calc(100vw - 32px));
@@ -165,7 +165,7 @@ function sendLoginPage(paths: AppPaths, response: Response): void {
         place-items: center;
         background: linear-gradient(135deg, #f7efe3 0%, #f0e0c7 100%);
         color: #3f2b1d;
-        font: 16px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+        font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
       }
       main {
         width: min(640px, calc(100vw - 32px));

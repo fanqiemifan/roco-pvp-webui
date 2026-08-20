@@ -24,6 +24,7 @@
     let matchPhaseSignature = null;
     let page3SpriteSource = 'sprite';
     const panelDataCache = { left: null, right: null };
+    const spriteNameImageCache = new Map();
     let lineupAnimationTimer = null;
     let lineupAnimationMode = null;
 
@@ -109,13 +110,54 @@
         }
     }
 
+    function buildSpriteNameImage(name, cardSize) {
+        const fontSize = cardSize * 8 / 96;
+        const lineHeight = cardSize * 14 / 96;
+        const scale = 4;
+        const cacheKey = `${name}|${cardSize}|${fontSize}`;
+        const cached = spriteNameImageCache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
+        const measureCanvas = document.createElement('canvas');
+        const measureContext = measureCanvas.getContext('2d');
+        if (!measureContext) {
+            return null;
+        }
+        measureContext.font = `900 ${fontSize}px "MiSans-Heavy", "MiSans-Medium", "Microsoft YaHei", sans-serif`;
+        const textWidth = Math.ceil(measureContext.measureText(name).width) + 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = textWidth * scale;
+        canvas.height = Math.ceil(lineHeight * scale);
+        const context = canvas.getContext('2d');
+        if (!context) {
+            return null;
+        }
+        context.scale(scale, scale);
+        context.font = `900 ${fontSize}px "MiSans-Heavy", "MiSans-Medium", "Microsoft YaHei", sans-serif`;
+        context.fillStyle = '#fff';
+        context.textBaseline = 'middle';
+        context.fillText(name, 1, lineHeight / 2);
+
+        const result = {
+            src: canvas.toDataURL('image/png'),
+            width: textWidth,
+            height: lineHeight,
+        };
+        spriteNameImageCache.set(cacheKey, result);
+        return result;
+    }
+
     function buildSlotCard(slotEl, sprite, spiritName, imageSrc) {
         const attributeIcons = getSpriteAttributeIcons(sprite);
         const attributeIcon1 = attributeIcons[0] || '';
         const attributeIcon2 = attributeIcons[1] || '';
+        const cardSize = slotEl.clientWidth || 108;
+        const nameImage = buildSpriteNameImage(spiritName, cardSize);
         const card = document.createElement('div');
         card.className = `sprite-pet-card${attributeIcon2 ? ' sprite-pet-card-has-attr2' : ''}`;
-        card.style.setProperty('--pet-card-size', `${slotEl.clientWidth || 108}px`);
+        card.style.setProperty('--pet-card-size', `${cardSize}px`);
         card.style.setProperty('--pet-name-left', String(getSpriteCardNameLeft(spiritName.length)));
 
         card.innerHTML = `
@@ -125,7 +167,7 @@
             ${attributeIcon1 ? '<img class="sprite-pet-card-attr sprite-pet-card-attr-1" alt="">' : ''}
             ${attributeIcon2 ? '<img class="sprite-pet-card-attr sprite-pet-card-attr-2" alt="">' : ''}
             <div class="sprite-pet-card-name-bg"></div>
-            <span class="sprite-pet-card-name"></span>
+            <img class="sprite-pet-card-name sprite-pet-card-name-image" alt="">
         `;
 
         const spriteImage = card.querySelector('.sprite-pet-card-sprite');
@@ -143,7 +185,12 @@
         }
 
         const nameEl = card.querySelector('.sprite-pet-card-name');
-        nameEl.textContent = spiritName;
+        if (nameImage) {
+            nameEl.src = nameImage.src;
+            nameEl.width = nameImage.width;
+            nameEl.height = nameImage.height;
+            nameEl.alt = spiritName;
+        }
 
         slotEl.innerHTML = '';
         slotEl.appendChild(card);
@@ -272,6 +319,7 @@
         if (exitLayer) {
             exitLayer.innerHTML = '';
         }
+        spriteNameImageCache.clear();
         panelStates.left.signatures.fill(getSlotSignature(null));
         panelStates.right.signatures.fill(getSlotSignature(null));
     }

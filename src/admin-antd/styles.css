@@ -18,7 +18,7 @@ body {
   position: relative;
   margin: 0;
   color: #2f2418;
-  font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "Avenir Next", "Microsoft YaHei", sans-serif;
   background-color: #f4ede4;
 }
 
@@ -1192,7 +1192,7 @@ a {
   padding: 2px 8px;
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.55);
-  font: 600 12px/1.4 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font: 600 12px/1.4 -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
   letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.9);
   pointer-events: none;

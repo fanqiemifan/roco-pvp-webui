@@ -51,7 +51,7 @@ body {
     pointer-events: none;
     transition: opacity 420ms ease;
     z-index: 5;
-    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
 }
 
 .stage-fallback.is-visible {

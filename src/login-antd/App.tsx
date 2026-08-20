@@ -213,7 +213,7 @@ export function LoginApp() {
           colorError: '#b93d32',
           colorWarning: '#cf8a2e',
           borderRadius: 18,
-          fontFamily: '"Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif',
+          fontFamily: '"Avenir Next", "Microsoft YaHei", sans-serif',
           colorText: '#2f2418',
           colorBgBase: '#f8f2e8',
         },

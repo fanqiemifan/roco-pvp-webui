@@ -138,7 +138,7 @@ export const theme = {
     borderRadius: 12,
     borderRadiusLG: 16,
     controlHeight: 42,
-    fontFamily: '"Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif',
+    fontFamily: '"Avenir Next", "Microsoft YaHei", sans-serif',
   },
   components: {
     Layout: {
