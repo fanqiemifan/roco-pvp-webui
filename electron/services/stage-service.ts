@@ -3,10 +3,12 @@ import fs from 'node:fs';
 import {
   DEFAULT_STAGE_PAGE,
   DEFAULT_STAGE_TRANSITION,
+  DEFAULT_PAGE3_SPRITE_SOURCE,
+  SUPPORTED_PAGE3_SPRITE_SOURCES,
   SUPPORTED_STAGE_PAGES,
   SUPPORTED_STAGE_TRANSITIONS,
 } from '../../shared/constants.js';
-import type { StageConfig, StagePageKey, StageTransitionType } from '../../shared/types.js';
+import type { Page3SpriteSource, StageConfig, StagePageKey, StageTransitionType } from '../../shared/types.js';
 import { ensureRuntimeDirs } from './image-service.js';
 import type { AppPaths } from './path-service.js';
 
@@ -32,10 +34,17 @@ function normalizePage5Tag(value: unknown): string {
   return String(value ?? '').trim().slice(0, 40);
 }
 
+function normalizePage3SpriteSource(value: unknown): Page3SpriteSource {
+  return typeof value === 'string' && SUPPORTED_PAGE3_SPRITE_SOURCES.has(value)
+    ? value as Page3SpriteSource
+    : DEFAULT_PAGE3_SPRITE_SOURCE;
+}
+
 function defaultStageState(): StageConfig {
   return {
     page: DEFAULT_STAGE_PAGE as StagePageKey,
     transition: DEFAULT_STAGE_TRANSITION as StageTransitionType,
+    page3SpriteSource: DEFAULT_PAGE3_SPRITE_SOURCE,
     page5Player: '',
     page5Tag: '',
     mtime: null,
@@ -53,6 +62,7 @@ export function getStageState(paths: AppPaths): StageConfig {
     return {
       page: normalizeStagePage(metadata.page),
       transition: normalizeStageTransition(metadata.transition),
+      page3SpriteSource: normalizePage3SpriteSource(metadata.page3SpriteSource),
       page5Player: normalizePage5Player(metadata.page5Player),
       page5Tag: normalizePage5Tag(metadata.page5Tag),
       mtime: stat.mtimeMs,
@@ -69,10 +79,12 @@ export function saveStageState(paths: AppPaths, payload: unknown): StageConfig {
 
   const raw = payload as Record<string, unknown>;
   ensureRuntimeDirs(paths);
+  const current = getStageState(paths);
 
   const metadata = {
     page: normalizeStagePage(raw.page),
-    transition: normalizeStageTransition(raw.transition),
+    transition: normalizeStageTransition(raw.transition ?? current.transition),
+    page3SpriteSource: normalizePage3SpriteSource(raw.page3SpriteSource ?? current.page3SpriteSource),
     page5Player: normalizePage5Player(raw.page5Player),
     page5Tag: normalizePage5Tag(raw.page5Tag),
   };

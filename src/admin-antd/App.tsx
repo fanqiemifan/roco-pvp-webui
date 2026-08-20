@@ -54,6 +54,7 @@ import type {
   PanelState,
   ScoreboardState,
   Page6Background,
+  Page3SpriteSource,
   SlotState,
   SpriteRecord,
   StageConfig,
@@ -1484,20 +1485,21 @@ function Dashboard() {
 
   async function saveStage(
     nextPage: StagePageKey,
-    options?: { silent?: boolean; transition?: StageTransitionType; page5Player?: string; page5Tag?: string },
+    options?: { silent?: boolean; transition?: StageTransitionType; page3SpriteSource?: Page3SpriteSource; page5Player?: string; page5Tag?: string },
   ) {
     const silent = options?.silent ?? false;
     const normalized = normalizeStagePage(nextPage);
     const transition = normalizeStageTransition(options?.transition ?? stage?.transition);
+    const page3SpriteSource = options?.page3SpriteSource ?? stage?.page3SpriteSource ?? 'sprite';
     const page5Player = options?.page5Player ?? stage?.page5Player ?? '';
     const page5Tag = options?.page5Tag ?? stage?.page5Tag ?? '';
     // 乐观更新，避免切换回弹
-    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page5Player, page5Tag } : prev));
+    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page5Player, page5Tag } : prev));
     setStageSaving(true);
     try {
       const data = await requestJson<{ success: boolean; stage: StageConfig }>('/api/stage', {
         method: 'POST',
-        json: { page: normalized, transition, page5Player, page5Tag },
+        json: { page: normalized, transition, page3SpriteSource, page5Player, page5Tag },
       });
       applyServerState({ stage: data.stage });
       if (!silent) {
@@ -3050,7 +3052,7 @@ function Dashboard() {
                           <Space wrap>
                             <Button
                               type="primary"
-                              disabled={!nextgame?.matchId}
+                              disabled={!nextgame?.matchId || !pendingMatches.some((match) => match.id === nextgame.matchId)}
                               loading={nextgameSaving}
                               onClick={() => void showNextGame({})}
                             >
@@ -3120,6 +3122,21 @@ function Dashboard() {
                       </Card>
                     </Col>
                   </Row>
+                  <Card size="small" className="subtle-card">
+                    <Space direction="vertical" size={12} className="control-stack">
+                      <Text strong>推流页面3精灵图片</Text>
+                      <Segmented
+                        block
+                        value={stage?.page3SpriteSource ?? 'sprite'}
+                        disabled={stageSaving}
+                        options={[
+                          { value: 'sprite', label: '精灵原图' },
+                          { value: 'thumbnail', label: 'Thumbnail' },
+                        ]}
+                        onChange={(value) => { void saveStage(stage?.page ?? 'page3', { page3SpriteSource: value as Page3SpriteSource }); }}
+                      />
+                    </Space>
+                  </Card>
                   <Card size="small" className="subtle-card stage-settings-card" title="页面2设置">
                     <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
                       <Row gutter={[16, 16]}>

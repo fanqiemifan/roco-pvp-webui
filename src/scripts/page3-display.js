@@ -22,6 +22,8 @@
     let avatarSignature = null;
     let nextGameSignature = null;
     let matchPhaseSignature = null;
+    let page3SpriteSource = 'sprite';
+    const panelDataCache = { left: null, right: null };
     let lineupAnimationTimer = null;
     let lineupAnimationMode = null;
 
@@ -164,16 +166,31 @@
         const healthEnabled = !!(slotData && slotData.healthEnabled);
         const isDone = healthEnabled && healthPercent <= 0;
         const cacheBuster = mtime ? Math.floor(mtime) : Date.now();
-        const imageSrc = `${sprite.path}${sprite.path.includes('?') ? '&' : '?'}t=${cacheBuster}`;
+        const imageCandidates = getSpriteImageCandidates(sprite)
+            .map((src) => `${src}${src.includes('?') ? '&' : '?'}t=${cacheBuster}`);
 
         slotEl.className = `page3-spirit-slot is-active${isDone ? ' is-done' : ''}`;
         if (lineupAnimationMode === 'enter') {
             slotEl.classList.add('is-lineup-entering');
         }
-        buildSlotCard(slotEl, sprite, spiritName, imageSrc);
+        buildSlotCard(slotEl, sprite, spiritName, imageCandidates[0] || '');
+        const spriteImage = slotEl.querySelector('.sprite-pet-card-sprite');
+        if (page3SpriteSource === 'thumbnail' && slotEl.dataset.side === 'right') {
+            spriteImage.classList.add('is-page3-thumbnail-flipped');
+        }
+        let imageIndex = 0;
+        spriteImage.onerror = () => {
+            imageIndex += 1;
+            if (imageIndex < imageCandidates.length) {
+                spriteImage.src = imageCandidates[imageIndex];
+            } else {
+                spriteImage.onerror = null;
+            }
+        };
     }
 
     function renderPanel(position, panelData) {
+        panelDataCache[position] = panelData || null;
         const selected = panelData && Array.isArray(panelData.selected) ? panelData.selected : [];
         const slotEls = document.querySelectorAll(`.page3-spirit-slot[data-side="${position}"]`);
 
@@ -207,6 +224,29 @@
                 lastRenderedSlots[position][index] = null;
             }
         });
+    }
+
+    function sanitizeFilenameSegment(value) {
+        return String(value || '')
+            .normalize('NFC')
+            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
+            .replace(/\s+/g, '')
+            .replace(/\.+$/g, '')
+            .trim();
+    }
+
+    function getSpriteImageCandidates(sprite) {
+        const fallback = sprite && sprite.path ? String(sprite.path) : '';
+        if (page3SpriteSource !== 'thumbnail' || !sprite || !sprite.thumbnailId) {
+            return fallback ? [fallback] : [];
+        }
+        const names = [sprite.cardName, sprite.displayName, sprite.chineseName, sprite.name]
+            .map(sanitizeFilenameSegment)
+            .filter(Boolean);
+        const thumbnails = Array.from(new Set(names)).map((name) =>
+            `/resources/Thumbnail/${sanitizeFilenameSegment(sprite.thumbnailId)}_${name}.png`
+        );
+        return [...thumbnails, ...(fallback ? [fallback] : [])];
     }
 
     function getMatchPhase(payload) {
@@ -420,11 +460,24 @@
     function applySnapshot(payload) {
         const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
         observeMatchPhase(payload);
+        setPage3SpriteSource(payload && payload.stage ? payload.stage.page3SpriteSource : 'sprite');
         renderScoreboard(payload ? payload.scoreboard : null);
         renderAvatars(payload ? payload.avatars : null);
         renderNextGame(payload ? payload.nextgame : null);
         renderPanel('left', panels.find(panel => panel && panel.position === 'left'));
         renderPanel('right', panels.find(panel => panel && panel.position === 'right'));
+    }
+
+    function setPage3SpriteSource(source) {
+        const nextSource = source === 'thumbnail' ? 'thumbnail' : 'sprite';
+        if (page3SpriteSource === nextSource) {
+            return;
+        }
+        page3SpriteSource = nextSource;
+        panelStates.left.signatures.fill(null);
+        panelStates.right.signatures.fill(null);
+        renderPanel('left', panelDataCache.left);
+        renderPanel('right', panelDataCache.right);
     }
 
     // 设置下场对局选手名字：超过 5 个字时开启横向滚动
@@ -583,6 +636,11 @@
 
         socket.on('matches:update', payload => {
             observeMatchPhase({ matches: payload ? payload.matches : null });
+        });
+
+        socket.on('stage:update', payload => {
+            const stage = payload && payload.stage ? payload.stage : payload;
+            setPage3SpriteSource(stage && stage.page3SpriteSource);
         });
 
         socket.on('nextgame:update', payload => {

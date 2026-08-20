@@ -36,6 +36,10 @@
   transform: translate(-50%, -50%);
 }
 
+.sprite-pet-card-sprite.is-page3-thumbnail-flipped {
+  transform: translate(-50%, -50%) scaleX(-1);
+}
+
 .sprite-pet-card-name-bg {
   position: absolute;
   left: calc(var(--pet-card-size) * 18 / 96);

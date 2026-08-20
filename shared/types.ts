@@ -156,10 +156,13 @@ export type StagePageKey =
   | 'blank';
 
 export type StageTransitionType = 'none' | 'blinds' | 'zoom';
+export type Page3SpriteSource = 'sprite' | 'thumbnail';
 
 export interface StageConfig {
   page: StagePageKey;
   transition: StageTransitionType;
+  /** 推流页面3：精灵主体图片来源 */
+  page3SpriteSource: Page3SpriteSource;
   /** 推流页面5：选手过滤（空字符串 = 全部选手） */
   page5Player: string;
   /** 推流页面5：赛事标签过滤（空字符串 = 全部标签） */

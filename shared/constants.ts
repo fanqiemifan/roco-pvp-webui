@@ -39,6 +39,8 @@ export const SUPPORTED_STAGE_PAGES = new Set([
  */
 export const DEFAULT_STAGE_TRANSITION = 'blinds';
 export const SUPPORTED_STAGE_TRANSITIONS = new Set(['none', 'blinds', 'zoom']);
+export const DEFAULT_PAGE3_SPRITE_SOURCE = 'sprite' as const;
+export const SUPPORTED_PAGE3_SPRITE_SOURCES = new Set(['sprite', 'thumbnail']);
 
 /**
  * 下一局比赛（page3 下场对局）默认停留时长：
