@@ -228,7 +228,7 @@
             }
         });
 
-        socket.on('scoreboardUpdate', (payload) => {
+        socket.on('scoreboard:update', (payload) => {
             const scoreboard = payload && payload.scoreboard ? payload.scoreboard : null;
             if (scoreboard) {
                 applyTitle(scoreboard.page5Title);

@@ -12,6 +12,7 @@
             return;
         }
         screenEl.classList.toggle('page6-mode-video', isVideo);
+        screenEl.classList.toggle('page6-mode-image-2', mode === 'image-2');
         if (isVideo && backVideoEl) {
             const playPromise = backVideoEl.play();
             if (playPromise && typeof playPromise.catch === 'function') {
@@ -80,7 +81,7 @@
                 fetch('/api/page6', { credentials: 'same-origin' }).then((r) => r.json()),
                 fetch('/api/scoreboard', { credentials: 'same-origin' }).then((r) => r.json()),
             ]);
-            applySubtitle(scoreboard && scoreboard.page6Title);
+            applySubtitle(page6Res && page6Res.state && page6Res.state.title);
             renderGrid(page6Res && page6Res.matches);
             applyBackground(page6Res && page6Res.state && page6Res.state.background);
         } catch (error) {
@@ -95,9 +96,6 @@
         const socket = io({ transports: ['websocket', 'polling'] });
 
         socket.on('snapshot', (payload) => {
-            if (payload && payload.scoreboard) {
-                applySubtitle(payload.scoreboard.page6Title);
-            }
             if (payload && payload.page6) {
                 // 页面6 状态变更后重新拉取完整比赛数据
                 void loadData();
@@ -106,13 +104,6 @@
 
         socket.on('page6:update', () => {
             void loadData();
-        });
-
-        socket.on('scoreboardUpdate', (payload) => {
-            const scoreboard = payload && payload.scoreboard ? payload.scoreboard : null;
-            if (scoreboard) {
-                applySubtitle(scoreboard.page6Title);
-            }
         });
 
         socket.on('matchesUpdate', () => {

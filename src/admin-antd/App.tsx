@@ -53,6 +53,7 @@ import type {
   Page6State,
   PanelState,
   ScoreboardState,
+  Page6Background,
   SlotState,
   SpriteRecord,
   StageConfig,
@@ -320,6 +321,10 @@ function Dashboard() {
   const [nextgameMatch, setNextgameMatch] = useState<MatchRecord | null>(null);
   const [nextgameSaving, setNextgameSaving] = useState(false);
   const [page6, setPage6] = useState<Page6State | null>(null);
+  const [page5TitleDraft, setPage5TitleDraft] = useState('');
+  const [page6TitleDraft, setPage6TitleDraft] = useState('');
+  const [page6BackgroundDraft, setPage6BackgroundDraft] = useState<Page6Background>('image');
+  const [page5Page6Saving, setPage5Page6Saving] = useState(false);
   const [page6Draft, setPage6Draft] = useState<string[]>([]);
   const [page6Pushing, setPage6Pushing] = useState(false);
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
@@ -1435,34 +1440,45 @@ function Dashboard() {
         },
       });
       applyServerState({ scoreboard: data.scoreboard });
-      message.success('显示设置已保存');
+      message.success('页面2设置已保存');
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
     }
   }
 
-  // 推流页面5标题 / 推流页面6副标题、背景（独立卡片，改动即保存）
-  async function savePage5Page6Settings(fields: Partial<{ page5Title: string; page6Title: string; page6Background: 'image' | 'video' }>) {
+  useEffect(() => {
+    setPage5TitleDraft(scoreboard?.page5Title ?? '');
+  }, [scoreboard?.page5Title]);
+
+  useEffect(() => {
+    setPage6TitleDraft(page6?.title ?? '');
+    setPage6BackgroundDraft(page6?.background ?? 'image');
+  }, [page6?.title, page6?.background]);
+
+  async function saveLiveStreamSettings() {
     try {
-      if (fields.page5Title !== undefined && scoreboard) {
-        const data = await requestJson<{ success: boolean; scoreboard: ScoreboardState }>('/api/scoreboard', {
+      setPage5Page6Saving(true);
+      if (scoreboard) {
+        const scoreboardData = await requestJson<{ success: boolean; scoreboard: ScoreboardState }>('/api/scoreboard', {
           method: 'POST',
-          json: { ...scoreboard, page5Title: fields.page5Title },
+          json: { ...scoreboard, page5Title: page5TitleDraft },
         });
-        applyServerState({ scoreboard: data.scoreboard });
+        applyServerState({ scoreboard: scoreboardData.scoreboard });
       }
-      if (fields.page6Title !== undefined || fields.page6Background !== undefined) {
-        const page6Data = await requestJson<{ success: boolean; state: Page6State }>('/api/page6', {
-          method: 'POST',
-          json: {
-            title: fields.page6Title ?? page6?.title ?? '',
-            background: fields.page6Background ?? page6?.background ?? 'image',
-          },
-        });
-        applyServerState({ page6: page6Data.state });
-      }
+      const page6Data = await requestJson<{ success: boolean; state: Page6State }>('/api/page6', {
+        method: 'POST',
+        json: {
+          matchIds: page6?.matchIds ?? [],
+          title: page6TitleDraft,
+          background: page6BackgroundDraft,
+        },
+      });
+      applyServerState({ page6: page6Data.state });
+      message.success('直播推流页面设置已保存');
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setPage5Page6Saving(false);
     }
   }
 
@@ -2909,6 +2925,9 @@ function Dashboard() {
                 title="直播推流"
                 extra={
                   <Space wrap>
+                    <Button type="primary" loading={page5Page6Saving} onClick={() => { void saveLiveStreamSettings(); }}>
+                      保存直播推流设置
+                    </Button>
                     <Button href="/" target="_blank">打开推流页面</Button>
                     <Button onClick={handleCopyStageLocalAddress}>复制推流页地址</Button>
                   </Space>
@@ -2923,6 +2942,15 @@ function Dashboard() {
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
                           <Text strong>推流页面5 统计口径</Text>
+                          <div>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>页面5标题：</Text>
+                            <Input
+                              maxLength={40}
+                              placeholder="例如：仙王杯（自动拼上赛事标签与精灵出场胜率）"
+                              value={page5TitleDraft}
+                              onChange={(event) => setPage5TitleDraft(event.target.value)}
+                            />
+                          </div>
                           <div>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>赛事标签：</Text>
                             <Select
@@ -2956,35 +2984,27 @@ function Dashboard() {
                     <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
-                          <Text strong>推流页面5/6 标题与背景</Text>
-                          <div>
-                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>推流页面5标题：</Text>
-                            <Input
-                              maxLength={40}
-                              placeholder="例如：仙王杯（自动拼上赛事标签与精灵出场胜率）"
-                              value={scoreboard?.page5Title ?? ''}
-                              onChange={(event) => { void savePage5Page6Settings({ page5Title: event.target.value }); }}
-                            />
-                          </div>
+                          <Text strong>推流页面6副标题与背景</Text>
                           <div>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>推流页面6副标题：</Text>
                             <Input
                               maxLength={40}
                               placeholder="页面6比赛结果页标题2内容，可留空"
-                              value={page6?.title ?? ''}
-                              onChange={(event) => { void savePage5Page6Settings({ page6Title: event.target.value }); }}
+                              value={page6TitleDraft}
+                              onChange={(event) => setPage6TitleDraft(event.target.value)}
                             />
                           </div>
                           <div>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>推流页面6背景：</Text>
                             <Segmented
                               block
-                              value={page6?.background ?? 'image'}
+                              value={page6BackgroundDraft}
                               options={[
                                 { value: 'image', label: '图片' },
+                                { value: 'image-2', label: '图片2' },
                                 { value: 'video', label: '视频' },
                               ]}
-                              onChange={(value) => { void savePage5Page6Settings({ page6Background: value as 'image' | 'video' }); }}
+                              onChange={(value) => setPage6BackgroundDraft(value as Page6Background)}
                             />
                           </div>
                         </Space>
@@ -3100,7 +3120,7 @@ function Dashboard() {
                       </Card>
                     </Col>
                   </Row>
-                  <Card size="small" className="subtle-card stage-settings-card" title="显示设置">
+                  <Card size="small" className="subtle-card stage-settings-card" title="页面2设置">
                     <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
                       <Row gutter={[16, 16]}>
                         <Col xs={24} md={12} xl={8}>
@@ -3119,7 +3139,7 @@ function Dashboard() {
                           </Form.Item>
                         </Col>
                       </Row>
-                      <Button type="primary" htmlType="submit">保存显示设置</Button>
+                      <Button type="primary" htmlType="submit">保存页面2设置</Button>
                     </Form>
                   </Card>
                 </Space>

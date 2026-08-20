@@ -72,6 +72,8 @@ export interface ScoreboardState {
   mtime: number | null;
 }
 
+export type Page6Background = 'image' | 'image-2' | 'video';
+
 export interface MatchSlotSnapshot {
   slot: number;
   spriteId: string | null;
@@ -173,8 +175,8 @@ export interface Page6State {
   matchIds: string[];
   /** 标题2 内容（后端输入，空字符串则隐藏） */
   title: string;
-  /** 页面6背景类型：image=图片，video=视频 */
-  background: 'image' | 'video';
+  /** 页面6背景类型：默认图片、备用图片或视频 */
+  background: Page6Background;
   mtime: number | null;
 }
 

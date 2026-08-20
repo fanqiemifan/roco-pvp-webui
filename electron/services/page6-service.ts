@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-import type { Page6State } from '../../shared/types.js';
+import type { Page6Background, Page6State } from '../../shared/types.js';
 import { ensureRuntimeDirs } from './image-service.js';
 import { getMatchStore } from './match-service.js';
 import type { AppPaths } from './path-service.js';
@@ -17,8 +17,11 @@ function defaultPage6State(): Page6State {
   };
 }
 
-function normalizeBackground(value: unknown): 'image' | 'video' {
-  return value === 'video' ? 'video' : 'image';
+function normalizeBackground(value: unknown): Page6Background {
+  if (value === 'video' || value === 'image-2') {
+    return value;
+  }
+  return 'image';
 }
 
 function normalizeMatchIds(value: unknown): string[] {

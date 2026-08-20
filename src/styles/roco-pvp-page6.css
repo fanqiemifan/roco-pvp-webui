@@ -40,6 +40,10 @@ body {
     background: url("/assets/ui/back.for-page6.jpg") no-repeat center / 100% 100%;
 }
 
+.page6-screen.page6-mode-image-2 {
+    background-image: url("/assets/ui/back.for-page6-2.png");
+}
+
 /* 背景视频：仅在后台选择「视频」背景时显示，覆盖在图片背景之上 */
 .page6-back-video {
     position: absolute;
