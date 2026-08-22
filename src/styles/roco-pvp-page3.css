@@ -15,6 +15,14 @@
 }
 
 @font-face {
+    font-family: "MiSans-Semibold";
+    src: url("/assets/fonts/MiSans-Semibold.otf") format("opentype");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
     font-family: "MiSans-Heavy";
     src: url("/assets/fonts/MiSans-Heavy.otf") format("opentype");
     font-weight: 900;
@@ -305,9 +313,9 @@ body {
 }
 
 .page3-versus-main {
-    font-family: "MiSans-Medium", "Microsoft YaHei", sans-serif;
+    font-family: "MiSans-Semibold", "Microsoft YaHei", sans-serif;
     font-size: 36px;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1;
 }
 
