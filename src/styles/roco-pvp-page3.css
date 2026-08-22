@@ -211,12 +211,22 @@ body {
     background: #F2ECDF;
 }
 
+/* 中央区：透明定位容器，黑色底板由 center-back 提供 */
 .page3-scoreboard-center {
     position: absolute;
     left: 452px;
     top: 0;
     width: 266px;
     height: 100px;
+}
+
+/* 黑色底板：置于中央区最底层，覆盖轨道描边（w266 h92，与描边外沿对齐） */
+.page3-scoreboard-center-back {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 266px;
+    height: 92px;
     border-radius: 30px;
     background: #06060a;
 }
@@ -278,6 +288,7 @@ body {
     right: 35px;
 }
 
+/* VS 块保持 100px 高，上下突出于 92px 黑色底板 */
 .page3-versus {
     position: absolute;
     left: 94px;
