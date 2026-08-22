@@ -29,6 +29,7 @@ import {
   Spin,
   Statistic,
   Steps,
+  Switch,
   Table,
   Tag,
   Timeline,
@@ -579,6 +580,8 @@ function Dashboard() {
     matchForm.setFieldsValue({
       leftPlayer: activeMatch.leftPlayer,
       rightPlayer: activeMatch.rightPlayer,
+      leftRank: activeMatch.leftRank,
+      rightRank: activeMatch.rightRank,
       bestOf: activeMatch.bestOf,
     });
   }, [activeMatch, matchForm]);
@@ -1485,21 +1488,22 @@ function Dashboard() {
 
   async function saveStage(
     nextPage: StagePageKey,
-    options?: { silent?: boolean; transition?: StageTransitionType; page3SpriteSource?: Page3SpriteSource; page5Player?: string; page5Tag?: string },
+    options?: { silent?: boolean; transition?: StageTransitionType; page3SpriteSource?: Page3SpriteSource; page3RankVisible?: boolean; page5Player?: string; page5Tag?: string },
   ) {
     const silent = options?.silent ?? false;
     const normalized = normalizeStagePage(nextPage);
     const transition = normalizeStageTransition(options?.transition ?? stage?.transition);
     const page3SpriteSource = options?.page3SpriteSource ?? stage?.page3SpriteSource ?? 'sprite';
+    const page3RankVisible = options?.page3RankVisible ?? stage?.page3RankVisible ?? false;
     const page5Player = options?.page5Player ?? stage?.page5Player ?? '';
     const page5Tag = options?.page5Tag ?? stage?.page5Tag ?? '';
     // 乐观更新，避免切换回弹
-    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page5Player, page5Tag } : prev));
+    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page3RankVisible, page5Player, page5Tag } : prev));
     setStageSaving(true);
     try {
       const data = await requestJson<{ success: boolean; stage: StageConfig }>('/api/stage', {
         method: 'POST',
-        json: { page: normalized, transition, page3SpriteSource, page5Player, page5Tag },
+        json: { page: normalized, transition, page3SpriteSource, page3RankVisible, page5Player, page5Tag },
       });
       applyServerState({ stage: data.stage });
       if (!silent) {
@@ -2486,14 +2490,40 @@ function Dashboard() {
                         >
                           <Row gutter={[16, 16]}>
                             <Col xs={24} md={8}>
-                              <Form.Item label="左侧选手" name="leftPlayer">
-                                <Input maxLength={32} placeholder="输入左侧选手名字" />
-                              </Form.Item>
+                              <Row gutter={8} wrap={false} className="current-match-player-inputs">
+                                <Col flex="auto" style={{ minWidth: 0 }}>
+                                  <Form.Item label="左侧选手" name="leftPlayer">
+                                    <Input maxLength={32} placeholder="输入左侧选手名字" />
+                                  </Form.Item>
+                                </Col>
+                                <Col flex="112px">
+                                  <Form.Item
+                                    label="排位排名"
+                                    name="leftRank"
+                                    getValueFromEvent={(event: React.ChangeEvent<HTMLInputElement>) => event.target.value.replace(/\D/g, '')}
+                                  >
+                                    <Input maxLength={10} inputMode="numeric" placeholder="仅数字" />
+                                  </Form.Item>
+                                </Col>
+                              </Row>
                             </Col>
                             <Col xs={24} md={8}>
-                              <Form.Item label="右侧选手" name="rightPlayer">
-                                <Input maxLength={32} placeholder="输入右侧选手名字" />
-                              </Form.Item>
+                              <Row gutter={8} wrap={false} className="current-match-player-inputs">
+                                <Col flex="auto" style={{ minWidth: 0 }}>
+                                  <Form.Item label="右侧选手" name="rightPlayer">
+                                    <Input maxLength={32} placeholder="输入右侧选手名字" />
+                                  </Form.Item>
+                                </Col>
+                                <Col flex="112px">
+                                  <Form.Item
+                                    label="排位排名"
+                                    name="rightRank"
+                                    getValueFromEvent={(event: React.ChangeEvent<HTMLInputElement>) => event.target.value.replace(/\D/g, '')}
+                                  >
+                                    <Input maxLength={10} inputMode="numeric" placeholder="仅数字" />
+                                  </Form.Item>
+                                </Col>
+                              </Row>
                             </Col>
                             <Col xs={24} md={8}>
                               <Form.Item label="比赛赛制" name="bestOf">
@@ -3137,6 +3167,23 @@ function Dashboard() {
                       />
                     </Space>
                   </Card>
+                  <Card size="small" className="subtle-card">
+                    <Space direction="vertical" size={12} className="control-stack">
+                      <Text strong>推流页面3排位图标</Text>
+                      <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                        开启后在页面3比分栏中央两侧显示选手排位排名图标；当前对局未输入排位排名的选手只显示图标，不显示排名数字。
+                      </Paragraph>
+                      <Space wrap>
+                        <Switch
+                          checked={stage?.page3RankVisible ?? false}
+                          disabled={stageSaving}
+                          loading={stageSaving}
+                          onChange={(checked) => { void saveStage(stage?.page ?? 'page3', { silent: true, page3RankVisible: checked }); }}
+                        />
+                        {stage?.page3RankVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
+                      </Space>
+                    </Space>
+                  </Card>
                   <Card size="small" className="subtle-card stage-settings-card" title="页面2设置">
                     <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
                       <Row gutter={[16, 16]}>
@@ -3328,6 +3375,28 @@ function Dashboard() {
           <Form.Item label="右侧选手" name="rightPlayer" rules={[{ required: true, message: '请输入右侧选手名' }]}>
             <Input maxLength={32} placeholder="例如：选手B" />
           </Form.Item>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="左侧选手排位排名（可选）"
+                name="leftRank"
+                id="createLeftRank"
+                getValueFromEvent={(event: React.ChangeEvent<HTMLInputElement>) => event.target.value.replace(/\D/g, '')}
+              >
+                <Input maxLength={10} inputMode="numeric" placeholder="仅数字，例如：123" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="右侧选手排位排名（可选）"
+                name="rightRank"
+                id="createRightRank"
+                getValueFromEvent={(event: React.ChangeEvent<HTMLInputElement>) => event.target.value.replace(/\D/g, '')}
+              >
+                <Input maxLength={10} inputMode="numeric" placeholder="仅数字，例如：456" />
+              </Form.Item>
+            </Col>
+          </Row>
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
               <Form.Item label="左侧选手头像（留空则使用默认）">

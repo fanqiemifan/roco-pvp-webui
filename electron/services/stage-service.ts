@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import {
   DEFAULT_STAGE_PAGE,
   DEFAULT_STAGE_TRANSITION,
+  DEFAULT_PAGE3_RANK_VISIBLE,
   DEFAULT_PAGE3_SPRITE_SOURCE,
   SUPPORTED_PAGE3_SPRITE_SOURCES,
   SUPPORTED_STAGE_PAGES,
@@ -40,11 +41,16 @@ function normalizePage3SpriteSource(value: unknown): Page3SpriteSource {
     : DEFAULT_PAGE3_SPRITE_SOURCE;
 }
 
+function normalizePage3RankVisible(value: unknown): boolean {
+  return typeof value === 'boolean' ? value : DEFAULT_PAGE3_RANK_VISIBLE;
+}
+
 function defaultStageState(): StageConfig {
   return {
     page: DEFAULT_STAGE_PAGE as StagePageKey,
     transition: DEFAULT_STAGE_TRANSITION as StageTransitionType,
     page3SpriteSource: DEFAULT_PAGE3_SPRITE_SOURCE,
+    page3RankVisible: DEFAULT_PAGE3_RANK_VISIBLE,
     page5Player: '',
     page5Tag: '',
     mtime: null,
@@ -63,6 +69,7 @@ export function getStageState(paths: AppPaths): StageConfig {
       page: normalizeStagePage(metadata.page),
       transition: normalizeStageTransition(metadata.transition),
       page3SpriteSource: normalizePage3SpriteSource(metadata.page3SpriteSource),
+      page3RankVisible: normalizePage3RankVisible(metadata.page3RankVisible),
       page5Player: normalizePage5Player(metadata.page5Player),
       page5Tag: normalizePage5Tag(metadata.page5Tag),
       mtime: stat.mtimeMs,
@@ -85,6 +92,7 @@ export function saveStageState(paths: AppPaths, payload: unknown): StageConfig {
     page: normalizeStagePage(raw.page),
     transition: normalizeStageTransition(raw.transition ?? current.transition),
     page3SpriteSource: normalizePage3SpriteSource(raw.page3SpriteSource ?? current.page3SpriteSource),
+    page3RankVisible: normalizePage3RankVisible(raw.page3RankVisible ?? current.page3RankVisible),
     page5Player: normalizePage5Player(raw.page5Player),
     page5Tag: normalizePage5Tag(raw.page5Tag),
   };

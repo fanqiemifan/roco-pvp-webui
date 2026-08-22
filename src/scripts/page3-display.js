@@ -23,12 +23,17 @@
     let nextGameSignature = null;
     let matchPhaseSignature = null;
     let page3SpriteSource = 'sprite';
+    let page3RankVisible = false;
+    let scoreboardDataCache = null;
     const panelDataCache = { left: null, right: null };
     const spriteNameImageCache = new Map();
     let lineupAnimationTimer = null;
     let lineupAnimationMode = null;
 
     const LINEUP_ANIMATION_MS = 760;
+
+    // 排名数字距离图标左侧的 x 偏移（按显示位数，10000+ 视为 6 位）
+    const RANK_TEXT_LEFT_BY_LENGTH = { 1: 22, 2: 16, 3: 12, 4: 7, 5: 3, 6: -2 };
 
     function clamp(value, min, max, fallback) {
         if (value === null || value === undefined || value === '') {
@@ -432,17 +437,51 @@
         return Math.round(clamp(value, 12, 160, 64) * 0.75);
     }
 
+    function formatRankText(value) {
+        const digits = String(value || '').replace(/\D/g, '');
+        if (!digits) {
+            return '';
+        }
+        return Number(digits) > 10000 ? '10000+' : digits;
+    }
+
+    function renderRank(side, value) {
+        const rankEl = document.getElementById(side === 'left' ? 'page3LeftRank' : 'page3RightRank');
+        if (!rankEl) {
+            return;
+        }
+        const txtEl = rankEl.querySelector('.page3-rank-txt');
+        const text = formatRankText(value);
+
+        // 直播推流开关关闭时隐藏整个图标；开启但未输入排名时仅隐藏数字
+        rankEl.hidden = !page3RankVisible;
+        if (!txtEl) {
+            return;
+        }
+        txtEl.hidden = !page3RankVisible || !text;
+        if (!text) {
+            return;
+        }
+
+        txtEl.textContent = text;
+        txtEl.style.left = `${RANK_TEXT_LEFT_BY_LENGTH[Math.min(text.length, 6)]}px`;
+    }
+
     function renderScoreboard(scoreboard) {
         const data = scoreboard || {};
+        scoreboardDataCache = data;
         const nextSignature = JSON.stringify({
             leftName: data.leftName || '',
             leftScore: data.leftScore || '0',
+            leftRank: data.leftRank || '',
             rightName: data.rightName || '',
             rightScore: data.rightScore || '0',
+            rightRank: data.rightRank || '',
             bestOf: normalizeBestOf(data.bestOf),
             scoreboardEnabled: data.scoreboardEnabled !== false,
             nameFontSize: scaleNameFont(data.nameFontSize),
-            scoreFontSize: scaleScoreFont(data.scoreFontSize)
+            scoreFontSize: scaleScoreFont(data.scoreFontSize),
+            rankVisible: page3RankVisible
         });
 
         if (scoreboardSignature === nextSignature) {
@@ -466,6 +505,9 @@
         document.getElementById('page3BestOf').textContent = `BO${normalizeBestOf(data.bestOf)}`;
         document.getElementById('page3LeftAvatar').textContent = getInitial(leftName, 'L');
         document.getElementById('page3RightAvatar').textContent = getInitial(rightName, 'R');
+
+        renderRank('left', data.leftRank);
+        renderRank('right', data.rightRank);
     }
 
     function renderAvatar(side, avatarState) {
@@ -509,6 +551,7 @@
         const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
         observeMatchPhase(payload);
         setPage3SpriteSource(payload && payload.stage ? payload.stage.page3SpriteSource : 'sprite');
+        setPage3RankVisible(payload && payload.stage ? payload.stage.page3RankVisible === true : false);
         renderScoreboard(payload ? payload.scoreboard : null);
         renderAvatars(payload ? payload.avatars : null);
         renderNextGame(payload ? payload.nextgame : null);
@@ -526,6 +569,15 @@
         panelStates.right.signatures.fill(null);
         renderPanel('left', panelDataCache.left);
         renderPanel('right', panelDataCache.right);
+    }
+
+    function setPage3RankVisible(visible) {
+        const next = visible === true;
+        if (page3RankVisible === next) {
+            return;
+        }
+        page3RankVisible = next;
+        renderScoreboard(scoreboardDataCache);
     }
 
     // 设置下场对局选手名字：超过 5 个字时开启横向滚动
@@ -629,20 +681,22 @@
     }
 
     async function loadInitialState() {
-        const [imagesResponse, scoreboardResponse, avatarsResponse, nextgameResponse, matchesResponse] = await Promise.all([
+        const [imagesResponse, scoreboardResponse, avatarsResponse, nextgameResponse, matchesResponse, stageResponse] = await Promise.all([
             fetch('api/images'),
             fetch('api/scoreboard'),
             fetch('api/avatars'),
             fetch('api/nextgame'),
-            fetch('api/matches')
+            fetch('api/matches'),
+            fetch('api/stage')
         ]);
 
-        const [imagesData, scoreboardData, avatarsData, nextgameData, matchesData] = await Promise.all([
+        const [imagesData, scoreboardData, avatarsData, nextgameData, matchesData, stageData] = await Promise.all([
             imagesResponse.json(),
             scoreboardResponse.json(),
             avatarsResponse.json(),
             nextgameResponse.json(),
-            matchesResponse.json()
+            matchesResponse.json(),
+            stageResponse.json()
         ]);
 
         applySnapshot({
@@ -650,7 +704,8 @@
             scoreboard: scoreboardData,
             avatars: avatarsData,
             nextgame: nextgameData,
-            matches: matchesData
+            matches: matchesData,
+            stage: stageData
         });
     }
 
@@ -689,6 +744,7 @@
         socket.on('stage:update', payload => {
             const stage = payload && payload.stage ? payload.stage : payload;
             setPage3SpriteSource(stage && stage.page3SpriteSource);
+            setPage3RankVisible(stage && stage.page3RankVisible === true);
         });
 
         socket.on('nextgame:update', payload => {

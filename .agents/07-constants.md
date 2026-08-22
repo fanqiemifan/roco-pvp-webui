@@ -17,6 +17,10 @@
 | SUPPORTED_STAGE_PAGES | {page1-overlay,page2,page3,page5,page6,page7,blank} | 支持的推流页面 | shared/constants.ts |
 | DEFAULT_STAGE_TRANSITION | blinds | 默认切换过渡 | shared/constants.ts |
 | SUPPORTED_STAGE_TRANSITIONS | {none,blinds,zoom} | 支持的过渡效果 | shared/constants.ts |
+| DEFAULT_PAGE3_SPRITE_SOURCE | sprite | 页面3精灵图片来源默认值（sprite / thumbnail） | shared/constants.ts |
+| SUPPORTED_PAGE3_SPRITE_SOURCES | {sprite,thumbnail} | 页面3精灵图片来源枚举 | shared/constants.ts |
+| DEFAULT_PAGE3_RANK_VISIBLE | false | 页面3排位排名图标默认隐藏 | shared/constants.ts |
+| RANK_TEXT_MAX_LENGTH | 10 | 排位排名存储最大位数（超过 10000 显示 10000+） | shared/constants.ts |
 
 ## 悬浮窗尺寸（electron/float-window.ts）
 

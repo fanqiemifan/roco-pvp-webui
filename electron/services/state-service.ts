@@ -9,6 +9,7 @@ import {
   DEFAULT_OPACITY,
   DEFAULT_SATURATION,
   MAX_SELECTION_COUNT,
+  RANK_TEXT_MAX_LENGTH,
   SUPPORTED_BEST_OF,
 } from '../../shared/constants.js';
 import type { PanelState, ScoreboardState, SlotState } from '../../shared/types.js';
@@ -47,6 +48,11 @@ function normalizeScoreboardText(value: unknown, maxLength = 32): string {
 function normalizeScoreboardScore(value: unknown, maxLength = 4): string {
   const text = String(value ?? '').trim();
   return (text || '0').slice(0, maxLength);
+}
+
+/** 排位排名：只保留数字，空字符串 = 未输入 */
+export function normalizeRankValue(value: unknown): string {
+  return String(value ?? '').replace(/\D/g, '').slice(0, RANK_TEXT_MAX_LENGTH);
 }
 
 function normalizeBestOf(value: unknown): number {
@@ -157,8 +163,10 @@ function defaultScoreboardState(): ScoreboardState {
   return {
     leftName: '',
     leftScore: '0',
+    leftRank: '',
     rightName: '',
     rightScore: '0',
+    rightRank: '',
     bestOf: DEFAULT_BEST_OF,
     scoreboardEnabled: true,
     eventTitle: DEFAULT_EVENT_TITLE,
@@ -256,8 +264,10 @@ export function getScoreboardState(paths: AppPaths): ScoreboardState {
     return {
       leftName: normalizeScoreboardText(metadata.leftName),
       leftScore: normalizeScoreboardScore(metadata.leftScore),
+      leftRank: normalizeRankValue(metadata.leftRank),
       rightName: normalizeScoreboardText(metadata.rightName),
       rightScore: normalizeScoreboardScore(metadata.rightScore),
+      rightRank: normalizeRankValue(metadata.rightRank),
       bestOf: normalizeBestOf(metadata.bestOf),
       scoreboardEnabled: normalizeBool(metadata.scoreboardEnabled, true),
       eventTitle: normalizeScoreboardText(metadata.eventTitle ?? DEFAULT_EVENT_TITLE, 40),
@@ -281,12 +291,16 @@ export function saveScoreboardState(paths: AppPaths, payload: unknown): Scoreboa
 
   const raw = payload as Record<string, unknown>;
   ensureRuntimeDirs(paths);
+  // 排名来自赛事数据同步，载荷未携带时保留现值，避免其他设置保存时被清空
+  const current = getScoreboardState(paths);
 
   const metadata = {
     leftName: normalizeScoreboardText(raw.leftName),
     leftScore: normalizeScoreboardScore(raw.leftScore),
+    leftRank: normalizeRankValue(raw.leftRank === undefined ? current.leftRank : raw.leftRank),
     rightName: normalizeScoreboardText(raw.rightName),
     rightScore: normalizeScoreboardScore(raw.rightScore),
+    rightRank: normalizeRankValue(raw.rightRank === undefined ? current.rightRank : raw.rightRank),
     bestOf: normalizeBestOf(raw.bestOf),
     scoreboardEnabled: normalizeBool(raw.scoreboardEnabled, true),
     eventTitle: normalizeScoreboardText(raw.eventTitle ?? DEFAULT_EVENT_TITLE, 40),

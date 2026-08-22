@@ -58,8 +58,12 @@ export interface Page4State {
 export interface ScoreboardState {
   leftName: string;
   leftScore: string;
+  /** 左侧选手排位排名（仅数字，空字符串 = 未输入） */
+  leftRank: string;
   rightName: string;
   rightScore: string;
+  /** 右侧选手排位排名（仅数字，空字符串 = 未输入） */
+  rightRank: string;
   bestOf: number;
   scoreboardEnabled: boolean;
   eventTitle: string;
@@ -102,6 +106,10 @@ export interface MatchRecord {
   status: 'pending' | 'in_progress' | 'completed';
   leftPlayer: string;
   rightPlayer: string;
+  /** 左侧选手排位排名（仅数字，空字符串 = 未输入） */
+  leftRank: string;
+  /** 右侧选手排位排名（仅数字，空字符串 = 未输入） */
+  rightRank: string;
   bestOf: number;
   games: GameRecord[];
   leftScore: number;
@@ -163,6 +171,8 @@ export interface StageConfig {
   transition: StageTransitionType;
   /** 推流页面3：精灵主体图片来源 */
   page3SpriteSource: Page3SpriteSource;
+  /** 推流页面3：是否显示比分栏中央两侧的排位排名图标 */
+  page3RankVisible: boolean;
   /** 推流页面5：选手过滤（空字符串 = 全部选手） */
   page5Player: string;
   /** 推流页面5：赛事标签过滤（空字符串 = 全部标签） */

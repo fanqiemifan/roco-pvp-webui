@@ -221,6 +221,44 @@ body {
     background: #06060a;
 }
 
+/* 排位排名图标：位于比分栏中央两侧，间隔 12px（中央区 452~718px） */
+.page3-rank {
+    position: absolute;
+    top: 14px;
+    width: 53px;
+    height: 64px;
+    pointer-events: none;
+}
+
+.page3-rank-left {
+    left: 387px;
+}
+
+.page3-rank-right {
+    left: 730px;
+}
+
+.page3-rank img {
+    display: block;
+    width: 53px;
+    height: 64px;
+    object-fit: contain;
+}
+
+/* 排名数字：y 固定 48，x 由 JS 按位数设置 */
+.page3-rank-txt {
+    position: absolute;
+    top: 46px;
+    font-family: "MiSans-Heavy", "MiSans-Medium", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    color: #FEC55E;
+    background: #000;
+    padding: 4px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
 .page3-score {
     position: absolute;
     top: 50%;

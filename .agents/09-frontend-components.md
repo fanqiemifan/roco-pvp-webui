@@ -3,18 +3,18 @@
 ## admin-antd（管理后台，React + Ant Design）
 
 ### 目录结构
-- App.tsx — 主组件：Layout（Header/Sider/Content）、视图分发、工具栏按钮（阵容悬浮窗/打开预览/复制链接/刷新）
+- App.tsx — 主组件：Layout（Header/Sider/Content）、视图分发、工具栏按钮（阵容悬浮窗/打开预览/复制链接/刷新）、「开一局」创建赛事弹窗（选手名/排位排名/头像/赛制/标签）
 - views/ — 各视图独立页面
 - components/ — 可复用小组件
 - lib/ — 无状态纯函数（请求、统计、格式化等）
 - constants.ts / types.ts — 本地常量与类型
 
 ### 视图页面（ViewKey）
-- roster - 阵容编辑（RosterPanelEditor：左右面板编辑、精灵搜索、快速填充）
+- roster - 阵容编辑（RosterPanelEditor：左右面板编辑、精灵搜索、快速填充；顶部「当前比赛」表单含左右选手名+排位排名（仅数字，PATCH 保存比赛信息时一并提交））
 - live - 实时控制（比赛开始、胜负记录、撤销/恢复）
 - history - 比赛历史（列表、删除、批量删除、撤销删除）
 - stats - 数据统计（StatsView：使用率/上场率排行、属性分布、标签趋势；1920px 断点布局）
-- stage - 直播推流（推流页面切换、过渡效果、page5 口径；底部「显示设置」卡片：页面2赛事标题/阵容展示、推流页5标题、比分字号）
+- stage - 直播推流（推流页面切换、过渡效果、page5 口径；「推流页面3精灵图片」卡片；「推流页面3排位图标」开关控制页面3比分栏排位图标显隐；底部「显示设置」卡片：页面2赛事标题/阵容展示、推流页5标题、比分字号）
 - preview - 页面预览
 - about - 关于项目（更新日志）
 
@@ -51,7 +51,7 @@
 - index.html + stage-carrier.js — 推流载体，按 stage 配置用 iframe 加载对应页面
 - roco-pvp-page1.html + overlay.js — Overlay 比分栏
 - roco-pvp-page2.html + lineup-display.js — 全局阵容展示
-- roco-pvp-page3.html + page3-display.js — 头像比分阵容
+- roco-pvp-page3.html + page3-display.js — 头像比分阵容；比分栏中央两侧排位排名图标（stage.page3RankVisible 控制显隐，开启但未输入排名时仅显示图标；排名超过 10000 显示 10000+，txt 位置按位数查表）
 - roco-pvp-page4.html + page4-display.js — 仅显阵容
 - roco-pvp-page5.html + page5-display.js — 登场/胜率排行
 - roco-pvp-page7.html + page7-display.js — 等待页（公开免鉴权，history-panel 展示后台推送的比赛结果）

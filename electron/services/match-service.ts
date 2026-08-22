@@ -16,6 +16,7 @@ import {
   clearPanelState,
   getPanelState,
   getScoreboardState,
+  normalizeRankValue,
   saveScoreboardState,
 } from './state-service.js';
 
@@ -416,6 +417,8 @@ function normalizeMatchRecord(match: unknown, lookup?: Map<string, SpriteRecord>
     status: raw.status === 'completed' || raw.status === 'in_progress' ? raw.status : 'pending',
     leftPlayer: normalizePlayerName(raw.leftPlayer),
     rightPlayer: normalizePlayerName(raw.rightPlayer),
+    leftRank: normalizeRankValue(raw.leftRank),
+    rightRank: normalizeRankValue(raw.rightRank),
     bestOf,
     games: normalizedGames,
     leftScore: Number(raw.leftScore) || 0,
@@ -477,6 +480,8 @@ function normalizeFlowSnapshot(
     status: raw.status === 'completed' || raw.status === 'in_progress' ? raw.status : 'pending',
     leftPlayer: '',
     rightPlayer: '',
+    leftRank: '',
+    rightRank: '',
     bestOf,
     games: normalizedGames,
     leftScore: Number(raw.leftScore) || 0,
@@ -795,6 +800,8 @@ function syncScoreboardFromMatch(paths: AppPaths, match: MatchRecord): void {
     ...scoreboard,
     leftName: match.leftPlayer,
     rightName: match.rightPlayer,
+    leftRank: match.leftRank,
+    rightRank: match.rightRank,
     leftScore: String(match.leftScore),
     rightScore: String(match.rightScore),
     bestOf: match.bestOf,
@@ -810,6 +817,8 @@ function clearActiveDisplayState(paths: AppPaths): void {
     ...scoreboard,
     leftName: '',
     rightName: '',
+    leftRank: '',
+    rightRank: '',
     leftScore: '0',
     rightScore: '0',
     bestOf: DEFAULT_BEST_OF,
@@ -926,6 +935,8 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
   const raw = payload as Record<string, unknown>;
   const leftPlayer = normalizePlayerName(raw.leftPlayer);
   const rightPlayer = normalizePlayerName(raw.rightPlayer);
+  const leftRank = normalizeRankValue(raw.leftRank);
+  const rightRank = normalizeRankValue(raw.rightRank);
   const bestOf = normalizeBestOf(raw.bestOf);
   const tags = normalizeTags(raw.tags);
 
@@ -948,6 +959,8 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
     status: 'pending',
     leftPlayer,
     rightPlayer,
+    leftRank,
+    rightRank,
     bestOf,
     games: [createEmptyGameRecord(1)],
     leftScore: 0,
@@ -980,6 +993,8 @@ export function updateMatch(paths: AppPaths, matchId: string, payload: unknown):
   const raw = payload as Record<string, unknown>;
   const leftPlayer = raw.leftPlayer === undefined ? current.leftPlayer : normalizePlayerName(raw.leftPlayer);
   const rightPlayer = raw.rightPlayer === undefined ? current.rightPlayer : normalizePlayerName(raw.rightPlayer);
+  const leftRank = raw.leftRank === undefined ? current.leftRank : normalizeRankValue(raw.leftRank);
+  const rightRank = raw.rightRank === undefined ? current.rightRank : normalizeRankValue(raw.rightRank);
   const nextBestOf = raw.bestOf === undefined ? current.bestOf : normalizeBestOf(raw.bestOf);
 
   if (!leftPlayer || !rightPlayer) {
@@ -998,6 +1013,8 @@ export function updateMatch(paths: AppPaths, matchId: string, payload: unknown):
     ...current,
     leftPlayer,
     rightPlayer,
+    leftRank,
+    rightRank,
     bestOf: nextBestOf,
     tags,
     updatedAt: new Date().toISOString(),

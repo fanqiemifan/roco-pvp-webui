@@ -19,7 +19,7 @@
 
 | 类型名称 | 说明 | 文件 |
 |---------|------|------|
-| ScoreboardState | 记分牌状态（leftName, leftScore, rightName, rightScore, bestOf, scoreboardEnabled, eventTitle, eventTitleEnabled, page2LineupDisplayMode, nameFontSize, scoreFontSize, mtime） | shared/types.ts |
+| ScoreboardState | 记分牌状态（leftName, leftScore, leftRank, rightName, rightScore, rightRank, bestOf, scoreboardEnabled, eventTitle, eventTitleEnabled, page2LineupDisplayMode, nameFontSize, scoreFontSize, mtime）。leftRank/rightRank 为选手排位排名（仅数字字符串，空 = 未输入，由赛事同步） | shared/types.ts |
 
 ## 仅显阵容（page4）
 
@@ -35,7 +35,7 @@
 |---------|------|------|
 | StagePageKey | 推流页面 key：page1-overlay / page2 / page3 / page5 / page6 / page7 / blank | shared/types.ts |
 | StageTransitionType | 过渡效果：none / blinds / zoom | shared/types.ts |
-| StageConfig | 推流载体配置（page, transition, page5Title, page5Player, page5Tag, mtime） | shared/types.ts |
+| StageConfig | 推流载体配置（page, transition, page3SpriteSource, page3RankVisible, page5Title, page5Player, page5Tag, mtime）。page3RankVisible 控制页面3比分栏中央两侧排位排名图标显隐 | shared/types.ts |
 | Page6State | 比赛结果页配置（matchIds 最多 8 个已结束比赛, title 副标题, mtime） | shared/types.ts |
 
 
@@ -45,7 +45,7 @@
 |---------|------|------|
 | MatchSlotSnapshot | 比赛格子快照（slotIndex, spriteId, spritePath） | shared/types.ts |
 | GameRecord | 单局比赛记录（gameNumber, status, leftLineup, rightLineup, winner） | shared/types.ts |
-| MatchRecord | 完整比赛记录（id, createdAt, updatedAt, status, leftPlayer, rightPlayer, bestOf, games, leftScore, rightScore, winner, completedAt, tags） | shared/types.ts |
+| MatchRecord | 完整比赛记录（id, createdAt, updatedAt, status, leftPlayer, rightPlayer, leftRank, rightRank, bestOf, games, leftScore, rightScore, winner, completedAt, tags）。leftRank/rightRank 为左右选手排位排名（仅数字字符串，空 = 未输入） | shared/types.ts |
 | MatchStoreState | 比赛存储状态（matches, activeMatchId, mtime） | shared/types.ts |
 
 ## 头像

@@ -5,8 +5,8 @@
 | 自然语言描述 | 函数名 | 签名 | 说明 |
 |-------------|-------|------|------|
 | 获取比赛列表 | getMatchStore | (paths: AppPaths) => MatchStoreState | 获取比赛存储状态 |
-| 创建比赛 | createMatch | (paths: AppPaths, payload: unknown) => MatchStoreState | 创建新比赛，payload 包含 leftPlayer, rightPlayer, bestOf, tags |
-| 更新比赛信息 | updateMatch | (paths: AppPaths, matchId: string, payload: unknown) => MatchStoreState | 更新比赛信息 |
+| 创建比赛 | createMatch | (paths: AppPaths, payload: unknown) => MatchStoreState | 创建新比赛，payload 包含 leftPlayer, rightPlayer, leftRank, rightRank, bestOf, tags |
+| 更新比赛信息 | updateMatch | (paths: AppPaths, matchId: string, payload: unknown) => MatchStoreState | 更新比赛信息（含排位排名；syncScoreboardFromMatch 会把选手名与排名同步到记分牌） |
 | 更新比赛标签 | updateMatchTags | (paths: AppPaths, matchId: string, payload: unknown) => MatchStoreState | 更新比赛标签 |
 | 批量添加标签 | updateMatchesTags | (paths: AppPaths, matchIds: unknown, payload: unknown) => MatchStoreState | 为多场比赛追加标签（合并保留原有） |
 | 选择活动比赛 | setActiveMatch | (paths: AppPaths, matchId: string) => MatchStoreState | 设置活动比赛 |
@@ -34,7 +34,8 @@
 | 自然语言描述 | 函数名 | 签名 | 说明 |
 |-------------|-------|------|------|
 | 获取记分牌状态 | getScoreboardState | (paths: AppPaths) => ScoreboardState | 获取记分牌状态 |
-| 保存记分牌状态 | saveScoreboardState | (paths: AppPaths, payload: unknown) => ScoreboardState | 保存记分牌状态 |
+| 保存记分牌状态 | saveScoreboardState | (paths: AppPaths, payload: unknown) => ScoreboardState | 保存记分牌状态；排名字段未携带时保留现值 |
+| 归一化排位排名 | normalizeRankValue | (value: unknown) => string | 导出函数：只保留数字、截断到 RANK_TEXT_MAX_LENGTH 位（空字符串 = 未输入） |
 | 更新赛制 | saveScoreboardBestOf | (paths: AppPaths, payload: unknown) => ScoreboardState | 更新赛制 |
 
 ## 精灵管理 (sprite-service.ts)
@@ -78,7 +79,7 @@
 | 自然语言描述 | 函数名 | 签名 | 说明 |
 |-------------|-------|------|------|
 | 获取推流配置 | getStageState | (paths: AppPaths) => StageConfig | 获取 stage 配置 |
-| 保存推流配置 | saveStageState | (paths: AppPaths, payload) => StageConfig | 保存 stage 配置 |
+| 保存推流配置 | saveStageState | (paths: AppPaths, payload) => StageConfig | 保存 stage 配置；page3RankVisible 未携带时保留现值 |
 
 ## 数据统计 (stats-service.ts)
 

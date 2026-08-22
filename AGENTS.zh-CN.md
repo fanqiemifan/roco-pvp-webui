@@ -36,6 +36,7 @@ Roco PVP WebUI — 洛克王国比赛推流控制台。Electron（Express + Sock
 - `shared/types.ts`（全部类型）、`shared/events.ts`（socket 事件）、`shared/constants.ts`（默认值：端口 9988、BO7、6 个格子、推流页面/过渡枚举）——electron 和 React 代码都会引用。
 - 管理后台：`src/admin-antd/App.tsx`（阵容/实时控制/历史/数据统计/显示设置/直播推流/页面预览/关于），按视图拆在 `src/admin-antd/views/`，通用逻辑在 `lib/`、小组件在 `components/`。登录页：`src/login-antd/App.tsx`。
 - 推流/展示页面是纯原生 JS（`src/pages/*.html` + `src/scripts/*.js` + `src/styles/*.css`），其中 `page4`/`page5` 分别是仅显阵容页与使用率/胜率排行页，`float`/`float-menu` 是桌面悬浮窗页面。
+- 排位排名（page3 比分栏图标）：在「开一局」创建弹窗或赛事面板「当前比赛」表单输入（仅数字、可选），随对局存入 `matches.json` 并由 `syncScoreboardFromMatch` 同步到记分牌；「直播推流」面板的 `page3RankVisible` 开关控制推流页显隐（开启但未输入排名只显示图标，超过 10000 显示 `10000+`）。
 - 详细索引（类型、API 路由、函数、socket 事件、常量、文件地图）在 `.agents/01..10-*.md` —— 遇到问题先查它们；行为有变化时要同步更新这些文档。
 
 ## 注意事项

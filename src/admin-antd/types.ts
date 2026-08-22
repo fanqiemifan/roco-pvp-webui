@@ -12,6 +12,8 @@ export type JsonInit = RequestInit & {
 export type MatchFormValues = {
   leftPlayer: string;
   rightPlayer: string;
+  leftRank?: string;
+  rightRank?: string;
   bestOf: number;
   tags?: string[];
 };

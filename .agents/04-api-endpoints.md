@@ -21,7 +21,7 @@
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
 |-------------|------|------|------|------|
 | 获取记分牌 | GET | /api/scoreboard | 获取记分牌状态 | electron/socket-server.ts |
-| 保存记分牌 | POST | /api/scoreboard | 保存记分牌状态 | electron/socket-server.ts |
+| 保存记分牌 | POST | /api/scoreboard | 保存记分牌状态（排名字段 leftRank/rightRank 未携带时保留现值，避免清空赛事同步的排名） | electron/socket-server.ts |
 | 更新赛制 | POST | /api/scoreboard/best-of | 更新赛制 | electron/socket-server.ts |
 
 ## 比赛接口
@@ -29,8 +29,8 @@
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
 |-------------|------|------|------|------|
 | 获取所有比赛 | GET | /api/matches | 获取所有比赛记录 | electron/socket-server.ts |
-| 创建比赛 | POST | /api/matches | 创建新比赛 | electron/socket-server.ts |
-| 更新比赛 | PATCH | /api/matches/:matchId | 更新比赛信息 | electron/socket-server.ts |
+| 创建比赛 | POST | /api/matches | 创建新比赛（payload 可含 leftRank/rightRank 排位排名，仅数字、可选） | electron/socket-server.ts |
+| 更新比赛 | PATCH | /api/matches/:matchId | 更新比赛信息（含选手名、排位排名、赛制；后台「保存比赛信息」走此接口） | electron/socket-server.ts |
 | 更新比赛标签 | PATCH | /api/matches/:matchId/tags | 更新比赛标签 | electron/socket-server.ts |
 | 批量添加标签 | POST | /api/matches/batch-tags | 为多场比赛追加标签（合并保留原有，body: matchIds/tags） | electron/socket-server.ts |
 | 删除比赛 | DELETE | /api/matches/:matchId | 删除单个比赛 | electron/socket-server.ts |
