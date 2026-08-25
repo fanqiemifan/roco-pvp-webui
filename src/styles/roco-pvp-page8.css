@@ -138,11 +138,11 @@ body {
     background: #1d2e34;
 }
 
-/* 左侧选手名区域：选手名右对齐贴向中央 vs（距 vs 24px）。
+/* 左侧选手名区域：选手名贴向中央 vs（距 vs 24px）。
    padding-left 103px = 左侧 rank 固定区（距左 50px + 宽 53px），
-   名字最大到 rank 右边缘，再长则截断省略；
-   direction: rtl 只作用于名字本身（.page8-name-left），
-   让过长时在远离 vs 的一侧（左端）出现省略号，不影响 flex 贴 vs */
+   名字最大到 rank 右边缘，再长则截断省略。
+   名字保持 LTR（不设 direction: rtl），text-overflow: ellipsis 保留名字开头、
+   省略号出现在右端（贴近 vs 一侧），如「测试9是的发33 → 测试9是的发...」 */
 .page8-left {
     flex: 1;
     min-width: 0;
@@ -152,11 +152,6 @@ body {
     margin-right: 24px;
     padding-left: 103px;
     overflow: hidden;
-}
-
-.page8-name-left {
-    direction: rtl;
-    text-align: right;
 }
 
 /* 右侧选手名区域：左对齐贴向中央 vs（距 vs 24px）。

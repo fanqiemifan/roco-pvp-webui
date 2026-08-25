@@ -2898,6 +2898,12 @@ function Dashboard() {
                   rowKey={(record) => record.id}
                   columns={historyColumns}
                   dataSource={sortedMatches}
+                  pagination={{
+                    defaultPageSize: 10,
+                    pageSizeOptions: ['10', '20', '50', '100'],
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} / 共 ${total} 条`,
+                  }}
                   rowSelection={{
                     selectedRowKeys: selectedHistoryKeys,
                     onChange: (keys) => setSelectedHistoryKeys(keys),
@@ -3551,6 +3557,16 @@ function Dashboard() {
                           </Card>
                         </Col>
                       </Row>
+                      <Card size="small" className="subtle-card" title="作者与许可">
+                        <Space direction="vertical" size={8} className="page-stack">
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            作者邮箱：<Link href="mailto:463218006@qq.com">463218006@qq.com</Link>
+                          </Paragraph>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            本软件<Text strong>免费开源使用</Text>，基于 MIT License 发布，可自由使用、复制、修改与分发（分发时需保留版权声明与许可声明）。
+                          </Paragraph>
+                        </Space>
+                      </Card>
                       <Card size="small" className="subtle-card" title="字体说明">
                         <Space direction="vertical" size={8} className="page-stack">
                           <Paragraph type="secondary" style={{ marginBottom: 0 }}>
