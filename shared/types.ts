@@ -194,6 +194,32 @@ export interface Page6State {
 }
 
 /**
+ * 比赛预告（page8）背景类型：
+ * - image: 内置背景图 1（back.for-page6.jpg）
+ * - image-2: 内置背景图 2（back.for-page6-2.png）
+ * - custom: 后台手动上传的自定义壁纸
+ */
+export type Page8Background = 'image' | 'image-2' | 'custom';
+
+/**
+ * 比赛预告（page8）状态：展示哪些待开始/进行中的比赛，以及标题、副标题与壁纸。
+ * 复用 page6 的布局结构，但网格卡展示「选手对局信息」（选手名 + 排位排名 + vs）。
+ */
+export interface Page8State {
+  /** 已选中的比赛 id（最多 12 个，顺序即展示顺序） */
+  matchIds: string[];
+  /** 主标题内容（后台输入，空字符串则隐藏） */
+  title: string;
+  /** 副标题内容（后台输入，空字符串则隐藏） */
+  subtitle: string;
+  /** 页面8背景类型 */
+  background: Page8Background;
+  /** 自定义壁纸访问 URL（background 为 custom 时使用，空字符串则回退内置图） */
+  wallpaperUrl: string;
+  mtime: number | null;
+}
+
+/**
  * 下一局比赛（page3 下场对局）配置：
  * - matchId：所选待开始比赛
  * - visible：当前是否正在显示
@@ -226,6 +252,7 @@ export interface SnapshotPayload {
   matches: MatchStoreState;
   stage: StageConfig;
   page6: Page6State;
+  page8: Page8State;
   nextgame: NextGamePayload;
 }
 

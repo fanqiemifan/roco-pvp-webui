@@ -52,6 +52,8 @@ import type {
   Page4SlotState,
   Page4State,
   Page6State,
+  Page8Background,
+  Page8State,
   PanelState,
   ScoreboardState,
   Page6Background,
@@ -144,6 +146,16 @@ const { TextArea } = Input;
 
 const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
   {
+    version: '1.5.4',
+    date: '2026-08',
+    items: [
+      '新增推流页面8（比赛预告）：复用页面6 布局，选手对局信息卡 w860×h88 两列网格（每列最多 6 场、第 7 场开启第二列），展示 vs + 双方选手名 + 排位排名图标（复用页面3 图标样式）',
+      '后台「比赛历史」新增「预告」勾选：最多选择 12 场对局推送（可勾选待开始与进行中的对局，已完成对局不可选；选 0 场推送即清空页面），只取选手信息与排位排名',
+      '「页面预览」新增推流页面8 预览与设置：可输入主标题/副标题、切换壁纸（图片1/图片2/自定义上传，自动缩放为 1920×1080）',
+      '页面8 不加入直播推流设置（stage 可选画面），仅在页面预览中展示',
+    ],
+  },
+  {
     version: '1.5.3',
     date: '2026-08',
     items: [
@@ -227,6 +239,7 @@ const HISTORY_STATUS_RANK: Record<MatchRecord['status'], number> = {
 };
 
 const PAGE6_MAX_MATCHES = 8;
+const PAGE8_MAX_MATCHES = 12;
 
 function HistorySortHeader({ text, sortKey, activeOrder, onSort }: {
   text: string;
@@ -329,6 +342,15 @@ function Dashboard() {
   const [page5Page6Saving, setPage5Page6Saving] = useState(false);
   const [page6Draft, setPage6Draft] = useState<string[]>([]);
   const [page6Pushing, setPage6Pushing] = useState(false);
+  const [page8, setPage8] = useState<Page8State | null>(null);
+  const [page8Draft, setPage8Draft] = useState<string[]>([]);
+  const [page8TitleDraft, setPage8TitleDraft] = useState('');
+  const [page8SubtitleDraft, setPage8SubtitleDraft] = useState('');
+  const [page8BackgroundDraft, setPage8BackgroundDraft] = useState<Page8Background>('image');
+  const [page8Pushing, setPage8Pushing] = useState(false);
+  const [page8Saving, setPage8Saving] = useState(false);
+  const [page8WallpaperUploading, setPage8WallpaperUploading] = useState(false);
+  const [page8SettingsNotice, setPage8SettingsNotice] = useState<NoticeState>(null);
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
   const [page4Notice, setPage4Notice] = useState<NoticeState>(null);
   const [historyNotice, setHistoryNotice] = useState<NoticeState>(null);
@@ -456,6 +478,7 @@ function Dashboard() {
     page4Panel?: Page4PanelState;
     stage?: StageConfig;
     page6?: Page6State;
+    page8?: Page8State;
     nextgame?: NextGamePayload;
   }) {
     startTransition(() => {
@@ -498,6 +521,9 @@ function Dashboard() {
       if (payload.page6) {
         setPage6(payload.page6);
       }
+      if (payload.page8) {
+        setPage8(payload.page8);
+      }
     });
   }
 
@@ -506,7 +532,7 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextNextgame] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage8, nextNextgame] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
@@ -516,6 +542,7 @@ function Dashboard() {
         requestJson<{ sprites: SpriteRecord[] }>('/api/sprites'),
         requestJson<StageConfig>('/api/stage'),
         requestJson<{ state: Page6State }>('/api/page6'),
+        requestJson<{ state: Page8State }>('/api/page8'),
         requestJson<NextGamePayload>('/api/nextgame'),
       ]);
 
@@ -532,6 +559,8 @@ function Dashboard() {
         setStage(nextStage);
         setPage6(nextPage6.state);
         setPage6Draft(nextPage6.state.matchIds);
+        setPage8(nextPage8.state);
+        setPage8Draft(nextPage8.state.matchIds);
         setNextgame(nextNextgame.state);
         setNextgameMatch(nextNextgame.match ?? null);
         syncPanelFromApi('left', nextPanels.images[0]);
@@ -634,6 +663,12 @@ function Dashboard() {
     socket.on(SOCKET_EVENTS.page6Update, (payload) => {
       if (payload?.state) {
         applyServerState({ page6: payload.state });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.page8Update, (payload) => {
+      if (payload?.state) {
+        applyServerState({ page8: payload.state });
       }
     });
 
@@ -1283,12 +1318,48 @@ function Dashboard() {
       });
       applyServerState({ page6: data.state });
       setPage6Draft(data.state.matchIds);
-      setHistoryNotice({ tone: 'success', text: `已推送 ${data.state.matchIds.length} 场比赛结果到推流页面6` });
-      message.success(`已推送 ${data.state.matchIds.length} 场比赛结果到推流页面6`);
+      const nextText = data.state.matchIds.length
+        ? `已推送 ${data.state.matchIds.length} 场比赛结果到推流页面6`
+        : '已清空推流页面6 的比赛结果';
+      setHistoryNotice({ tone: 'success', text: nextText });
+      message.success(nextText);
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
     } finally {
       setPage6Pushing(false);
+    }
+  }
+
+  function togglePage8Draft(matchId: string, checked: boolean) {
+    setPage8Draft((prev) => {
+      if (checked) {
+        if (prev.includes(matchId) || prev.length >= PAGE8_MAX_MATCHES) {
+          return prev;
+        }
+        return [...prev, matchId];
+      }
+      return prev.filter((id) => id !== matchId);
+    });
+  }
+
+  async function pushPage8Matches() {
+    setPage8Pushing(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page8State }>('/api/page8', {
+        method: 'POST',
+        json: { matchIds: page8Draft },
+      });
+      applyServerState({ page8: data.state });
+      setPage8Draft(data.state.matchIds);
+      const nextText = data.state.matchIds.length
+        ? `已推送 ${data.state.matchIds.length} 场对局预告到推流页面8`
+        : '已清空推流页面8 的对局预告';
+      setHistoryNotice({ tone: 'success', text: nextText });
+      message.success(nextText);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setPage8Pushing(false);
     }
   }
 
@@ -1459,6 +1530,12 @@ function Dashboard() {
     setPage6BackgroundDraft(page6?.background ?? 'image');
   }, [page6?.title, page6?.background]);
 
+  useEffect(() => {
+    setPage8TitleDraft(page8?.title ?? '');
+    setPage8SubtitleDraft(page8?.subtitle ?? '');
+    setPage8BackgroundDraft(page8?.background ?? 'image');
+  }, [page8?.title, page8?.subtitle, page8?.background]);
+
   async function saveLiveStreamSettings() {
     try {
       setPage5Page6Saving(true);
@@ -1483,6 +1560,60 @@ function Dashboard() {
       message.error(error instanceof Error ? error.message : String(error));
     } finally {
       setPage5Page6Saving(false);
+    }
+  }
+
+  async function savePage8Settings() {
+    setPage8Saving(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page8State }>('/api/page8', {
+        method: 'POST',
+        json: {
+          matchIds: page8?.matchIds ?? page8Draft,
+          title: page8TitleDraft,
+          subtitle: page8SubtitleDraft,
+          background: page8BackgroundDraft,
+        },
+      });
+      applyServerState({ page8: data.state });
+      setPage8SettingsNotice({ tone: 'success', text: '比赛预告页面设置已保存，预览已更新' });
+      message.success('比赛预告页面设置已保存');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+      setPage8SettingsNotice({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setPage8Saving(false);
+    }
+  }
+
+  async function uploadPage8Wallpaper(file: File) {
+    setPage8WallpaperUploading(true);
+    try {
+      const data = await uploadSingleFile<{ success: boolean; state: Page8State; wallpaperUrl: string }>('/api/page8/wallpaper', file);
+      applyServerState({ page8: data.state });
+      setPage8BackgroundDraft('custom');
+      message.success('自定义壁纸已上传并应用');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+      setPage8SettingsNotice({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setPage8WallpaperUploading(false);
+    }
+  }
+
+  async function removePage8Wallpaper() {
+    setPage8WallpaperUploading(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page8State }>('/api/page8/wallpaper', {
+        method: 'DELETE',
+      });
+      applyServerState({ page8: data.state });
+      setPage8BackgroundDraft('image');
+      message.success('已删除自定义壁纸，回退到内置背景');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setPage8WallpaperUploading(false);
     }
   }
 
@@ -2128,6 +2259,31 @@ function Dashboard() {
       },
     },
     {
+      title: (
+        <span>
+          预告
+          <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+            已选 {page8Draft.length}/{PAGE8_MAX_MATCHES}
+          </Text>
+        </span>
+      ),
+      key: 'page8',
+      width: 92,
+      render: (_: unknown, record: MatchRecord) => {
+        const isSelected = page8Draft.includes(record.id);
+        const isFull = page8Draft.length >= PAGE8_MAX_MATCHES && !isSelected;
+        // 可勾选「待开始」与「进行中」的比赛；已完成对局不可勾选
+        const selectable = record.status === 'pending' || record.status === 'in_progress';
+        return (
+          <Checkbox
+            checked={isSelected}
+            disabled={!selectable || isFull}
+            onChange={(event) => togglePage8Draft(record.id, event.target.checked)}
+          />
+        );
+      },
+    },
+    {
       title: '左侧选手',
       dataIndex: 'leftPlayer',
       key: 'leftPlayer',
@@ -2693,10 +2849,16 @@ function Dashboard() {
                     <Button
                       type="primary"
                       loading={page6Pushing}
-                      disabled={!page6Draft.length}
                       onClick={() => void pushPage6Matches()}
                     >
                       推送比赛结果（{page6Draft.length}/{PAGE6_MAX_MATCHES}）
+                    </Button>
+                    <Button
+                      type="primary"
+                      loading={page8Pushing}
+                      onClick={() => void pushPage8Matches()}
+                    >
+                      推送比赛预告（{page8Draft.length}/{PAGE8_MAX_MATCHES}）
                     </Button>
                   </Space>
                 )}
@@ -3230,6 +3392,7 @@ function Dashboard() {
                       { value: 'page5', label: '推流页面5' },
                       { value: 'page6', label: '推流页面6' },
                       { value: 'page7', label: '推流页面7' },
+                      { value: 'page8', label: '推流页面8' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}
                   />
@@ -3249,6 +3412,90 @@ function Dashboard() {
                       </Card>
                     </Col>
                   </Row>
+                  {previewSlot === 'page8' ? (
+                    <Card
+                      size="small"
+                      className="subtle-card"
+                      title="比赛预告设置（推流页面8）"
+                      extra={(
+                        <Space wrap>
+                          <Button
+                            type="primary"
+                            loading={page8Saving}
+                            onClick={() => void savePage8Settings()}
+                          >
+                            保存页面设置
+                          </Button>
+                        </Space>
+                      )}
+                    >
+                      <Space direction="vertical" size={12} className="page-stack" style={{ width: '100%' }}>
+                        {page8SettingsNotice ? (
+                          <Alert
+                            showIcon
+                            closable
+                            type={page8SettingsNotice.tone}
+                            message={page8SettingsNotice.text}
+                            onClose={() => setPage8SettingsNotice(null)}
+                          />
+                        ) : null}
+                        <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                          对局勾选与推送在「比赛历史」中完成：勾选「预告」列（最多 {PAGE8_MAX_MATCHES} 场，可勾选待开始与进行中的对局，已完成不可选）后点击「推送比赛预告」。
+                        </Paragraph>
+                        <Row gutter={[16, 16]}>
+                          <Col xs={24} md={8}>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>主标题：</Text>
+                            <Input
+                              maxLength={40}
+                              placeholder="例如：赛事预告，可留空隐藏"
+                              value={page8TitleDraft}
+                              onChange={(event) => setPage8TitleDraft(event.target.value)}
+                            />
+                          </Col>
+                          <Col xs={24} md={8}>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>副标题：</Text>
+                            <Input
+                              maxLength={40}
+                              placeholder="例如：下一场对局早知道，可留空隐藏"
+                              value={page8SubtitleDraft}
+                              onChange={(event) => setPage8SubtitleDraft(event.target.value)}
+                            />
+                          </Col>
+                          <Col xs={24} md={8}>
+                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>壁纸：</Text>
+                            <Space wrap>
+                              <Segmented
+                                value={page8BackgroundDraft}
+                                options={[
+                                  { value: 'image', label: '图片1' },
+                                  { value: 'image-2', label: '图片2' },
+                                  { value: 'custom', label: '自定义' },
+                                ]}
+                                onChange={(value) => setPage8BackgroundDraft(value as Page8Background)}
+                              />
+                              <Upload
+                                accept="image/*"
+                                showUploadList={false}
+                                beforeUpload={(file) => {
+                                  void uploadPage8Wallpaper(file);
+                                  return false;
+                                }}
+                              >
+                                <Button size="small" loading={page8WallpaperUploading} disabled={page8BackgroundDraft === 'custom'}>
+                                  上传壁纸
+                                </Button>
+                              </Upload>
+                              {page8BackgroundDraft === 'custom' ? (
+                                <Button size="small" danger loading={page8WallpaperUploading} onClick={() => void removePage8Wallpaper()}>
+                                  删除壁纸
+                                </Button>
+                              ) : null}
+                            </Space>
+                          </Col>
+                        </Row>
+                      </Space>
+                    </Card>
+                  ) : null}
                   <div className="preview-frame-shell" ref={previewFrameShellRef}>
                     <div
                       className="preview-frame-viewport"
