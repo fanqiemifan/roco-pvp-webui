@@ -37,6 +37,8 @@
 | StageTransitionType | 过渡效果：none / blinds / zoom | shared/types.ts |
 | StageConfig | 推流载体配置（page, transition, page3SpriteSource, page3RankVisible, page5Title, page5Player, page5Tag, mtime）。page3RankVisible 控制页面3比分栏中央两侧排位排名图标显隐 | shared/types.ts |
 | Page6State | 比赛结果页配置（matchIds 最多 8 个已结束比赛, title 副标题, mtime） | shared/types.ts |
+| Page8State | 比赛预告页配置（matchIds 最多 12 个待开始/进行中比赛, title/subtitle, background image/image-2/custom, wallpaperUrl, mtime） | shared/types.ts |
+| Page8Background | 页面8背景类型：image / image-2 / custom（自定义上传壁纸） | shared/types.ts |
 
 
 ## 比赛记录

@@ -3,7 +3,7 @@ import type { QuickFillMatch, Page4SlotState, SlotState } from '../../shared/typ
 export type PanelSide = 'left' | 'right';
 export type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'stats' | 'preview' | 'stage' | 'about';
 
-export type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'page5' | 'page6' | 'page7';
+export type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'page5' | 'page6' | 'page7' | 'page8';
 
 export type JsonInit = RequestInit & {
   json?: unknown;

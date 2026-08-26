@@ -29,6 +29,29 @@ import type { SpriteUsageRow, StatsMetricKey } from '../lib/stats';
 
 const { Text } = Typography;
 
+/** 数据统计明细卡片顶部切换视图 */
+type StatsChartMode = 'rank' | 'attribute' | 'trend';
+
+/** 平滑曲线：Catmull-Rom 转三次贝塞尔（基础折线图的连接方式） */
+function buildSmoothPath(points: Array<{ x: number; y: number }>): string {
+  if (points.length < 2) {
+    return '';
+  }
+  const parts = [`M ${points[0].x},${points[0].y}`];
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const p0 = points[i - 1] ?? points[i];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] ?? p2;
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    parts.push(`C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`);
+  }
+  return parts.join(' ');
+}
+
 function StatsColumnTitle({ text, tip }: { text: string; tip: string }) {
   return (
     <Tooltip
@@ -72,14 +95,8 @@ export function StatsView({
   onSearchChange,
 }: StatsViewProps) {
   const { message } = App.useApp();
-  const [isFullscreenWide, setIsFullscreenWide] = React.useState(false);
-  React.useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1920px)');
-    const update = () => setIsFullscreenWide(mql.matches);
-    update();
-    mql.addEventListener('change', update);
-    return () => mql.removeEventListener('change', update);
-  }, []);
+  // 合并后的明细卡片顶部切换：精灵排行 / 属性分布 / 各赛事阶段趋势
+  const [chartMode, setChartMode] = React.useState<StatsChartMode>('rank');
   const stats = buildUsageStats(matches, spriteMap, {
     player,
     tag,
@@ -96,13 +113,21 @@ export function StatsView({
     match.rightPlayer,
   ]).filter(Boolean)));
   const tagOptions = Array.from(new Set(matches.flatMap((match) => match.tags ?? [])));
-  const trendColors = ['#d38b2d', '#4f8cff', '#c24635'];
-  const topTrendRows = stats.rows.slice(0, 3);
+  const trendColors = ['#d38b2d', '#4f8cff', '#c24635', '#2d7a58', '#8a5fd0'];
+  const topTrendRows = stats.rows.slice(0, 5);
   const tagOrder = stats.tagOrder;
   const topUsageForTrend = Math.max(
     1,
     ...topTrendRows.flatMap((row) => tagOrder.map((tag) => (stats.spriteTagRate.get(row.name)?.get(tag) ?? 0) * 100)),
   );
+
+  // 基础折线图的数据点：x/y 为百分比坐标（相对绘图区），y 留出上下边距避免贴边
+  function trendPoint(rowName: string, tag: string, index: number) {
+    const rate = (stats.spriteTagRate.get(rowName)?.get(tag) ?? 0) * 100;
+    const x = tagOrder.length > 1 ? (index / (tagOrder.length - 1)) * 100 : 0;
+    const y = 100 - (rate / topUsageForTrend) * 100;
+    return { x, y: Math.max(3, Math.min(97, y)) };
+  }
   const trendTickStep = (() => {
     const raw = topUsageForTrend / 4;
     for (const nice of [1, 2, 5, 10, 20, 25, 50, 100]) {
@@ -111,10 +136,21 @@ export function StatsView({
     return Math.ceil(raw / 100) * 100;
   })();
   const trendTicks: number[] = [];
+  let lastTrendTick = 0;
   for (let v = 0; v < topUsageForTrend; v += trendTickStep) {
-    trendTicks.push(Math.round(v * 10) / 10);
+    lastTrendTick = Math.round(v * 10) / 10;
+    trendTicks.push(lastTrendTick);
   }
-  trendTicks.push(topUsageForTrend);
+  // 末尾刻度处理：当最大值与最后一个循环刻度相隔不足半步长时
+  // （如 top=41、step=20 → 40 与 41 在顶部几乎重叠，观感上像多出一个 ytick），
+  // 直接用最大值替换末端刻度；否则正常追加最大值刻度。
+  if (!trendTicks.length) {
+    trendTicks.push(topUsageForTrend);
+  } else if (topUsageForTrend - lastTrendTick > trendTickStep / 2) {
+    trendTicks.push(topUsageForTrend);
+  } else {
+    trendTicks[trendTicks.length - 1] = topUsageForTrend;
+  }
 
   const statsColumns: ColumnsType<SpriteUsageRow> = [
     {
@@ -338,43 +374,58 @@ export function StatsView({
       </Row>
 
       <Row gutter={[18, 18]}>
-        <Col xs={24} xxl={isFullscreenWide ? 18 : 24} order={isFullscreenWide ? 1 : 2}>
+        <Col xs={24}>
           <Card
-            title={metric === 'pickRate' ? '精灵使用率排行' : '精灵上场率排行'}
+            title={
+              chartMode === 'rank'
+                ? (metric === 'pickRate' ? '精灵使用率排行' : '精灵上场率排行')
+                : chartMode === 'attribute'
+                  ? '属性分布'
+                  : (metric === 'pickRate' ? 'TOP5各赛事阶段精灵使用率' : 'TOP5各赛事阶段精灵上场率')
+            }
             extra={(
-              <Space wrap>
-                <Input.Search
-                  placeholder="搜索精灵名称"
-                  value={search}
-                  onChange={(event) => onSearchChange(event.target.value)}
-                  className="stats-search"
-                  allowClear
-                />
-                <Button onClick={exportStatsCsv} disabled={!stats.rows.length}>导出 CSV</Button>
-              </Space>
+              <Segmented
+                value={chartMode}
+                options={[
+                  { value: 'rank', label: metric === 'pickRate' ? '使用率排行' : '上场率排行' },
+                  { value: 'attribute', label: '属性分布' },
+                  { value: 'trend', label: '各赛事阶段' },
+                ]}
+                onChange={(value) => setChartMode(value as StatsChartMode)}
+              />
             )}
           >
-            <Table
-              rowKey={(record) => record.key}
-              columns={statsColumns}
-              dataSource={visibleRows}
-              size="middle"
-              pagination={{ pageSize: 15, showSizeChanger: false, hideOnSinglePage: true }}
-              locale={{ emptyText: '当前筛选范围内暂无登场记录' }}
-            />
-            <Text type="secondary" className="stats-footnote">
-              {metric === 'pickRate'
-                ? '使用率 = 登场只次 ÷ 总登场只次（同局重复携带按只次计）'
-                : '上场率 = 登场场次 ÷ 总场次（同局左右双方携带同名精灵只计 1 次）'}
-              {' · 胜率 = 该精灵所在一侧获胜场次 ÷ 登场场次（镜像局双方同携按 0.5 胜计）'}
-              {' · 阵亡次数 = 已结束小局中 HP=0 的登场只数'}
-            </Text>
-          </Card>
-        </Col>
-        <Col xs={24} xxl={isFullscreenWide ? 6 : 24} order={isFullscreenWide ? 2 : 1}>
-          <Row gutter={[18, 18]}>
-            <Col xs={isFullscreenWide ? 24 : 12}>
-              <Card title="属性分布" extra={<Text type="secondary">按登场只次</Text>} className="stats-equal-card">
+            {chartMode === 'rank' ? (
+              <Space direction="vertical" size={12} className="page-stack" style={{ width: '100%' }}>
+                <Space wrap>
+                  <Input.Search
+                    placeholder="搜索精灵名称"
+                    value={search}
+                    onChange={(event) => onSearchChange(event.target.value)}
+                    className="stats-search"
+                    allowClear
+                  />
+                  <Button onClick={exportStatsCsv} disabled={!stats.rows.length}>导出 CSV</Button>
+                </Space>
+                <Table
+                  rowKey={(record) => record.key}
+                  columns={statsColumns}
+                  dataSource={visibleRows}
+                  size="middle"
+                  pagination={{ pageSize: 15, showSizeChanger: false, hideOnSinglePage: true }}
+                  locale={{ emptyText: '当前筛选范围内暂无登场记录' }}
+                />
+                <Text type="secondary" className="stats-footnote">
+                  {metric === 'pickRate'
+                    ? '使用率 = 登场只次 ÷ 总登场只次（同局重复携带按只次计）'
+                    : '上场率 = 登场场次 ÷ 总场次（同局左右双方携带同名精灵只计 1 次）'}
+                  {' · 胜率 = 该精灵所在一侧获胜场次 ÷ 登场场次（镜像局双方同携按 0.5 胜计）'}
+                  {' · 阵亡次数 = 已结束小局中 HP=0 的登场只数'}
+                </Text>
+              </Space>
+            ) : chartMode === 'attribute' ? (
+              <div className="stats-attribute-panel">
+                <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>按登场只次</Text>
                 {stats.attributeRows.length ? (
                   <div className="stats-attribute-grid">
                     {stats.attributeRows.slice(0, 18).map((row) => {
@@ -408,16 +459,12 @@ export function StatsView({
                     <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />
                   </div>
                 )}
-              </Card>
-            </Col>
-            <Col xs={isFullscreenWide ? 24 : 12}>
-              <Card
-                title={metric === 'pickRate' ? 'Top 3 各赛事阶段使用率' : 'Top 3 各赛事阶段上场率'}
-                extra={<Text type="secondary">按赛事标签</Text>}
-                className="stats-equal-card"
-              >
+              </div>
+            ) : (
+              <div className="stats-trend-panel">
+                <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>按赛事标签</Text>
                 {topTrendRows.length && tagOrder.length > 1 ? (
-                  <Space direction="vertical" size={10} className="page-stack stats-trend-stack">
+                  <Space direction="vertical" size={10} className="page-stack">
                     <div className="stats-trend-chart">
                       <div className="stats-trend-y" aria-hidden>
                         {trendTicks.map((tick) => (
@@ -437,17 +484,33 @@ export function StatsView({
                             return <line key={tick} x1="0" x2="100" y1={y} y2={y} className="stats-trend-grid" />;
                           })}
                           {topTrendRows.map((row, rowIndex) => {
-                            const points = tagOrder.map((tag, index) => {
-                              const rate = (stats.spriteTagRate.get(row.name)?.get(tag) ?? 0) * 100;
-                              const x = tagOrder.length > 1 ? (index / (tagOrder.length - 1)) * 100 : 0;
-                              const y = 100 - (rate / topUsageForTrend) * 100;
-                              return `${x},${Math.max(2, y)}`;
-                            }).join(' ');
+                            const points = tagOrder.map((tag, index) => trendPoint(row.name, tag, index));
                             return (
-                              <polyline key={row.key} points={points} fill="none" stroke={trendColors[rowIndex]} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+                              <path
+                                key={row.key}
+                                d={buildSmoothPath(points)}
+                                fill="none"
+                                stroke={trendColors[rowIndex]}
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                vectorEffect="non-scaling-stroke"
+                              />
                             );
                           })}
                         </svg>
+                        {topTrendRows.flatMap((row, rowIndex) => (
+                          tagOrder.map((tag, index) => {
+                            const point = trendPoint(row.name, tag, index);
+                            return (
+                              <span
+                                key={`${row.key}-${tag}`}
+                                className="stats-trend-point"
+                                style={{ left: `${point.x}%`, top: `${point.y}%`, background: trendColors[rowIndex] }}
+                              />
+                            );
+                          })
+                        ))}
                       </div>
                       <div className="stats-trend-x">
                         {tagOrder.map((tag, index) => {
@@ -481,9 +544,9 @@ export function StatsView({
                     <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="需要至少两个赛事阶段的登场数据" />
                   </div>
                 )}
-              </Card>
-            </Col>
-          </Row>
+              </div>
+            )}
+          </Card>
         </Col>
       </Row>
     </Space>

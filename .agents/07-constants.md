@@ -22,6 +22,8 @@
 | DEFAULT_PAGE3_RANK_VISIBLE | false | 页面3排位排名图标默认隐藏 | shared/constants.ts |
 | RANK_TEXT_MAX_LENGTH | 10 | 排位排名存储最大位数（超过 10000 显示 10000+） | shared/constants.ts |
 
+> 页面8（比赛预告）不在 shared/constants.ts 中，也不属于直播推流可选画面（SUPPORTED_STAGE_PAGES 不包含 page8）；其最多选 12 场的上限在 electron/services/page8-service.ts 的 PAGE8_MAX_MATCHES，前台常量 PAGE8_MAX_MATCHES 位于 src/admin-antd/App.tsx。
+
 ## 悬浮窗尺寸（electron/float-window.ts）
 
 | 常量名 | 值 | 说明 |

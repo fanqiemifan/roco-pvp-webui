@@ -1,7 +1,10 @@
 {
   "name": "pvp-webui-for-roco",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "private": true,
+  "description": "洛克王国 PVP 比赛推流控制台（Electron + React/Ant Design，免费开源）",
+  "author": "463218006@qq.com",
+  "license": "MIT",
   "type": "module",
   "main": "dist-electron/electron/main.js",
   "scripts": {

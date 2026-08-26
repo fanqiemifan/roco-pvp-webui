@@ -10,11 +10,12 @@
 | /img/ | resources/sprites-img/ | 精灵图片 |
 | /img-2/ | resources/sprites-alt/ | 备用精灵图片 |
 | /json/ | resources/data/ | JSON 数据文件 |
-| /runtime/ | runtime/cache/ | 运行时生成的图片（头像、截图） |
+| /runtime/ | runtime/cache/ | 运行时生成的图片（头像、截图、page8 自定义壁纸 page8-wallpaper.jpg） |
 | /image/ | src/assets/ui/ | UI 图片 |
 | /font/ | src/assets/fonts/ | 字体文件 |
 | /api/avatar/left-avatar.png | runtime/cache/ | 左侧头像图片 |
 | /api/avatar/right-avatar.png | runtime/cache/ | 右侧头像图片 |
+| /api/page8/wallpaper | runtime/cache/page8-wallpaper.jpg | page8 自定义壁纸上传接口 |
 
 # 页面路由索引
 
@@ -28,6 +29,7 @@
 | /roco-pvp-page5.html | roco-pvp-page5.html | 登场/胜率排行页 |
 | /roco-pvp-page6.html | roco-pvp-page6.html | 比赛结果展示页 |
 | /roco-pvp-page7.html | roco-pvp-page7.html | 等待页（公开免鉴权） |
+| /roco-pvp-page8.html | roco-pvp-page8.html | 比赛预告展示页（公开免鉴权，不进直播推流可选画面，仅在页面预览展示） |
 | /float.html | float.html | 桌面阵容悬浮窗 |
 | /float-menu.html | float-menu.html | 更换精灵菜单 |
 | /login.html | login-antd 构建产物 | 登录页面 |
