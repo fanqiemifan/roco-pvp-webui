@@ -86,6 +86,10 @@ function collectUsageStats(
     }
 
     match.games.forEach((game) => {
+      // 数据统计只统计已登记胜负的小局：未结束（无胜者）的局整局不计
+      if (game.status !== 'completed' || (game.winner !== 'left' && game.winner !== 'right')) {
+        return;
+      }
       const sides: Array<{ lineup: string[]; side: 'left' | 'right' }> = [
         { lineup: game.leftLineup, side: 'left' },
         { lineup: game.rightLineup, side: 'right' },

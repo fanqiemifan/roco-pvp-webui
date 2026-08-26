@@ -76,6 +76,10 @@ export function getSpriteRanking(
 
   for (const match of matches) {
     for (const game of match.games) {
+      // 排行只统计已登记胜负的小局：未结束（无胜者）的局整局不计
+      if (game.status !== 'completed' || (game.winner !== 'left' && game.winner !== 'right')) {
+        continue;
+      }
       const sides: Array<{ lineup: string[]; side: 'left' | 'right' }> = [
         { lineup: game.leftLineup, side: 'left' },
         { lineup: game.rightLineup, side: 'right' },

@@ -86,7 +86,7 @@ body {
 .page5-header-item {
     position: absolute;
     top: 19px;
-    width: 118px;
+    width: 138px;
     height: 83px;
     font-family: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
     font-size: 64px;
@@ -95,11 +95,11 @@ body {
 }
 
 .page5-header-count {
-    left: 402px;
+    left: 390px;
 }
 
 .page5-header-wins {
-    left: 602px;
+    left: 582px;
 }
 
 /* 行：最多5条，812×136 */
@@ -114,13 +114,12 @@ body {
     background: 
         linear-gradient(270deg, rgba(0, 47, 255, 0.2), rgba(0, 47, 255, 0.5)),
         linear-gradient(90deg, rgb(126 126 126 / 0.35) 0%, rgb(228 228 228 / 0.35) 100%) 0 100% / 100% 1px no-repeat;
-    border-left: 12px solid #002fff;
 }
 
 /* 名次 */
 .page5-rank {
     position: absolute;
-    left: 48px;
+    left: 60px;
     top: 26px;
     width: 56px;
     height: 82px;
@@ -133,7 +132,7 @@ body {
 /* 精灵卡片：复用 page3 的 petsdiv（sprite-pet-card）128×128 */
 .page5-sprite {
     position: absolute;
-    left: 118px;
+    left: 130px;
     top: 4px;
     width: 128px;
     height: 128px;
@@ -156,9 +155,9 @@ body {
 }
 
 .page5-data-count {
-    left: 381px;
+    left: 392px;
 }
 
 .page5-data-wins {
-    left: 577px;
+    left: 592px;
 }
