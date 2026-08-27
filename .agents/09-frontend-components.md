@@ -12,14 +12,14 @@
 ### 视图页面（ViewKey）
 - roster - 阵容编辑（RosterPanelEditor：左右面板编辑、精灵搜索、快速填充；顶部「当前比赛」表单含左右选手名+排位排名（仅数字，PATCH 保存比赛信息时一并提交））
 - live - 实时控制（比赛开始、胜负记录、撤销/恢复）
-- history - 比赛历史（列表、删除、批量删除、撤销删除；「推送」勾选列推送比赛结果到页面6、「预告」勾选列推送比赛预告到页面8，可勾选待开始与进行中的对局）
+- history - 比赛历史（列表、删除、批量删除、撤销删除；「推送」勾选列推送比赛结果到页面6、「预告」勾选列推送比赛预告到页面8、「对局」勾选列配合「推送对局推送」按钮推送对局到页面7，可勾选待开始与进行中的对局）
 - stats - 数据统计（StatsView：使用率/上场率排行、属性分布、标签趋势；1920px 断点布局）
-- stage - 直播推流（推流页面切换、过渡效果、page5 口径；「推流页面3精灵图片」卡片；「推流页面3排位图标」开关控制页面3比分栏排位图标显隐；底部「显示设置」卡片：页面2赛事标题/阵容展示、推流页5标题、比分字号）
-- preview - 页面预览（推流页面1-8 切换；页面8 附带「比赛预告设置」：主标题/副标题、壁纸图片1/图片2/自定义上传）
+- stage - 直播推流（推流页面切换、过渡效果、page5 口径；「推流页面3精灵图片」卡片；「推流页面3排位图标」开关；「页面2设置」卡片（赛事标题/阵容展示）；「对局信息文本输入」卡片（page7 主标题/温馨提示，对局勾选在比赛历史）；「团队积分榜设置（推流页面9）」卡片（主标题 + 4 行战队名称与 R1/R2/R3 积分，留空显示 `-`，排名与总积分自动计算）；底部「显示设置」卡片：推流页5标题、比分字号）
+- preview - 页面预览（推流页面1-9 切换；页面8 附带「比赛预告设置」：主标题/副标题、壁纸图片1/图片2/自定义上传）
 - about - 关于项目（更新日志）
 
 ### 核心状态（App.tsx）
-- leftPanel / rightPanel、page4、scoreboard、matches、avatars、stage
+- leftPanel / rightPanel、page4、scoreboard、matches、avatars、stage、page7 / page9（配置状态与对应草稿/保存中标记）
 - stats 相关：statsRange / statsMetric / statsPlayer / statsTag / statsSearch
 - socket - Socket.IO 连接实例
 
@@ -54,6 +54,9 @@
 - roco-pvp-page3.html + page3-display.js — 头像比分阵容；比分栏中央两侧排位排名图标（stage.page3RankVisible 控制显隐，开启但未输入排名时仅显示图标；排名超过 10000 显示 10000+，txt 位置按位数查表）
 - roco-pvp-page4.html + page4-display.js — 仅显阵容
 - roco-pvp-page5.html + page5-display.js — 登场/胜率排行
+- roco-pvp-page6.html + page6-display.js — 比赛结果页（已结束比赛的结果展示）
+- roco-pvp-page7.html + page7-display.js — 对局推送页（比赛历史勾选已结束比赛推送；多场比赛逐行滚动展示选手对局信息；主标题/温馨提示在「直播推流」设置，留空用默认值）
 - roco-pvp-page8.html + page8-display.js — 比赛预告页（公开免鉴权，复用 page6 布局；选手对局信息卡 w860×h88 两列网格，最多 12 场，展示 vs + 双方选手名 + 排位排名图标（复用 page3 rank 样式）；不进直播推流可选画面，仅在页面预览展示）
+- roco-pvp-page9.html + page9-display.js — 团队积分榜页（奶白卡片 + 金黄描边字 + 底部波浪装饰图 page9-back-1.png；标题后台可改留空用「团队积分榜」；战队名称与 R1/R2/R3 积分后台录入，留空显示「-」；按三轮总分降序自动排名与总积分，同分保持录入顺序；名称与积分全空的行不展示；行高/字号按战队数量自适应）
 - float.html + float.js — 桌面阵容悬浮窗（透明置顶小窗）
 - float-menu.html + float-menu.js — 更换精灵菜单（形态选择 / 全新精灵选择器）

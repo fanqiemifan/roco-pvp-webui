@@ -152,6 +152,7 @@ export interface AvatarCollectionState {
  * - page5: 推流页面5（使用率/胜率排行）
  * - page6: 推流页面6（比赛结果）
  * - page7: 推流页面7（对局推送）
+ * - page9: 推流页面9（团队积分榜）
  * - blank: 黑场（不加载任何画面）
  */
 export type StagePageKey =
@@ -161,6 +162,7 @@ export type StagePageKey =
   | 'page5'
   | 'page6'
   | 'page7'
+  | 'page9'
   | 'blank';
 
 export type StageTransitionType = 'none' | 'blinds' | 'zoom';
@@ -233,6 +235,30 @@ export interface Page8State {
 }
 
 /**
+ * 团队积分榜（page9）单支战队录入项：
+ * - name：战队名称（空字符串 = 未输入）
+ * - r1 / r2 / r3：三轮积分（仅数字字符串，空字符串 = 未输入，页面显示「-」）
+ * 排名与总积分由页面按总积分降序自动计算，不落盘。
+ */
+export interface Page9TeamEntry {
+  name: string;
+  r1: string;
+  r2: string;
+  r3: string;
+}
+
+/**
+ * 团队积分榜（page9）状态：标题可在后台修改，战队积分在后台逐行输入。
+ */
+export interface Page9State {
+  /** 主标题内容（后台输入，空字符串则使用默认「团队积分榜」） */
+  title: string;
+  /** 战队积分列表（顺序即录入顺序，最多 PAGE9_MAX_TEAMS 支） */
+  teams: Page9TeamEntry[];
+  mtime: number | null;
+}
+
+/**
  * 下一局比赛（page3 下场对局）配置：
  * - matchId：所选待开始比赛
  * - visible：当前是否正在显示
@@ -267,6 +293,7 @@ export interface SnapshotPayload {
   page6: Page6State;
   page7: Page7State;
   page8: Page8State;
+  page9: Page9State;
   nextgame: NextGamePayload;
 }
 

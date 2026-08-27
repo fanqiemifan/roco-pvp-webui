@@ -1,0 +1,191 @@
+/* 推流页面9：团队积分榜（奶白卡片 + 金黄点缀 + 底部波浪装饰图） */
+/* YouSheBiaoTiHei 不打包字体文件，改用系统安装字体，未安装时回退 MiSans Heavy */
+@font-face {
+    font-family: "YouSheBiaoTiHei";
+    src: local("YouSheBiaoTiHei");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MiSans-Heavy";
+    src: url("/assets/fonts/MiSans-Heavy.otf") format("opentype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MiSans-Regular";
+    src: url("/assets/fonts/MiSans-Regular.otf") format("opentype");
+    font-display: swap;
+}
+
+:root {
+    --page9-bg: #efece2;          /* 页面米灰底色 */
+    --page9-card-bg: #fdfbf4;     /* 卡片外框奶白 */
+    --page9-card-footer: #f0a63f; /* 卡片底部橙色条 */
+    --page9-panel-bg: #f1ece0;    /* 表格区内衬米色 */
+    --page9-header-bg: #2d2a26;   /* 顶部深色标题条 */
+    --page9-gold: #F5C361;        /* 金黄字（排名/总积分/表头） */
+    --page9-gold-stroke: rgba(111, 83, 32, 0.9); /* 金黄字描边 */
+    --page9-ink: #191817;         /* 黑色字（战队/分数） */
+    --page9-row-bg-1: #FDE7C1;    /* 奇数行底色 */
+    --page9-row-bg-2: #fae6b6;    /* 偶数行底色 */
+    /* 行高/行字号由 page9-display.js 按战队数量计算后写入 */
+    --page9-row-h: 150px;
+    --page9-row-fs: 54px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+.page9-screen {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: var(--page9-bg);
+    font-family: "YouSheBiaoTiHei", "MiSans-Heavy", "Microsoft YaHei", sans-serif;
+}
+
+/* ========== 底部装饰图（1920x220） ========== */
+.page9-back {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 1;
+    width: 1920px;
+    height: 220px;
+    pointer-events: none;
+}
+
+.page9-back img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
+
+/* ========== 积分榜卡片 ========== */
+.page9-card {
+    position: absolute;
+    left: 150px;
+    top: 170px;
+    z-index: 2;
+    width: 1620px;
+    display: flex;
+    flex-direction: column;
+    background: #FCF5E9;
+    border-radius: 28px;
+}
+
+/* 表格区内衬（含深色标题条）：无阴影，四周留奶白边 */
+.page9-inner {
+    margin: 26px 26px 22px;
+    background: var(--page9-panel-bg);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* 顶部深色标题条：标题后台可改，留空显示默认「团队积分榜」 */
+.page9-header {
+    height: 96px;
+    background: var(--page9-header-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page9-header span {
+    color: #ffffff;
+    font-size: 54px;
+    line-height: 1;
+    letter-spacing: 6px;
+    white-space: nowrap;
+}
+
+/* ========== 表格 ========== */
+/* 六列：排名 / 战队 / R1 / R2 / R3 / 总积分 */
+.page9-row {
+    display: grid;
+    grid-template-columns: 15% 22% 14% 14% 14% 21%;
+    align-items: center;
+}
+
+.page9-row > span {
+    text-align: center;
+    line-height: 1;
+}
+
+/* 表头（金黄描边字，无阴影） */
+.page9-head {
+    height: 134px;
+}
+
+.page9-head > span {
+    font-size: 64px;
+    color: var(--page9-gold);
+    -webkit-text-stroke: 2px var(--page9-gold-stroke);
+}
+
+/* 数据行：行高/字号由 JS 按战队数量自适应 */
+.page9-item {
+    height: var(--page9-row-h);
+}
+
+.page9-item:nth-child(odd) {
+    background: var(--page9-row-bg-1);
+}
+
+.page9-item:nth-child(even) {
+    background: var(--page9-row-bg-2);
+}
+
+/* 行间隔细缝（露出内衬底色） */
+.page9-gap {
+    height: 20px;
+    background: var(--page9-panel-bg);
+}
+
+/* 行尾留白（最后一行下方的内衬空隙） */
+.page9-tail {
+    height: 44px;
+    background: var(--page9-panel-bg);
+}
+
+/* 金黄描边字：排名 / 总积分 */
+.page9-gold {
+    font-size: var(--page9-row-fs);
+    color: var(--page9-gold);
+    -webkit-text-stroke: 2px var(--page9-gold-stroke);
+}
+
+/* 黑色字：战队 / 各轮分数 */
+.page9-ink {
+    font-size: calc(var(--page9-row-fs) + 2px);
+    color: var(--page9-ink);
+}
+
+.page9-ink.page9-team {
+    letter-spacing: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 12px;
+}
+
+/* ========== 卡片底部橙色条 ========== */
+.page9-footer {
+    height: 58px;
+    background: var(--page9-card-footer);
+    border-radius: 0 0 28px 28px;
+}

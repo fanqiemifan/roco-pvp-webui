@@ -28,7 +28,9 @@
 | /page4.html、/roco-pvp-page4.html | roco-pvp-page4.html | 仅显阵容页 |
 | /roco-pvp-page5.html | roco-pvp-page5.html | 登场/胜率排行页 |
 | /roco-pvp-page6.html | roco-pvp-page6.html | 比赛结果展示页 |
+| /roco-pvp-page7.html | roco-pvp-page7.html | 对局推送展示页（直播推流可选画面） |
 | /roco-pvp-page8.html | roco-pvp-page8.html | 比赛预告展示页（公开免鉴权，不进直播推流可选画面，仅在页面预览展示） |
+| /roco-pvp-page9.html | roco-pvp-page9.html | 团队积分榜展示页（直播推流可选画面） |
 | /float.html | float.html | 桌面阵容悬浮窗 |
 | /float-menu.html | float-menu.html | 更换精灵菜单 |
 | /login.html | login-antd 构建产物 | 登录页面 |

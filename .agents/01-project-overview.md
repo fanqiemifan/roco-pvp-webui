@@ -60,6 +60,10 @@ pvp-webUI-for-roco/
 | electron/services/config-service.ts | 运行时配置（端口）管理 |
 | electron/services/path-service.ts | 文件路径管理和路径工厂 |
 | electron/services/page4-service.ts | 仅显阵容页（page4）状态管理 |
+| electron/services/page6-service.ts | 比赛结果页（page6）状态管理 |
+| electron/services/page7-service.ts | 对局推送页（page7）状态管理 |
+| electron/services/page8-service.ts | 比赛预告页（page8）状态管理 |
+| electron/services/page9-service.ts | 团队积分榜页（page9）状态管理 |
 | electron/services/stage-service.ts | 直播推流载体配置管理 |
 | electron/services/stats-service.ts | 精灵精灵登场/胜率排行统计（/api/stats/ranking） |
 
@@ -95,7 +99,9 @@ pvp-webUI-for-roco/
 | page4-display.js | 仅显阵容页（page4）脚本 |
 | page5-display.js | 登场/胜率排行页（page5）脚本 |
 | page6-display.js | 比赛结果页（page6）脚本 |
+| page7-display.js | 对局推送页（page7）脚本（多场比赛逐行滚动展示） |
 | page8-display.js | 比赛预告页（page8）脚本 |
+| page9-display.js | 团队积分榜页（page9）脚本（排名与总积分自动计算） |
 | stage-carrier.js | 推流载体页（index.html）脚本，按 stage 配置加载对应页面 |
 | float.js | 桌面阵容悬浮窗脚本 |
 | float-menu.js | 更换精灵菜单脚本 |
@@ -111,7 +117,9 @@ pvp-webUI-for-roco/
 | roco-pvp-page4.html | 仅显阵容页 |
 | roco-pvp-page5.html | 登场/胜率排行页 |
 | roco-pvp-page6.html | 比赛结果展示页 |
+| roco-pvp-page7.html | 对局推送展示页（直播推流可选画面） |
 | roco-pvp-page8.html | 比赛预告展示页（公开免鉴权，不进直播推流可选画面） |
+| roco-pvp-page9.html | 团队积分榜展示页（直播推流可选画面） |
 | float.html | 桌面阵容悬浮窗 |
 | float-menu.html | 更换精灵菜单 |
 | admin-antd.html | 管理后台入口（Vite 构建产物，位于 dist/） |

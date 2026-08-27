@@ -55,6 +55,7 @@ import type {
   Page7State,
   Page8Background,
   Page8State,
+  Page9State,
   PanelState,
   ScoreboardState,
   Page6Background,
@@ -250,6 +251,8 @@ const HISTORY_STATUS_RANK: Record<MatchRecord['status'], number> = {
 
 const PAGE6_MAX_MATCHES = 8;
 const PAGE8_MAX_MATCHES = 12;
+/** 团队积分榜（page9）后台可录入的战队行数 */
+const PAGE9_TEAM_COUNT = 4;
 
 function HistorySortHeader({ text, sortKey, activeOrder, onSort }: {
   text: string;
@@ -367,6 +370,13 @@ function Dashboard() {
   const [page8Saving, setPage8Saving] = useState(false);
   const [page8WallpaperUploading, setPage8WallpaperUploading] = useState(false);
   const [page8SettingsNotice, setPage8SettingsNotice] = useState<NoticeState>(null);
+  const [page9, setPage9] = useState<Page9State | null>(null);
+  const [page9TitleDraft, setPage9TitleDraft] = useState('');
+  const [page9TeamsDraft, setPage9TeamsDraft] = useState<Array<{ name: string; r1: string; r2: string; r3: string }>>(
+    () => Array.from({ length: PAGE9_TEAM_COUNT }, () => ({ name: '', r1: '', r2: '', r3: '' })),
+  );
+  const [page9Saving, setPage9Saving] = useState(false);
+  const [page9SettingsNotice, setPage9SettingsNotice] = useState<NoticeState>(null);
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
   const [page4Notice, setPage4Notice] = useState<NoticeState>(null);
   const [historyNotice, setHistoryNotice] = useState<NoticeState>(null);
@@ -496,6 +506,7 @@ function Dashboard() {
     page6?: Page6State;
     page7?: Page7State;
     page8?: Page8State;
+    page9?: Page9State;
     nextgame?: NextGamePayload;
   }) {
     startTransition(() => {
@@ -544,6 +555,9 @@ function Dashboard() {
       if (payload.page8) {
         setPage8(payload.page8);
       }
+      if (payload.page9) {
+        setPage9(payload.page9);
+      }
     });
   }
 
@@ -552,7 +566,7 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage7, nextPage8, nextNextgame] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage7, nextPage8, nextPage9, nextNextgame] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
@@ -564,6 +578,7 @@ function Dashboard() {
         requestJson<{ state: Page6State }>('/api/page6'),
         requestJson<{ state: Page7State }>('/api/page7'),
         requestJson<{ state: Page8State }>('/api/page8'),
+        requestJson<{ state: Page9State }>('/api/page9'),
         requestJson<NextGamePayload>('/api/nextgame'),
       ]);
 
@@ -584,6 +599,7 @@ function Dashboard() {
         setPage7Draft(nextPage7.state.matchIds);
         setPage8(nextPage8.state);
         setPage8Draft(nextPage8.state.matchIds);
+        setPage9(nextPage9.state);
         setNextgame(nextNextgame.state);
         setNextgameMatch(nextNextgame.match ?? null);
         syncPanelFromApi('left', nextPanels.images[0]);
@@ -698,6 +714,12 @@ function Dashboard() {
     socket.on(SOCKET_EVENTS.page8Update, (payload) => {
       if (payload?.state) {
         applyServerState({ page8: payload.state });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.page9Update, (payload) => {
+      if (payload?.state) {
+        applyServerState({ page9: payload.state });
       }
     });
 
@@ -1570,6 +1592,23 @@ function Dashboard() {
     setPage7NoticeDraft(page7?.notice ?? '');
   }, [page7?.title, page7?.notice]);
 
+  useEffect(() => {
+    setPage9TitleDraft(page9?.title ?? '');
+    // 以服务端数据回填草稿行，不足 PAGE9_TEAM_COUNT 行则补空行
+    const serverTeams = Array.isArray(page9?.teams) ? page9.teams : [];
+    setPage9TeamsDraft(
+      Array.from({ length: PAGE9_TEAM_COUNT }, (_, index) => {
+        const team = serverTeams[index];
+        return {
+          name: team?.name ?? '',
+          r1: team?.r1 ?? '',
+          r2: team?.r2 ?? '',
+          r3: team?.r3 ?? '',
+        };
+      }),
+    );
+  }, [page9?.title, page9?.teams]);
+
   async function saveLiveStreamSettings() {
     try {
       setPage5Page6Saving(true);
@@ -1648,6 +1687,36 @@ function Dashboard() {
       }
       return prev.filter((id) => id !== matchId);
     });
+  }
+
+  // 更新团队积分榜某一行的某个字段（战队名称 / R1 / R2 / R3；积分仅允许数字）
+  function updatePage9TeamDraft(rowIndex: number, field: 'name' | 'r1' | 'r2' | 'r3', value: string) {
+    const nextValue = field === 'name' ? value : value.replace(/\D/g, '');
+    setPage9TeamsDraft((prev) => prev.map((team, index) => (
+      index === rowIndex ? { ...team, [field]: nextValue } : team
+    )));
+  }
+
+  async function savePage9Settings() {
+    setPage9Saving(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page9State }>('/api/page9', {
+        method: 'POST',
+        json: {
+          title: page9TitleDraft,
+          teams: page9TeamsDraft,
+        },
+      });
+      applyServerState({ page9: data.state });
+      setPage9SettingsNotice({ tone: 'success', text: '团队积分榜设置已保存，预览已更新' });
+      message.success('团队积分榜设置已保存');
+    } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
+      message.error(text);
+      setPage9SettingsNotice({ tone: 'error', text });
+    } finally {
+      setPage9Saving(false);
+    }
   }
 
   async function pushPage7Matches() {
@@ -3264,7 +3333,7 @@ function Dashboard() {
                     <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
-                          <Text strong>推流页面5 统计口径</Text>
+                          <Text strong>推流页面5-精灵出场胜率-统计口径</Text>
                           <div>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>页面5标题：</Text>
                             <Input
@@ -3307,7 +3376,7 @@ function Dashboard() {
                     <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
-                          <Text strong>推流页面6副标题与背景</Text>
+                          <Text strong>推流页面6-比赛结果标题与背景切换</Text>
                           <div>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>推流页面6副标题：</Text>
                             <Input
@@ -3336,7 +3405,7 @@ function Dashboard() {
                     <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
-                          <Text strong>下场对局（推流页面3）</Text>
+                          <Text strong>下场对局</Text>
                           <div>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>待开始比赛：</Text>
                             <Select
@@ -3446,6 +3515,9 @@ function Dashboard() {
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
                           <Text strong>推流页面3精灵图片</Text>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            切换显示精灵完整立绘或者头像缩略图
+                          </Paragraph>
                           <Segmented
                             block
                             value={stage?.page3SpriteSource ?? 'sprite'}
@@ -3481,15 +3553,15 @@ function Dashboard() {
                   </Row>
                   <Row gutter={[16, 16]} className="stage-config-cards">
                     <Col xs={24} md={12}>
-                      <Card size="small" className="subtle-card stage-settings-card" title="页面2设置">
+                      <Card size="small" className="subtle-card stage-settings-card" title="推流页面2设置">
                         <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
                           <Row gutter={[16, 16]}>
-                            <Col xs={24} md={12} xl={8}>
+                            <Col xs={24} md={12}>
                               <Form.Item label="页面2赛事标题" name="eventTitle">
                                 <Input maxLength={40} />
                               </Form.Item>
                             </Col>
-                            <Col xs={24} md={12} xl={8}>
+                            <Col xs={24} md={12}>
                               <Form.Item label="页面2阵容展示" name="page2LineupDisplayMode">
                                 <Select
                                   options={[
@@ -3505,34 +3577,120 @@ function Dashboard() {
                       </Card>
                     </Col>
                     <Col xs={24} md={12}>
-                      <Card size="small" className="subtle-card stage-settings-card" title="对局推送设置（推流页面7）">
+                      <Card size="small" className="subtle-card stage-settings-card" title="推流页面7标题文本设置">
                         <Space direction="vertical" size={12} className="page-stack" style={{ width: '100%' }}>
                           <Paragraph type="secondary" style={{ marginBottom: 0 }}>
                             对局勾选与推送在「比赛历史」中完成：勾选「对局」列后点击「推送对局推送」。
                           </Paragraph>
                           <Row gutter={[16, 16]}>
                             <Col xs={24} md={12}>
-                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>主标题：</Text>
-                              <Input
-                                maxLength={40}
-                                placeholder="例如：S2洛克联赛，留空显示默认「对局推送」"
-                                value={page7TitleDraft}
-                                onChange={(event) => setPage7TitleDraft(event.target.value)}
-                              />
+                              <Form.Item label="主标题">
+                                <Input
+                                  maxLength={40}
+                                  placeholder="例如：S2洛克联赛，留空显示默认「对局推送」"
+                                  value={page7TitleDraft}
+                                  onChange={(event) => setPage7TitleDraft(event.target.value)}
+                                />
+                              </Form.Item>
                             </Col>
                             <Col xs={24} md={12}>
-                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>温馨提示：</Text>
-                              <Input
-                                maxLength={60}
-                                placeholder="页面底部提示文字，留空使用默认内容"
-                                value={page7NoticeDraft}
-                                onChange={(event) => setPage7NoticeDraft(event.target.value)}
-                              />
+                              <Form.Item label="温馨提示">
+                                <Input
+                                  maxLength={60}
+                                  placeholder="页面底部提示文字，留空使用默认内容"
+                                  value={page7NoticeDraft}
+                                  onChange={(event) => setPage7NoticeDraft(event.target.value)}
+                                />
+                              </Form.Item>
                             </Col>
                           </Row>
                           <Button type="primary" loading={page7Saving} onClick={() => void savePage7Settings()}>
                             保存对局推送设置
                           </Button>
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
+                  <Row gutter={[16, 16]} className="stage-config-cards">
+                    <Col xs={24}>
+                      <Card
+                        size="small"
+                        className="subtle-card stage-settings-card"
+                        title="团队积分榜设置（推流页面9）"
+                        extra={(
+                          <Button type="primary" loading={page9Saving} onClick={() => void savePage9Settings()}>
+                            保存页面9设置
+                          </Button>
+                        )}
+                      >
+                        <Space direction="vertical" size={12} className="page-stack" style={{ width: '100%' }}>
+                          {page9SettingsNotice ? (
+                            <Alert
+                              showIcon
+                              closable
+                              type={page9SettingsNotice.tone}
+                              message={page9SettingsNotice.text}
+                              onClose={() => setPage9SettingsNotice(null)}
+                            />
+                          ) : null}
+                          <Row gutter={[16, 16]}>
+                            <Col xs={24} md={8}>
+                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>主标题：</Text>
+                              <Input
+                                maxLength={40}
+                                placeholder="留空显示默认「团队积分榜」"
+                                value={page9TitleDraft}
+                                onChange={(event) => setPage9TitleDraft(event.target.value)}
+                              />
+                            </Col>
+                          </Row>
+                          <div>
+                            <Row gutter={[16, 8]}>
+                              <Col xs={24} md={10}><Text type="secondary">战队名称</Text></Col>
+                              <Col xs={8} md={4}><Text type="secondary">R1 积分</Text></Col>
+                              <Col xs={8} md={4}><Text type="secondary">R2 积分</Text></Col>
+                              <Col xs={8} md={4}><Text type="secondary">R3 积分</Text></Col>
+                            </Row>
+                            {page9TeamsDraft.map((team, index) => (
+                              <Row key={index} gutter={[16, 8]} style={{ marginTop: 8 }}>
+                                <Col xs={24} md={10}>
+                                  <Input
+                                    maxLength={40}
+                                    placeholder={`战队 ${index + 1} 名称，可留空`}
+                                    value={team.name}
+                                    onChange={(event) => updatePage9TeamDraft(index, 'name', event.target.value)}
+                                  />
+                                </Col>
+                                <Col xs={8} md={4}>
+                                  <Input
+                                    maxLength={3}
+                                    placeholder="-"
+                                    value={team.r1}
+                                    onChange={(event) => updatePage9TeamDraft(index, 'r1', event.target.value)}
+                                  />
+                                </Col>
+                                <Col xs={8} md={4}>
+                                  <Input
+                                    maxLength={3}
+                                    placeholder="-"
+                                    value={team.r2}
+                                    onChange={(event) => updatePage9TeamDraft(index, 'r2', event.target.value)}
+                                  />
+                                </Col>
+                                <Col xs={8} md={4}>
+                                  <Input
+                                    maxLength={3}
+                                    placeholder="-"
+                                    value={team.r3}
+                                    onChange={(event) => updatePage9TeamDraft(index, 'r3', event.target.value)}
+                                  />
+                                </Col>
+                              </Row>
+                            ))}
+                          </div>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            积分留空显示「-」；排名与总积分按三轮积分之和自动降序计算（同分保持录入顺序）；名称与积分全空的行不展示；最多 {PAGE9_TEAM_COUNT} 支战队。
+                          </Paragraph>
                         </Space>
                       </Card>
                     </Col>
@@ -3562,6 +3720,7 @@ function Dashboard() {
                       { value: 'page6', label: '推流页面6' },
                       { value: 'page7', label: '推流页面7' },
                       { value: 'page8', label: '推流页面8' },
+                      { value: 'page9', label: '推流页面9' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}
                   />
