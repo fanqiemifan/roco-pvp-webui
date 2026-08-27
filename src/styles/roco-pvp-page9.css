@@ -115,9 +115,10 @@ body {
 
 /* ========== 表格 ========== */
 /* 六列：排名 / 战队 / R1 / R2 / R3 / 总积分 */
+/* 战队列加宽到 30%，容纳更长的战队名 */
 .page9-row {
     display: grid;
-    grid-template-columns: 15% 22% 14% 14% 14% 21%;
+    grid-template-columns: 14% 30% 12% 12% 12% 20%;
     align-items: center;
 }
 

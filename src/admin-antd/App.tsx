@@ -291,7 +291,7 @@ function Dashboard() {
   const [matchStore, setMatchStore] = useState<MatchStoreState>({
     activeMatchId: null,
     matches: [],
-    history: {
+    undo: {
       canUndo: false,
       canRedo: false,
       canUndoDelete: false,
@@ -496,7 +496,7 @@ function Dashboard() {
 
   function applyServerState(payload: {
     scoreboard?: ScoreboardState;
-    matches?: MatchStoreState;
+    store?: MatchStoreState;
     avatars?: AvatarCollectionState;
     panels?: PanelState[];
     panel?: PanelState;
@@ -513,8 +513,8 @@ function Dashboard() {
       if (payload.scoreboard) {
         setScoreboard(payload.scoreboard);
       }
-      if (payload.matches) {
-        setMatchStore(payload.matches);
+      if (payload.store) {
+        setMatchStore(payload.store);
       }
       if (payload.avatars) {
         setAvatars(payload.avatars);
@@ -571,7 +571,7 @@ function Dashboard() {
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
         requestJson<AvatarCollectionState>('/api/avatars'),
-        requestJson<{ images: [PanelState, PanelState] }>('/api/images'),
+        requestJson<{ panels: [PanelState, PanelState] }>('/api/panels'),
         requestJson<Page4State>('/api/page4'),
         requestJson<{ sprites: SpriteRecord[] }>('/api/sprites'),
         requestJson<StageConfig>('/api/stage'),
@@ -602,8 +602,8 @@ function Dashboard() {
         setPage9(nextPage9.state);
         setNextgame(nextNextgame.state);
         setNextgameMatch(nextNextgame.match ?? null);
-        syncPanelFromApi('left', nextPanels.images[0]);
-        syncPanelFromApi('right', nextPanels.images[1]);
+        syncPanelFromApi('left', nextPanels.panels[0]);
+        syncPanelFromApi('right', nextPanels.panels[1]);
         syncPage4PanelFromApi('left', nextPage4.panels[0]);
         syncPage4PanelFromApi('right', nextPage4.panels[1]);
       });
@@ -682,8 +682,8 @@ function Dashboard() {
     });
 
     socket.on(SOCKET_EVENTS.matchesUpdate, (payload) => {
-      if (payload?.matches) {
-        applyServerState({ matches: payload.matches });
+      if (payload?.store) {
+        applyServerState({ store: payload.store });
       }
     });
 
@@ -735,7 +735,8 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (!panels.left.autoSaveEnabled || !panels.left.dirty) {
+    // saving 期间跳过调度，避免保存触发的 saving/dirty 状态变化导致重复 POST
+    if (!panels.left.autoSaveEnabled || !panels.left.dirty || panels.left.saving) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -745,7 +746,7 @@ function Dashboard() {
   }, [panels.left]);
 
   useEffect(() => {
-    if (!panels.right.autoSaveEnabled || !panels.right.dirty) {
+    if (!panels.right.autoSaveEnabled || !panels.right.dirty || panels.right.saving) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -755,7 +756,7 @@ function Dashboard() {
   }, [panels.right]);
 
   useEffect(() => {
-    if (!page4Panels.left.autoSaveEnabled || !page4Panels.left.dirty) {
+    if (!page4Panels.left.autoSaveEnabled || !page4Panels.left.dirty || page4Panels.left.saving) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -765,7 +766,7 @@ function Dashboard() {
   }, [page4Panels.left]);
 
   useEffect(() => {
-    if (!page4Panels.right.autoSaveEnabled || !page4Panels.right.dirty) {
+    if (!page4Panels.right.autoSaveEnabled || !page4Panels.right.dirty || page4Panels.right.saving) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -787,7 +788,7 @@ function Dashboard() {
     const current = panels[side];
     mutatePanel(side, (panel) => ({ ...panel, saving: true }));
     try {
-      const data = await requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>(`/api/panels/${side}`, {
+      const data = await requestJson<{ success: boolean; panel?: PanelState; store?: MatchStoreState }>(`/api/panels/${side}`, {
         method: 'POST',
         json: {
           selected: buildPanelRequest(current.selected),
@@ -795,11 +796,11 @@ function Dashboard() {
       });
       applyServerState({
         panel: data.panel,
-        matches: data.matches,
+        store: data.store,
       });
       mutatePanel(side, (panel) => ({ ...panel, dirty: false, saving: false }));
       if (!silent) {
-        const nextActiveMatch = data.matches ? getActiveMatch(data.matches) : activeMatch;
+        const nextActiveMatch = data.store ? getActiveMatch(data.store) : activeMatch;
         const nextCurrentGame = getCurrentGame(nextActiveMatch);
         const nextText = nextCurrentGame?.status === 'in_progress'
           ? `${side === 'left' ? '左侧' : '右侧'}阵容已同步到当前对局与推流页面`
@@ -815,12 +816,12 @@ function Dashboard() {
 
   async function deletePanel(side: PanelSide) {
     try {
-      const data = await requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>(`/api/panels/${side}`, {
+      const data = await requestJson<{ success: boolean; panel?: PanelState; store?: MatchStoreState }>(`/api/panels/${side}`, {
         method: 'DELETE',
       });
       applyServerState({
         panel: data.panel,
-        matches: data.matches,
+        store: data.store,
       });
       mutatePanel(side, (panel) => ({
         ...panel,
@@ -1164,12 +1165,12 @@ function Dashboard() {
 
     const save = async () => {
       try {
-        const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState }>(`/api/matches/${encodeURIComponent(activeMatch.id)}`, {
+        const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState }>(`/api/matches/${encodeURIComponent(activeMatch.id)}`, {
           method: 'PATCH',
           json: values,
         });
         applyServerState({
-          matches: data.matches,
+          store: data.store,
           scoreboard: data.scoreboard,
         });
 
@@ -1216,18 +1217,18 @@ function Dashboard() {
 
   async function selectMatch(matchId: string) {
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>(`/api/matches/${encodeURIComponent(matchId)}/select`, {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>(`/api/matches/${encodeURIComponent(matchId)}/select`, {
         method: 'POST',
       });
       applyServerState({
-        matches: data.matches,
+        store: data.store,
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
       const nextAvatars = await requestJson<AvatarCollectionState>('/api/avatars');
       setAvatars(nextAvatars);
       setView('roster');
-      const nextStore = data.matches ?? matchStore;
+      const nextStore = data.store ?? matchStore;
       const nextActiveMatch = getActiveMatch(nextStore);
       const nextText = nextActiveMatch?.status === 'completed'
         ? `已切换到赛事 ${matchId}，比赛已完成，阵容不可编辑`
@@ -1245,7 +1246,7 @@ function Dashboard() {
 
   async function createMatch(values: CreateMatchValues) {
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches', {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches', {
         method: 'POST',
         json: {
           ...values,
@@ -1253,7 +1254,7 @@ function Dashboard() {
         },
       });
       applyServerState({
-        matches: data.matches,
+        store: data.store,
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
@@ -1281,7 +1282,7 @@ function Dashboard() {
   function getAvatarPreviewSrc(side: PanelSide): string {
     const avatar = avatars[side];
     return avatar.exists
-      ? `${avatar.path}?t=${avatar.mtime ?? Date.now()}`
+      ? `${avatar.path}?t=${avatar.mtime ?? 0}`
       : side === 'left'
         ? '/assets/ui/left-avatar.png'
         : '/assets/ui/right-avatar.png';
@@ -1314,12 +1315,12 @@ function Dashboard() {
     }
 
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches/history/delete', {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches/batch-delete', {
         method: 'POST',
         json: { matchIds },
       });
       applyServerState({
-        matches: data.matches,
+        store: data.store,
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
@@ -1333,11 +1334,11 @@ function Dashboard() {
 
   async function undoDeletedHistoryMatches() {
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches/history/undo-delete', {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches/undo-delete', {
         method: 'POST',
       });
       applyServerState({
-        matches: data.matches,
+        store: data.store,
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
@@ -1473,11 +1474,11 @@ function Dashboard() {
     }
     setBatchTagSaving(true);
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState }>('/api/matches/batch-tags', {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState }>('/api/matches/batch-tags', {
         method: 'POST',
         json: { matchIds: ids, tags: [batchTagValue] },
       });
-      applyServerState({ matches: data.matches });
+      applyServerState({ store: data.store });
       const added = batchTagValue;
       setSelectedHistoryKeys([]);
       setBatchTagOpen(false);
@@ -1497,7 +1498,7 @@ function Dashboard() {
     }
 
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>(
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>(
         `/api/matches/${encodeURIComponent(activeMatch.id)}/${action}`,
         {
           method: 'POST',
@@ -1505,12 +1506,12 @@ function Dashboard() {
         },
       );
       applyServerState({
-        matches: data.matches,
+        store: data.store,
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
 
-      const nextStore = data.matches ?? matchStore;
+      const nextStore = data.store ?? matchStore;
       const nextMatch = getActiveMatch(nextStore);
       if (action === 'start') {
         const nextText = '本局已开始，后续仍可继续编辑阵容、血量与能量值';
@@ -1870,11 +1871,11 @@ function Dashboard() {
 
     setSavingHistoryTagMatchId(matchId);
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState }>(`/api/matches/${encodeURIComponent(matchId)}/tags`, {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState }>(`/api/matches/${encodeURIComponent(matchId)}/tags`, {
         method: 'PATCH',
         json: { tags: nextTags },
       });
-      applyServerState({ matches: data.matches });
+      applyServerState({ store: data.store });
       setEditingHistoryTagMatchId(null);
       setEditingHistoryTagValues([]);
       setHistoryNotice({ tone: 'success', text: '标签已更新' });
@@ -2033,11 +2034,11 @@ function Dashboard() {
 
   async function saveLivePanelsSilently(nextPanels: Record<PanelSide, PanelEditorState>) {
     const [leftData, rightData] = await Promise.all([
-      requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>('/api/panels/left', {
+      requestJson<{ success: boolean; panel?: PanelState; store?: MatchStoreState }>('/api/panels/left', {
         method: 'POST',
         json: { selected: buildPanelRequest(nextPanels.left.selected) },
       }),
-      requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>('/api/panels/right', {
+      requestJson<{ success: boolean; panel?: PanelState; store?: MatchStoreState }>('/api/panels/right', {
         method: 'POST',
         json: { selected: buildPanelRequest(nextPanels.right.selected) },
       }),
@@ -2046,7 +2047,7 @@ function Dashboard() {
     applyServerState({
       panel: rightData.panel,
       panels: [leftData.panel, rightData.panel].filter(Boolean) as PanelState[],
-      matches: rightData.matches ?? leftData.matches,
+      store: rightData.store ?? leftData.store,
     });
   }
 
@@ -2318,7 +2319,7 @@ function Dashboard() {
     });
 
     try {
-      await requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>(`/api/panels/${side}/slots/${slotIndex}`, {
+      await requestJson<{ success: boolean; panel?: PanelState; store?: MatchStoreState }>(`/api/panels/${side}/slots/${slotIndex}`, {
         method: 'PATCH',
         json: {
           slot: buildPanelRequest(selected)[slotIndex],
@@ -2896,8 +2897,8 @@ function Dashboard() {
                               <Button type="dashed" onClick={() => void runMatchAction('winner', { winner: 'right' })} disabled={currentGame?.status !== 'in_progress'}>
                                 右侧赢了
                               </Button>
-                              <Button onClick={() => void runMatchAction('undo')} disabled={!matchStore.history.canUndo}>撤回上一步</Button>
-                              <Button onClick={() => void runMatchAction('redo')} disabled={!matchStore.history.canRedo}>取消撤回</Button>
+                              <Button onClick={() => void runMatchAction('undo')} disabled={!matchStore.undo.canUndo}>撤回上一步</Button>
+                              <Button onClick={() => void runMatchAction('redo')} disabled={!matchStore.undo.canRedo}>取消撤回</Button>
                             </Space>
                           </div>
                         </Form>
@@ -3028,7 +3029,7 @@ function Dashboard() {
                     <Button danger disabled={!selectedHistoryKeys.length} onClick={() => void deleteHistoryMatches(selectedHistoryKeys.map(String))}>
                       删除选中赛事
                     </Button>
-                    <Button onClick={() => void undoDeletedHistoryMatches()} disabled={!matchStore.history.canUndoDelete}>
+                    <Button onClick={() => void undoDeletedHistoryMatches()} disabled={!matchStore.undo.canUndoDelete}>
                       撤回最近删除
                     </Button>
                     <Button

@@ -122,7 +122,8 @@ export interface MatchRecord {
 export interface MatchStoreState {
   activeMatchId: string | null;
   matches: MatchRecord[];
-  history: {
+  /** 操作撤销能力（与页面上的「比赛历史」无关，纯 UI 撤销栈状态） */
+  undo: {
     canUndo: boolean;
     canRedo: boolean;
     canUndoDelete: boolean;
@@ -288,7 +289,7 @@ export interface SnapshotPayload {
   page4: Page4State;
   scoreboard: ScoreboardState;
   avatars: AvatarCollectionState;
-  matches: MatchStoreState;
+  store: MatchStoreState;
   stage: StageConfig;
   page6: Page6State;
   page7: Page7State;

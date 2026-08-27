@@ -62,7 +62,7 @@
     function applyRowMetrics(count) {
         var usable = ROWS_REGION_HEIGHT - (count - 1) * ROW_GAP_HEIGHT;
         var rowHeight = Math.min(150, Math.floor(usable / count));
-        var rowFont = Math.max(28, Math.min(54, Math.round(rowHeight * 0.36)));
+        var rowFont = Math.max(28, Math.min(64, Math.round(rowHeight * 0.36)));
         rowsEl.style.setProperty('--page9-row-h', rowHeight + 'px');
         rowsEl.style.setProperty('--page9-row-fs', rowFont + 'px');
     }

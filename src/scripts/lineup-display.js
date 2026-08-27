@@ -690,7 +690,7 @@
 
     async function loadInitialState() {
         const [imagesResponse, scoreboardResponse] = await Promise.all([
-            fetch('api/images'),
+            fetch('api/panels'),
             fetch('api/scoreboard')
         ]);
 
@@ -700,7 +700,7 @@
         ]);
 
         applySnapshot({
-            panels: imagesData.images || [],
+            panels: imagesData.panels || [],
             scoreboard: scoreboardData
         });
     }

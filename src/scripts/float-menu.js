@@ -76,8 +76,8 @@
     }
 
     async function loadData() {
-        const images = await requestJson('/api/images');
-        const panels = images && Array.isArray(images.images) ? images.images : [];
+        const images = await requestJson('/api/panels');
+        const panels = images && Array.isArray(images.panels) ? images.panels : [];
         const panel = panels.find((item) => item && item.position === side) || null;
         slotData = panel && Array.isArray(panel.selected) ? panel.selected[slotIndex] || null : null;
 
