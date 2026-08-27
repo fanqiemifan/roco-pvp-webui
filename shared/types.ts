@@ -192,6 +192,19 @@ export interface Page6State {
 }
 
 /**
+ * 对局推送（page7）状态：推送单场比赛，页面按小局逐行展示双方阵容与胜负。
+ */
+export interface Page7State {
+  /** 已选中的比赛 id（null = 未选择，页面显示空占位行） */
+  matchId: string | null;
+  /** 主标题内容（后台输入，空字符串则使用默认「对局推送」） */
+  title: string;
+  /** 温馨提示内容（后台可编辑，默认「温馨提示：排名选自选手历史最高非实时」） */
+  notice: string;
+  mtime: number | null;
+}
+
+/**
  * 比赛预告（page8）背景类型：
  * - image: 内置背景图 1（back.for-page6.jpg）
  * - image-2: 内置背景图 2（back.for-page6-2.png）
@@ -250,6 +263,7 @@ export interface SnapshotPayload {
   matches: MatchStoreState;
   stage: StageConfig;
   page6: Page6State;
+  page7: Page7State;
   page8: Page8State;
   nextgame: NextGamePayload;
 }

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洛克王国PVP - 推流页面7（对局推送）</title>
+    <link rel="stylesheet" href="/styles/roco-pvp-page7.css">
+</head>
+<body>
+    <main class="page7-screen" aria-label="洛克王国PVP对局推送">
+        <!-- 主标题：后台输入内容，字号64 YouSheBiaoTiHei 居中 -->
+        <div class="page7-title" id="page7Title"></div>
+        <!-- 比赛信息行：最多同时显示4行（超出滚动，不足补空占位行） -->
+        <div class="page7-rows" id="page7Rows"></div>
+        <!-- 温馨提示：后台可编辑 -->
+        <div class="page7-notice" id="page7Notice"></div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/page7-display.js"></script>
+</body>
+</html>

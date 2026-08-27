@@ -29,6 +29,10 @@ import {
   savePage6State,
 } from './services/page6-service.js';
 import {
+  getPage7State,
+  savePage7State,
+} from './services/page7-service.js';
+import {
   getPage8State,
   savePage8State,
 } from './services/page8-service.js';
@@ -95,6 +99,7 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     matches: getMatchStore(paths),
     stage: getStageState(paths),
     page6: getPage6State(paths),
+    page7: getPage7State(paths),
     page8: getPage8State(paths),
     nextgame: getNextGamePayload(paths),
   };
@@ -287,6 +292,7 @@ export async function createLocalServer(
   app.get('/roco-pvp-page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
   app.get('/roco-pvp-page5.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page5.html'));
   app.get('/roco-pvp-page6.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page6.html'));
+  app.get('/roco-pvp-page7.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page7.html'));
   app.get('/roco-pvp-page8.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page8.html'));
   app.get('/roco-pvp-page1.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page1.html'));
   app.get('/float.html', (_request, response) => sendPage(paths, response, 'float.html'));
@@ -343,9 +349,9 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page8.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
-      // 推流页面5/6/8 仅用于展示，所需的数据 GET 接口公开（写操作仍受保护）
-      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page6', '/api/page8', '/api/images', '/api/matches', '/api/sprites', '/api/nextgame'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/roco-pvp-page8.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
+      // 推流页面5/6/7/8 仅用于展示，所需的数据 GET 接口公开（写操作仍受保护）
+      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page6', '/api/page7', '/api/page8', '/api/images', '/api/matches', '/api/sprites', '/api/nextgame'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 
@@ -407,6 +413,30 @@ export async function createLocalServer(
     try {
       const state = savePage6State(paths, request.body ?? {});
       io.emit(SOCKET_EVENTS.page6Update, { state });
+      response.json({ success: true, state });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // 对局推送（page7）：返回所选比赛完整数据（含每个小局阵容）与按赛事隔离的选手头像
+  app.get('/api/page7', (_request, response) => {
+    const state = getPage7State(paths);
+    const matchStore = getMatchStore(paths);
+    const match = state.matchId
+      ? matchStore.matches.find((item) => item.id === state.matchId) ?? null
+      : null;
+    response.json({
+      state,
+      match,
+      avatars: getAvatarStates(paths, state.matchId),
+    });
+  });
+
+  app.post('/api/page7', (request, response) => {
+    try {
+      const state = savePage7State(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.page7Update, { state });
       response.json({ success: true, state });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });

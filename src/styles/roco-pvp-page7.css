@@ -1,0 +1,315 @@
+/* 推流页面7：对局推送 · 按小局逐行展示双方阵容与胜负（1920x1080） */
+/* YouSheBiaoTiHei 不打包字体文件，改用系统安装字体，未安装时回退 MiSans */
+@font-face {
+    font-family: "YouSheBiaoTiHei";
+    src: local("YouSheBiaoTiHei");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MiSans-Regular";
+    src: url("/assets/fonts/MiSans-Regular.otf") format("opentype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MiSans-Heavy";
+    src: url("/assets/fonts/MiSans-Heavy.otf") format("opentype");
+    font-display: swap;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+/* 页面画布：背景 262A2C；标题(84) + 32 间隙 + 4 行(168x4 + 32x3) = 884，垂直居中 */
+.page7-screen {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: #262A2C;
+}
+
+/* 主标题：w1542 h84，圆角 左上30 右上30 左下4 右下4，背景 FCC34A，字号64 居中 */
+.page7-title {
+    position: absolute;
+    left: 189px;
+    top: 98px;
+    z-index: 2;
+    width: 1542px;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #FCC34A;
+    border-radius: 30px 30px 4px 4px;
+    font-family: "YouSheBiaoTiHei", "MiSans-Heavy", "Microsoft YaHei", sans-serif;
+    font-size: 64px;
+    color: #000000;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* 温馨提示：36px 808080，位于列表下方 */
+.page7-notice {
+    position: absolute;
+    left: 668px;
+    top: 1002px;
+    z-index: 2;
+    font-family: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
+    font-size: 36px;
+    color: #808080;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* 单行容器：左侧对局序号 + 右侧比赛信息卡（JS 按序号设置 top） */
+.page7-row {
+    position: absolute;
+    left: 0;
+    width: 1920px;
+    height: 168px;
+    z-index: 3;
+}
+
+/* 对局序号（GAME1-5）：字号36 白色，距比赛信息卡左侧 24px，垂直居中 */
+.page7-row-label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 165px;
+    height: 168px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-family: "YouSheBiaoTiHei", "MiSans-Heavy", "Microsoft YaHei", sans-serif;
+    font-size: 36px;
+    color: #FFFFFF;
+    line-height: 1;
+}
+
+/* 比赛信息卡（含空占位卡）：w1542 h168 背景 F2EDE3 圆角30 */
+.page7-card {
+    position: absolute;
+    left: 189px;
+    top: 0;
+    width: 1542px;
+    height: 168px;
+    background: #F2EDE3;
+    border-radius: 30px;
+    overflow: hidden;
+}
+
+/* 空占位卡：icon-stay-tuned 居中 */
+.page7-card-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page7-card-empty img {
+    height: 120px;
+    object-fit: contain;
+}
+
+/* 左右半区：各 w771 h168；胜方一侧背景 FFC65F */
+.page7-side {
+    position: absolute;
+    top: 0;
+    width: 771px;
+    height: 168px;
+}
+
+/* 左半区圆角：左上30 右上100 右下50 左下30 */
+.page7-side-left {
+    left: 0;
+    border-radius: 30px 100px 50px 30px;
+}
+
+/* 右半区圆角：左上100 右上30 右下30 左下50 */
+.page7-side-right {
+    left: 771px;
+    border-radius: 100px 30px 30px 50px;
+}
+
+.page7-side.is-winner {
+    background: #FFC65F;
+}
+
+/* 选手头像：64x64 圆形；左侧 x18 y12，右侧距右 18 y12 */
+.page7-avatar {
+    position: absolute;
+    top: 12px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #fff7e9;
+}
+
+.page7-side-left .page7-avatar {
+    left: 18px;
+}
+
+.page7-side-right .page7-avatar {
+    right: 18px;
+}
+
+.page7-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* 选手名字：YouSheBiaoTiHei 40 黑色；左侧 x92 y16 左对齐，右侧距右 92 y16 右对齐 */
+.page7-name {
+    position: absolute;
+    top: 16px;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
+    font-size: 40px;
+    color: #000000;
+    line-height: 1;
+}
+
+.page7-side-left .page7-name {
+    left: 92px;
+    text-align: left;
+}
+
+.page7-side-right .page7-name {
+    right: 92px;
+    text-align: right;
+}
+
+/* 排位排名图标：复用 page3 rank div（53x64 图标 + 排名数字）；左侧 x360 y8，右侧距右 360 y8 */
+.page7-rank {
+    position: absolute;
+    top: 8px;
+    width: 53px;
+    height: 64px;
+    pointer-events: none;
+}
+
+.page7-side-left .page7-rank {
+    left: 360px;
+}
+
+.page7-side-right .page7-rank {
+    right: 360px;
+}
+
+.page7-rank img {
+    display: block;
+    width: 53px;
+    height: 64px;
+    object-fit: contain;
+}
+
+/* 排名数字：与 page3 一致，y46（相对图标），x 由 JS 按位数设置 */
+.page7-rank-txt {
+    position: absolute;
+    top: 46px;
+    font-family: "MiSans-Heavy", "MiSans-Medium", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    color: #FEC55E;
+    background: #000;
+    padding: 4px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+/* 精灵卡：复用 page2 pestdiv2 结构，比例 80x80；左侧从 x18 y80 起排，右侧从距右 18 y80 起排（镜像），
+   每张间隙 12px */
+.page7-pets {
+    position: absolute;
+    top: 80px;
+    height: 80px;
+    display: flex;
+    gap: 12px;
+}
+
+.page7-side-left .page7-pets {
+    left: 18px;
+    flex-direction: row;
+}
+
+.page7-side-right .page7-pets {
+    right: 18px;
+    flex-direction: row-reverse;
+}
+
+.page7-pet {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    flex: none;
+}
+
+/* 圆形底托：仅使用缩略图时显示（与 page2 pestdiv2 一致） */
+.page7-pet-circle {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 57px;
+    height: 57px;
+    border-radius: 50%;
+    background: #424442;
+    box-shadow: inset 0 0 0 2.5px #5d5d5d;
+    transform: translate(-50%, -50%);
+}
+
+.page7-pet.has-thumbnail .page7-pet-circle {
+    display: block;
+}
+
+.page7-pet img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: translate(-50%, -50%);
+}
+
+/* 胜负图标：w145 h120；左侧 x594 y24，右侧距右 594 y24 */
+.page7-result {
+    position: absolute;
+    top: 24px;
+    width: 145px;
+    height: 120px;
+}
+
+.page7-side-left .page7-result {
+    left: 594px;
+}
+
+.page7-side-right .page7-result {
+    right: 594px;
+}
+
+.page7-result img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}

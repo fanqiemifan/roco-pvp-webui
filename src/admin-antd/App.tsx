@@ -52,6 +52,7 @@ import type {
   Page4SlotState,
   Page4State,
   Page6State,
+  Page7State,
   Page8Background,
   Page8State,
   PanelState,
@@ -145,6 +146,15 @@ const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
 
 const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
+  {
+    version: '1.5.5',
+    date: '2026-08',
+    items: [
+      '新增推流页面7（对局推送）：按小局逐行展示双方选手、头像、排位排名与该局阵容（精灵卡复用页面2 样式，80×80），胜方一侧高亮 FFC65F 并显示胜/负图标',
+      '页面7 布局：主标题（FCC34A 黄底、后台输入）+ 最多 4 行比赛信息（超出滚动显示最新 4 局，未选满以占位行补齐），每行左侧显示 GAME1-5 对局序号，底部温馨提示后台可编辑',
+      '后台新增独立导航「对局推送」：选择单场比赛即时推送，可编辑主标题与温馨提示，并内嵌页面预览',
+    ],
+  },
   {
     version: '1.5.4',
     date: '2026-08',
@@ -343,6 +353,11 @@ function Dashboard() {
   const [page6Draft, setPage6Draft] = useState<string[]>([]);
   const [page6Pushing, setPage6Pushing] = useState(false);
   const [page8, setPage8] = useState<Page8State | null>(null);
+  const [page7, setPage7] = useState<Page7State | null>(null);
+  const [page7TitleDraft, setPage7TitleDraft] = useState('');
+  const [page7NoticeDraft, setPage7NoticeDraft] = useState('');
+  const [page7Saving, setPage7Saving] = useState(false);
+  const [page7Notice, setPage7Notice] = useState<NoticeState>(null);
   const [page8Draft, setPage8Draft] = useState<string[]>([]);
   const [page8TitleDraft, setPage8TitleDraft] = useState('');
   const [page8SubtitleDraft, setPage8SubtitleDraft] = useState('');
@@ -478,6 +493,7 @@ function Dashboard() {
     page4Panel?: Page4PanelState;
     stage?: StageConfig;
     page6?: Page6State;
+    page7?: Page7State;
     page8?: Page8State;
     nextgame?: NextGamePayload;
   }) {
@@ -521,6 +537,9 @@ function Dashboard() {
       if (payload.page6) {
         setPage6(payload.page6);
       }
+      if (payload.page7) {
+        setPage7(payload.page7);
+      }
       if (payload.page8) {
         setPage8(payload.page8);
       }
@@ -532,7 +551,7 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage8, nextNextgame] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage7, nextPage8, nextNextgame] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
@@ -542,6 +561,7 @@ function Dashboard() {
         requestJson<{ sprites: SpriteRecord[] }>('/api/sprites'),
         requestJson<StageConfig>('/api/stage'),
         requestJson<{ state: Page6State }>('/api/page6'),
+        requestJson<{ state: Page7State }>('/api/page7'),
         requestJson<{ state: Page8State }>('/api/page8'),
         requestJson<NextGamePayload>('/api/nextgame'),
       ]);
@@ -559,6 +579,7 @@ function Dashboard() {
         setStage(nextStage);
         setPage6(nextPage6.state);
         setPage6Draft(nextPage6.state.matchIds);
+        setPage7(nextPage7.state);
         setPage8(nextPage8.state);
         setPage8Draft(nextPage8.state.matchIds);
         setNextgame(nextNextgame.state);
@@ -663,6 +684,12 @@ function Dashboard() {
     socket.on(SOCKET_EVENTS.page6Update, (payload) => {
       if (payload?.state) {
         applyServerState({ page6: payload.state });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.page7Update, (payload) => {
+      if (payload?.state) {
+        applyServerState({ page7: payload.state });
       }
     });
 
@@ -1536,6 +1563,11 @@ function Dashboard() {
     setPage8BackgroundDraft(page8?.background ?? 'image');
   }, [page8?.title, page8?.subtitle, page8?.background]);
 
+  useEffect(() => {
+    setPage7TitleDraft(page7?.title ?? '');
+    setPage7NoticeDraft(page7?.notice ?? '');
+  }, [page7?.title, page7?.notice]);
+
   async function saveLiveStreamSettings() {
     try {
       setPage5Page6Saving(true);
@@ -1584,6 +1616,32 @@ function Dashboard() {
     } finally {
       setPage8Saving(false);
     }
+  }
+
+  async function savePage7Settings(extra?: { matchId?: string | null }) {
+    setPage7Saving(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page7State }>('/api/page7', {
+        method: 'POST',
+        json: {
+          matchId: extra && extra.matchId !== undefined ? extra.matchId : page7?.matchId ?? null,
+          title: page7TitleDraft,
+          notice: page7NoticeDraft,
+        },
+      });
+      applyServerState({ page7: data.state });
+      setPage7Notice({ tone: 'success', text: '对局推送页面设置已保存，预览已更新' });
+      message.success('对局推送页面设置已保存');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+      setPage7Notice({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setPage7Saving(false);
+    }
+  }
+
+  async function pushPage7Match(matchId: string | null) {
+    await savePage7Settings({ matchId });
   }
 
   async function uploadPage8Wallpaper(file: File) {
@@ -2206,13 +2264,13 @@ function Dashboard() {
     updatePreviewLayout();
     const observer = new ResizeObserver(() => updatePreviewLayout());
     observer.observe(shell);
-
     window.addEventListener('resize', updatePreviewLayout);
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', updatePreviewLayout);
     };
-  }, [previewSlot]);
+    // view 也作为依赖：预览外壳在「页面预览」与「对局推送」两个视图中分别挂载，切换后需重新计算缩放
+  }, [previewSlot, view]);
 
   if (loading) {
     return (
@@ -2226,6 +2284,7 @@ function Dashboard() {
   const menuItems: MenuProps['items'] = [
     { key: 'roster', label: '赛事面板' },
     { key: 'stage', label: '直播推流' },
+    { key: 'page7', label: '对局推送' },
     { key: 'live', label: '实时控制' },
     { key: 'history', label: '比赛历史' },
     { key: 'stats', label: '数据统计' },
@@ -2448,7 +2507,13 @@ function Dashboard() {
           mode="inline"
           selectedKeys={[view]}
           items={menuItems}
-          onClick={({ key }) => setView(key as ViewKey)}
+          onClick={({ key }) => {
+            setView(key as ViewKey);
+            // 进入「对局推送」视图时同步预览槽位，方便顶栏「打开当前预览」直达页面7
+            if (key === 'page7') {
+              setPreviewSlot('page7');
+            }
+          }}
           className="admin-menu"
         />
       </Sider>
@@ -2458,7 +2523,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'stats' ? '数据统计' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'stats' ? '数据统计' : view === 'stage' ? '直播推流' : view === 'page7' ? '对局推送' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -3397,6 +3462,7 @@ function Dashboard() {
                       { value: 'page4', label: '仅显阵容' },
                       { value: 'page5', label: '推流页面5' },
                       { value: 'page6', label: '推流页面6' },
+                      { value: 'page7', label: '推流页面7' },
                       { value: 'page8', label: '推流页面8' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}
@@ -3508,6 +3574,85 @@ function Dashboard() {
                     >
                       <div className="preview-frame-stage" style={{ transform: `scale(${previewScale})` }}>
                       <iframe title="preview" className="preview-frame" src={buildPreviewUrl(previewSlot)} />
+                      </div>
+                    </div>
+                  </div>
+                </Space>
+              </Card>
+            </Space>
+          ) : null}
+
+          {view === 'page7' ? (
+            <Space direction="vertical" size={18} className="page-stack">
+              <Card
+                className="preview-page-card"
+                title="对局推送（推流页面7）"
+                extra={<Button type="primary" href="/roco-pvp-page7.html" target="_blank">新窗口打开</Button>}
+              >
+                <Space direction="vertical" size={16} className="page-stack" style={{ width: '100%' }}>
+                  {page7Notice ? (
+                    <Alert
+                      showIcon
+                      closable
+                      type={page7Notice.tone}
+                      message={page7Notice.text}
+                      onClose={() => setPage7Notice(null)}
+                    />
+                  ) : null}
+                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                    选择单场比赛即时推送：页面按小局逐行展示双方选手、头像、排位排名与该局阵容，胜方一侧高亮并显示胜/负图标；
+                    最多同时显示 4 行，超过 4 个小局时自动滚动显示最新 4 局（第 5 局出现时第 1 局消失），未选满时以占位行补齐。
+                  </Paragraph>
+                  <Row gutter={[16, 16]}>
+                    <Col xs={24} md={8}>
+                      <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>选择比赛（单场推送，清空即显示占位行）：</Text>
+                      <Select
+                        style={{ width: '100%' }}
+                        showSearch
+                        allowClear
+                        optionFilterProp="label"
+                        placeholder="搜索并选择要推送的比赛"
+                        value={page7?.matchId ?? undefined}
+                        disabled={page7Saving}
+                        options={matchStore.matches.map((match) => ({
+                          value: match.id,
+                          label: `${match.leftPlayer || '左侧'} vs ${match.rightPlayer || '右侧'}（BO${match.bestOf}）`,
+                        }))}
+                        onChange={(value) => { void pushPage7Match(value ?? null); }}
+                      />
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>主标题：</Text>
+                      <Input
+                        maxLength={40}
+                        placeholder="例如：S2洛克联赛，留空显示默认「对局推送」"
+                        value={page7TitleDraft}
+                        onChange={(event) => setPage7TitleDraft(event.target.value)}
+                      />
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>温馨提示：</Text>
+                      <Input
+                        maxLength={60}
+                        placeholder="页面底部提示文字，留空使用默认内容"
+                        value={page7NoticeDraft}
+                        onChange={(event) => setPage7NoticeDraft(event.target.value)}
+                      />
+                    </Col>
+                  </Row>
+                  <Space wrap>
+                    <Button type="primary" loading={page7Saving} onClick={() => void savePage7Settings()}>
+                      保存页面设置
+                    </Button>
+                    <Button href={buildPreviewUrl('page7')} target="_blank">打开页面7</Button>
+                  </Space>
+                  <div className="preview-frame-shell" ref={previewFrameShellRef}>
+                    <div
+                      className="preview-frame-viewport"
+                      style={{ width: `${previewShellSize.width}px`, height: `${previewShellSize.height}px` }}
+                    >
+                      <div className="preview-frame-stage" style={{ transform: `scale(${previewScale})` }}>
+                        <iframe title="preview-page7" className="preview-frame" src={buildPreviewUrl('page7')} />
                       </div>
                     </div>
                   </div>
