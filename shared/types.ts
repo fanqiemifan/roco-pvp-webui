@@ -151,6 +151,7 @@ export interface AvatarCollectionState {
  * - page3: 推流页面3（头像比分阵容）
  * - page5: 推流页面5（使用率/胜率排行）
  * - page6: 推流页面6（比赛结果）
+ * - page7: 推流页面7（对局推送）
  * - blank: 黑场（不加载任何画面）
  */
 export type StagePageKey =
@@ -159,6 +160,7 @@ export type StagePageKey =
   | 'page3'
   | 'page5'
   | 'page6'
+  | 'page7'
   | 'blank';
 
 export type StageTransitionType = 'none' | 'blinds' | 'zoom';
@@ -192,11 +194,11 @@ export interface Page6State {
 }
 
 /**
- * 对局推送（page7）状态：推送单场比赛，页面按小局逐行展示双方阵容与胜负。
+ * 对局推送（page7）状态：推送多场比赛，页面按小局逐行展示双方阵容与胜负。
  */
 export interface Page7State {
-  /** 已选中的比赛 id（null = 未选择，页面显示空占位行） */
-  matchId: string | null;
+  /** 已选中的比赛 id 列表（顺序即展示顺序，空数组 = 未选择，页面显示空占位行） */
+  matchIds: string[];
   /** 主标题内容（后台输入，空字符串则使用默认「对局推送」） */
   title: string;
   /** 温馨提示内容（后台可编辑，默认「温馨提示：排名选自选手历史最高非实时」） */

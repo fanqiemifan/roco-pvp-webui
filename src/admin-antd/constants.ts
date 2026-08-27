@@ -84,6 +84,12 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
     previewPath: '/roco-pvp-page6.html',
   },
   {
+    value: 'page7',
+    label: '推流页面7',
+    description: '对局推送（多场比赛按小局逐行滚动展示）',
+    previewPath: '/roco-pvp-page7.html',
+  },
+  {
     value: 'blank',
     label: '黑场',
     description: '不加载任何画面（切黑）',

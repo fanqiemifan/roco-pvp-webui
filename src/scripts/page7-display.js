@@ -5,7 +5,11 @@
     const MAX_VISIBLE_ROWS = 4;
     const ROW_HEIGHT = 168;
     const ROW_GAP = 32;
-    const ROWS_TOP = 214;
+    const ROW_STRIDE = ROW_HEIGHT + ROW_GAP; // 每行步进 200px
+
+    // 循环滚动节奏（先快后慢）：起始停留短，越接近底部停留越长，回到第一场后重置
+    const SCROLL_HOLD_FAST_MS = 1600;
+    const SCROLL_HOLD_SLOW_MS = 3600;
 
     const DEFAULT_TITLE = '对局推送';
     const DEFAULT_NOTICE = '温馨提示：排名选自选手历史最高非实时';
@@ -24,11 +28,13 @@
     const RANK_TEXT_LEFT_BY_LENGTH = { 1: 22, 2: 16, 3: 12, 4: 7, 5: 3, 6: -2 };
 
     const titleEl = document.getElementById('page7Title');
-    const rowsEl = document.getElementById('page7Rows');
+    const rowsEl = document.getElementById('page7RowsTrack');
     const noticeEl = document.getElementById('page7Notice');
 
     let spriteLookup = null;
     let renderSignature = null;
+    let scrollTimer = null;
+    let currentScrollOffset = 0;
 
     /* ---------- 通用工具 ---------- */
 
@@ -98,7 +104,8 @@
         const payload = await response.json();
         const records = (Array.isArray(payload) ? payload : (payload.spirits || []))
             .map((record) => ({
-                displayName: String(record.displayName || record.name || '').trim(),
+                // sprites.json 原始字段为中文名（精灵名称/精灵名字2/缩略图图片ID），与 sprite-service 的解析保持一致
+                displayName: String(record.displayName || record.name || record['精灵名字2'] || record['精灵名称'] || '').trim(),
                 path: toRootPath(record.path),
                 thumbnailId: String(record.thumbnailId || record['缩略图图片ID'] || '').trim(),
             }))
@@ -115,15 +122,15 @@
         return spriteLookup.byName.get(name) || spriteLookup.byBaseName.get(base) || null;
     }
 
-    /* ---------- 单个精灵卡（复用 page2 pestdiv2：缩略图优先 + 圆形底托，比例 80x80） ---------- */
+    /* ---------- 单个精灵卡（参考 page1 petsdiv3：缩略图优先 + 圆形底托，比例 80x80） ---------- */
+
+    function basename(value) {
+        return String(value || '').split('/').filter(Boolean).pop() || '';
+    }
 
     function buildPetCard(spriteId) {
         const card = document.createElement('div');
         card.className = 'page7-pet';
-
-        const circle = document.createElement('div');
-        circle.className = 'page7-pet-circle';
-        card.appendChild(circle);
 
         const image = document.createElement('img');
         image.alt = '';
@@ -131,16 +138,21 @@
 
         const record = resolveSprite(spriteId);
         if (!record) {
+            console.warn('[page7] 精灵索引中未找到:', spriteId);
             return card;
         }
 
-        // 候选图：缩略图（thumbnailId_名字.png）优先，失败后回退精灵原图
+        card.classList.add('is-active');
+
+        // 候选名：显示名 / 去变体后缀名 / 原始 spriteId / 文件名（与 page1 的候选逻辑一致）
         const candidateNames = Array.from(new Set([
-            stripVariantName(record.displayName),
             record.displayName,
+            stripVariantName(record.displayName),
             String(spriteId || '').trim(),
+            basename(record.path),
         ].map(sanitizeFilenameSegment).filter(Boolean)));
 
+        // 候选图：缩略图（thumbnailId_名字.png）优先，失败后回退精灵原图
         const sources = record.thumbnailId
             ? candidateNames.map((name) => `${THUMBNAIL_RESOURCE_BASE}/${record.thumbnailId}_${name}.png`)
             : [];
@@ -154,15 +166,12 @@
 
         let currentIndex = 0;
         const assignNext = () => {
-            const src = sources[currentIndex];
-            card.classList.toggle('has-thumbnail', String(src || '').startsWith(THUMBNAIL_RESOURCE_BASE));
-            image.src = src;
+            image.src = sources[currentIndex];
         };
         image.onerror = () => {
             currentIndex += 1;
             if (currentIndex >= sources.length) {
                 image.onerror = null;
-                card.classList.remove('has-thumbnail');
                 return;
             }
             assignNext();
@@ -217,7 +226,7 @@
 
     /* ---------- 半区（left / right div） ---------- */
 
-    function buildSide(side, match, game, avatars) {
+    function buildSide(side, match, game, matchAvatars) {
         const sideEl = document.createElement('div');
         sideEl.className = `page7-side page7-side-${side}`;
 
@@ -226,8 +235,8 @@
             sideEl.classList.add('is-winner');
         }
 
-        // 头像
-        sideEl.appendChild(buildAvatar(side, avatars ? avatars[side] : null));
+        // 头像（按比赛 id 从 avatars 映射中取该场的头像）
+        sideEl.appendChild(buildAvatar(side, matchAvatars ? matchAvatars[side] : null));
 
         // 选手名字
         const name = document.createElement('div');
@@ -280,10 +289,23 @@
         });
     }
 
-    function buildRow(index, game, gameNumber, match, avatars) {
+    // 多场比赛按选择顺序合并：每场比赛的每个参与小局占一行
+    function collectDisplayEntries(matches) {
+        const entries = [];
+        (matches || []).forEach((match) => {
+            getDisplayGames(match).forEach((game) => {
+                entries.push({ match, game });
+            });
+        });
+        return entries;
+    }
+
+    function buildRow(index, entry, gameNumber, avatars) {
+        const match = entry ? entry.match : null;
+        const game = entry ? entry.game : null;
         const row = document.createElement('div');
         row.className = 'page7-row';
-        row.style.top = `${ROWS_TOP + index * (ROW_HEIGHT + ROW_GAP)}px`;
+        row.style.top = `${index * ROW_STRIDE}px`;
 
         // 对局序号：GAME1、GAME2…（空占位行也正常显示）
         const label = document.createElement('div');
@@ -294,8 +316,9 @@
         const card = document.createElement('div');
         if (game && match) {
             card.className = 'page7-card';
-            card.appendChild(buildSide('left', match, game, avatars));
-            card.appendChild(buildSide('right', match, game, avatars));
+            const matchAvatars = avatars ? avatars[match.id] || null : null;
+            card.appendChild(buildSide('left', match, game, matchAvatars));
+            card.appendChild(buildSide('right', match, game, matchAvatars));
         } else {
             // 空占位卡：icon-stay-tuned 居中
             card.className = 'page7-card page7-card-empty';
@@ -309,48 +332,75 @@
         return row;
     }
 
+    /* ---------- 循环滚动：超过 4 行时逐行下滚，到底后滚回第一场，节奏先快后慢 ---------- */
+
+    function stopAutoScroll() {
+        if (scrollTimer !== null) {
+            clearTimeout(scrollTimer);
+            scrollTimer = null;
+        }
+    }
+
+    function scheduleAutoScroll(rowCount) {
+        const maxOffset = rowCount - MAX_VISIBLE_ROWS;
+        if (maxOffset <= 0) {
+            return;
+        }
+        // 先快后慢：按滚动进度在快/慢停留时长之间线性过渡，回到第一场后节奏重置
+        const progress = Math.min(1, Math.max(0, currentScrollOffset / maxOffset));
+        const holdMs = SCROLL_HOLD_FAST_MS + (SCROLL_HOLD_SLOW_MS - SCROLL_HOLD_FAST_MS) * progress;
+        scrollTimer = setTimeout(() => {
+            currentScrollOffset = currentScrollOffset >= maxOffset ? 0 : currentScrollOffset + 1;
+            rowsEl.style.transform = `translateY(${-currentScrollOffset * ROW_STRIDE}px)`;
+            scheduleAutoScroll(rowCount);
+        }, holdMs);
+    }
+
+    function startAutoScroll(rowCount) {
+        stopAutoScroll();
+        currentScrollOffset = 0;
+        rowsEl.style.transition = 'none';
+        rowsEl.style.transform = 'translateY(0)';
+        // 下一帧恢复过渡，避免重置位置时出现滑动动画
+        requestAnimationFrame(() => {
+            rowsEl.style.transition = '';
+        });
+        if (rowCount > MAX_VISIBLE_ROWS) {
+            scheduleAutoScroll(rowCount);
+        }
+    }
+
     function renderRows(data) {
-        const state = (data && data.state) || {};
-        const match = (data && data.match) || null;
+        const matches = (data && data.matches) || [];
         const avatars = (data && data.avatars) || null;
 
         rowsEl.innerHTML = '';
 
-        // 滑动窗口：超过 4 个小局时只显示最后 4 个（显示第 5 局时第 1 局消失）
-        const games = getDisplayGames(match);
-        const visibleGames = games.slice(-MAX_VISIBLE_ROWS);
-        let nextNumber = visibleGames.length
-            ? Number(visibleGames[visibleGames.length - 1].gameNumber) || visibleGames.length
-            : 0;
+        // 全部参与展示的小局按选择顺序合并渲染（GAME 序号连续编号）
+        const entries = collectDisplayEntries(matches);
+        // 不足 4 行时用空占位行补齐到 4 行
+        const rowCount = Math.max(MAX_VISIBLE_ROWS, entries.length);
 
-        for (let index = 0; index < MAX_VISIBLE_ROWS; index += 1) {
-            const game = visibleGames[index] || null;
-            let gameNumber;
-            if (game) {
-                gameNumber = Number(game.gameNumber) || index + 1;
-            } else {
-                nextNumber += 1;
-                gameNumber = nextNumber;
-            }
-            rowsEl.appendChild(buildRow(index, game, gameNumber, match, avatars));
+        for (let index = 0; index < rowCount; index += 1) {
+            const entry = entries[index] || null;
+            rowsEl.appendChild(buildRow(index, entry, index + 1, avatars));
         }
+
+        startAutoScroll(rowCount);
     }
 
-    function applyAll(data) {
+    // 计算渲染签名：标题/提示/所选比赛/小局/头像 任一变化才重渲染
+    function buildSignature(data) {
         const state = (data && data.state) || {};
-        const match = (data && data.match) || null;
+        const matches = (data && data.matches) || [];
         const avatars = (data && data.avatars) || null;
 
-        titleEl.textContent = String(state.title || '').trim() || DEFAULT_TITLE;
-        noticeEl.textContent = String(state.notice || '').trim() || DEFAULT_NOTICE;
-
-        renderRows(data);
-
-        renderSignature = JSON.stringify({
-            title: titleEl.textContent,
-            notice: noticeEl.textContent,
-            matchId: state.matchId || null,
-            match: match ? {
+        return JSON.stringify({
+            title: String(state.title || '').trim() || DEFAULT_TITLE,
+            notice: String(state.notice || '').trim() || DEFAULT_NOTICE,
+            matchIds: state.matchIds || [],
+            matches: matches.map((match) => ({
+                id: match.id,
                 leftPlayer: match.leftPlayer,
                 rightPlayer: match.rightPlayer,
                 leftRank: match.leftRank,
@@ -362,47 +412,34 @@
                     leftLineup: game.leftLineup,
                     rightLineup: game.rightLineup,
                 })),
-            } : null,
-            avatars: avatars ? {
-                left: avatars.left && avatars.left.exists ? `${avatars.left.path}?${avatars.left.mtime}` : '',
-                right: avatars.right && avatars.right.exists ? `${avatars.right.path}?${avatars.right.mtime}` : '',
-            } : null,
+            })),
+            avatars: avatars ? Object.keys(avatars).map((matchId) => ({
+                matchId,
+                left: avatars[matchId] && avatars[matchId].left && avatars[matchId].left.exists
+                    ? `${avatars[matchId].left.path}?${avatars[matchId].left.mtime}` : '',
+                right: avatars[matchId] && avatars[matchId].right && avatars[matchId].right.exists
+                    ? `${avatars[matchId].right.path}?${avatars[matchId].right.mtime}` : '',
+            })) : null,
         });
+    }
+
+    function applyAll(data) {
+        const state = (data && data.state) || {};
+
+        titleEl.textContent = String(state.title || '').trim() || DEFAULT_TITLE;
+        noticeEl.textContent = String(state.notice || '').trim() || DEFAULT_NOTICE;
+
+        renderRows(data);
+
+        renderSignature = buildSignature(data);
     }
 
     async function loadData() {
         try {
             const data = await fetch('/api/page7', { credentials: 'same-origin' }).then((response) => response.json());
-            if (renderSignature !== null) {
-                // 先用同一份签名逻辑判断是否有变化，避免无差异重渲染导致图片闪烁
-                const state = (data && data.state) || {};
-                const match = (data && data.match) || null;
-                const avatars = (data && data.avatars) || null;
-                const nextSignature = JSON.stringify({
-                    title: String(state.title || '').trim() || DEFAULT_TITLE,
-                    notice: String(state.notice || '').trim() || DEFAULT_NOTICE,
-                    matchId: state.matchId || null,
-                    match: match ? {
-                        leftPlayer: match.leftPlayer,
-                        rightPlayer: match.rightPlayer,
-                        leftRank: match.leftRank,
-                        rightRank: match.rightRank,
-                        games: (match.games || []).map((game) => ({
-                            gameNumber: game.gameNumber,
-                            winner: game.winner,
-                            status: game.status,
-                            leftLineup: game.leftLineup,
-                            rightLineup: game.rightLineup,
-                        })),
-                    } : null,
-                    avatars: avatars ? {
-                        left: avatars.left && avatars.left.exists ? `${avatars.left.path}?${avatars.left.mtime}` : '',
-                        right: avatars.right && avatars.right.exists ? `${avatars.right.path}?${avatars.right.mtime}` : '',
-                    } : null,
-                });
-                if (renderSignature === nextSignature) {
-                    return;
-                }
+            // 先用同一份签名逻辑判断是否有变化，避免无差异重渲染导致图片闪烁
+            if (renderSignature !== null && renderSignature === buildSignature(data)) {
+                return;
             }
             applyAll(data);
         } catch (error) {

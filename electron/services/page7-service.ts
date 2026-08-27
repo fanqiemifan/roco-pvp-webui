@@ -13,19 +13,27 @@ export const PAGE7_DEFAULT_NOTICE = '温馨提示：排名选自选手历史最�
 
 function defaultPage7State(): Page7State {
   return {
-    matchId: null,
+    matchIds: [],
     title: '',
     notice: '',
     mtime: null,
   };
 }
 
-function normalizeMatchId(value: unknown): string | null {
-  if (value === null || value === undefined) {
-    return null;
+function normalizeMatchIds(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
   }
-  const id = String(value).trim();
-  return id || null;
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  for (const item of value) {
+    const id = String(item ?? '').trim();
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      ids.push(id);
+    }
+  }
+  return ids;
 }
 
 function normalizeTitle(value: unknown): string {
@@ -44,8 +52,10 @@ export function getPage7State(paths: AppPaths): Page7State {
   try {
     const metadata = JSON.parse(fs.readFileSync(paths.page7File, 'utf-8')) as Record<string, unknown>;
     const stat = fs.statSync(paths.page7File);
+    // 兼容旧版单选结构 matchId: string | null
+    const legacyMatchIds = normalizeMatchIds([metadata.matchId]);
     return {
-      matchId: normalizeMatchId(metadata.matchId),
+      matchIds: metadata.matchIds === undefined ? legacyMatchIds : normalizeMatchIds(metadata.matchIds),
       title: normalizeTitle(metadata.title),
       notice: normalizeNotice(metadata.notice),
       mtime: stat.mtimeMs,
@@ -56,7 +66,8 @@ export function getPage7State(paths: AppPaths): Page7State {
 }
 
 /**
- * 保存 page7 配置。matchId 必须是比赛列表中存在的比赛（传 null 清空选择）。
+ * 保存 page7 配置。matchIds 只保留比赛列表中真实存在的比赛（避免悬空引用），
+ * 顺序即页面展示顺序。
  */
 export function savePage7State(paths: AppPaths, payload: unknown): Page7State {
   if (!payload || typeof payload !== 'object') {
@@ -67,16 +78,14 @@ export function savePage7State(paths: AppPaths, payload: unknown): Page7State {
 
   const raw = payload as Record<string, unknown>;
   const previous = getPage7State(paths);
-  const matchId = raw.matchId === undefined ? previous.matchId : normalizeMatchId(raw.matchId);
+  const matchIds = raw.matchIds === undefined ? previous.matchIds : normalizeMatchIds(raw.matchIds);
   const title = raw.title === undefined ? previous.title : normalizeTitle(raw.title);
   const notice = raw.notice === undefined ? previous.notice : normalizeNotice(raw.notice);
 
-  // 只允许选择比赛列表中真实存在的比赛，避免悬空引用
-  const exists = matchId === null
-    || getMatchStore(paths).matches.some((match) => match.id === matchId);
-  const effectiveMatchId = exists ? matchId : null;
+  const knownIds = new Set(getMatchStore(paths).matches.map((match) => match.id));
+  const effectiveMatchIds = matchIds.filter((id) => knownIds.has(id));
 
-  const metadata = { matchId: effectiveMatchId, title, notice };
+  const metadata = { matchIds: effectiveMatchIds, title, notice };
   fs.writeFileSync(paths.page7File, JSON.stringify(metadata, null, 2), 'utf-8');
   return getPage7State(paths);
 }

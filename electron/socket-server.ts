@@ -8,7 +8,7 @@ import multer from 'multer';
 import { Server as SocketIOServer } from 'socket.io';
 
 import { SOCKET_EVENTS } from '../shared/events.js';
-import type { SnapshotPayload } from '../shared/types.js';
+import type { AvatarCollectionState, SnapshotPayload } from '../shared/types.js';
 import { buildQuickFillPreview, listSprites, spriteMatchesKeyword } from './services/sprite-service.js';
 import { getSpriteRanking } from './services/stats-service.js';
 import {
@@ -419,18 +419,19 @@ export async function createLocalServer(
     }
   });
 
-  // 对局推送（page7）：返回所选比赛完整数据（含每个小局阵容）与按赛事隔离的选手头像
+  // 对局推送（page7）：返回所选多场比赛完整数据（含每个小局阵容）与按赛事隔离的选手头像
   app.get('/api/page7', (_request, response) => {
     const state = getPage7State(paths);
     const matchStore = getMatchStore(paths);
-    const match = state.matchId
-      ? matchStore.matches.find((item) => item.id === state.matchId) ?? null
-      : null;
-    response.json({
-      state,
-      match,
-      avatars: getAvatarStates(paths, state.matchId),
-    });
+    const matches = state.matchIds
+      .map((id) => matchStore.matches.find((item) => item.id === id))
+      .filter((match): match is NonNullable<typeof match> => Boolean(match));
+    // 头像按赛事隔离：{ [matchId]: { left, right } }
+    const avatars: Record<string, AvatarCollectionState> = {};
+    for (const match of matches) {
+      avatars[match.id] = getAvatarStates(paths, match.id);
+    }
+    response.json({ state, matches, avatars });
   });
 
   app.post('/api/page7', (request, response) => {

@@ -357,7 +357,8 @@ function Dashboard() {
   const [page7TitleDraft, setPage7TitleDraft] = useState('');
   const [page7NoticeDraft, setPage7NoticeDraft] = useState('');
   const [page7Saving, setPage7Saving] = useState(false);
-  const [page7Notice, setPage7Notice] = useState<NoticeState>(null);
+  const [page7Draft, setPage7Draft] = useState<string[]>([]);
+  const [page7Pushing, setPage7Pushing] = useState(false);
   const [page8Draft, setPage8Draft] = useState<string[]>([]);
   const [page8TitleDraft, setPage8TitleDraft] = useState('');
   const [page8SubtitleDraft, setPage8SubtitleDraft] = useState('');
@@ -580,6 +581,7 @@ function Dashboard() {
         setPage6(nextPage6.state);
         setPage6Draft(nextPage6.state.matchIds);
         setPage7(nextPage7.state);
+        setPage7Draft(nextPage7.state.matchIds);
         setPage8(nextPage8.state);
         setPage8Draft(nextPage8.state.matchIds);
         setNextgame(nextNextgame.state);
@@ -1618,30 +1620,59 @@ function Dashboard() {
     }
   }
 
-  async function savePage7Settings(extra?: { matchId?: string | null }) {
+  async function savePage7Settings() {
     setPage7Saving(true);
     try {
       const data = await requestJson<{ success: boolean; state: Page7State }>('/api/page7', {
         method: 'POST',
         json: {
-          matchId: extra && extra.matchId !== undefined ? extra.matchId : page7?.matchId ?? null,
+          matchIds: page7?.matchIds ?? page7Draft,
           title: page7TitleDraft,
           notice: page7NoticeDraft,
         },
       });
       applyServerState({ page7: data.state });
-      setPage7Notice({ tone: 'success', text: '对局推送页面设置已保存，预览已更新' });
+      setPage7Draft(data.state.matchIds);
       message.success('对局推送页面设置已保存');
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error));
-      setPage7Notice({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
     } finally {
       setPage7Saving(false);
     }
   }
 
-  async function pushPage7Match(matchId: string | null) {
-    await savePage7Settings({ matchId });
+  function togglePage7Draft(matchId: string, checked: boolean) {
+    setPage7Draft((prev) => {
+      if (checked) {
+        return prev.includes(matchId) ? prev : [...prev, matchId];
+      }
+      return prev.filter((id) => id !== matchId);
+    });
+  }
+
+  async function pushPage7Matches() {
+    setPage7Pushing(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page7State }>('/api/page7', {
+        method: 'POST',
+        json: {
+          matchIds: page7Draft,
+          title: page7TitleDraft,
+          notice: page7NoticeDraft,
+        },
+      });
+      applyServerState({ page7: data.state });
+      setPage7Draft(data.state.matchIds);
+      const nextText = data.state.matchIds.length
+        ? `已推送 ${data.state.matchIds.length} 场对局到推流页面7（对局推送）`
+        : '已清空推流页面7 的对局推送';
+      setHistoryNotice({ tone: 'success', text: nextText });
+      message.success(nextText);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setPage7Pushing(false);
+    }
   }
 
   async function uploadPage8Wallpaper(file: File) {
@@ -2284,7 +2315,6 @@ function Dashboard() {
   const menuItems: MenuProps['items'] = [
     { key: 'roster', label: '赛事面板' },
     { key: 'stage', label: '直播推流' },
-    { key: 'page7', label: '对局推送' },
     { key: 'live', label: '实时控制' },
     { key: 'history', label: '比赛历史' },
     { key: 'stats', label: '数据统计' },
@@ -2297,7 +2327,7 @@ function Dashboard() {
     {
       title: (
         <span>
-          推送
+          比赛结果
           <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
             已选 {page6Draft.length}/{PAGE6_MAX_MATCHES}
           </Text>
@@ -2320,7 +2350,28 @@ function Dashboard() {
     {
       title: (
         <span>
-          预告
+          对局信息
+          <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+            已选 {page7Draft.length}
+          </Text>
+        </span>
+      ),
+      key: 'page7',
+      width: 92,
+      render: (_: unknown, record: MatchRecord) => {
+        const isSelected = page7Draft.includes(record.id);
+        return (
+          <Checkbox
+            checked={isSelected}
+            onChange={(event) => togglePage7Draft(record.id, event.target.checked)}
+          />
+        );
+      },
+    },
+    {
+      title: (
+        <span>
+          比赛预告
           <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
             已选 {page8Draft.length}/{PAGE8_MAX_MATCHES}
           </Text>
@@ -2523,7 +2574,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'stats' ? '数据统计' : view === 'stage' ? '直播推流' : view === 'page7' ? '对局推送' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'stats' ? '数据统计' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -2917,6 +2968,13 @@ function Dashboard() {
                       onClick={() => void pushPage6Matches()}
                     >
                       推送比赛结果（{page6Draft.length}/{PAGE6_MAX_MATCHES}）
+                    </Button>
+                    <Button
+                      type="primary"
+                      loading={page7Pushing}
+                      onClick={() => void pushPage7Matches()}
+                    >
+                      推送对局推送（{page7Draft.length}）
                     </Button>
                     <Button
                       type="primary"
@@ -3366,8 +3424,8 @@ function Dashboard() {
                       );
                     })}
                   </Row>
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24}>
+                  <Row gutter={[16, 16]} className="stage-config-cards">
+                    <Col xs={24} md={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
                           <Text strong>切换过渡效果</Text>
@@ -3384,61 +3442,101 @@ function Dashboard() {
                         </Space>
                       </Card>
                     </Col>
-                  </Row>
-                  <Card size="small" className="subtle-card">
-                    <Space direction="vertical" size={12} className="control-stack">
-                      <Text strong>推流页面3精灵图片</Text>
-                      <Segmented
-                        block
-                        value={stage?.page3SpriteSource ?? 'sprite'}
-                        disabled={stageSaving}
-                        options={[
-                          { value: 'sprite', label: '精灵原图' },
-                          { value: 'thumbnail', label: 'Thumbnail' },
-                        ]}
-                        onChange={(value) => { void saveStage(stage?.page ?? 'page3', { page3SpriteSource: value as Page3SpriteSource }); }}
-                      />
-                    </Space>
-                  </Card>
-                  <Card size="small" className="subtle-card">
-                    <Space direction="vertical" size={12} className="control-stack">
-                      <Text strong>推流页面3排位图标</Text>
-                      <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                        开启后在页面3比分栏中央两侧显示选手排位排名图标；当前对局未输入排位排名的选手只显示图标，不显示排名数字。
-                      </Paragraph>
-                      <Space wrap>
-                        <Switch
-                          checked={stage?.page3RankVisible ?? false}
-                          disabled={stageSaving}
-                          loading={stageSaving}
-                          onChange={(checked) => { void saveStage(stage?.page ?? 'page3', { silent: true, page3RankVisible: checked }); }}
-                        />
-                        {stage?.page3RankVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
-                      </Space>
-                    </Space>
-                  </Card>
-                  <Card size="small" className="subtle-card stage-settings-card" title="页面2设置">
-                    <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
-                      <Row gutter={[16, 16]}>
-                        <Col xs={24} md={12} xl={8}>
-                          <Form.Item label="页面2赛事标题" name="eventTitle">
-                            <Input maxLength={40} />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={12} xl={8}>
-                          <Form.Item label="页面2阵容展示" name="page2LineupDisplayMode">
-                            <Select
-                              options={[
-                                { value: 'default', label: '默认血量展示' },
-                                { value: 'avatar-only', label: '仅头像展示' },
-                              ]}
+                    <Col xs={24} md={8}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>推流页面3精灵图片</Text>
+                          <Segmented
+                            block
+                            value={stage?.page3SpriteSource ?? 'sprite'}
+                            disabled={stageSaving}
+                            options={[
+                              { value: 'sprite', label: '精灵原图' },
+                              { value: 'thumbnail', label: 'Thumbnail' },
+                            ]}
+                            onChange={(value) => { void saveStage(stage?.page ?? 'page3', { page3SpriteSource: value as Page3SpriteSource }); }}
+                          />
+                        </Space>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>推流页面3排位图标</Text>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            开启后在页面3比分栏中央两侧显示选手排位排名图标；当前对局未输入排位排名的选手只显示图标，不显示排名数字。
+                          </Paragraph>
+                          <Space wrap>
+                            <Switch
+                              checked={stage?.page3RankVisible ?? false}
+                              disabled={stageSaving}
+                              loading={stageSaving}
+                              onChange={(checked) => { void saveStage(stage?.page ?? 'page3', { silent: true, page3RankVisible: checked }); }}
                             />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-                      <Button type="primary" htmlType="submit">保存页面2设置</Button>
-                    </Form>
-                  </Card>
+                            {stage?.page3RankVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
+                          </Space>
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
+                  <Row gutter={[16, 16]} className="stage-config-cards">
+                    <Col xs={24} md={12}>
+                      <Card size="small" className="subtle-card stage-settings-card" title="页面2设置">
+                        <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
+                          <Row gutter={[16, 16]}>
+                            <Col xs={24} md={12} xl={8}>
+                              <Form.Item label="页面2赛事标题" name="eventTitle">
+                                <Input maxLength={40} />
+                              </Form.Item>
+                            </Col>
+                            <Col xs={24} md={12} xl={8}>
+                              <Form.Item label="页面2阵容展示" name="page2LineupDisplayMode">
+                                <Select
+                                  options={[
+                                    { value: 'default', label: '默认血量展示' },
+                                    { value: 'avatar-only', label: '仅头像展示' },
+                                  ]}
+                                />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                          <Button type="primary" htmlType="submit">保存页面2设置</Button>
+                        </Form>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Card size="small" className="subtle-card stage-settings-card" title="对局推送设置（推流页面7）">
+                        <Space direction="vertical" size={12} className="page-stack" style={{ width: '100%' }}>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            对局勾选与推送在「比赛历史」中完成：勾选「对局」列后点击「推送对局推送」。
+                          </Paragraph>
+                          <Row gutter={[16, 16]}>
+                            <Col xs={24} md={12}>
+                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>主标题：</Text>
+                              <Input
+                                maxLength={40}
+                                placeholder="例如：S2洛克联赛，留空显示默认「对局推送」"
+                                value={page7TitleDraft}
+                                onChange={(event) => setPage7TitleDraft(event.target.value)}
+                              />
+                            </Col>
+                            <Col xs={24} md={12}>
+                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>温馨提示：</Text>
+                              <Input
+                                maxLength={60}
+                                placeholder="页面底部提示文字，留空使用默认内容"
+                                value={page7NoticeDraft}
+                                onChange={(event) => setPage7NoticeDraft(event.target.value)}
+                              />
+                            </Col>
+                          </Row>
+                          <Button type="primary" loading={page7Saving} onClick={() => void savePage7Settings()}>
+                            保存对局推送设置
+                          </Button>
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
                 </Space>
               </Card>
             </Space>
@@ -3574,85 +3672,6 @@ function Dashboard() {
                     >
                       <div className="preview-frame-stage" style={{ transform: `scale(${previewScale})` }}>
                       <iframe title="preview" className="preview-frame" src={buildPreviewUrl(previewSlot)} />
-                      </div>
-                    </div>
-                  </div>
-                </Space>
-              </Card>
-            </Space>
-          ) : null}
-
-          {view === 'page7' ? (
-            <Space direction="vertical" size={18} className="page-stack">
-              <Card
-                className="preview-page-card"
-                title="对局推送（推流页面7）"
-                extra={<Button type="primary" href="/roco-pvp-page7.html" target="_blank">新窗口打开</Button>}
-              >
-                <Space direction="vertical" size={16} className="page-stack" style={{ width: '100%' }}>
-                  {page7Notice ? (
-                    <Alert
-                      showIcon
-                      closable
-                      type={page7Notice.tone}
-                      message={page7Notice.text}
-                      onClose={() => setPage7Notice(null)}
-                    />
-                  ) : null}
-                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                    选择单场比赛即时推送：页面按小局逐行展示双方选手、头像、排位排名与该局阵容，胜方一侧高亮并显示胜/负图标；
-                    最多同时显示 4 行，超过 4 个小局时自动滚动显示最新 4 局（第 5 局出现时第 1 局消失），未选满时以占位行补齐。
-                  </Paragraph>
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24} md={8}>
-                      <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>选择比赛（单场推送，清空即显示占位行）：</Text>
-                      <Select
-                        style={{ width: '100%' }}
-                        showSearch
-                        allowClear
-                        optionFilterProp="label"
-                        placeholder="搜索并选择要推送的比赛"
-                        value={page7?.matchId ?? undefined}
-                        disabled={page7Saving}
-                        options={matchStore.matches.map((match) => ({
-                          value: match.id,
-                          label: `${match.leftPlayer || '左侧'} vs ${match.rightPlayer || '右侧'}（BO${match.bestOf}）`,
-                        }))}
-                        onChange={(value) => { void pushPage7Match(value ?? null); }}
-                      />
-                    </Col>
-                    <Col xs={24} md={8}>
-                      <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>主标题：</Text>
-                      <Input
-                        maxLength={40}
-                        placeholder="例如：S2洛克联赛，留空显示默认「对局推送」"
-                        value={page7TitleDraft}
-                        onChange={(event) => setPage7TitleDraft(event.target.value)}
-                      />
-                    </Col>
-                    <Col xs={24} md={8}>
-                      <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>温馨提示：</Text>
-                      <Input
-                        maxLength={60}
-                        placeholder="页面底部提示文字，留空使用默认内容"
-                        value={page7NoticeDraft}
-                        onChange={(event) => setPage7NoticeDraft(event.target.value)}
-                      />
-                    </Col>
-                  </Row>
-                  <Space wrap>
-                    <Button type="primary" loading={page7Saving} onClick={() => void savePage7Settings()}>
-                      保存页面设置
-                    </Button>
-                    <Button href={buildPreviewUrl('page7')} target="_blank">打开页面7</Button>
-                  </Space>
-                  <div className="preview-frame-shell" ref={previewFrameShellRef}>
-                    <div
-                      className="preview-frame-viewport"
-                      style={{ width: `${previewShellSize.width}px`, height: `${previewShellSize.height}px` }}
-                    >
-                      <div className="preview-frame-stage" style={{ transform: `scale(${previewScale})` }}>
-                        <iframe title="preview-page7" className="preview-frame" src={buildPreviewUrl('page7')} />
                       </div>
                     </div>
                   </div>
