@@ -40,11 +40,6 @@ export const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     fileName: 'roco-pvp-page6.html',
     path: '/roco-pvp-page6.html',
   },
-  page7: {
-    title: '推流页面7',
-    fileName: 'roco-pvp-page7.html',
-    path: '/roco-pvp-page7.html',
-  },
   page8: {
     title: '推流页面8（比赛预告）',
     fileName: 'roco-pvp-page8.html',
@@ -82,12 +77,6 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
     label: '推流页面6',
     description: '比赛结果展示（最多 8 场已结束比赛）',
     previewPath: '/roco-pvp-page6.html',
-  },
-  {
-    value: 'page7',
-    label: '推流页面7',
-    description: '直播等待 / 间歇展示页',
-    previewPath: '/roco-pvp-page7.html',
   },
   {
     value: 'blank',

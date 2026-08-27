@@ -33,7 +33,7 @@
 
 | 类型名称 | 说明 | 文件 |
 |---------|------|------|
-| StagePageKey | 推流页面 key：page1-overlay / page2 / page3 / page5 / page6 / page7 / blank | shared/types.ts |
+| StagePageKey | 推流页面 key：page1-overlay / page2 / page3 / page5 / page6 / blank | shared/types.ts |
 | StageTransitionType | 过渡效果：none / blinds / zoom | shared/types.ts |
 | StageConfig | 推流载体配置（page, transition, page3SpriteSource, page3RankVisible, page5Title, page5Player, page5Tag, mtime）。page3RankVisible 控制页面3比分栏中央两侧排位排名图标显隐 | shared/types.ts |
 | Page6State | 比赛结果页配置（matchIds 最多 8 个已结束比赛, title 副标题, mtime） | shared/types.ts |

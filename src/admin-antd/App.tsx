@@ -3397,7 +3397,6 @@ function Dashboard() {
                       { value: 'page4', label: '仅显阵容' },
                       { value: 'page5', label: '推流页面5' },
                       { value: 'page6', label: '推流页面6' },
-                      { value: 'page7', label: '推流页面7' },
                       { value: 'page8', label: '推流页面8' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}

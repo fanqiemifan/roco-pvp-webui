@@ -95,7 +95,6 @@ pvp-webUI-for-roco/
 | page4-display.js | 仅显阵容页（page4）脚本 |
 | page5-display.js | 登场/胜率排行页（page5）脚本 |
 | page6-display.js | 比赛结果页（page6）脚本 |
-| page7-display.js | 等待页（page7）脚本 |
 | page8-display.js | 比赛预告页（page8）脚本 |
 | stage-carrier.js | 推流载体页（index.html）脚本，按 stage 配置加载对应页面 |
 | float.js | 桌面阵容悬浮窗脚本 |
@@ -112,7 +111,6 @@ pvp-webUI-for-roco/
 | roco-pvp-page4.html | 仅显阵容页 |
 | roco-pvp-page5.html | 登场/胜率排行页 |
 | roco-pvp-page6.html | 比赛结果展示页 |
-| roco-pvp-page7.html | 等待页（公开免鉴权） |
 | roco-pvp-page8.html | 比赛预告展示页（公开免鉴权，不进直播推流可选画面） |
 | float.html | 桌面阵容悬浮窗 |
 | float-menu.html | 更换精灵菜单 |

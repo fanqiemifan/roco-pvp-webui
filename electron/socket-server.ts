@@ -287,7 +287,6 @@ export async function createLocalServer(
   app.get('/roco-pvp-page4.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page4.html'));
   app.get('/roco-pvp-page5.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page5.html'));
   app.get('/roco-pvp-page6.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page6.html'));
-  app.get('/roco-pvp-page7.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page7.html'));
   app.get('/roco-pvp-page8.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page8.html'));
   app.get('/roco-pvp-page1.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page1.html'));
   app.get('/float.html', (_request, response) => sendPage(paths, response, 'float.html'));
@@ -344,8 +343,8 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/roco-pvp-page8.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
-      // 推流页面5/6/7/8 仅用于展示，所需的数据 GET 接口公开（写操作仍受保护）
+      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page8.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
+      // 推流页面5/6/8 仅用于展示，所需的数据 GET 接口公开（写操作仍受保护）
       const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page6', '/api/page8', '/api/images', '/api/matches', '/api/sprites', '/api/nextgame'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';

@@ -54,7 +54,6 @@
 - roco-pvp-page3.html + page3-display.js — 头像比分阵容；比分栏中央两侧排位排名图标（stage.page3RankVisible 控制显隐，开启但未输入排名时仅显示图标；排名超过 10000 显示 10000+，txt 位置按位数查表）
 - roco-pvp-page4.html + page4-display.js — 仅显阵容
 - roco-pvp-page5.html + page5-display.js — 登场/胜率排行
-- roco-pvp-page7.html + page7-display.js — 等待页（公开免鉴权，history-panel 展示后台推送的比赛结果）
 - roco-pvp-page8.html + page8-display.js — 比赛预告页（公开免鉴权，复用 page6 布局；选手对局信息卡 w860×h88 两列网格，最多 12 场，展示 vs + 双方选手名 + 排位排名图标（复用 page3 rank 样式）；不进直播推流可选画面，仅在页面预览展示）
 - float.html + float.js — 桌面阵容悬浮窗（透明置顶小窗）
 - float-menu.html + float-menu.js — 更换精灵菜单（形态选择 / 全新精灵选择器）
