@@ -31,7 +31,7 @@
     --page9-row-bg-2: #fae6b6;    /* 偶数行底色 */
     /* 行高/行字号由 page9-display.js 按战队数量计算后写入 */
     --page9-row-h: 150px;
-    --page9-row-fs: 54px;
+    --page9-row-fs: 64px;
 }
 
 * {
@@ -86,14 +86,27 @@ body {
     flex-direction: column;
     background: #FCF5E9;
     border-radius: 28px;
+    outline: 4px solid #867E72;
 }
 
 /* 表格区内衬（含深色标题条）：无阴影，四周留奶白边 */
 .page9-inner {
+    position: relative;
     margin: 26px 26px 22px;
     background: var(--page9-panel-bg);
-    border-radius: 16px;
+    border-radius: 30px;
     overflow: hidden;
+}
+
+/* 内描边覆盖层：inset 阴影沿圆角连续绘制，避免 border 圆角处漏出底层深色的黑色像素 */
+.page9-inner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 30px;
+    box-shadow: inset 0 0 0 2px #F6DFBF;
+    pointer-events: none;
+    z-index: 1;
 }
 
 /* 顶部深色标题条：标题后台可改，留空显示默认「团队积分榜」 */
@@ -107,7 +120,7 @@ body {
 
 .page9-header span {
     color: #ffffff;
-    font-size: 54px;
+    font-size: 64px;
     line-height: 1;
     letter-spacing: 6px;
     white-space: nowrap;
@@ -118,7 +131,7 @@ body {
 /* 战队列加宽到 30%，容纳更长的战队名 */
 .page9-row {
     display: grid;
-    grid-template-columns: 14% 30% 12% 12% 12% 20%;
+    grid-template-columns: 14% 27% 13% 13% 13% 20%;
     align-items: center;
 }
 
