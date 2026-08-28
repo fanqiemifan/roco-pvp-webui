@@ -52,8 +52,10 @@ import type {
   Page4SlotState,
   Page4State,
   Page6State,
+  Page7State,
   Page8Background,
   Page8State,
+  Page9State,
   PanelState,
   ScoreboardState,
   Page6Background,
@@ -145,6 +147,15 @@ const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
 
 const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
+  {
+    version: '1.5.5',
+    date: '2026-08',
+    items: [
+      '新增推流页面7（对局推送）：按小局逐行展示双方选手、头像、排位排名与该局阵容（精灵卡复用页面2 样式，80×80），胜方一侧高亮 FFC65F 并显示胜/负图标',
+      '页面7 布局：主标题（FCC34A 黄底、后台输入）+ 最多 4 行比赛信息（超出滚动显示最新 4 局，未选满以占位行补齐），每行左侧显示 GAME1-5 对局序号，底部温馨提示后台可编辑',
+      '后台新增独立导航「对局推送」：选择单场比赛即时推送，可编辑主标题与温馨提示，并内嵌页面预览',
+    ],
+  },
   {
     version: '1.5.4',
     date: '2026-08',
@@ -240,6 +251,8 @@ const HISTORY_STATUS_RANK: Record<MatchRecord['status'], number> = {
 
 const PAGE6_MAX_MATCHES = 8;
 const PAGE8_MAX_MATCHES = 12;
+/** 团队积分榜（page9）后台可录入的战队行数 */
+const PAGE9_TEAM_COUNT = 4;
 
 function HistorySortHeader({ text, sortKey, activeOrder, onSort }: {
   text: string;
@@ -278,7 +291,7 @@ function Dashboard() {
   const [matchStore, setMatchStore] = useState<MatchStoreState>({
     activeMatchId: null,
     matches: [],
-    history: {
+    undo: {
       canUndo: false,
       canRedo: false,
       canUndoDelete: false,
@@ -343,6 +356,12 @@ function Dashboard() {
   const [page6Draft, setPage6Draft] = useState<string[]>([]);
   const [page6Pushing, setPage6Pushing] = useState(false);
   const [page8, setPage8] = useState<Page8State | null>(null);
+  const [page7, setPage7] = useState<Page7State | null>(null);
+  const [page7TitleDraft, setPage7TitleDraft] = useState('');
+  const [page7NoticeDraft, setPage7NoticeDraft] = useState('');
+  const [page7Saving, setPage7Saving] = useState(false);
+  const [page7Draft, setPage7Draft] = useState<string[]>([]);
+  const [page7Pushing, setPage7Pushing] = useState(false);
   const [page8Draft, setPage8Draft] = useState<string[]>([]);
   const [page8TitleDraft, setPage8TitleDraft] = useState('');
   const [page8SubtitleDraft, setPage8SubtitleDraft] = useState('');
@@ -351,6 +370,13 @@ function Dashboard() {
   const [page8Saving, setPage8Saving] = useState(false);
   const [page8WallpaperUploading, setPage8WallpaperUploading] = useState(false);
   const [page8SettingsNotice, setPage8SettingsNotice] = useState<NoticeState>(null);
+  const [page9, setPage9] = useState<Page9State | null>(null);
+  const [page9TitleDraft, setPage9TitleDraft] = useState('');
+  const [page9TeamsDraft, setPage9TeamsDraft] = useState<Array<{ name: string; r1: string; r2: string; r3: string }>>(
+    () => Array.from({ length: PAGE9_TEAM_COUNT }, () => ({ name: '', r1: '', r2: '', r3: '' })),
+  );
+  const [page9Saving, setPage9Saving] = useState(false);
+  const [page9SettingsNotice, setPage9SettingsNotice] = useState<NoticeState>(null);
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
   const [page4Notice, setPage4Notice] = useState<NoticeState>(null);
   const [historyNotice, setHistoryNotice] = useState<NoticeState>(null);
@@ -470,7 +496,7 @@ function Dashboard() {
 
   function applyServerState(payload: {
     scoreboard?: ScoreboardState;
-    matches?: MatchStoreState;
+    store?: MatchStoreState;
     avatars?: AvatarCollectionState;
     panels?: PanelState[];
     panel?: PanelState;
@@ -478,15 +504,17 @@ function Dashboard() {
     page4Panel?: Page4PanelState;
     stage?: StageConfig;
     page6?: Page6State;
+    page7?: Page7State;
     page8?: Page8State;
+    page9?: Page9State;
     nextgame?: NextGamePayload;
   }) {
     startTransition(() => {
       if (payload.scoreboard) {
         setScoreboard(payload.scoreboard);
       }
-      if (payload.matches) {
-        setMatchStore(payload.matches);
+      if (payload.store) {
+        setMatchStore(payload.store);
       }
       if (payload.avatars) {
         setAvatars(payload.avatars);
@@ -521,8 +549,14 @@ function Dashboard() {
       if (payload.page6) {
         setPage6(payload.page6);
       }
+      if (payload.page7) {
+        setPage7(payload.page7);
+      }
       if (payload.page8) {
         setPage8(payload.page8);
+      }
+      if (payload.page9) {
+        setPage9(payload.page9);
       }
     });
   }
@@ -532,17 +566,19 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage8, nextNextgame] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage7, nextPage8, nextPage9, nextNextgame] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
         requestJson<AvatarCollectionState>('/api/avatars'),
-        requestJson<{ images: [PanelState, PanelState] }>('/api/images'),
+        requestJson<{ panels: [PanelState, PanelState] }>('/api/panels'),
         requestJson<Page4State>('/api/page4'),
         requestJson<{ sprites: SpriteRecord[] }>('/api/sprites'),
         requestJson<StageConfig>('/api/stage'),
         requestJson<{ state: Page6State }>('/api/page6'),
+        requestJson<{ state: Page7State }>('/api/page7'),
         requestJson<{ state: Page8State }>('/api/page8'),
+        requestJson<{ state: Page9State }>('/api/page9'),
         requestJson<NextGamePayload>('/api/nextgame'),
       ]);
 
@@ -559,12 +595,15 @@ function Dashboard() {
         setStage(nextStage);
         setPage6(nextPage6.state);
         setPage6Draft(nextPage6.state.matchIds);
+        setPage7(nextPage7.state);
+        setPage7Draft(nextPage7.state.matchIds);
         setPage8(nextPage8.state);
         setPage8Draft(nextPage8.state.matchIds);
+        setPage9(nextPage9.state);
         setNextgame(nextNextgame.state);
         setNextgameMatch(nextNextgame.match ?? null);
-        syncPanelFromApi('left', nextPanels.images[0]);
-        syncPanelFromApi('right', nextPanels.images[1]);
+        syncPanelFromApi('left', nextPanels.panels[0]);
+        syncPanelFromApi('right', nextPanels.panels[1]);
         syncPage4PanelFromApi('left', nextPage4.panels[0]);
         syncPage4PanelFromApi('right', nextPage4.panels[1]);
       });
@@ -643,8 +682,8 @@ function Dashboard() {
     });
 
     socket.on(SOCKET_EVENTS.matchesUpdate, (payload) => {
-      if (payload?.matches) {
-        applyServerState({ matches: payload.matches });
+      if (payload?.store) {
+        applyServerState({ store: payload.store });
       }
     });
 
@@ -666,9 +705,21 @@ function Dashboard() {
       }
     });
 
+    socket.on(SOCKET_EVENTS.page7Update, (payload) => {
+      if (payload?.state) {
+        applyServerState({ page7: payload.state });
+      }
+    });
+
     socket.on(SOCKET_EVENTS.page8Update, (payload) => {
       if (payload?.state) {
         applyServerState({ page8: payload.state });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.page9Update, (payload) => {
+      if (payload?.state) {
+        applyServerState({ page9: payload.state });
       }
     });
 
@@ -684,7 +735,8 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (!panels.left.autoSaveEnabled || !panels.left.dirty) {
+    // saving 期间跳过调度，避免保存触发的 saving/dirty 状态变化导致重复 POST
+    if (!panels.left.autoSaveEnabled || !panels.left.dirty || panels.left.saving) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -694,7 +746,7 @@ function Dashboard() {
   }, [panels.left]);
 
   useEffect(() => {
-    if (!panels.right.autoSaveEnabled || !panels.right.dirty) {
+    if (!panels.right.autoSaveEnabled || !panels.right.dirty || panels.right.saving) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -704,7 +756,7 @@ function Dashboard() {
   }, [panels.right]);
 
   useEffect(() => {
-    if (!page4Panels.left.autoSaveEnabled || !page4Panels.left.dirty) {
+    if (!page4Panels.left.autoSaveEnabled || !page4Panels.left.dirty || page4Panels.left.saving) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -714,7 +766,7 @@ function Dashboard() {
   }, [page4Panels.left]);
 
   useEffect(() => {
-    if (!page4Panels.right.autoSaveEnabled || !page4Panels.right.dirty) {
+    if (!page4Panels.right.autoSaveEnabled || !page4Panels.right.dirty || page4Panels.right.saving) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -736,7 +788,7 @@ function Dashboard() {
     const current = panels[side];
     mutatePanel(side, (panel) => ({ ...panel, saving: true }));
     try {
-      const data = await requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>(`/api/panels/${side}`, {
+      const data = await requestJson<{ success: boolean; panel?: PanelState; store?: MatchStoreState }>(`/api/panels/${side}`, {
         method: 'POST',
         json: {
           selected: buildPanelRequest(current.selected),
@@ -744,11 +796,11 @@ function Dashboard() {
       });
       applyServerState({
         panel: data.panel,
-        matches: data.matches,
+        store: data.store,
       });
       mutatePanel(side, (panel) => ({ ...panel, dirty: false, saving: false }));
       if (!silent) {
-        const nextActiveMatch = data.matches ? getActiveMatch(data.matches) : activeMatch;
+        const nextActiveMatch = data.store ? getActiveMatch(data.store) : activeMatch;
         const nextCurrentGame = getCurrentGame(nextActiveMatch);
         const nextText = nextCurrentGame?.status === 'in_progress'
           ? `${side === 'left' ? '左侧' : '右侧'}阵容已同步到当前对局与推流页面`
@@ -764,12 +816,12 @@ function Dashboard() {
 
   async function deletePanel(side: PanelSide) {
     try {
-      const data = await requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>(`/api/panels/${side}`, {
+      const data = await requestJson<{ success: boolean; panel?: PanelState; store?: MatchStoreState }>(`/api/panels/${side}`, {
         method: 'DELETE',
       });
       applyServerState({
         panel: data.panel,
-        matches: data.matches,
+        store: data.store,
       });
       mutatePanel(side, (panel) => ({
         ...panel,
@@ -1113,12 +1165,12 @@ function Dashboard() {
 
     const save = async () => {
       try {
-        const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState }>(`/api/matches/${encodeURIComponent(activeMatch.id)}`, {
+        const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState }>(`/api/matches/${encodeURIComponent(activeMatch.id)}`, {
           method: 'PATCH',
           json: values,
         });
         applyServerState({
-          matches: data.matches,
+          store: data.store,
           scoreboard: data.scoreboard,
         });
 
@@ -1165,18 +1217,18 @@ function Dashboard() {
 
   async function selectMatch(matchId: string) {
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>(`/api/matches/${encodeURIComponent(matchId)}/select`, {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>(`/api/matches/${encodeURIComponent(matchId)}/select`, {
         method: 'POST',
       });
       applyServerState({
-        matches: data.matches,
+        store: data.store,
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
       const nextAvatars = await requestJson<AvatarCollectionState>('/api/avatars');
       setAvatars(nextAvatars);
       setView('roster');
-      const nextStore = data.matches ?? matchStore;
+      const nextStore = data.store ?? matchStore;
       const nextActiveMatch = getActiveMatch(nextStore);
       const nextText = nextActiveMatch?.status === 'completed'
         ? `已切换到赛事 ${matchId}，比赛已完成，阵容不可编辑`
@@ -1194,7 +1246,7 @@ function Dashboard() {
 
   async function createMatch(values: CreateMatchValues) {
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches', {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches', {
         method: 'POST',
         json: {
           ...values,
@@ -1202,7 +1254,7 @@ function Dashboard() {
         },
       });
       applyServerState({
-        matches: data.matches,
+        store: data.store,
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
@@ -1230,7 +1282,7 @@ function Dashboard() {
   function getAvatarPreviewSrc(side: PanelSide): string {
     const avatar = avatars[side];
     return avatar.exists
-      ? `${avatar.path}?t=${avatar.mtime ?? Date.now()}`
+      ? `${avatar.path}?t=${avatar.mtime ?? 0}`
       : side === 'left'
         ? '/assets/ui/left-avatar.png'
         : '/assets/ui/right-avatar.png';
@@ -1263,12 +1315,12 @@ function Dashboard() {
     }
 
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches/history/delete', {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches/batch-delete', {
         method: 'POST',
         json: { matchIds },
       });
       applyServerState({
-        matches: data.matches,
+        store: data.store,
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
@@ -1282,11 +1334,11 @@ function Dashboard() {
 
   async function undoDeletedHistoryMatches() {
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches/history/undo-delete', {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches/undo-delete', {
         method: 'POST',
       });
       applyServerState({
-        matches: data.matches,
+        store: data.store,
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
@@ -1422,11 +1474,11 @@ function Dashboard() {
     }
     setBatchTagSaving(true);
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState }>('/api/matches/batch-tags', {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState }>('/api/matches/batch-tags', {
         method: 'POST',
         json: { matchIds: ids, tags: [batchTagValue] },
       });
-      applyServerState({ matches: data.matches });
+      applyServerState({ store: data.store });
       const added = batchTagValue;
       setSelectedHistoryKeys([]);
       setBatchTagOpen(false);
@@ -1446,7 +1498,7 @@ function Dashboard() {
     }
 
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>(
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>(
         `/api/matches/${encodeURIComponent(activeMatch.id)}/${action}`,
         {
           method: 'POST',
@@ -1454,12 +1506,12 @@ function Dashboard() {
         },
       );
       applyServerState({
-        matches: data.matches,
+        store: data.store,
         scoreboard: data.scoreboard,
         panels: data.panels,
       });
 
-      const nextStore = data.matches ?? matchStore;
+      const nextStore = data.store ?? matchStore;
       const nextMatch = getActiveMatch(nextStore);
       if (action === 'start') {
         const nextText = '本局已开始，后续仍可继续编辑阵容、血量与能量值';
@@ -1536,6 +1588,28 @@ function Dashboard() {
     setPage8BackgroundDraft(page8?.background ?? 'image');
   }, [page8?.title, page8?.subtitle, page8?.background]);
 
+  useEffect(() => {
+    setPage7TitleDraft(page7?.title ?? '');
+    setPage7NoticeDraft(page7?.notice ?? '');
+  }, [page7?.title, page7?.notice]);
+
+  useEffect(() => {
+    setPage9TitleDraft(page9?.title ?? '');
+    // 以服务端数据回填草稿行，不足 PAGE9_TEAM_COUNT 行则补空行
+    const serverTeams = Array.isArray(page9?.teams) ? page9.teams : [];
+    setPage9TeamsDraft(
+      Array.from({ length: PAGE9_TEAM_COUNT }, (_, index) => {
+        const team = serverTeams[index];
+        return {
+          name: team?.name ?? '',
+          r1: team?.r1 ?? '',
+          r2: team?.r2 ?? '',
+          r3: team?.r3 ?? '',
+        };
+      }),
+    );
+  }, [page9?.title, page9?.teams]);
+
   async function saveLiveStreamSettings() {
     try {
       setPage5Page6Saving(true);
@@ -1583,6 +1657,91 @@ function Dashboard() {
       setPage8SettingsNotice({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
     } finally {
       setPage8Saving(false);
+    }
+  }
+
+  async function savePage7Settings() {
+    setPage7Saving(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page7State }>('/api/page7', {
+        method: 'POST',
+        json: {
+          matchIds: page7?.matchIds ?? page7Draft,
+          title: page7TitleDraft,
+          notice: page7NoticeDraft,
+        },
+      });
+      applyServerState({ page7: data.state });
+      setPage7Draft(data.state.matchIds);
+      message.success('对局推送页面设置已保存');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setPage7Saving(false);
+    }
+  }
+
+  function togglePage7Draft(matchId: string, checked: boolean) {
+    setPage7Draft((prev) => {
+      if (checked) {
+        return prev.includes(matchId) ? prev : [...prev, matchId];
+      }
+      return prev.filter((id) => id !== matchId);
+    });
+  }
+
+  // 更新团队积分榜某一行的某个字段（战队名称 / R1 / R2 / R3；积分仅允许数字）
+  function updatePage9TeamDraft(rowIndex: number, field: 'name' | 'r1' | 'r2' | 'r3', value: string) {
+    const nextValue = field === 'name' ? value : value.replace(/\D/g, '');
+    setPage9TeamsDraft((prev) => prev.map((team, index) => (
+      index === rowIndex ? { ...team, [field]: nextValue } : team
+    )));
+  }
+
+  async function savePage9Settings() {
+    setPage9Saving(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page9State }>('/api/page9', {
+        method: 'POST',
+        json: {
+          title: page9TitleDraft,
+          teams: page9TeamsDraft,
+        },
+      });
+      applyServerState({ page9: data.state });
+      setPage9SettingsNotice({ tone: 'success', text: '团队积分榜设置已保存，预览已更新' });
+      message.success('团队积分榜设置已保存');
+    } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
+      message.error(text);
+      setPage9SettingsNotice({ tone: 'error', text });
+    } finally {
+      setPage9Saving(false);
+    }
+  }
+
+  async function pushPage7Matches() {
+    setPage7Pushing(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page7State }>('/api/page7', {
+        method: 'POST',
+        json: {
+          matchIds: page7Draft,
+          title: page7TitleDraft,
+          notice: page7NoticeDraft,
+        },
+      });
+      applyServerState({ page7: data.state });
+      setPage7Draft(data.state.matchIds);
+      const nextText = data.state.matchIds.length
+        ? `已推送 ${data.state.matchIds.length} 场对局到推流页面7（对局推送）`
+        : '已清空推流页面7 的对局推送';
+      setHistoryNotice({ tone: 'success', text: nextText });
+      message.success(nextText);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setPage7Pushing(false);
     }
   }
 
@@ -1712,11 +1871,11 @@ function Dashboard() {
 
     setSavingHistoryTagMatchId(matchId);
     try {
-      const data = await requestJson<{ success: boolean; matches?: MatchStoreState }>(`/api/matches/${encodeURIComponent(matchId)}/tags`, {
+      const data = await requestJson<{ success: boolean; store?: MatchStoreState }>(`/api/matches/${encodeURIComponent(matchId)}/tags`, {
         method: 'PATCH',
         json: { tags: nextTags },
       });
-      applyServerState({ matches: data.matches });
+      applyServerState({ store: data.store });
       setEditingHistoryTagMatchId(null);
       setEditingHistoryTagValues([]);
       setHistoryNotice({ tone: 'success', text: '标签已更新' });
@@ -1875,11 +2034,11 @@ function Dashboard() {
 
   async function saveLivePanelsSilently(nextPanels: Record<PanelSide, PanelEditorState>) {
     const [leftData, rightData] = await Promise.all([
-      requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>('/api/panels/left', {
+      requestJson<{ success: boolean; panel?: PanelState; store?: MatchStoreState }>('/api/panels/left', {
         method: 'POST',
         json: { selected: buildPanelRequest(nextPanels.left.selected) },
       }),
-      requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>('/api/panels/right', {
+      requestJson<{ success: boolean; panel?: PanelState; store?: MatchStoreState }>('/api/panels/right', {
         method: 'POST',
         json: { selected: buildPanelRequest(nextPanels.right.selected) },
       }),
@@ -1888,7 +2047,7 @@ function Dashboard() {
     applyServerState({
       panel: rightData.panel,
       panels: [leftData.panel, rightData.panel].filter(Boolean) as PanelState[],
-      matches: rightData.matches ?? leftData.matches,
+      store: rightData.store ?? leftData.store,
     });
   }
 
@@ -2160,7 +2319,7 @@ function Dashboard() {
     });
 
     try {
-      await requestJson<{ success: boolean; panel?: PanelState; matches?: MatchStoreState }>(`/api/panels/${side}/slots/${slotIndex}`, {
+      await requestJson<{ success: boolean; panel?: PanelState; store?: MatchStoreState }>(`/api/panels/${side}/slots/${slotIndex}`, {
         method: 'PATCH',
         json: {
           slot: buildPanelRequest(selected)[slotIndex],
@@ -2206,13 +2365,13 @@ function Dashboard() {
     updatePreviewLayout();
     const observer = new ResizeObserver(() => updatePreviewLayout());
     observer.observe(shell);
-
     window.addEventListener('resize', updatePreviewLayout);
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', updatePreviewLayout);
     };
-  }, [previewSlot]);
+    // view 也作为依赖：预览外壳在「页面预览」与「对局推送」两个视图中分别挂载，切换后需重新计算缩放
+  }, [previewSlot, view]);
 
   if (loading) {
     return (
@@ -2238,7 +2397,7 @@ function Dashboard() {
     {
       title: (
         <span>
-          推送
+          比赛结果
           <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
             已选 {page6Draft.length}/{PAGE6_MAX_MATCHES}
           </Text>
@@ -2261,7 +2420,28 @@ function Dashboard() {
     {
       title: (
         <span>
-          预告
+          对局信息
+          <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+            已选 {page7Draft.length}
+          </Text>
+        </span>
+      ),
+      key: 'page7',
+      width: 92,
+      render: (_: unknown, record: MatchRecord) => {
+        const isSelected = page7Draft.includes(record.id);
+        return (
+          <Checkbox
+            checked={isSelected}
+            onChange={(event) => togglePage7Draft(record.id, event.target.checked)}
+          />
+        );
+      },
+    },
+    {
+      title: (
+        <span>
+          比赛预告
           <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
             已选 {page8Draft.length}/{PAGE8_MAX_MATCHES}
           </Text>
@@ -2448,7 +2628,13 @@ function Dashboard() {
           mode="inline"
           selectedKeys={[view]}
           items={menuItems}
-          onClick={({ key }) => setView(key as ViewKey)}
+          onClick={({ key }) => {
+            setView(key as ViewKey);
+            // 进入「对局推送」视图时同步预览槽位，方便顶栏「打开当前预览」直达页面7
+            if (key === 'page7') {
+              setPreviewSlot('page7');
+            }
+          }}
           className="admin-menu"
         />
       </Sider>
@@ -2711,8 +2897,8 @@ function Dashboard() {
                               <Button type="dashed" onClick={() => void runMatchAction('winner', { winner: 'right' })} disabled={currentGame?.status !== 'in_progress'}>
                                 右侧赢了
                               </Button>
-                              <Button onClick={() => void runMatchAction('undo')} disabled={!matchStore.history.canUndo}>撤回上一步</Button>
-                              <Button onClick={() => void runMatchAction('redo')} disabled={!matchStore.history.canRedo}>取消撤回</Button>
+                              <Button onClick={() => void runMatchAction('undo')} disabled={!matchStore.undo.canUndo}>撤回上一步</Button>
+                              <Button onClick={() => void runMatchAction('redo')} disabled={!matchStore.undo.canRedo}>取消撤回</Button>
                             </Space>
                           </div>
                         </Form>
@@ -2843,7 +3029,7 @@ function Dashboard() {
                     <Button danger disabled={!selectedHistoryKeys.length} onClick={() => void deleteHistoryMatches(selectedHistoryKeys.map(String))}>
                       删除选中赛事
                     </Button>
-                    <Button onClick={() => void undoDeletedHistoryMatches()} disabled={!matchStore.history.canUndoDelete}>
+                    <Button onClick={() => void undoDeletedHistoryMatches()} disabled={!matchStore.undo.canUndoDelete}>
                       撤回最近删除
                     </Button>
                     <Button
@@ -2852,6 +3038,13 @@ function Dashboard() {
                       onClick={() => void pushPage6Matches()}
                     >
                       推送比赛结果（{page6Draft.length}/{PAGE6_MAX_MATCHES}）
+                    </Button>
+                    <Button
+                      type="primary"
+                      loading={page7Pushing}
+                      onClick={() => void pushPage7Matches()}
+                    >
+                      推送对局推送（{page7Draft.length}）
                     </Button>
                     <Button
                       type="primary"
@@ -3141,7 +3334,7 @@ function Dashboard() {
                     <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
-                          <Text strong>推流页面5 统计口径</Text>
+                          <Text strong>推流页面5-精灵出场胜率-统计口径</Text>
                           <div>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>页面5标题：</Text>
                             <Input
@@ -3184,7 +3377,7 @@ function Dashboard() {
                     <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
-                          <Text strong>推流页面6副标题与背景</Text>
+                          <Text strong>推流页面6-比赛结果标题与背景切换</Text>
                           <div>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>推流页面6副标题：</Text>
                             <Input
@@ -3213,7 +3406,7 @@ function Dashboard() {
                     <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
-                          <Text strong>下场对局（推流页面3）</Text>
+                          <Text strong>下场对局</Text>
                           <div>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>待开始比赛：</Text>
                             <Select
@@ -3301,8 +3494,8 @@ function Dashboard() {
                       );
                     })}
                   </Row>
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24}>
+                  <Row gutter={[16, 16]} className="stage-config-cards">
+                    <Col xs={24} md={8}>
                       <Card size="small" className="subtle-card">
                         <Space direction="vertical" size={12} className="control-stack">
                           <Text strong>切换过渡效果</Text>
@@ -3319,61 +3512,190 @@ function Dashboard() {
                         </Space>
                       </Card>
                     </Col>
-                  </Row>
-                  <Card size="small" className="subtle-card">
-                    <Space direction="vertical" size={12} className="control-stack">
-                      <Text strong>推流页面3精灵图片</Text>
-                      <Segmented
-                        block
-                        value={stage?.page3SpriteSource ?? 'sprite'}
-                        disabled={stageSaving}
-                        options={[
-                          { value: 'sprite', label: '精灵原图' },
-                          { value: 'thumbnail', label: 'Thumbnail' },
-                        ]}
-                        onChange={(value) => { void saveStage(stage?.page ?? 'page3', { page3SpriteSource: value as Page3SpriteSource }); }}
-                      />
-                    </Space>
-                  </Card>
-                  <Card size="small" className="subtle-card">
-                    <Space direction="vertical" size={12} className="control-stack">
-                      <Text strong>推流页面3排位图标</Text>
-                      <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                        开启后在页面3比分栏中央两侧显示选手排位排名图标；当前对局未输入排位排名的选手只显示图标，不显示排名数字。
-                      </Paragraph>
-                      <Space wrap>
-                        <Switch
-                          checked={stage?.page3RankVisible ?? false}
-                          disabled={stageSaving}
-                          loading={stageSaving}
-                          onChange={(checked) => { void saveStage(stage?.page ?? 'page3', { silent: true, page3RankVisible: checked }); }}
-                        />
-                        {stage?.page3RankVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
-                      </Space>
-                    </Space>
-                  </Card>
-                  <Card size="small" className="subtle-card stage-settings-card" title="页面2设置">
-                    <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
-                      <Row gutter={[16, 16]}>
-                        <Col xs={24} md={12} xl={8}>
-                          <Form.Item label="页面2赛事标题" name="eventTitle">
-                            <Input maxLength={40} />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={12} xl={8}>
-                          <Form.Item label="页面2阵容展示" name="page2LineupDisplayMode">
-                            <Select
-                              options={[
-                                { value: 'default', label: '默认血量展示' },
-                                { value: 'avatar-only', label: '仅头像展示' },
-                              ]}
+                    <Col xs={24} md={8}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>推流页面3精灵图片</Text>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            切换显示精灵完整立绘或者头像缩略图
+                          </Paragraph>
+                          <Segmented
+                            block
+                            value={stage?.page3SpriteSource ?? 'sprite'}
+                            disabled={stageSaving}
+                            options={[
+                              { value: 'sprite', label: '精灵原图' },
+                              { value: 'thumbnail', label: 'Thumbnail' },
+                            ]}
+                            onChange={(value) => { void saveStage(stage?.page ?? 'page3', { page3SpriteSource: value as Page3SpriteSource }); }}
+                          />
+                        </Space>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>推流页面3排位图标</Text>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            开启后在页面3比分栏中央两侧显示选手排位排名图标；当前对局未输入排位排名的选手只显示图标，不显示排名数字。
+                          </Paragraph>
+                          <Space wrap>
+                            <Switch
+                              checked={stage?.page3RankVisible ?? false}
+                              disabled={stageSaving}
+                              loading={stageSaving}
+                              onChange={(checked) => { void saveStage(stage?.page ?? 'page3', { silent: true, page3RankVisible: checked }); }}
                             />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-                      <Button type="primary" htmlType="submit">保存页面2设置</Button>
-                    </Form>
-                  </Card>
+                            {stage?.page3RankVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
+                          </Space>
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
+                  <Row gutter={[16, 16]} className="stage-config-cards">
+                    <Col xs={24} md={12}>
+                      <Card size="small" className="subtle-card stage-settings-card" title="推流页面2设置">
+                        <Form form={scoreboardForm} layout="vertical" onFinish={(values) => void saveScoreboardSettings(values)}>
+                          <Row gutter={[16, 16]}>
+                            <Col xs={24} md={12}>
+                              <Form.Item label="页面2赛事标题" name="eventTitle">
+                                <Input maxLength={40} />
+                              </Form.Item>
+                            </Col>
+                            <Col xs={24} md={12}>
+                              <Form.Item label="页面2阵容展示" name="page2LineupDisplayMode">
+                                <Select
+                                  options={[
+                                    { value: 'default', label: '默认血量展示' },
+                                    { value: 'avatar-only', label: '仅头像展示' },
+                                  ]}
+                                />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                          <Button type="primary" htmlType="submit">保存页面2设置</Button>
+                        </Form>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Card size="small" className="subtle-card stage-settings-card" title="推流页面7标题文本设置">
+                        <Space direction="vertical" size={12} className="page-stack" style={{ width: '100%' }}>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            对局勾选与推送在「比赛历史」中完成：勾选「对局」列后点击「推送对局推送」。
+                          </Paragraph>
+                          <Row gutter={[16, 16]}>
+                            <Col xs={24} md={12}>
+                              <Form.Item label="主标题">
+                                <Input
+                                  maxLength={40}
+                                  placeholder="例如：S2洛克联赛，留空显示默认「对局推送」"
+                                  value={page7TitleDraft}
+                                  onChange={(event) => setPage7TitleDraft(event.target.value)}
+                                />
+                              </Form.Item>
+                            </Col>
+                            <Col xs={24} md={12}>
+                              <Form.Item label="温馨提示">
+                                <Input
+                                  maxLength={60}
+                                  placeholder="页面底部提示文字，留空使用默认内容"
+                                  value={page7NoticeDraft}
+                                  onChange={(event) => setPage7NoticeDraft(event.target.value)}
+                                />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                          <Button type="primary" loading={page7Saving} onClick={() => void savePage7Settings()}>
+                            保存对局推送设置
+                          </Button>
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
+                  <Row gutter={[16, 16]} className="stage-config-cards">
+                    <Col xs={24}>
+                      <Card
+                        size="small"
+                        className="subtle-card stage-settings-card"
+                        title="团队积分榜设置（推流页面9）"
+                        extra={(
+                          <Button type="primary" loading={page9Saving} onClick={() => void savePage9Settings()}>
+                            保存页面9设置
+                          </Button>
+                        )}
+                      >
+                        <Space direction="vertical" size={12} className="page-stack" style={{ width: '100%' }}>
+                          {page9SettingsNotice ? (
+                            <Alert
+                              showIcon
+                              closable
+                              type={page9SettingsNotice.tone}
+                              message={page9SettingsNotice.text}
+                              onClose={() => setPage9SettingsNotice(null)}
+                            />
+                          ) : null}
+                          <Row gutter={[16, 16]}>
+                            <Col xs={24} md={8}>
+                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>主标题：</Text>
+                              <Input
+                                maxLength={40}
+                                placeholder="留空显示默认「团队积分榜」"
+                                value={page9TitleDraft}
+                                onChange={(event) => setPage9TitleDraft(event.target.value)}
+                              />
+                            </Col>
+                          </Row>
+                          <div>
+                            <Row gutter={[16, 8]}>
+                              <Col xs={24} md={10}><Text type="secondary">战队名称</Text></Col>
+                              <Col xs={8} md={4}><Text type="secondary">R1 积分</Text></Col>
+                              <Col xs={8} md={4}><Text type="secondary">R2 积分</Text></Col>
+                              <Col xs={8} md={4}><Text type="secondary">R3 积分</Text></Col>
+                            </Row>
+                            {page9TeamsDraft.map((team, index) => (
+                              <Row key={index} gutter={[16, 8]} style={{ marginTop: 8 }}>
+                                <Col xs={24} md={10}>
+                                  <Input
+                                    maxLength={40}
+                                    placeholder={`战队 ${index + 1} 名称，可留空`}
+                                    value={team.name}
+                                    onChange={(event) => updatePage9TeamDraft(index, 'name', event.target.value)}
+                                  />
+                                </Col>
+                                <Col xs={8} md={4}>
+                                  <Input
+                                    maxLength={3}
+                                    placeholder="-"
+                                    value={team.r1}
+                                    onChange={(event) => updatePage9TeamDraft(index, 'r1', event.target.value)}
+                                  />
+                                </Col>
+                                <Col xs={8} md={4}>
+                                  <Input
+                                    maxLength={3}
+                                    placeholder="-"
+                                    value={team.r2}
+                                    onChange={(event) => updatePage9TeamDraft(index, 'r2', event.target.value)}
+                                  />
+                                </Col>
+                                <Col xs={8} md={4}>
+                                  <Input
+                                    maxLength={3}
+                                    placeholder="-"
+                                    value={team.r3}
+                                    onChange={(event) => updatePage9TeamDraft(index, 'r3', event.target.value)}
+                                  />
+                                </Col>
+                              </Row>
+                            ))}
+                          </div>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            积分留空显示「-」；排名与总积分按三轮积分之和自动降序计算（同分保持录入顺序）；名称与积分全空的行不展示；最多 {PAGE9_TEAM_COUNT} 支战队。
+                          </Paragraph>
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
                 </Space>
               </Card>
             </Space>
@@ -3399,6 +3721,7 @@ function Dashboard() {
                       { value: 'page6', label: '推流页面6' },
                       { value: 'page7', label: '推流页面7' },
                       { value: 'page8', label: '推流页面8' },
+                      { value: 'page9', label: '推流页面9' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}
                   />

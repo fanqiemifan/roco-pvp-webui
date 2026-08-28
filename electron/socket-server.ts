@@ -8,7 +8,7 @@ import multer from 'multer';
 import { Server as SocketIOServer } from 'socket.io';
 
 import { SOCKET_EVENTS } from '../shared/events.js';
-import type { SnapshotPayload } from '../shared/types.js';
+import type { AvatarCollectionState, SnapshotPayload } from '../shared/types.js';
 import { buildQuickFillPreview, listSprites, spriteMatchesKeyword } from './services/sprite-service.js';
 import { getSpriteRanking } from './services/stats-service.js';
 import {
@@ -29,9 +29,17 @@ import {
   savePage6State,
 } from './services/page6-service.js';
 import {
+  getPage7State,
+  savePage7State,
+} from './services/page7-service.js';
+import {
   getPage8State,
   savePage8State,
 } from './services/page8-service.js';
+import {
+  getPage9State,
+  savePage9State,
+} from './services/page9-service.js';
 import {
   getNextGamePayload,
   hideNextGame,
@@ -92,10 +100,12 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     page4: getPage4State(paths),
     scoreboard: getScoreboardState(paths),
     avatars: getAvatarStates(paths, activeMatchId),
-    matches: getMatchStore(paths),
+    store: getMatchStore(paths),
     stage: getStageState(paths),
     page6: getPage6State(paths),
+    page7: getPage7State(paths),
     page8: getPage8State(paths),
+    page9: getPage9State(paths),
     nextgame: getNextGamePayload(paths),
   };
 }
@@ -289,6 +299,7 @@ export async function createLocalServer(
   app.get('/roco-pvp-page6.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page6.html'));
   app.get('/roco-pvp-page7.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page7.html'));
   app.get('/roco-pvp-page8.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page8.html'));
+  app.get('/roco-pvp-page9.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page9.html'));
   app.get('/roco-pvp-page1.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page1.html'));
   app.get('/float.html', (_request, response) => sendPage(paths, response, 'float.html'));
   app.get('/float-menu.html', (_request, response) => sendPage(paths, response, 'float-menu.html'));
@@ -344,9 +355,9 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/roco-pvp-page8.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
-      // 推流页面5/6/7/8 仅用于展示，所需的数据 GET 接口公开（写操作仍受保护）
-      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page6', '/api/page8', '/api/images', '/api/matches', '/api/sprites', '/api/nextgame'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/roco-pvp-page8.html', '/roco-pvp-page9.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
+      // 推流页面5/6/7/8/9 仅用于展示，所需的数据 GET 接口公开（写操作仍受保护）
+      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page6', '/api/page7', '/api/page8', '/api/page9', '/api/panels', '/api/matches', '/api/sprites', '/api/nextgame'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 
@@ -365,8 +376,9 @@ export async function createLocalServer(
   app.get('/admin.html', (_request, response) => sendAdminAntdPage(paths, response));
   app.get('/admin-antd.html', (_request, response) => sendAdminAntdPage(paths, response));
 
-  app.get('/api/images', (_request, response) => {
-    response.json({ images: [getPanelState(paths, 'left'), getPanelState(paths, 'right')] });
+  // 阵容面板状态（左右两侧），供推流页与管理后台初始加载
+  app.get('/api/panels', (_request, response) => {
+    response.json({ panels: [getPanelState(paths, 'left'), getPanelState(paths, 'right')] });
   });
 
   app.get('/api/avatars', (_request, response) => {
@@ -408,6 +420,31 @@ export async function createLocalServer(
     try {
       const state = savePage6State(paths, request.body ?? {});
       io.emit(SOCKET_EVENTS.page6Update, { state });
+      response.json({ success: true, state });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // 对局推送（page7）：返回所选多场比赛完整数据（含每个小局阵容）与按赛事隔离的选手头像
+  app.get('/api/page7', (_request, response) => {
+    const state = getPage7State(paths);
+    const matchStore = getMatchStore(paths);
+    const matches = state.matchIds
+      .map((id) => matchStore.matches.find((item) => item.id === id))
+      .filter((match): match is NonNullable<typeof match> => Boolean(match));
+    // 头像按赛事隔离：{ [matchId]: { left, right } }
+    const avatars: Record<string, AvatarCollectionState> = {};
+    for (const match of matches) {
+      avatars[match.id] = getAvatarStates(paths, match.id);
+    }
+    response.json({ state, matches, avatars });
+  });
+
+  app.post('/api/page7', (request, response) => {
+    try {
+      const state = savePage7State(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.page7Update, { state });
       response.json({ success: true, state });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
@@ -457,6 +494,20 @@ export async function createLocalServer(
       }
       const state = savePage8State(paths, { background: 'image', wallpaperUrl: '' });
       io.emit(SOCKET_EVENTS.page8Update, { state });
+      response.json({ success: true, state });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get('/api/page9', (_request, response) => {
+    response.json({ state: getPage9State(paths) });
+  });
+
+  app.post('/api/page9', (request, response) => {
+    try {
+      const state = savePage9State(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.page9Update, { state });
       response.json({ success: true, state });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
@@ -536,11 +587,11 @@ export async function createLocalServer(
       const matches = createMatch(paths, request.body ?? {});
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
-      response.json({ success: true, matches, scoreboard, panels });
+      response.json({ success: true, store: matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -550,9 +601,9 @@ export async function createLocalServer(
     try {
       const matches = updateMatch(paths, request.params.matchId, request.body ?? {});
       const scoreboard = getScoreboardState(paths);
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
-      response.json({ success: true, matches, scoreboard });
+      response.json({ success: true, store: matches, scoreboard });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -561,8 +612,8 @@ export async function createLocalServer(
   app.patch('/api/matches/:matchId/tags', (request, response) => {
     try {
       const matches = updateMatchTags(paths, request.params.matchId, request.body ?? {});
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
-      response.json({ success: true, matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
+      response.json({ success: true, store: matches });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -572,8 +623,8 @@ export async function createLocalServer(
     try {
       const body = (request.body ?? {}) as { matchIds?: unknown; tags?: unknown };
       const matches = updateMatchesTags(paths, body.matchIds, { tags: body.tags });
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
-      response.json({ success: true, matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
+      response.json({ success: true, store: matches });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -584,41 +635,41 @@ export async function createLocalServer(
       const matches = deleteMatch(paths, _request.params.matchId);
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
-      response.json({ success: true, matches, scoreboard, panels });
+      response.json({ success: true, store: matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
   });
 
-  app.post('/api/matches/history/delete', (request, response) => {
+  app.post('/api/matches/batch-delete', (request, response) => {
     try {
       const matches = deleteMatches(paths, request.body?.matchIds ?? []);
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
-      response.json({ success: true, matches, scoreboard, panels });
+      response.json({ success: true, store: matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
   });
 
-  app.post('/api/matches/history/undo-delete', (_request, response) => {
+  app.post('/api/matches/undo-delete', (_request, response) => {
     try {
       const matches = undoDeletedMatches(paths);
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
-      response.json({ success: true, matches, scoreboard, panels });
+      response.json({ success: true, store: matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -629,11 +680,11 @@ export async function createLocalServer(
       const matches = setActiveMatch(paths, request.params.matchId);
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
-      response.json({ success: true, matches, scoreboard, panels });
+      response.json({ success: true, store: matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -648,10 +699,10 @@ export async function createLocalServer(
       const matches = recordMatchWinner(paths, request.params.matchId, winner);
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
-      response.json({ success: true, matches, scoreboard, panels });
+      response.json({ success: true, store: matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -662,10 +713,10 @@ export async function createLocalServer(
       const matches = startCurrentGame(paths, request.params.matchId);
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
-      response.json({ success: true, matches, scoreboard, panels });
+      response.json({ success: true, store: matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -676,11 +727,11 @@ export async function createLocalServer(
       const matches = undoMatchAction(paths, _request.params.matchId);
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
-      response.json({ success: true, matches, scoreboard, panels });
+      response.json({ success: true, store: matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -691,11 +742,11 @@ export async function createLocalServer(
       const matches = redoMatchAction(paths, _request.params.matchId);
       const scoreboard = getScoreboardState(paths);
       const panels = [getPanelState(paths, 'left'), getPanelState(paths, 'right')];
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       emitAvatarUpdate();
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
-      response.json({ success: true, matches, scoreboard, panels });
+      response.json({ success: true, store: matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -812,8 +863,8 @@ export async function createLocalServer(
 
       if (activeMatch && activeGame?.status === 'pending') {
         const matches = saveDraftPanelStateForActiveMatch(paths, position, request.body?.selected ?? []);
-        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
-        response.json({ success: true, matches });
+        io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
+        response.json({ success: true, store: matches });
         return;
       }
 
@@ -821,7 +872,7 @@ export async function createLocalServer(
         const panel = savePanelState(paths, position, request.body?.selected ?? []);
         const matches = saveDraftPanelStateForActiveMatch(paths, position, request.body?.selected ?? []);
         io.emit(SOCKET_EVENTS.panelUpdate, { panel });
-        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+        io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
         response.json({ success: true, panel, matches });
         return;
       }
@@ -829,7 +880,7 @@ export async function createLocalServer(
       const panel = savePanelState(paths, position, request.body?.selected ?? []);
       const matches = syncActiveMatchLineupsFromPanels(paths);
       io.emit(SOCKET_EVENTS.panelUpdate, { panel });
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       response.json({ success: true, panel, matches });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -863,8 +914,8 @@ export async function createLocalServer(
 
       if (activeMatch && activeGame?.status === 'pending') {
         const matches = saveDraftPanelSlotStateForActiveMatch(paths, position, slotIndex, request.body?.slot ?? null);
-        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
-        response.json({ success: true, matches });
+        io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
+        response.json({ success: true, store: matches });
         return;
       }
 
@@ -872,7 +923,7 @@ export async function createLocalServer(
         const panel = savePanelSlotState(paths, position, slotIndex, request.body?.slot ?? null);
         const matches = saveDraftPanelSlotStateForActiveMatch(paths, position, slotIndex, request.body?.slot ?? null);
         io.emit(SOCKET_EVENTS.panelUpdate, { panel });
-        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+        io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
         response.json({ success: true, panel, matches });
         return;
       }
@@ -880,7 +931,7 @@ export async function createLocalServer(
       const panel = savePanelSlotState(paths, position, slotIndex, request.body?.slot ?? null);
       const matches = syncActiveMatchLineupsFromPanels(paths);
       io.emit(SOCKET_EVENTS.panelUpdate, { panel });
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       response.json({ success: true, panel, matches });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -909,7 +960,7 @@ export async function createLocalServer(
 
       if (activeMatch && activeGame?.status === 'pending') {
         const matches = saveDraftPanelStateForActiveMatch(paths, position, []);
-        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+        io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
         response.json({ success: true, position, matches });
         return;
       }
@@ -919,7 +970,7 @@ export async function createLocalServer(
         const panel = getPanelState(paths, position);
         const matches = saveDraftPanelStateForActiveMatch(paths, position, []);
         io.emit(SOCKET_EVENTS.panelUpdate, { panel });
-        io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+        io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
         response.json({ success: true, position, panel, matches });
         return;
       }
@@ -928,7 +979,7 @@ export async function createLocalServer(
       const panel = getPanelState(paths, position);
       const matches = syncActiveMatchLineupsFromPanels(paths);
       io.emit(SOCKET_EVENTS.panelUpdate, { panel });
-      io.emit(SOCKET_EVENTS.matchesUpdate, { matches });
+      io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       response.json({ success: true, position, panel, matches });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });

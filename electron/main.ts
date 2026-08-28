@@ -117,8 +117,7 @@ function getWindowPreset(targetUrl: string): WindowPreset {
     };
   }
   if (
-    pathname.endsWith('/roco-pvp-page7.html')
-    || pathname.endsWith('/roco-pvp-page2.html')
+    pathname.endsWith('/roco-pvp-page2.html')
     || pathname.endsWith('/roco-pvp-page3.html')
     || pathname.endsWith('/')
   ) {

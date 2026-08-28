@@ -180,9 +180,9 @@
     }
 
     async function loadInitialState() {
-        const response = await fetch('/api/images');
+        const response = await fetch('/api/panels');
         const data = await response.json();
-        applySnapshot({ panels: data.images || [] });
+        applySnapshot({ panels: data.panels || [] });
     }
 
     function connectSocket() {

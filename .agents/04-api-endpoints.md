@@ -74,13 +74,27 @@
 | 上传自定义壁纸 | POST | /api/page8/wallpaper | 上传 page8 壁纸（魔数校验，缩放宽高 1920×1080 压缩为 JPEG，自动切到 custom 背景） | electron/socket-server.ts |
 | 删除自定义壁纸 | DELETE | /api/page8/wallpaper | 删除 page8 壁纸并回退到内置背景 | electron/socket-server.ts |
 
+## 对局推送（page7）接口
+
+| 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
+|-------------|------|------|------|------|
+| 获取对局推送页状态 | GET | /api/page7 | 获取 page7 状态与已选比赛数据（公开 GET） | electron/socket-server.ts |
+| 保存对局推送配置 | POST | /api/page7 | 保存 page7 配置（matchIds 已结束比赛 / title 主标题 / notice 温馨提示） | electron/socket-server.ts |
+
+## 团队积分榜（page9）接口
+
+| 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
+|-------------|------|------|------|------|
+| 获取团队积分榜状态 | GET | /api/page9 | 获取 page9 标题与战队积分列表（公开 GET） | electron/socket-server.ts |
+| 保存团队积分榜配置 | POST | /api/page9 | 保存 page9 配置（title 主标题 / teams 最多 4 支战队的名称与 R1/R2/R3 积分，排名与总积分由前端自动计算） | electron/socket-server.ts |
+
 ## 统计接口
 
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
 |-------------|------|------|------|------|
 | 精灵排行 | GET | /api/stats/ranking | 精灵使用率/上场率/胜率排行（支持 tag / player 参数，统计全部历史对局） | electron/socket-server.ts |
 
-> 推流页面5/页面6 仅用于展示：`GET /api/stage`、`GET /api/scoreboard`、`GET /api/stats/ranking`、`GET /api/page6` 公开免鉴权；同名 POST 写操作仍受保护。
+> 推流页面5/6/7/8/9 仅用于展示：`GET /api/stage`、`GET /api/scoreboard`、`GET /api/stats/ranking`、`GET /api/page6`、`GET /api/page7`、`GET /api/page8`、`GET /api/page9` 公开免鉴权；同名 POST 写操作仍受保护。
 ## 精灵接口
 
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |

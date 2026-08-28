@@ -106,7 +106,7 @@
             void loadData();
         });
 
-        socket.on('matchesUpdate', () => {
+        socket.on('matches:update', () => {
             void loadData();
         });
     }

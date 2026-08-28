@@ -302,7 +302,7 @@
     }
 
     function getMatchPhase(payload) {
-        const store = payload && payload.matches;
+        const store = payload && payload.store;
         const matches = store && Array.isArray(store.matches) ? store.matches : [];
         const activeMatch = matches.find(match => match && match.id === store.activeMatchId);
         if (!activeMatch) {
@@ -682,7 +682,7 @@
 
     async function loadInitialState() {
         const [imagesResponse, scoreboardResponse, avatarsResponse, nextgameResponse, matchesResponse, stageResponse] = await Promise.all([
-            fetch('api/images'),
+            fetch('api/panels'),
             fetch('api/scoreboard'),
             fetch('api/avatars'),
             fetch('api/nextgame'),
@@ -700,11 +700,11 @@
         ]);
 
         applySnapshot({
-            panels: imagesData.images || [],
+            panels: imagesData.panels || [],
             scoreboard: scoreboardData,
             avatars: avatarsData,
             nextgame: nextgameData,
-            matches: matchesData,
+            store: matchesData,
             stage: stageData
         });
     }
@@ -738,7 +738,7 @@
         });
 
         socket.on('matches:update', payload => {
-            observeMatchPhase({ matches: payload ? payload.matches : null });
+            observeMatchPhase({ store: payload ? payload.store : null });
         });
 
         socket.on('stage:update', payload => {

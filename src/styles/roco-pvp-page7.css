@@ -1,4 +1,5 @@
-/* YouSheBiaoTiHei 不再打包字体文件，改用系统安装字体，未安装时回退 MiSans */
+/* 推流页面7：对局推送 · 按小局逐行展示双方阵容与胜负（1920x1080） */
+/* YouSheBiaoTiHei 不打包字体文件，改用系统安装字体，未安装时回退 MiSans */
 @font-face {
     font-family: "YouSheBiaoTiHei";
     src: local("YouSheBiaoTiHei");
@@ -17,24 +18,6 @@
     font-display: swap;
 }
 
-:root {
-    --paper: #f2ede1;
-    --paper-strong: #fbf8f0;
-    --paper-deep: #e6dcc7;
-    --paper-warm: #ede4d1;
-    --ink: #31291f;
-    --ink-soft: #6f6355;
-    --gold: #b6844f;
-    --gold-deep: #8f6133;
-    --green: #2f9e62;
-    --green-soft: rgba(47, 158, 98, 0.14);
-    --line: rgba(104, 81, 55, 0.14);
-    --line-strong: rgba(104, 81, 55, 0.22);
-    --shadow: 0 22px 48px rgba(87, 67, 46, 0.12);
-    --title-font: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
-    --body-font: "MiSans-Regular", "Microsoft YaHei", sans-serif;
-}
-
 * {
     box-sizing: border-box;
     margin: 0;
@@ -43,638 +26,311 @@
 
 html,
 body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+/* 页面画布：背景 262A2C；标题(84) + 32 间隙 + 4 行(168x4 + 32x3) = 884，垂直居中 */
+.page7-screen {
+    position: relative;
     width: 1920px;
     height: 1080px;
     overflow: hidden;
-    background:
-        radial-gradient(circle at top left, rgba(197, 167, 127, 0.26), transparent 26%),
-        radial-gradient(circle at right 18% top 10%, rgba(182, 132, 79, 0.12), transparent 24%),
-        linear-gradient(135deg, #f8f3e8 0%, var(--paper) 46%, #ebe2d0 100%);
-    color: var(--ink);
-    font-family: var(--body-font);
+    background: #262A2C;
 }
 
-body {
-    position: relative;
+/* 主标题：w1542 h84，圆角 左上30 右上30 左下4 右下4，背景 FCC34A，字号64 居中 */
+.page7-title {
+    position: absolute;
+    left: 189px;
+    top: 98px;
+    z-index: 2;
+    width: 1542px;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #FCC34A;
+    border-radius: 30px 30px 4px 4px;
+    font-family: "YouSheBiaoTiHei", "MiSans-Heavy", "Microsoft YaHei", sans-serif;
+    font-size: 64px;
+    color: #000000;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
-img {
+/* 温馨提示：36px 808080，位于列表下方 */
+.page7-notice {
+    position: absolute;
+    left: 668px;
+    top: 1012px;
+    z-index: 2;
+    font-family: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
+    font-size: 36px;
+    color: #808080;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* 比赛行视口：固定显示 4 行（168*4 + 32*3 = 768），超出部分由 track 滚动展示 */
+.page7-rows {
+    position: absolute;
+    left: 0;
+    top: 214px;
+    width: 1920px;
+    height: 768px;
+    overflow: hidden;
+    z-index: 3;
+}
+
+/* 滚动轨道：整列表，循环滚动；动画曲线先快后慢（easeOutQuint） */
+.page7-rows-track {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    will-change: transform;
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 单行容器：左侧对局序号 + 右侧比赛信息卡（JS 按序号设置 top，相对 track） */
+.page7-row {
+    position: absolute;
+    left: 0;
+    width: 1920px;
+    height: 168px;
+}
+
+/* 对局序号（GAME1-5）：字号36 白色，距比赛信息卡左侧 24px，垂直居中 */
+.page7-row-label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 165px;
+    height: 168px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-family: "YouSheBiaoTiHei", "MiSans-Heavy", "Microsoft YaHei", sans-serif;
+    font-size: 36px;
+    color: #FFFFFF;
+    line-height: 1;
+}
+
+/* 比赛信息卡（含空占位卡）：w1542 h168 背景 F2EDE3 圆角30 */
+.page7-card {
+    position: absolute;
+    left: 189px;
+    top: 0;
+    width: 1542px;
+    height: 168px;
+    background: #F2EDE3;
+    border-radius: 30px;
+    overflow: hidden;
+}
+
+/* 空占位卡：icon-stay-tuned 居中 */
+.page7-card-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page7-card-empty img {
+    height: 120px;
+    object-fit: contain;
+}
+
+/* 左右半区：各 w771 h168；胜方一侧背景 FFC65F */
+.page7-side {
+    position: absolute;
+    top: 0;
+    width: 771px;
+    height: 168px;
+}
+
+/* 左半区圆角：左上30 右上100 右下50 左下30 */
+.page7-side-left {
+    left: 0;
+    border-radius: 30px 100px 50px 30px;
+}
+
+/* 右半区圆角：左上100 右上30 右下30 左下50 */
+.page7-side-right {
+    left: 771px;
+    border-radius: 100px 30px 30px 50px;
+}
+
+.page7-side.is-winner {
+    background: #FFC65F;
+}
+
+/* 选手头像：64x64 圆形；左侧 x18 y12，右侧距右 18 y12 */
+.page7-avatar {
+    position: absolute;
+    top: 12px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #fff7e9;
+}
+
+.page7-side-left .page7-avatar {
+    left: 18px;
+}
+
+.page7-side-right .page7-avatar {
+    right: 18px;
+}
+
+.page7-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
 }
 
-.standby-screen {
-    position: relative;
-    width: 1920px;
-    height: 1080px;
-    padding: 36px 40px 34px;
+/* 选手名字：YouSheBiaoTiHei 40 黑色；左侧 x92 y16 左对齐，右侧距右 92 y16 右对齐 */
+.page7-name {
+    position: absolute;
+    top: 24px;
+    max-width: 260px;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: "YouSheBiaoTiHei", "MiSans-Regular", "Microsoft YaHei", sans-serif;
+    font-size: 40px;
+    color: #000000;
+    line-height: 1;
 }
 
-.standby-screen::before {
-    content: "";
+.page7-side-left .page7-name {
+    left: 92px;
+    text-align: left;
+}
+
+.page7-side-right .page7-name {
+    right: 92px;
+    text-align: right;
+}
+
+/* 排位排名图标：复用 page3 rank div（53x64 图标 + 排名数字）；左侧 x360 y8，右侧距右 360 y8 */
+.page7-rank {
     position: absolute;
-    inset: 20px;
-    border-radius: 32px;
-    border: 1px solid rgba(126, 97, 63, 0.08);
+    top: 8px;
+    width: 53px;
+    height: 64px;
     pointer-events: none;
 }
 
-.texture {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(12px);
-    pointer-events: none;
+.page7-side-left .page7-rank {
+    left: 360px;
 }
 
-.texture-left {
-    width: 460px;
-    height: 460px;
-    left: -160px;
-    top: 420px;
-    background: radial-gradient(circle, rgba(182, 132, 79, 0.16) 0%, transparent 70%);
+.page7-side-right .page7-rank {
+    right: 360px;
 }
 
-.texture-right {
-    width: 520px;
-    height: 520px;
-    right: -180px;
-    top: 60px;
-    background: radial-gradient(circle, rgba(160, 132, 96, 0.12) 0%, transparent 72%);
-}
-
-.stage-card,
-.history-panel {
-    position: relative;
-    z-index: 1;
-}
-
-.content-layout {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: 1.42fr 0.58fr;
-    gap: 22px;
-    height: 100%;
-}
-
-.stage-card,
-.history-panel {
-    border-radius: 28px;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 251, 244, 0.86)),
-        var(--paper-strong);
-    border: 1px solid var(--line);
-    box-shadow: var(--shadow);
-}
-
-.stage-card {
-    padding: 22px 28px 24px;
-}
-
-.match-headline {
-    display: grid;
-    grid-template-columns: 1fr 260px 1fr;
-    gap: 20px;
-    align-items: center;
-    padding: 18px 20px;
-    border-radius: 24px;
-    background: linear-gradient(180deg, rgba(242, 237, 225, 0.78), rgba(246, 241, 231, 0.96));
-    border: 1px solid rgba(104, 81, 55, 0.1);
-}
-
-.player-title {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.player-title-right {
-    text-align: right;
-}
-
-.player-side {
-    font-size: 12px;
-    color: var(--ink-soft);
-    letter-spacing: 0.16em;
-}
-
-.player-title strong {
-    font-family: var(--title-font);
-    font-weight: 400;
-    font-size: 34px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.versus-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-.versus-score {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    font-family: var(--title-font);
-    font-size: 56px;
-    line-height: 1;
-    color: var(--gold-deep);
-}
-
-.versus-score em {
-    font-style: normal;
-    font-size: 22px;
-    color: rgba(111, 99, 85, 0.7);
-}
-
-.versus-meta {
-    color: var(--ink-soft);
-    font-size: 13px;
-}
-
-.lineup-showcase {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: 18px;
-    margin-top: 18px;
-}
-
-.roster-card,
-.battle-overview-card,
-.pending-state {
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.58);
-    border: 1px solid rgba(104, 81, 55, 0.1);
-}
-
-.roster-card {
-    padding: 20px 18px;
-}
-
-.battle-overview-card {
-    padding: 18px;
-}
-
-.roster-card-right .roster-title {
-    text-align: right;
-}
-
-.roster-title {
-    color: var(--ink-soft);
-    font-size: 13px;
-    margin-bottom: 14px;
-}
-
-.roster-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-}
-
-.roster-slot {
-    position: relative;
-    aspect-ratio: 1;
-    border-radius: 18px;
-    overflow: hidden;
-    background: linear-gradient(180deg, rgba(250, 246, 238, 0.95), rgba(239, 231, 215, 0.9));
-    border: 1px solid rgba(104, 81, 55, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.roster-slot img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: 8px;
-}
-
-.roster-slot-empty {
-    background: linear-gradient(180deg, rgba(247, 241, 229, 0.75), rgba(233, 225, 208, 0.72));
-}
-
-.roster-slot-empty::before {
-    content: "待选";
-    color: rgba(111, 99, 85, 0.58);
-    font-size: 14px;
-    letter-spacing: 0.08em;
-}
-
-.pending-state {
-    padding: 22px 18px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-.pending-chip {
-    min-height: 38px;
-    padding: 0 16px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    background: linear-gradient(135deg, #c79a67, #a86e3d);
-    color: #fffaf2;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    box-shadow: 0 14px 24px rgba(168, 110, 61, 0.22);
-}
-
-.pending-copy {
-    margin-top: 16px;
-    font-family: var(--title-font);
-    font-size: 28px;
-    line-height: 1.2;
-}
-
-.game-track {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 18px;
-}
-
-.game-chip,
-.game-result {
-    min-height: 34px;
-    padding: 0 12px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    border: 1px solid rgba(104, 81, 55, 0.12);
-    background: rgba(255, 255, 255, 0.72);
-    color: var(--ink-soft);
-}
-
-.game-chip-active {
-    background: rgba(182, 132, 79, 0.14);
-    color: var(--gold-deep);
-    border-color: rgba(182, 132, 79, 0.24);
-}
-
-.game-chip-done {
-    background: rgba(143, 97, 51, 0.09);
-}
-
-.recent-games-section {
-    margin-top: 18px;
-    padding: 18px;
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.52);
-    border: 1px solid rgba(104, 81, 55, 0.1);
-}
-
-.recent-games-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 14px;
-}
-
-.recent-games-note {
-    color: var(--ink-soft);
-    font-size: 12px;
-}
-
-.recent-games-list {
-    display: grid;
-    gap: 12px;
-    transition: transform 0.65s ease;
-}
-
-.recent-games-viewport {
-    overflow: hidden;
-}
-
-.recent-game-card {
-    padding: 14px;
-    border-radius: 20px;
-    background: linear-gradient(180deg, rgba(250, 246, 238, 0.9), rgba(240, 232, 216, 0.92));
-    border: 1px solid rgba(104, 81, 55, 0.1);
-}
-
-.recent-game-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-}
-
-.recent-game-index {
-    font-family: var(--title-font);
-    font-size: 24px;
-    line-height: 1;
-    color: var(--gold-deep);
-}
-
-.recent-game-winner {
-    min-height: 30px;
-    padding: 0 12px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    background: var(--green-soft);
-    border: 1px solid rgba(47, 158, 98, 0.22);
-    color: var(--green);
-    font-size: 12px;
-}
-
-.series-games-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-}
-
-.series-game-card {
-    padding: 14px;
-    border-radius: 18px;
-    background: linear-gradient(180deg, rgba(250, 246, 238, 0.9), rgba(240, 232, 216, 0.92));
-    border: 1px solid rgba(104, 81, 55, 0.1);
-}
-
-.series-game-card-current {
-    border-color: rgba(182, 132, 79, 0.28);
-    box-shadow: 0 14px 24px rgba(182, 132, 79, 0.14);
-}
-
-.series-game-card-left {
-    background: linear-gradient(180deg, rgba(233, 244, 255, 0.92), rgba(241, 247, 255, 0.95));
-}
-
-.series-game-card-right {
-    background: linear-gradient(180deg, rgba(255, 241, 233, 0.92), rgba(255, 247, 241, 0.95));
-}
-
-.series-game-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-}
-
-.series-game-index {
-    font-family: var(--title-font);
-    font-size: 22px;
-    line-height: 1;
-    color: var(--gold-deep);
-}
-
-.series-game-status {
-    min-height: 28px;
-    padding: 0 12px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    font-size: 12px;
-    border: 1px solid rgba(104, 81, 55, 0.1);
-    color: var(--ink-soft);
-    background: rgba(255, 255, 255, 0.72);
-}
-
-.series-game-status.is-left {
-    color: #2b6cb0;
-    background: rgba(43, 108, 176, 0.1);
-    border-color: rgba(43, 108, 176, 0.18);
-}
-
-.series-game-status.is-right {
-    color: #c05621;
-    background: rgba(192, 86, 33, 0.1);
-    border-color: rgba(192, 86, 33, 0.18);
-}
-
-.series-game-status.is-live {
-    color: var(--gold-deep);
-    background: rgba(182, 132, 79, 0.12);
-    border-color: rgba(182, 132, 79, 0.2);
-}
-
-.series-game-body {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 12px;
-    align-items: center;
-    margin-top: 16px;
-}
-
-.series-game-player {
-    font-size: 18px;
-    line-height: 1.3;
-}
-
-.series-game-player-right {
-    text-align: right;
-}
-
-.series-game-player.is-lose {
-    color: rgba(111, 99, 85, 0.62);
-}
-
-.series-game-center {
-    font-size: 12px;
-    color: var(--ink-soft);
-    white-space: nowrap;
-}
-
-.recent-game-body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 12px;
-}
-
-.recent-side {
-    padding: 12px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.56);
-    border: 1px solid rgba(104, 81, 55, 0.08);
-}
-
-.recent-side-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.recent-game-card .recent-side-top strong {
-    font-family: "MiSans-Regular", "Microsoft YaHei", sans-serif;
-}
-
-.recent-side-top strong {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--ink);
-}
-
-.recent-side-result {
-    font-size: 12px;
-    color: var(--ink-soft);
-}
-
-.recent-side.is-win .recent-side-result {
-    color: var(--gold-deep);
-}
-
-.mini-roster {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 8px;
-}
-
-.mini-roster-slot {
-    aspect-ratio: 1;
-    border-radius: 12px;
-    overflow: hidden;
-    background: rgba(242, 237, 225, 0.9);
-    border: 1px solid rgba(104, 81, 55, 0.08);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mini-roster-slot img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: 4px;
-}
-
-.mini-roster-slot-empty::before {
-    content: "";
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: rgba(111, 99, 85, 0.18);
-}
-
-.history-panel {
-    padding: 20px 18px;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-.history-list-viewport {
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-}
-
-.history-list {
-    display: grid;
-    gap: 14px;
-    min-height: 0;
-    transition: transform 0.65s ease;
-}
-
-.history-card {
-    padding: 16px 16px 14px;
-    border-radius: 22px;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 251, 244, 0.9)),
-        var(--paper-warm);
-    border: 1px solid rgba(104, 81, 55, 0.1);
-}
-
-.history-card-emphasis {
-    background:
-        linear-gradient(180deg, rgba(198, 162, 115, 0.14), rgba(255, 251, 244, 0.94)),
-        var(--paper-strong);
-}
-
-.history-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    color: var(--ink-soft);
-    font-size: 12px;
-}
-
-.history-scoreline {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 10px;
-    align-items: center;
-    margin-top: 14px;
-}
-
-.history-scoreline strong {
-    font-family: var(--title-font);
-    font-weight: 400;
-    font-size: 26px;
-    line-height: 1.1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.history-scoreline strong:last-child {
-    text-align: right;
-}
-
-.history-score {
-    font-family: var(--title-font);
-    font-size: 38px;
-    line-height: 1;
-    color: var(--gold-deep);
-}
-
-.history-last-lineup {
-    margin-top: 14px;
-}
-
-.history-lineup-sides {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.history-lineup-side {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    min-height: 72px;
-    padding: 8px 0;
-    font-size: 12px;
-    color: var(--ink-soft);
-}
-
-.history-lineup-side:last-child {
-    justify-content: flex-end;
-}
-
-.history-lineup-side img {
-    width: 64px;
+.page7-rank img {
+    display: block;
+    width: 53px;
     height: 64px;
     object-fit: contain;
-    filter: drop-shadow(0 6px 10px rgba(87, 67, 46, 0.12));
 }
 
-.empty-state {
-    min-height: 140px;
-    border-radius: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 24px;
-    background: rgba(255, 255, 255, 0.46);
-    border: 1px dashed rgba(104, 81, 55, 0.16);
-    color: var(--ink-soft);
+/* 排名数字：与 page3 一致，y46（相对图标），x 由 JS 按位数设置 */
+.page7-rank-txt {
+    position: absolute;
+    top: 46px;
+    font-family: "MiSans-Heavy", "MiSans-Medium", "Microsoft YaHei", sans-serif;
     font-size: 14px;
-    line-height: 1.8;
+    font-weight: 900;
+    color: #FEC55E;
+    background: #000;
+    padding: 4px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+/* 精灵卡：复用 page2 pestdiv2 结构，比例 80x80；左侧从 x18 y80 起排，右侧从距右 18 y80 起排（镜像），
+   每张间隙 12px */
+.page7-pets {
+    position: absolute;
+    top: 80px;
+    height: 80px;
+    display: flex;
+    gap: 12px;
+}
+
+.page7-side-left .page7-pets {
+    left: 18px;
+    flex-direction: row;
+}
+
+.page7-side-right .page7-pets {
+    right: 18px;
+    flex-direction: row-reverse;
+}
+
+/* 精灵卡：参考 page1 的 petsdiv3（容器 98 -> 80 等比缩放 0.816） */
+.page7-pet {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    overflow: visible;
+    flex: none;
+}
+
+/* 圆形底托：active 时显示（80px*0.816≈65px，描边 3px*0.816≈2.5px） */
+.page7-pet.is-active::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 65px;
+    height: 65px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: #424442;
+    border: 2.5px solid #5d5d5d;
+    overflow: hidden;
+}
+
+/* 图片：110px*0.816≈90px，大于容器并居中（与 petsdiv3 一致） */
+.page7-pet img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 90px;
+    height: 90px;
+    transform: translate(-50%, -50%);
+    object-fit: contain;
+    pointer-events: none;
+}
+
+/* 胜负图标：w145 h120；左侧 x594 y24，右侧距右 594 y24 */
+.page7-result {
+    position: absolute;
+    top: 24px;
+    width: 145px;
+    height: 120px;
+}
+
+.page7-side-left .page7-result {
+    left: 594px;
+}
+
+.page7-side-right .page7-result {
+    right: 594px;
+}
+
+.page7-result img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }

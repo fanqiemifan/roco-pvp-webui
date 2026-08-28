@@ -713,7 +713,7 @@ function toPublicStore(store: MatchStoreFile, mtime: number | null): MatchStoreS
   return {
     activeMatchId: store.activeMatchId,
     matches: store.matches,
-    history: {
+    undo: {
       canUndo: Boolean(activeHistory && activeHistory.undoStack.length > 0),
       canRedo: Boolean(activeHistory && activeHistory.redoStack.length > 0),
       canUndoDelete: store.deletedHistory.length > 0,

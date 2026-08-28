@@ -41,7 +41,7 @@ export const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     path: '/roco-pvp-page6.html',
   },
   page7: {
-    title: '推流页面7',
+    title: '推流页面7（对局推送）',
     fileName: 'roco-pvp-page7.html',
     path: '/roco-pvp-page7.html',
   },
@@ -49,6 +49,11 @@ export const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     title: '推流页面8（比赛预告）',
     fileName: 'roco-pvp-page8.html',
     path: '/roco-pvp-page8.html',
+  },
+  page9: {
+    title: '推流页面9（团队积分榜）',
+    fileName: 'roco-pvp-page9.html',
+    path: '/roco-pvp-page9.html',
   },
 };
 
@@ -86,8 +91,14 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
   {
     value: 'page7',
     label: '推流页面7',
-    description: '直播等待 / 间歇展示页',
+    description: '对局推送（多场比赛按小局逐行滚动展示）',
     previewPath: '/roco-pvp-page7.html',
+  },
+  {
+    value: 'page9',
+    label: '推流页面9',
+    description: '团队积分榜（后台录入战队积分，排名与总积分自动计算）',
+    previewPath: '/roco-pvp-page9.html',
   },
   {
     value: 'blank',

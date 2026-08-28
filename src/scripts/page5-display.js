@@ -235,11 +235,10 @@
             }
         });
 
-        socket.on('matchesUpdate', (payload) => {
-            const stage = payload && payload.stage ? payload.stage : null;
-            setTag(stage ? stage.page5Tag : undefined);
+        // matches:update 载荷为 { store }，比赛数据变化时用当前标签口径刷新排行
+        socket.on('matches:update', () => {
             refreshTitle();
-            scheduleRefresh(stage ? stage.page5Tag : undefined, stage ? stage.page5Player : undefined);
+            scheduleRefresh(currentTag, undefined);
         });
     }
 

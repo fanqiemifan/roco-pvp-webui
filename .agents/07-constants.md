@@ -14,7 +14,7 @@
 | SUPPORTED_IMAGE_EXTENSIONS | {.png,.jpg,.jpeg,.webp} | 支持的头像图片扩展名 | shared/constants.ts |
 | SUPPORTED_BEST_OF | {1,3,5,7} | 支持的赛制 | shared/constants.ts |
 | DEFAULT_STAGE_PAGE | page3 | 默认推流页面 | shared/constants.ts |
-| SUPPORTED_STAGE_PAGES | {page1-overlay,page2,page3,page5,page6,page7,blank} | 支持的推流页面 | shared/constants.ts |
+| SUPPORTED_STAGE_PAGES | {page1-overlay,page2,page3,page5,page6,page7,page9,blank} | 支持的推流页面 | shared/constants.ts |
 | DEFAULT_STAGE_TRANSITION | blinds | 默认切换过渡 | shared/constants.ts |
 | SUPPORTED_STAGE_TRANSITIONS | {none,blinds,zoom} | 支持的过渡效果 | shared/constants.ts |
 | DEFAULT_PAGE3_SPRITE_SOURCE | sprite | 页面3精灵图片来源默认值（sprite / thumbnail） | shared/constants.ts |
@@ -23,6 +23,8 @@
 | RANK_TEXT_MAX_LENGTH | 10 | 排位排名存储最大位数（超过 10000 显示 10000+） | shared/constants.ts |
 
 > 页面8（比赛预告）不在 shared/constants.ts 中，也不属于直播推流可选画面（SUPPORTED_STAGE_PAGES 不包含 page8）；其最多选 12 场的上限在 electron/services/page8-service.ts 的 PAGE8_MAX_MATCHES，前台常量 PAGE8_MAX_MATCHES 位于 src/admin-antd/App.tsx。
+>
+> 页面9（团队积分榜）在 SUPPORTED_STAGE_PAGES 中；战队上限常量 PAGE9_MAX_TEAMS = 4 位于 electron/services/page9-service.ts，后台表单行数常量 PAGE9_TEAM_COUNT = 4 位于 src/admin-antd/App.tsx；单项积分最长 3 位数字（0-999）。
 
 ## 悬浮窗尺寸（electron/float-window.ts）
 

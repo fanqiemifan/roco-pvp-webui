@@ -1,810 +1,485 @@
 (function () {
     'use strict';
 
-    const MAX_SLOTS = 6;
-    const DEFAULT_BEST_OF = 7;
+    // 页面布局常量：最多同时显示 4 行，行高 168、行间距 32，第一行距主标题 32
+    const MAX_VISIBLE_ROWS = 4;
+    const ROW_HEIGHT = 168;
+    const ROW_GAP = 32;
+    const ROW_STRIDE = ROW_HEIGHT + ROW_GAP; // 每行步进 200px
 
-    const state = {
-        panels: {
-            left: null,
-            right: null
-        },
-        scoreboard: null,
-        matches: null,
-        page6MatchIds: [],
-        sprites: new Map(),
-        historyScrollTimer: null,
-        recentGamesScrollTimer: null
+    // 循环滚动节奏（先快后慢）：起始停留短，越接近底部停留越长，回到第一场后重置
+    const SCROLL_HOLD_FAST_MS = 1600;
+    const SCROLL_HOLD_SLOW_MS = 3600;
+
+    const DEFAULT_TITLE = '对局推送';
+    const DEFAULT_NOTICE = '温馨提示：排名选自选手历史最高非实时';
+    const DEFAULT_AVATARS = {
+        left: '/assets/ui/left-avatar.png',
+        right: '/assets/ui/right-avatar.png'
     };
+    const WIN_ICON = '/assets/ui/win-icon.DJfsgL3i.png';
+    const FAIL_ICON = '/assets/ui/fail-icon.ChpzWjNv.png';
+    const STAY_TUNED_ICON = '/assets/ui/icon-stay-tuned.DHbzz5us.png';
+    const RANK_ICON = '/assets/ui/7.Wku3bA4b.png';
+    const SPIRIT_INDEX_URL = '/resources/data/sprites.json';
+    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
 
-    function clamp(value, min, max, fallback) {
-        if (value === null || value === undefined || value === '') {
-            return fallback;
-        }
-        const number = Number(value);
-        if (Number.isNaN(number)) {
-            return fallback;
-        }
-        return Math.min(max, Math.max(min, number));
+    // 复用 page3 的排名数字偏移：按显示位数设置数字距图标左侧的 x（10000+ 视为 6 位）
+    const RANK_TEXT_LEFT_BY_LENGTH = { 1: 22, 2: 16, 3: 12, 4: 7, 5: 3, 6: -2 };
+
+    const titleEl = document.getElementById('page7Title');
+    const rowsEl = document.getElementById('page7RowsTrack');
+    const noticeEl = document.getElementById('page7Notice');
+
+    let spriteLookup = null;
+    let renderSignature = null;
+    let scrollTimer = null;
+    let currentScrollOffset = 0;
+
+    /* ---------- 通用工具 ---------- */
+
+    function normalizeText(value) {
+        return String(value ?? '')
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, '')
+            .replace(/[·・.。_\-－—]/g, '');
     }
 
-    function normalizeBestOf(value) {
-        const number = Number(value);
-        return [1, 3, 5, 7].includes(number) ? number : DEFAULT_BEST_OF;
+    function stripVariantName(value) {
+        return String(value ?? '').trim().replace(/[-_－—]\d+$/, '');
     }
 
-    function getDisplayName(sprite) {
-        if (!sprite || typeof sprite !== 'object') {
+    function sanitizeFilenameSegment(value) {
+        const normalized = String(value ?? '')
+            .normalize('NFC')
+            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
+            .replace(/\s+/g, '')
+            .replace(/\.+$/g, '')
+            .trim();
+        return normalized || '';
+    }
+
+    function toRootPath(value) {
+        const text = String(value ?? '').trim();
+        if (!text) {
             return '';
         }
-        return String(
-            sprite.displayName
-            || sprite.chineseName
-            || sprite.name
-            || sprite.filename
-            || ''
-        ).trim().replace(/[-_－—]\d+$/, '');
+        return text.startsWith('/') ? text : `/${text.replace(/^\/+/, '')}`;
     }
+
+    function formatRankText(value) {
+        const digits = String(value || '').replace(/\D/g, '');
+        if (!digits) {
+            return '';
+        }
+        return Number(digits) > 10000 ? '10000+' : digits;
+    }
+
+    /* ---------- 精灵索引（用于把小局阵容的 spriteId 解析成图片） ---------- */
+
+    function buildSpriteLookup(records) {
+        const byName = new Map();
+        const byBaseName = new Map();
+        records.forEach((record) => {
+            const displayName = String(record.displayName || '').trim();
+            const cardName = stripVariantName(displayName);
+            const nameKey = normalizeText(displayName);
+            const baseKey = normalizeText(cardName);
+            if (nameKey && !byName.has(nameKey)) {
+                byName.set(nameKey, record);
+            }
+            if (baseKey && !byBaseName.has(baseKey)) {
+                byBaseName.set(baseKey, record);
+            }
+        });
+        return { byName, byBaseName };
+    }
+
+    async function loadSpriteIndex() {
+        const response = await fetch(SPIRIT_INDEX_URL);
+        if (!response.ok) {
+            throw new Error(`精灵索引加载失败: ${response.status}`);
+        }
+        const payload = await response.json();
+        const records = (Array.isArray(payload) ? payload : (payload.spirits || []))
+            .map((record) => ({
+                // sprites.json 原始字段为中文名（精灵名称/精灵名字2/缩略图图片ID），与 sprite-service 的解析保持一致
+                displayName: String(record.displayName || record.name || record['精灵名字2'] || record['精灵名称'] || '').trim(),
+                path: toRootPath(record.path),
+                thumbnailId: String(record.thumbnailId || record['缩略图图片ID'] || '').trim(),
+            }))
+            .filter((record) => record.displayName);
+        spriteLookup = buildSpriteLookup(records);
+    }
+
+    function resolveSprite(spriteId) {
+        if (!spriteId || !spriteLookup) {
+            return null;
+        }
+        const name = normalizeText(spriteId);
+        const base = normalizeText(stripVariantName(spriteId));
+        return spriteLookup.byName.get(name) || spriteLookup.byBaseName.get(base) || null;
+    }
+
+    /* ---------- 单个精灵卡（参考 page1 petsdiv3：缩略图优先 + 圆形底托，比例 80x80） ---------- */
 
     function basename(value) {
         return String(value || '').split('/').filter(Boolean).pop() || '';
     }
 
-    function buildSpriteLookup(records) {
-        const lookup = new Map();
+    function buildPetCard(spriteId) {
+        const card = document.createElement('div');
+        card.className = 'page7-pet';
 
-        (Array.isArray(records) ? records : []).forEach(sprite => {
-            if (!sprite || typeof sprite !== 'object') {
-                return;
-            }
+        const image = document.createElement('img');
+        image.alt = '';
+        card.appendChild(image);
 
-            const keys = new Set([
-                sprite.id,
-                sprite.filename,
-                sprite.displayName,
-                sprite.name,
-                sprite.chineseName,
-                basename(sprite.id),
-                basename(sprite.filename),
-                basename(sprite.path),
-                ...(Array.isArray(sprite.aliases) ? sprite.aliases : [])
-            ]);
-
-            keys.forEach(key => {
-                if (typeof key === 'string' && key.trim()) {
-                    lookup.set(key.trim(), sprite);
-                }
-            });
-        });
-
-        return lookup;
-    }
-
-    function getActiveMatch(store) {
-        if (!store || !Array.isArray(store.matches) || store.matches.length === 0) {
-            return null;
+        const record = resolveSprite(spriteId);
+        if (!record) {
+            console.warn('[page7] 精灵索引中未找到:', spriteId);
+            return card;
         }
 
-        if (store.activeMatchId) {
-            const activeMatch = store.matches.find(match => match && match.id === store.activeMatchId);
-            if (activeMatch) {
-                return activeMatch;
-            }
+        card.classList.add('is-active');
+
+        // 候选名：显示名 / 去变体后缀名 / 原始 spriteId / 文件名（与 page1 的候选逻辑一致）
+        const candidateNames = Array.from(new Set([
+            record.displayName,
+            stripVariantName(record.displayName),
+            String(spriteId || '').trim(),
+            basename(record.path),
+        ].map(sanitizeFilenameSegment).filter(Boolean)));
+
+        // 候选图：缩略图（thumbnailId_名字.png）优先，失败后回退精灵原图
+        const sources = record.thumbnailId
+            ? candidateNames.map((name) => `${THUMBNAIL_RESOURCE_BASE}/${record.thumbnailId}_${name}.png`)
+            : [];
+        if (record.path) {
+            sources.push(record.path);
         }
 
-        return store.matches.find(match => match && (match.status === 'pending' || match.status === 'in_progress')) || null;
-    }
-
-    function getCurrentGame(match) {
-        if (!match || !Array.isArray(match.games) || match.games.length === 0) {
-            return null;
-        }
-
-        return (
-            match.games.find(game => game && game.status === 'in_progress')
-            || match.games.find(game => game && game.status === 'pending')
-            || match.games[match.games.length - 1]
-            || null
-        );
-    }
-
-    function resolveSlotSprite(slotData) {
-        if (!slotData) {
-            return null;
-        }
-
-        if (slotData.sprite && slotData.sprite.path) {
-            return slotData.sprite;
-        }
-
-        const spriteId = typeof slotData.spriteId === 'string' ? slotData.spriteId : '';
-        if (!spriteId) {
-            return null;
-        }
-
-        return state.sprites.get(spriteId) || state.sprites.get(basename(spriteId)) || null;
-    }
-
-    function buildSlotsFromSnapshots(snapshots) {
-        const slots = Array.from({ length: MAX_SLOTS }, (_, index) => {
-            const slotData = Array.isArray(snapshots) ? snapshots[index] : null;
-            return {
-                sprite: resolveSlotSprite(slotData)
-            };
-        });
-
-        return slots;
-    }
-
-    function getStatusMeta(match, currentGame) {
-        if (!match || !currentGame) {
-            return {
-                chip: 'MATCH READY',
-                text: '等待选择对局',
-                badge: '等待主舞台选择'
-            };
-        }
-
-        if (currentGame.status === 'in_progress') {
-            return {
-                chip: 'MATCH LIVE',
-                text: '当前对局进行中',
-                badge: '主舞台进行中'
-            };
-        }
-
-        if (match.status === 'completed' || currentGame.status === 'completed') {
-            return {
-                chip: 'MATCH DONE',
-                text: '当前系列赛已结束',
-                badge: '主舞台已结束'
-            };
-        }
-
-        return {
-            chip: 'MATCH PENDING',
-            text: '等待开始本次对局',
-            badge: '主舞台等待页'
-        };
-    }
-
-    function formatMatchMeta(match, currentGame) {
-        if (!match) {
-            return '等待后台选择系列赛';
-        }
-
-        const bestOf = normalizeBestOf(match.bestOf);
-        const gameNumber = currentGame && Number.isFinite(Number(currentGame.gameNumber))
-            ? Number(currentGame.gameNumber)
-            : 1;
-        const statusText = currentGame && currentGame.status === 'in_progress'
-            ? '进行中'
-            : match.status === 'completed'
-                ? '已结束'
-                : '待开始';
-
-        return `BO${bestOf} · 第 ${gameNumber} 局${statusText}`;
-    }
-
-    function formatDateTime(value) {
-        if (!value) {
-            return '';
-        }
-
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) {
-            return '';
-        }
-
-        return new Intl.DateTimeFormat('zh-CN', {
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        }).format(date);
-    }
-
-    function getCompletedMatches(store) {
-        if (!store || !Array.isArray(store.matches)) {
-            return [];
-        }
-
-        return store.matches
-            .filter(match => match && match.status === 'completed')
-            .sort((left, right) => {
-                const leftTime = new Date(left.completedAt || left.updatedAt || left.createdAt || 0).getTime();
-                const rightTime = new Date(right.completedAt || right.updatedAt || right.createdAt || 0).getTime();
-                return rightTime - leftTime;
-            });
-    }
-
-    // 仅展示后台「比赛结果」推送选中（page6 matchIds）的已结束比赛，按推送顺序排列
-    function getPushedMatches(store) {
-        if (!store || !Array.isArray(store.matches) || !Array.isArray(state.page6MatchIds)) {
-            return [];
-        }
-
-        const byId = new Map();
-        store.matches.forEach(match => {
-            if (match && match.id) {
-                byId.set(match.id, match);
-            }
-        });
-
-        const pushed = [];
-        state.page6MatchIds.forEach(id => {
-            const match = byId.get(id);
-            if (match && match.status === 'completed') {
-                pushed.push(match);
-            }
-        });
-
-        return pushed;
-    }
-
-    function getCompletedGames(match) {
-        if (!match || !Array.isArray(match.games)) {
-            return [];
-        }
-
-        return match.games.filter(game => game && game.winner && game.status === 'completed');
-    }
-
-    function getLastLineupGame(match) {
-        if (!match || !Array.isArray(match.games)) {
-            return null;
-        }
-
-        for (let index = match.games.length - 1; index >= 0; index -= 1) {
-            const game = match.games[index];
-            if (!game) {
-                continue;
-            }
-
-            const hasLeft = Array.isArray(game.leftSlots) && game.leftSlots.some(slot => slot && slot.spriteId);
-            const hasRight = Array.isArray(game.rightSlots) && game.rightSlots.some(slot => slot && slot.spriteId);
-            if (hasLeft || hasRight) {
-                return game;
-            }
-        }
-
-        return null;
-    }
-
-    function createMiniRoster(slots) {
-        const roster = document.createElement('div');
-        roster.className = 'mini-roster';
-
-        Array.from({ length: MAX_SLOTS }, (_, index) => slots[index] || { sprite: null }).forEach(slotData => {
-            const slotEl = document.createElement('div');
-            const sprite = slotData && slotData.sprite ? slotData.sprite : null;
-
-            slotEl.className = `mini-roster-slot${sprite && sprite.path ? '' : ' mini-roster-slot-empty'}`;
-            if (sprite && sprite.path) {
-                const image = document.createElement('img');
-                image.src = sprite.path;
-                image.alt = getDisplayName(sprite);
-                slotEl.appendChild(image);
-            }
-
-            roster.appendChild(slotEl);
-        });
-
-        return roster;
-    }
-
-    function renderGameTrack(match, currentGame) {
-        const track = document.getElementById('gameTrack');
-        track.innerHTML = '';
-
-        if (!match) {
-            const chip = document.createElement('span');
-            chip.className = 'game-chip game-chip-active';
-            chip.textContent = '等待创建系列赛';
-            track.appendChild(chip);
-            return;
-        }
-
-        const bestOf = normalizeBestOf(match.bestOf);
-        for (let index = 0; index < bestOf; index += 1) {
-            const gameNumber = index + 1;
-            const game = Array.isArray(match.games) ? match.games[index] : null;
-            const chip = document.createElement('span');
-            chip.className = 'game-chip';
-
-            if (game && game.winner === 'left') {
-                chip.classList.add('game-chip-done');
-                chip.textContent = `G${gameNumber} 左胜`;
-            } else if (game && game.winner === 'right') {
-                chip.classList.add('game-chip-done');
-                chip.textContent = `G${gameNumber} 右胜`;
-            } else if (currentGame && Number(currentGame.gameNumber) === gameNumber && currentGame.status === 'in_progress') {
-                chip.classList.add('game-chip-active');
-                chip.textContent = `G${gameNumber} 进行中`;
-            } else if (currentGame && Number(currentGame.gameNumber) === gameNumber && currentGame.status === 'pending') {
-                chip.classList.add('game-chip-active');
-                chip.textContent = `G${gameNumber} 待开始`;
-            } else {
-                chip.textContent = `G${gameNumber}`;
-            }
-
-            track.appendChild(chip);
-        }
-    }
-
-    function createSeriesGameCard(gameNumber, game, currentGame, match) {
-        const card = document.createElement('article');
-        const gameStatus = game?.status || (currentGame && Number(currentGame.gameNumber) === gameNumber ? currentGame.status : 'pending');
-        const winner = game?.winner || '';
-        const isCurrent = currentGame && Number(currentGame.gameNumber) === gameNumber;
-
-        card.className = `series-game-card${isCurrent ? ' series-game-card-current' : ''}${winner ? ` series-game-card-${winner}` : ''}`;
-
-        const top = document.createElement('div');
-        top.className = 'series-game-top';
-
-        const index = document.createElement('div');
-        index.className = 'series-game-index';
-        index.textContent = `G${gameNumber}`;
-
-        const status = document.createElement('div');
-        status.className = 'series-game-status';
-
-        if (winner === 'left') {
-            status.classList.add('is-left');
-            status.textContent = '左侧胜';
-        } else if (winner === 'right') {
-            status.classList.add('is-right');
-            status.textContent = '右侧胜';
-        } else if (gameStatus === 'in_progress') {
-            status.classList.add('is-live');
-            status.textContent = '进行中';
-        } else {
-            status.classList.add('is-pending');
-            status.textContent = '待开始';
-        }
-
-        top.append(index, status);
-
-        const body = document.createElement('div');
-        body.className = 'series-game-body';
-
-        const left = document.createElement('strong');
-        left.className = `series-game-player${winner === 'left' ? ' is-win' : winner === 'right' ? ' is-lose' : ''}`;
-        left.textContent = match?.leftPlayer || '左侧选手';
-
-        const center = document.createElement('span');
-        center.className = 'series-game-center';
-        center.textContent = winner
-            ? winner === 'left'
-                ? '击败右侧'
-                : '击败左侧'
-            : gameStatus === 'in_progress'
-                ? '正在交战'
-                : '等待开局';
-
-        const right = document.createElement('strong');
-        right.className = `series-game-player series-game-player-right${winner === 'right' ? ' is-win' : winner === 'left' ? ' is-lose' : ''}`;
-        right.textContent = match?.rightPlayer || '右侧选手';
-
-        body.append(left, center, right);
-        card.append(top, body);
-        return card;
-    }
-
-    function renderSeriesGames(activeMatch, currentGame) {
-        const list = document.getElementById('seriesGamesList');
-        list.innerHTML = '';
-
-        if (!activeMatch) {
-            const empty = document.createElement('div');
-            empty.className = 'empty-state';
-            empty.textContent = '当前还没有活动中的系列赛。';
-            list.appendChild(empty);
-            return;
-        }
-
-        const bestOf = normalizeBestOf(activeMatch.bestOf);
-        for (let index = 0; index < bestOf; index += 1) {
-            const gameNumber = index + 1;
-            const game = Array.isArray(activeMatch.games) ? activeMatch.games[index] : null;
-            list.appendChild(createSeriesGameCard(gameNumber, game, currentGame, activeMatch));
-        }
-    }
-
-    function createRecentGameCard(game, match) {
-        const card = document.createElement('article');
-        card.className = 'recent-game-card';
-
-        const top = document.createElement('div');
-        top.className = 'recent-game-top';
-
-        const index = document.createElement('div');
-        index.className = 'recent-game-index';
-        index.textContent = `G${Number(game.gameNumber) || 1}`;
-
-        const winner = document.createElement('div');
-        winner.className = 'recent-game-winner';
-        winner.textContent = game.winner === 'left'
-            ? `${match.leftPlayer || '左侧'} 胜`
-            : `${match.rightPlayer || '右侧'} 胜`;
-
-        top.append(index, winner);
-
-        const body = document.createElement('div');
-        body.className = 'recent-game-body';
-
-        const leftSlots = buildSlotsFromSnapshots(game.leftSlots);
-        const rightSlots = buildSlotsFromSnapshots(game.rightSlots);
-
-        [
-            {
-                key: 'left',
-                name: match.leftPlayer || '左侧',
-                result: game.winner === 'left' ? '本局胜' : '本局负',
-                slots: leftSlots
-            },
-            {
-                key: 'right',
-                name: match.rightPlayer || '右侧',
-                result: game.winner === 'right' ? '本局胜' : '本局负',
-                slots: rightSlots
-            }
-        ].forEach(side => {
-            const sideEl = document.createElement('section');
-            sideEl.className = `recent-side${game.winner === side.key ? ' is-win' : ''}`;
-
-            const sideTop = document.createElement('div');
-            sideTop.className = 'recent-side-top';
-
-            const name = document.createElement('strong');
-            name.textContent = side.name;
-
-            const result = document.createElement('span');
-            result.className = 'recent-side-result';
-            result.textContent = side.result;
-
-            sideTop.append(name, result);
-            sideEl.append(sideTop, createMiniRoster(side.slots));
-            body.appendChild(sideEl);
-        });
-
-        card.append(top, body);
-        return card;
-    }
-
-    function renderRecentGames(activeMatch) {
-        const list = document.getElementById('recentGamesList');
-        list.innerHTML = '';
-
-        const games = getCompletedGames(activeMatch);
-        if (games.length === 0) {
-            const empty = document.createElement('div');
-            empty.className = 'empty-state';
-            empty.textContent = '当前系列赛还没有已结束的小局。';
-            list.appendChild(empty);
-            clearRecentGamesAutoScroll();
-            return;
-        }
-
-        games.forEach(game => {
-            list.appendChild(createRecentGameCard(game, activeMatch));
-        });
-
-        setupRecentGamesAutoScroll();
-    }
-
-    function clearRecentGamesAutoScroll() {
-        if (state.recentGamesScrollTimer) {
-            window.clearInterval(state.recentGamesScrollTimer);
-            state.recentGamesScrollTimer = null;
-        }
-
-        const list = document.getElementById('recentGamesList');
-        if (list) {
-            list.style.transform = 'translateY(0)';
-        }
-    }
-
-    function setupRecentGamesAutoScroll() {
-        const viewport = document.getElementById('recentGamesViewport');
-        const list = document.getElementById('recentGamesList');
-
-        clearRecentGamesAutoScroll();
-
-        if (!viewport || !list) {
-            return;
-        }
-
-        const cards = Array.from(list.querySelectorAll('.recent-game-card'));
-        if (cards.length <= 2) {
-            viewport.style.height = '';
-            return;
-        }
-
-        const gap = 12;
-        const visibleCount = 2;
-        const windowHeights = [];
-
-        for (let index = 0; index <= cards.length - visibleCount; index += 1) {
-            const windowCards = cards.slice(index, index + visibleCount);
-            windowHeights.push(
-                windowCards.reduce((sum, card) => sum + card.offsetHeight, 0) + gap * (windowCards.length - 1)
-            );
-        }
-
-        const offsets = [0];
-        for (let index = 1; index < cards.length - visibleCount + 1; index += 1) {
-            offsets.push(offsets[index - 1] + cards[index - 1].offsetHeight + gap);
+        if (!sources.length) {
+            return card;
         }
 
         let currentIndex = 0;
-        viewport.style.height = `${Math.max(...windowHeights)}px`;
-
-        state.recentGamesScrollTimer = window.setInterval(() => {
-            currentIndex = (currentIndex + 1) % offsets.length;
-            list.style.transform = `translateY(-${offsets[currentIndex]}px)`;
-        }, 3800);
-    }
-
-    function clearHistoryAutoScroll() {
-        if (state.historyScrollTimer) {
-            window.clearInterval(state.historyScrollTimer);
-            state.historyScrollTimer = null;
-        }
-
-        const list = document.getElementById('historyList');
-        if (list) {
-            list.style.transform = 'translateY(0)';
-        }
-    }
-
-    function setupHistoryAutoScroll() {
-        const viewport = document.getElementById('historyListViewport');
-        const list = document.getElementById('historyList');
-
-        clearHistoryAutoScroll();
-
-        if (!viewport || !list) {
-            return;
-        }
-
-        const cards = Array.from(list.querySelectorAll('.history-card'));
-        if (cards.length <= 3) {
-            viewport.style.height = '';
-            return;
-        }
-
-        const gap = 14;
-        const pageSize = 3;
-        const pageOffsets = [0];
-        const pageHeights = [];
-
-        for (let start = 0; start < cards.length; start += pageSize) {
-            const pageCards = cards.slice(start, start + pageSize);
-            const pageHeight = pageCards.reduce((sum, card) => sum + card.offsetHeight, 0) + gap * (pageCards.length - 1);
-            pageHeights.push(pageHeight);
-
-            if (start > 0) {
-                const previousCards = cards.slice(start - pageSize, start);
-                const previousOffset = pageOffsets[pageOffsets.length - 1];
-                const previousHeight = previousCards.reduce((sum, card) => sum + card.offsetHeight, 0) + gap * previousCards.length;
-                pageOffsets.push(previousOffset + previousHeight);
+        const assignNext = () => {
+            image.src = sources[currentIndex];
+        };
+        image.onerror = () => {
+            currentIndex += 1;
+            if (currentIndex >= sources.length) {
+                image.onerror = null;
+                return;
             }
-        }
+            assignNext();
+        };
+        assignNext();
 
-        let currentPage = 0;
-
-        viewport.style.height = `${Math.max(...pageHeights)}px`;
-        state.historyScrollTimer = window.setInterval(() => {
-            currentPage = (currentPage + 1) % pageOffsets.length;
-            list.style.transform = `translateY(-${pageOffsets[currentPage]}px)`;
-        }, 4200);
-    }
-
-    function renderStage() {
-        const activeMatch = getActiveMatch(state.matches);
-        const currentGame = getCurrentGame(activeMatch);
-        const scoreboard = state.scoreboard || {};
-        const statusMeta = getStatusMeta(activeMatch, currentGame);
-
-        document.getElementById('leftPlayerName').textContent = activeMatch?.leftPlayer || scoreboard.leftName || '左侧选手';
-        document.getElementById('rightPlayerName').textContent = activeMatch?.rightPlayer || scoreboard.rightName || '右侧选手';
-        document.getElementById('leftPlayerScore').textContent = String(activeMatch?.leftScore ?? scoreboard.leftScore ?? '0');
-        document.getElementById('rightPlayerScore').textContent = String(activeMatch?.rightScore ?? scoreboard.rightScore ?? '0');
-        document.getElementById('versusMeta').textContent = formatMatchMeta(activeMatch, currentGame);
-        document.getElementById('statusChip').textContent = statusMeta.chip;
-        document.getElementById('statusText').textContent = statusMeta.text;
-
-        renderGameTrack(activeMatch, currentGame);
-        renderSeriesGames(activeMatch, currentGame);
-        renderRecentGames(activeMatch);
-    }
-
-    function createHistoryCard(match, isFirst) {
-        const card = document.createElement('article');
-        card.className = `history-card${isFirst ? ' history-card-emphasis' : ''}`;
-
-        const top = document.createElement('div');
-        top.className = 'history-top';
-
-        const time = document.createElement('span');
-        time.textContent = formatDateTime(match.completedAt || match.updatedAt || match.createdAt) || '已完赛';
-
-        const mode = document.createElement('span');
-        mode.textContent = `BO${normalizeBestOf(match.bestOf)}`;
-        top.append(time, mode);
-
-        const scoreline = document.createElement('div');
-        scoreline.className = 'history-scoreline';
-
-        const leftName = document.createElement('strong');
-        leftName.textContent = match.leftPlayer || '左侧';
-
-        const score = document.createElement('div');
-        score.className = 'history-score';
-        score.textContent = `${match.leftScore ?? 0} : ${match.rightScore ?? 0}`;
-
-        const rightName = document.createElement('strong');
-        rightName.textContent = match.rightPlayer || '右侧';
-
-        scoreline.append(leftName, score, rightName);
-
-        const lastLineup = document.createElement('div');
-        lastLineup.className = 'history-last-lineup';
-
-        const game = getLastLineupGame(match);
-        const lineupSides = document.createElement('div');
-        lineupSides.className = 'history-lineup-sides';
-
-        [
-            {
-                name: match.leftPlayer || '左侧',
-                slots: buildSlotsFromSnapshots(game ? game.leftSlots : [])
-            },
-            {
-                name: match.rightPlayer || '右侧',
-                slots: buildSlotsFromSnapshots(game ? game.rightSlots : [])
-            }
-        ].forEach(side => {
-            const sideEl = document.createElement('section');
-            sideEl.className = 'history-lineup-side';
-
-            const selectedSlots = side.slots.filter(slotData => slotData && slotData.sprite && slotData.sprite.path);
-            if (selectedSlots.length === 0) {
-                sideEl.textContent = `${side.name} 暂无精灵`;
-            } else {
-                selectedSlots.forEach(slotData => {
-                    const image = document.createElement('img');
-                    image.src = slotData.sprite.path;
-                    image.alt = getDisplayName(slotData.sprite);
-                    sideEl.appendChild(image);
-                });
-            }
-
-            lineupSides.appendChild(sideEl);
-        });
-
-        lastLineup.appendChild(lineupSides);
-        card.append(top, scoreline, lastLineup);
         return card;
     }
 
-    function renderHistory() {
-        const historyList = document.getElementById('historyList');
-        const pushedMatches = getPushedMatches(state.matches);
+    /* ---------- 排位排名（复用 page3 rank div） ---------- */
 
-        historyList.innerHTML = '';
+    function buildRankIcon(rankValue) {
+        const rank = document.createElement('div');
+        rank.className = 'page7-rank';
 
-        if (pushedMatches.length === 0) {
-            const empty = document.createElement('div');
-            empty.className = 'empty-state';
-            empty.textContent = '后台尚未推送任何比赛结果。';
-            historyList.appendChild(empty);
-            clearHistoryAutoScroll();
+        const icon = document.createElement('img');
+        icon.src = RANK_ICON;
+        icon.alt = '';
+        rank.appendChild(icon);
+
+        const txt = document.createElement('div');
+        txt.className = 'page7-rank-txt';
+        const text = formatRankText(rankValue);
+        if (text) {
+            txt.textContent = text;
+            txt.style.left = `${RANK_TEXT_LEFT_BY_LENGTH[Math.min(text.length, 6)]}px`;
+        } else {
+            txt.hidden = true;
+        }
+        rank.appendChild(txt);
+        return rank;
+    }
+
+    /* ---------- 头像 ---------- */
+
+    function buildAvatar(side, avatarState) {
+        const avatar = document.createElement('div');
+        avatar.className = 'page7-avatar';
+
+        const image = document.createElement('img');
+        image.alt = `${side === 'left' ? '左侧' : '右侧'}选手头像`;
+        const state = avatarState || {};
+        if (state.exists && state.path) {
+            const cacheBuster = state.mtime ? Math.floor(state.mtime) : Date.now();
+            image.src = `${state.path}?t=${cacheBuster}`;
+        } else {
+            image.src = DEFAULT_AVATARS[side];
+        }
+        avatar.appendChild(image);
+        return avatar;
+    }
+
+    /* ---------- 半区（left / right div） ---------- */
+
+    function buildSide(side, match, game, matchAvatars) {
+        const sideEl = document.createElement('div');
+        sideEl.className = `page7-side page7-side-${side}`;
+
+        const winner = game ? game.winner : null;
+        if (winner === side) {
+            sideEl.classList.add('is-winner');
+        }
+
+        // 头像（按比赛 id 从 avatars 映射中取该场的头像）
+        sideEl.appendChild(buildAvatar(side, matchAvatars ? matchAvatars[side] : null));
+
+        // 选手名字
+        const name = document.createElement('div');
+        name.className = 'page7-name';
+        name.textContent = (side === 'left' ? match.leftPlayer : match.rightPlayer) || (side === 'left' ? '左侧' : '右侧');
+        sideEl.appendChild(name);
+
+        // 排位排名图标
+        sideEl.appendChild(buildRankIcon(side === 'left' ? match.leftRank : match.rightRank));
+
+        // 精灵卡（该小局阵容，最多 6 张，每张 80x80 间隙 12px）
+        const pets = document.createElement('div');
+        pets.className = 'page7-pets';
+        const slots = game ? (side === 'left' ? game.leftSlots : game.rightSlots) : null;
+        (slots || []).forEach((slot) => {
+            if (slot && slot.spriteId) {
+                pets.appendChild(buildPetCard(slot.spriteId));
+            }
+        });
+        sideEl.appendChild(pets);
+
+        // 胜负图标：胜方 win-icon、败方 fail-icon，未分出胜负时不显示
+        if (winner === 'left' || winner === 'right') {
+            const result = document.createElement('div');
+            result.className = 'page7-result';
+            const icon = document.createElement('img');
+            icon.src = winner === side ? WIN_ICON : FAIL_ICON;
+            icon.alt = winner === side ? '胜' : '负';
+            result.appendChild(icon);
+            sideEl.appendChild(result);
+        }
+
+        return sideEl;
+    }
+
+    /* ---------- 行渲染 ---------- */
+
+    // 参与展示的小局：已分出胜负，或已录入阵容（进行中/待开始的下一局）
+    function getDisplayGames(match) {
+        if (!match || !Array.isArray(match.games)) {
+            return [];
+        }
+        return match.games.filter((game) => {
+            if (game.status === 'completed') {
+                return true;
+            }
+            const leftCount = Array.isArray(game.leftLineup) ? game.leftLineup.length : 0;
+            const rightCount = Array.isArray(game.rightLineup) ? game.rightLineup.length : 0;
+            return leftCount + rightCount > 0;
+        });
+    }
+
+    // 多场比赛按选择顺序合并：每场比赛的每个参与小局占一行
+    function collectDisplayEntries(matches) {
+        const entries = [];
+        (matches || []).forEach((match) => {
+            getDisplayGames(match).forEach((game) => {
+                entries.push({ match, game });
+            });
+        });
+        return entries;
+    }
+
+    function buildRow(index, entry, gameNumber, avatars) {
+        const match = entry ? entry.match : null;
+        const game = entry ? entry.game : null;
+        const row = document.createElement('div');
+        row.className = 'page7-row';
+        row.style.top = `${index * ROW_STRIDE}px`;
+
+        // 对局序号：GAME1、GAME2…（空占位行也正常显示）
+        const label = document.createElement('div');
+        label.className = 'page7-row-label';
+        label.textContent = `GAME${gameNumber}`;
+        row.appendChild(label);
+
+        const card = document.createElement('div');
+        if (game && match) {
+            card.className = 'page7-card';
+            const matchAvatars = avatars ? avatars[match.id] || null : null;
+            card.appendChild(buildSide('left', match, game, matchAvatars));
+            card.appendChild(buildSide('right', match, game, matchAvatars));
+        } else {
+            // 空占位卡：icon-stay-tuned 居中
+            card.className = 'page7-card page7-card-empty';
+            const icon = document.createElement('img');
+            icon.src = STAY_TUNED_ICON;
+            icon.alt = '敬请期待';
+            card.appendChild(icon);
+        }
+        row.appendChild(card);
+
+        return row;
+    }
+
+    /* ---------- 循环滚动：超过 4 行时逐行下滚，到底后滚回第一场，节奏先快后慢 ---------- */
+
+    function stopAutoScroll() {
+        if (scrollTimer !== null) {
+            clearTimeout(scrollTimer);
+            scrollTimer = null;
+        }
+    }
+
+    function scheduleAutoScroll(rowCount) {
+        const maxOffset = rowCount - MAX_VISIBLE_ROWS;
+        if (maxOffset <= 0) {
             return;
         }
+        // 先快后慢：按滚动进度在快/慢停留时长之间线性过渡，回到第一场后节奏重置
+        const progress = Math.min(1, Math.max(0, currentScrollOffset / maxOffset));
+        const holdMs = SCROLL_HOLD_FAST_MS + (SCROLL_HOLD_SLOW_MS - SCROLL_HOLD_FAST_MS) * progress;
+        scrollTimer = setTimeout(() => {
+            currentScrollOffset = currentScrollOffset >= maxOffset ? 0 : currentScrollOffset + 1;
+            rowsEl.style.transform = `translateY(${-currentScrollOffset * ROW_STRIDE}px)`;
+            scheduleAutoScroll(rowCount);
+        }, holdMs);
+    }
 
-        pushedMatches.forEach((match, index) => {
-            historyList.appendChild(createHistoryCard(match, index === 0));
+    function startAutoScroll(rowCount) {
+        stopAutoScroll();
+        currentScrollOffset = 0;
+        rowsEl.style.transition = 'none';
+        rowsEl.style.transform = 'translateY(0)';
+        // 下一帧恢复过渡，避免重置位置时出现滑动动画
+        requestAnimationFrame(() => {
+            rowsEl.style.transition = '';
         });
-
-        setupHistoryAutoScroll();
-    }
-
-    function renderAll() {
-        renderStage();
-        renderHistory();
-    }
-
-    function applySnapshot(payload) {
-        const panels = payload && Array.isArray(payload.panels) ? payload.panels : [];
-        state.panels.left = panels.find(panel => panel && panel.position === 'left') || null;
-        state.panels.right = panels.find(panel => panel && panel.position === 'right') || null;
-        state.scoreboard = payload ? payload.scoreboard || null : null;
-        state.matches = payload ? payload.matches || null : null;
-        if (payload && payload.page6 && Array.isArray(payload.page6.matchIds)) {
-            state.page6MatchIds = payload.page6.matchIds;
+        if (rowCount > MAX_VISIBLE_ROWS) {
+            scheduleAutoScroll(rowCount);
         }
-        renderAll();
     }
 
-    async function loadInitialState() {
-        const [imagesResponse, scoreboardResponse, matchesResponse, spritesResponse, page6Response] = await Promise.all([
-            fetch('/api/images'),
-            fetch('/api/scoreboard'),
-            fetch('/api/matches'),
-            fetch('/api/sprites'),
-            fetch('/api/page6')
-        ]);
+    function renderRows(data) {
+        const matches = (data && data.matches) || [];
+        const avatars = (data && data.avatars) || null;
 
-        const [imagesData, scoreboardData, matchesData, spritesData, page6Data] = await Promise.all([
-            imagesResponse.json(),
-            scoreboardResponse.json(),
-            matchesResponse.json(),
-            spritesResponse.json(),
-            page6Response.json()
-        ]);
+        rowsEl.innerHTML = '';
 
-        state.sprites = buildSpriteLookup(spritesData.sprites || []);
-        applySnapshot({
-            panels: imagesData.images || [],
-            scoreboard: scoreboardData,
-            matches: matchesData,
-            page6: page6Data && page6Data.state ? page6Data.state : null
+        // 全部参与展示的小局按选择顺序合并渲染（GAME 序号连续编号）
+        const entries = collectDisplayEntries(matches);
+        // 不足 4 行时用空占位行补齐到 4 行
+        const rowCount = Math.max(MAX_VISIBLE_ROWS, entries.length);
+
+        for (let index = 0; index < rowCount; index += 1) {
+            const entry = entries[index] || null;
+            rowsEl.appendChild(buildRow(index, entry, index + 1, avatars));
+        }
+
+        startAutoScroll(rowCount);
+    }
+
+    // 计算渲染签名：标题/提示/所选比赛/小局/头像 任一变化才重渲染
+    function buildSignature(data) {
+        const state = (data && data.state) || {};
+        const matches = (data && data.matches) || [];
+        const avatars = (data && data.avatars) || null;
+
+        return JSON.stringify({
+            title: String(state.title || '').trim() || DEFAULT_TITLE,
+            notice: String(state.notice || '').trim() || DEFAULT_NOTICE,
+            matchIds: state.matchIds || [],
+            matches: matches.map((match) => ({
+                id: match.id,
+                leftPlayer: match.leftPlayer,
+                rightPlayer: match.rightPlayer,
+                leftRank: match.leftRank,
+                rightRank: match.rightRank,
+                games: (match.games || []).map((game) => ({
+                    gameNumber: game.gameNumber,
+                    winner: game.winner,
+                    status: game.status,
+                    leftLineup: game.leftLineup,
+                    rightLineup: game.rightLineup,
+                })),
+            })),
+            avatars: avatars ? Object.keys(avatars).map((matchId) => ({
+                matchId,
+                left: avatars[matchId] && avatars[matchId].left && avatars[matchId].left.exists
+                    ? `${avatars[matchId].left.path}?${avatars[matchId].left.mtime}` : '',
+                right: avatars[matchId] && avatars[matchId].right && avatars[matchId].right.exists
+                    ? `${avatars[matchId].right.path}?${avatars[matchId].right.mtime}` : '',
+            })) : null,
         });
+    }
+
+    function applyAll(data) {
+        const state = (data && data.state) || {};
+
+        titleEl.textContent = String(state.title || '').trim() || DEFAULT_TITLE;
+        noticeEl.textContent = String(state.notice || '').trim() || DEFAULT_NOTICE;
+
+        renderRows(data);
+
+        renderSignature = buildSignature(data);
+    }
+
+    async function loadData() {
+        try {
+            const data = await fetch('/api/page7', { credentials: 'same-origin' }).then((response) => response.json());
+            // 先用同一份签名逻辑判断是否有变化，避免无差异重渲染导致图片闪烁
+            if (renderSignature !== null && renderSignature === buildSignature(data)) {
+                return;
+            }
+            applyAll(data);
+        } catch (error) {
+            console.error('page7 初始加载失败:', error);
+        }
     }
 
     function connectSocket() {
         if (typeof io !== 'function') {
-            console.error('Socket.IO 客户端未加载');
             return;
         }
+        const socket = io({ transports: ['websocket', 'polling'] });
 
-        const socket = io({
-            transports: ['websocket', 'polling']
-        });
-
-        socket.on('snapshot', payload => {
-            applySnapshot(payload || {});
-        });
-
-        socket.on('panel:update', payload => {
-            if (payload && payload.panel && payload.panel.position) {
-                state.panels[payload.panel.position] = payload.panel;
-                renderStage();
+        socket.on('snapshot', (payload) => {
+            if (payload && payload.page7) {
+                void loadData();
             }
         });
 
-        socket.on('scoreboard:update', payload => {
-            state.scoreboard = payload ? payload.scoreboard || null : null;
-            renderStage();
+        socket.on('page7:update', () => {
+            void loadData();
         });
 
-        socket.on('matches:update', payload => {
-            state.matches = payload ? payload.matches || null : null;
-            renderAll();
+        socket.on('matches:update', () => {
+            void loadData();
         });
 
-        socket.on('page6:update', payload => {
-            if (payload && payload.state && Array.isArray(payload.state.matchIds)) {
-                state.page6MatchIds = payload.state.matchIds;
-            }
-            renderHistory();
-        });
-
-        socket.on('connect_error', error => {
-            console.error('Socket.IO 连接失败:', error);
+        socket.on('avatar:update', () => {
+            // 头像按赛事隔离：重新拉取后由签名比对决定是否重渲染
+            void loadData();
         });
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
         try {
-            await loadInitialState();
-            connectSocket();
+            await loadSpriteIndex();
         } catch (error) {
-            console.error('初始化直播等待页失败:', error);
+            console.error('精灵索引加载失败:', error);
         }
+        void loadData();
+        connectSocket();
     });
 })();

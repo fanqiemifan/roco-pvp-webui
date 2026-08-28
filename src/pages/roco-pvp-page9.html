@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洛克王国PVP - 推流页面9（团队积分榜）</title>
+    <link rel="stylesheet" href="/styles/roco-pvp-page9.css">
+</head>
+<body>
+    <main class="page9-screen" id="page9Screen" aria-label="洛克王国PVP团队积分榜">
+        <!-- 底部装饰图（1920x220，置于卡片下层） -->
+        <div class="page9-back" aria-hidden="true">
+            <img src="/assets/ui/page9-back-1.png" alt="">
+        </div>
+
+        <!-- 积分榜卡片 -->
+        <div class="page9-card">
+            <div class="page9-inner">
+                <!-- 顶部深色标题条：标题可在后台修改，留空显示默认「团队积分榜」 -->
+                <div class="page9-header"><span id="page9Title">团队积分榜</span></div>
+
+                <!-- 表头：排名 / 战队 / R1 / R2 / R3 / 总积分 -->
+                <div class="page9-row page9-head">
+                    <span>排名</span>
+                    <span>战队</span>
+                    <span>R1</span>
+                    <span>R2</span>
+                    <span>R3</span>
+                    <span>总积分</span>
+                </div>
+
+                <!-- 数据行：由 page9-display.js 按总积分降序渲染（排名自动计算） -->
+                <div id="page9Rows"></div>
+
+                <div class="page9-tail"></div>
+            </div>
+
+            <!-- 底部橙色条 -->
+            <div class="page9-footer"></div>
+        </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/page9-display.js"></script>
+</body>
+</html>

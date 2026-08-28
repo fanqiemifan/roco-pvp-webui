@@ -122,7 +122,8 @@ export interface MatchRecord {
 export interface MatchStoreState {
   activeMatchId: string | null;
   matches: MatchRecord[];
-  history: {
+  /** 操作撤销能力（与页面上的「比赛历史」无关，纯 UI 撤销栈状态） */
+  undo: {
     canUndo: boolean;
     canRedo: boolean;
     canUndoDelete: boolean;
@@ -151,7 +152,8 @@ export interface AvatarCollectionState {
  * - page3: 推流页面3（头像比分阵容）
  * - page5: 推流页面5（使用率/胜率排行）
  * - page6: 推流页面6（比赛结果）
- * - page7: 推流页面7（等待页）
+ * - page7: 推流页面7（对局推送）
+ * - page9: 推流页面9（团队积分榜）
  * - blank: 黑场（不加载任何画面）
  */
 export type StagePageKey =
@@ -161,6 +163,7 @@ export type StagePageKey =
   | 'page5'
   | 'page6'
   | 'page7'
+  | 'page9'
   | 'blank';
 
 export type StageTransitionType = 'none' | 'blinds' | 'zoom';
@@ -194,6 +197,19 @@ export interface Page6State {
 }
 
 /**
+ * 对局推送（page7）状态：推送多场比赛，页面按小局逐行展示双方阵容与胜负。
+ */
+export interface Page7State {
+  /** 已选中的比赛 id 列表（顺序即展示顺序，空数组 = 未选择，页面显示空占位行） */
+  matchIds: string[];
+  /** 主标题内容（后台输入，空字符串则使用默认「对局推送」） */
+  title: string;
+  /** 温馨提示内容（后台可编辑，默认「温馨提示：排名选自选手历史最高非实时」） */
+  notice: string;
+  mtime: number | null;
+}
+
+/**
  * 比赛预告（page8）背景类型：
  * - image: 内置背景图 1（back.for-page6.jpg）
  * - image-2: 内置背景图 2（back.for-page6-2.png）
@@ -216,6 +232,30 @@ export interface Page8State {
   background: Page8Background;
   /** 自定义壁纸访问 URL（background 为 custom 时使用，空字符串则回退内置图） */
   wallpaperUrl: string;
+  mtime: number | null;
+}
+
+/**
+ * 团队积分榜（page9）单支战队录入项：
+ * - name：战队名称（空字符串 = 未输入）
+ * - r1 / r2 / r3：三轮积分（仅数字字符串，空字符串 = 未输入，页面显示「-」）
+ * 排名与总积分由页面按总积分降序自动计算，不落盘。
+ */
+export interface Page9TeamEntry {
+  name: string;
+  r1: string;
+  r2: string;
+  r3: string;
+}
+
+/**
+ * 团队积分榜（page9）状态：标题可在后台修改，战队积分在后台逐行输入。
+ */
+export interface Page9State {
+  /** 主标题内容（后台输入，空字符串则使用默认「团队积分榜」） */
+  title: string;
+  /** 战队积分列表（顺序即录入顺序，最多 PAGE9_MAX_TEAMS 支） */
+  teams: Page9TeamEntry[];
   mtime: number | null;
 }
 
@@ -249,10 +289,12 @@ export interface SnapshotPayload {
   page4: Page4State;
   scoreboard: ScoreboardState;
   avatars: AvatarCollectionState;
-  matches: MatchStoreState;
+  store: MatchStoreState;
   stage: StageConfig;
   page6: Page6State;
+  page7: Page7State;
   page8: Page8State;
+  page9: Page9State;
   nextgame: NextGamePayload;
 }
 
