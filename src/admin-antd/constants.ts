@@ -95,6 +95,12 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
     previewPath: '/roco-pvp-page7.html',
   },
   {
+    value: 'page8',
+    label: '推流页面8',
+    description: '比赛预告（后台选择待开赛/进行中比赛，展示预告信息）',
+    previewPath: '/roco-pvp-page8.html',
+  },
+  {
     value: 'page9',
     label: '推流页面9',
     description: '团队积分榜（后台录入战队积分，排名与总积分自动计算）',

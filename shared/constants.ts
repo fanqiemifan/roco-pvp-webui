@@ -18,6 +18,7 @@ export const SUPPORTED_BEST_OF = new Set([1, 3, 5, 7]);
  * - page5: 推流页面5（使用率/胜率排行）
  * - page6: 推流页面6（比赛结果）
  * - page7: 推流页面7（对局推送）
+ * - page8: 推流页面8（比赛预告）
  * - page9: 推流页面9（团队积分榜）
  * - blank: 黑场
  */
@@ -29,6 +30,7 @@ export const SUPPORTED_STAGE_PAGES = new Set([
   'page5',
   'page6',
   'page7',
+  'page8',
   'page9',
   'blank',
 ]);
