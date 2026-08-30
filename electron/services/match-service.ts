@@ -21,6 +21,7 @@ import {
 } from './state-service.js';
 
 const PLAYER_NAME_MAX_LENGTH = 32;
+const TEAM_NAME_MAX_LENGTH = 40;
 const MAX_GAME_SLOTS = 6;
 const FLOW_HISTORY_LIMIT = 50;
 const DELETE_HISTORY_LIMIT = 3;
@@ -65,6 +66,16 @@ function cloneValue<T>(value: T): T {
 
 function normalizePlayerName(value: unknown): string {
   return String(value ?? '').trim().slice(0, PLAYER_NAME_MAX_LENGTH);
+}
+
+/** 战队名称：去除首尾空白，最长 40 字（空字符串 = 未填） */
+function normalizeTeamName(value: unknown): string {
+  return String(value ?? '').trim().slice(0, TEAM_NAME_MAX_LENGTH);
+}
+
+/** 战队 id：仅保留字母数字与 -_（空字符串 = 手动输入或未复用录入信息） */
+function normalizeTeamId(value: unknown): string {
+  return String(value ?? '').replace(/[^a-zA-Z0-9_-]/g, '');
 }
 
 function normalizeBestOf(value: unknown): number {
@@ -419,6 +430,10 @@ function normalizeMatchRecord(match: unknown, lookup?: Map<string, SpriteRecord>
     rightPlayer: normalizePlayerName(raw.rightPlayer),
     leftRank: normalizeRankValue(raw.leftRank),
     rightRank: normalizeRankValue(raw.rightRank),
+    leftTeamId: normalizeTeamId(raw.leftTeamId),
+    leftTeamName: normalizeTeamName(raw.leftTeamName),
+    rightTeamId: normalizeTeamId(raw.rightTeamId),
+    rightTeamName: normalizeTeamName(raw.rightTeamName),
     bestOf,
     games: normalizedGames,
     leftScore: Number(raw.leftScore) || 0,
@@ -482,6 +497,10 @@ function normalizeFlowSnapshot(
     rightPlayer: '',
     leftRank: '',
     rightRank: '',
+    leftTeamId: '',
+    leftTeamName: '',
+    rightTeamId: '',
+    rightTeamName: '',
     bestOf,
     games: normalizedGames,
     leftScore: Number(raw.leftScore) || 0,
@@ -937,6 +956,10 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
   const rightPlayer = normalizePlayerName(raw.rightPlayer);
   const leftRank = normalizeRankValue(raw.leftRank);
   const rightRank = normalizeRankValue(raw.rightRank);
+  const leftTeamId = normalizeTeamId(raw.leftTeamId);
+  const leftTeamName = normalizeTeamName(raw.leftTeamName);
+  const rightTeamId = normalizeTeamId(raw.rightTeamId);
+  const rightTeamName = normalizeTeamName(raw.rightTeamName);
   const bestOf = normalizeBestOf(raw.bestOf);
   const tags = normalizeTags(raw.tags);
 
@@ -961,6 +984,10 @@ export function createMatch(paths: AppPaths, payload: unknown): MatchStoreState 
     rightPlayer,
     leftRank,
     rightRank,
+    leftTeamId,
+    leftTeamName,
+    rightTeamId,
+    rightTeamName,
     bestOf,
     games: [createEmptyGameRecord(1)],
     leftScore: 0,

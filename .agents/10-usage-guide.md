@@ -17,6 +17,9 @@
 | 更新推流配置 | saveStageState | electron/services/stage-service.ts |
 | 更新对局推送配置 | savePage7State | electron/services/page7-service.ts |
 | 更新团队积分榜配置 | savePage9State | electron/services/page9-service.ts |
+| 选手/战队信息录入 | savePlayerProfile / saveTeamProfile | electron/services/profile-service.ts |
+| 创建比赛复用录入信息 | reusePlayerProfile | src/admin-antd/App.tsx |
+| page3 战队标识渲染 | renderTeams / buildTeamNameImage | src/scripts/page3-display.js |
 | 精灵排行统计 | getSpriteRanking | electron/services/stats-service.ts |
 | 搜索精灵 | listSprites | electron/services/sprite-service.ts |
 | 上传头像 | saveAvatar | electron/services/image-service.ts |
@@ -35,6 +38,7 @@
 - SlotState - 格子状态
 - SpriteRecord - 精灵记录
 - StageConfig / StagePageKey / StageTransitionType - 直播推流配置
+- PlayerProfile / TeamProfile / ProfileStoreState - 信息录入（选手/战队档案）
 - Page7State - 对局推送页配置
 - Page9State / Page9TeamEntry - 团队积分榜配置
 - SpriteUsageRow / StatsMetricKey / StatsRangeKey（管理后台统计，src/admin-antd/lib/stats.ts）

@@ -44,6 +44,7 @@ export const SUPPORTED_STAGE_TRANSITIONS = new Set(['none', 'blinds', 'zoom']);
 export const DEFAULT_PAGE3_SPRITE_SOURCE = 'sprite' as const;
 export const SUPPORTED_PAGE3_SPRITE_SOURCES = new Set(['sprite', 'thumbnail']);
 export const DEFAULT_PAGE3_RANK_VISIBLE = false;
+export const DEFAULT_PAGE3_TEAM_VISIBLE = false;
 export const RANK_TEXT_MAX_LENGTH = 10;
 
 /**

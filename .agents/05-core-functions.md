@@ -5,7 +5,7 @@
 | 自然语言描述 | 函数名 | 签名 | 说明 |
 |-------------|-------|------|------|
 | 获取比赛列表 | getMatchStore | (paths: AppPaths) => MatchStoreState | 获取比赛存储状态 |
-| 创建比赛 | createMatch | (paths: AppPaths, payload: unknown) => MatchStoreState | 创建新比赛，payload 包含 leftPlayer, rightPlayer, leftRank, rightRank, bestOf, tags |
+| 创建比赛 | createMatch | (paths: AppPaths, payload: unknown) => MatchStoreState | 创建新比赛，payload 包含 leftPlayer, rightPlayer, leftRank, rightRank, leftTeamId/leftTeamName/rightTeamId/rightTeamName（所属战队，选填）, bestOf, tags |
 | 更新比赛信息 | updateMatch | (paths: AppPaths, matchId: string, payload: unknown) => MatchStoreState | 更新比赛信息（含排位排名；syncScoreboardFromMatch 会把选手名与排名同步到记分牌） |
 | 更新比赛标签 | updateMatchTags | (paths: AppPaths, matchId: string, payload: unknown) => MatchStoreState | 更新比赛标签 |
 | 批量添加标签 | updateMatchesTags | (paths: AppPaths, matchIds: unknown, payload: unknown) => MatchStoreState | 为多场比赛追加标签（合并保留原有） |
@@ -57,6 +57,8 @@
 | 上传头像 | saveAvatar | (paths: AppPaths, side: 'left' | 'right', buffer: Buffer, mimeType?: string) => AvatarState | 保存头像 |
 | 删除头像 | deleteAvatar | (paths: AppPaths, side: 'left' | 'right') => AvatarState | 删除头像 |
 | 读取头像 MIME 类型 | readAvatarMimeType | (paths: AppPaths, side: 'left' | 'right') => string | 读取头像 MIME 类型 |
+| 保存选手录入头像 | saveProfilePlayerAvatar | (paths: AppPaths, playerId: string, buffer: Buffer) => Promise<void> | 魔数校验 + sharp 方形裁剪 PNG，存 cache/profiles/players/<id>.png |
+| 保存战队录入 logo | saveProfileTeamLogo | (paths: AppPaths, teamId: string, buffer: Buffer) => Promise<void> | 魔数校验 + sharp cover 铺满裁剪 192×192 PNG，存 cache/profiles/teams/<id>.png |
 
 ## 配置管理 (config-service.ts)
 
@@ -79,7 +81,17 @@
 | 自然语言描述 | 函数名 | 签名 | 说明 |
 |-------------|-------|------|------|
 | 获取推流配置 | getStageState | (paths: AppPaths) => StageConfig | 获取 stage 配置 |
-| 保存推流配置 | saveStageState | (paths: AppPaths, payload) => StageConfig | 保存 stage 配置；page3RankVisible 未携带时保留现值 |
+| 保存推流配置 | saveStageState | (paths: AppPaths, payload) => StageConfig | 保存 stage 配置；page3RankVisible / page3TeamVisible 未携带时保留现值 |
+
+## 信息录入 (profile-service.ts)
+
+| 自然语言描述 | 函数名 | 签名 | 说明 |
+|-------------|-------|------|------|
+| 获取录入存储 | getProfileStore | (paths: AppPaths) => ProfileStoreState | 获取选手/战队录入（cache/profiles.json，附带头像/logo 存在性与 mtime） |
+| 保存选手录入 | savePlayerProfile | (paths: AppPaths, payload: unknown) => ProfileStoreState | 新增/更新选手；未传 id 但同名视为更新（沿用旧 id 保住头像文件）；上限 200 人 |
+| 删除选手录入 | deletePlayerProfile | (paths: AppPaths, playerId: string) => ProfileStoreState | 删除选手连同头像文件 |
+| 保存战队录入 | saveTeamProfile | (paths: AppPaths, payload: unknown) => ProfileStoreState | 新增/更新战队；未传 id 但同名视为更新（沿用旧 id 保住 logo 文件）；上限 100 支 |
+| 删除战队录入 | deleteTeamProfile | (paths: AppPaths, teamId: string) => ProfileStoreState | 删除战队连同 logo 文件 |
 
 ## 对局推送 (page7-service.ts)
 

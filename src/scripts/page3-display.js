@@ -24,9 +24,13 @@
     let matchPhaseSignature = null;
     let page3SpriteSource = 'sprite';
     let page3RankVisible = false;
+    let page3TeamVisible = false;
     let scoreboardDataCache = null;
+    let storeDataCache = null;
+    let profilesDataCache = null;
     const panelDataCache = { left: null, right: null };
     const spriteNameImageCache = new Map();
+    const teamNameImageCache = new Map();
     let lineupAnimationTimer = null;
     let lineupAnimationMode = null;
 
@@ -467,6 +471,118 @@
         txtEl.style.left = `${RANK_TEXT_LEFT_BY_LENGTH[Math.min(text.length, 6)]}px`;
     }
 
+    // 战队名称渲染为 PNG（MiSans-Semibold 15px #585858），缓存避免重复绘制与字体兼容问题
+    function buildTeamNameImage(name) {
+        const text = String(name || '').trim();
+        if (!text) {
+            return null;
+        }
+
+        const cached = teamNameImageCache.get(text);
+        if (cached) {
+            return cached;
+        }
+
+        const fontSize = 15;
+        const lineHeight = 18;
+        const scale = 4;
+        const measureCanvas = document.createElement('canvas');
+        const measureContext = measureCanvas.getContext('2d');
+        if (!measureContext) {
+            return null;
+        }
+        measureContext.font = `600 ${fontSize}px "MiSans-Semibold", "Microsoft YaHei", sans-serif`;
+        const textWidth = Math.ceil(measureContext.measureText(text).width) + 2;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = textWidth * scale;
+        canvas.height = Math.ceil(lineHeight * scale);
+        const context = canvas.getContext('2d');
+        if (!context) {
+            return null;
+        }
+        context.scale(scale, scale);
+        context.font = `600 ${fontSize}px "MiSans-Semibold", "Microsoft YaHei", sans-serif`;
+        context.fillStyle = '#585858';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(text, textWidth / 2, lineHeight / 2);
+
+        const result = {
+            src: canvas.toDataURL('image/png'),
+            width: textWidth,
+            height: lineHeight,
+        };
+        teamNameImageCache.set(text, result);
+        return result;
+    }
+
+    function renderTeamSide(side, teamName, teamLogo) {
+        const teamEl = document.getElementById(side === 'left' ? 'page3LeftTeam' : 'page3RightTeam');
+        if (!teamEl) {
+            return;
+        }
+
+        const name = String(teamName || '').trim();
+        // 开关关闭或当前对局未填写所属战队时不显示
+        teamEl.hidden = !page3TeamVisible || !name;
+        if (teamEl.hidden) {
+            return;
+        }
+
+        const logoEl = document.getElementById(side === 'left' ? 'page3LeftTeamLogo' : 'page3RightTeamLogo');
+        const nameEl = document.getElementById(side === 'left' ? 'page3LeftTeamName' : 'page3RightTeamName');
+
+        // logo 优先取「信息录入」战队；未录入或未上传时仅显示名称色块
+        if (logoEl) {
+            if (teamLogo && teamLogo.logoExists) {
+                const cacheBuster = teamLogo.logoMtime ? Math.floor(teamLogo.logoMtime) : Date.now();
+                logoEl.src = `/runtime/profiles/teams/${encodeURIComponent(teamLogo.id)}.png?t=${cacheBuster}`;
+                logoEl.classList.add('is-visible');
+            } else {
+                logoEl.classList.remove('is-visible');
+                logoEl.removeAttribute('src');
+            }
+        }
+
+        if (nameEl) {
+            const nameImage = buildTeamNameImage(name);
+            if (nameImage) {
+                nameEl.src = nameImage.src;
+                nameEl.width = nameImage.width;
+                nameEl.height = nameImage.height;
+                nameEl.alt = name;
+            } else {
+                nameEl.removeAttribute('src');
+            }
+        }
+    }
+
+    function renderTeams() {
+        const store = storeDataCache || {};
+        const matches = Array.isArray(store.matches) ? store.matches : [];
+        const activeMatch = matches.find(match => match && match.id === store.activeMatchId) || null;
+        const teams = profilesDataCache && Array.isArray(profilesDataCache.teams) ? profilesDataCache.teams : [];
+
+        const teamBySide = {
+            left: null,
+            right: null
+        };
+        if (activeMatch) {
+            const leftId = activeMatch.leftTeamId || '';
+            const rightId = activeMatch.rightTeamId || '';
+            if (leftId) {
+                teamBySide.left = teams.find(team => team && team.id === leftId) || null;
+            }
+            if (rightId) {
+                teamBySide.right = teams.find(team => team && team.id === rightId) || null;
+            }
+        }
+
+        renderTeamSide('left', activeMatch ? activeMatch.leftTeamName : '', teamBySide.left);
+        renderTeamSide('right', activeMatch ? activeMatch.rightTeamName : '', teamBySide.right);
+    }
+
     function renderScoreboard(scoreboard) {
         const data = scoreboard || {};
         scoreboardDataCache = data;
@@ -552,6 +668,10 @@
         observeMatchPhase(payload);
         setPage3SpriteSource(payload && payload.stage ? payload.stage.page3SpriteSource : 'sprite');
         setPage3RankVisible(payload && payload.stage ? payload.stage.page3RankVisible === true : false);
+        setPage3TeamVisible(payload && payload.stage ? payload.stage.page3TeamVisible === true : false);
+        storeDataCache = payload ? payload.store || null : null;
+        profilesDataCache = payload ? payload.profiles || null : null;
+        renderTeams();
         renderScoreboard(payload ? payload.scoreboard : null);
         renderAvatars(payload ? payload.avatars : null);
         renderNextGame(payload ? payload.nextgame : null);
@@ -578,6 +698,15 @@
         }
         page3RankVisible = next;
         renderScoreboard(scoreboardDataCache);
+    }
+
+    function setPage3TeamVisible(visible) {
+        const next = visible === true;
+        if (page3TeamVisible === next) {
+            return;
+        }
+        page3TeamVisible = next;
+        renderTeams();
     }
 
     // 设置下场对局选手名字：超过 5 个字时开启横向滚动
@@ -681,22 +810,24 @@
     }
 
     async function loadInitialState() {
-        const [imagesResponse, scoreboardResponse, avatarsResponse, nextgameResponse, matchesResponse, stageResponse] = await Promise.all([
+        const [imagesResponse, scoreboardResponse, avatarsResponse, nextgameResponse, matchesResponse, stageResponse, profilesResponse] = await Promise.all([
             fetch('api/panels'),
             fetch('api/scoreboard'),
             fetch('api/avatars'),
             fetch('api/nextgame'),
             fetch('api/matches'),
-            fetch('api/stage')
+            fetch('api/stage'),
+            fetch('api/profiles')
         ]);
 
-        const [imagesData, scoreboardData, avatarsData, nextgameData, matchesData, stageData] = await Promise.all([
+        const [imagesData, scoreboardData, avatarsData, nextgameData, matchesData, stageData, profilesData] = await Promise.all([
             imagesResponse.json(),
             scoreboardResponse.json(),
             avatarsResponse.json(),
             nextgameResponse.json(),
             matchesResponse.json(),
-            stageResponse.json()
+            stageResponse.json(),
+            profilesResponse.json()
         ]);
 
         applySnapshot({
@@ -705,7 +836,8 @@
             avatars: avatarsData,
             nextgame: nextgameData,
             store: matchesData,
-            stage: stageData
+            stage: stageData,
+            profiles: profilesData
         });
     }
 
@@ -739,12 +871,20 @@
 
         socket.on('matches:update', payload => {
             observeMatchPhase({ store: payload ? payload.store : null });
+            storeDataCache = payload ? payload.store || null : null;
+            renderTeams();
         });
 
         socket.on('stage:update', payload => {
             const stage = payload && payload.stage ? payload.stage : payload;
             setPage3SpriteSource(stage && stage.page3SpriteSource);
             setPage3RankVisible(stage && stage.page3RankVisible === true);
+            setPage3TeamVisible(stage && stage.page3TeamVisible === true);
+        });
+
+        socket.on('profiles:update', payload => {
+            profilesDataCache = payload && payload.profiles ? payload.profiles : null;
+            renderTeams();
         });
 
         socket.on('nextgame:update', payload => {

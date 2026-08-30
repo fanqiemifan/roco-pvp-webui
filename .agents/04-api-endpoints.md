@@ -94,7 +94,20 @@
 |-------------|------|------|------|------|
 | 精灵排行 | GET | /api/stats/ranking | 精灵使用率/上场率/胜率排行（支持 tag / player 参数，统计全部历史对局） | electron/socket-server.ts |
 
-> 推流页面5/6/7/8/9 仅用于展示：`GET /api/stage`、`GET /api/scoreboard`、`GET /api/stats/ranking`、`GET /api/page6`、`GET /api/page7`、`GET /api/page8`、`GET /api/page9` 公开免鉴权；同名 POST 写操作仍受保护。
+> 推流页面仅用于展示，以下 GET 接口公开免鉴权：`/api/stage`、`/api/scoreboard`、`/api/stats/ranking`、`/api/page4`、`/api/page6`、`/api/page7`、`/api/page8`、`/api/page9`、`/api/panels`、`/api/matches`、`/api/sprites`、`/api/nextgame`、`/api/profiles`、`/api/avatars`；同名 POST/DELETE 写操作仍受保护。
+
+## 信息录入（选手/战队档案）接口
+
+| 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
+|-------------|------|------|------|------|
+| 获取录入列表 | GET | /api/profiles | 获取选手与战队录入（公开 GET，推流页9 战队联想/页面3 战队标识依赖） | electron/socket-server.ts |
+| 保存选手录入 | POST | /api/profiles/players | 新增/更新选手（未传 id 但同名视为更新；name 必填） | electron/socket-server.ts |
+| 删除选手录入 | DELETE | /api/profiles/players/:playerId | 删除选手（连同头像文件） | electron/socket-server.ts |
+| 保存战队录入 | POST | /api/profiles/teams | 新增/更新战队（未传 id 但同名视为更新；name 必填） | electron/socket-server.ts |
+| 删除战队录入 | DELETE | /api/profiles/teams/:teamId | 删除战队（连同 logo 文件） | electron/socket-server.ts |
+| 上传选手头像 | POST | /api/upload/player-avatar/:playerId | 上传选手头像（魔数校验，sharp 裁剪为方形 PNG，存 cache/profiles/players/<id>.png） | electron/socket-server.ts |
+| 上传战队 logo | POST | /api/upload/team-logo/:teamId | 上传战队 logo（魔数校验，sharp cover 铺满裁剪 192×192 PNG，存 cache/profiles/teams/<id>.png） | electron/socket-server.ts |
+
 ## 精灵接口
 
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |

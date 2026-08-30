@@ -35,7 +35,7 @@
 |---------|------|------|
 | StagePageKey | 推流页面 key：page1-overlay / page2 / page3 / page5 / page6 / page7 / page9 / blank | shared/types.ts |
 | StageTransitionType | 过渡效果：none / blinds / zoom | shared/types.ts |
-| StageConfig | 推流载体配置（page, transition, page3SpriteSource, page3RankVisible, page5Title, page5Player, page5Tag, mtime）。page3RankVisible 控制页面3比分栏中央两侧排位排名图标显隐 | shared/types.ts |
+| StageConfig | 推流载体配置（page, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page5Title, page5Player, page5Tag, mtime）。page3RankVisible 控制页面3排位排名图标显隐；page3TeamVisible 控制页面3左右两侧战队标识 div 显隐 | shared/types.ts |
 | Page6State | 比赛结果页配置（matchIds 最多 8 个已结束比赛, title 副标题, mtime） | shared/types.ts |
 | Page7State | 对局推送页配置（matchIds 已结束比赛, title 主标题留空用默认「对局推送」, notice 温馨提示留空用默认, mtime） | shared/types.ts |
 | Page8State | 比赛预告页配置（matchIds 最多 12 个待开始/进行中比赛, title/subtitle, background image/image-2/custom, wallpaperUrl, mtime） | shared/types.ts |
@@ -50,7 +50,7 @@
 |---------|------|------|
 | MatchSlotSnapshot | 比赛格子快照（slotIndex, spriteId, spritePath） | shared/types.ts |
 | GameRecord | 单局比赛记录（gameNumber, status, leftLineup, rightLineup, winner） | shared/types.ts |
-| MatchRecord | 完整比赛记录（id, createdAt, updatedAt, status, leftPlayer, rightPlayer, leftRank, rightRank, bestOf, games, leftScore, rightScore, winner, completedAt, tags）。leftRank/rightRank 为左右选手排位排名（仅数字字符串，空 = 未输入） | shared/types.ts |
+| MatchRecord | 完整比赛记录（id, createdAt, updatedAt, status, leftPlayer, rightPlayer, leftRank, rightRank, leftTeamId, leftTeamName, rightTeamId, rightTeamName, bestOf, games, leftScore, rightScore, winner, completedAt, tags）。leftRank/rightRank 为左右选手排位排名（仅数字字符串，空 = 未输入）；leftTeamId/rightTeamId 为所属战队 id（命中「信息录入」战队时有值），leftTeamName/rightTeamName 为战队名称（空 = 未填写） | shared/types.ts |
 | MatchStoreState | 比赛存储状态（matches, activeMatchId, mtime） | shared/types.ts |
 
 ## 头像
@@ -60,11 +60,19 @@
 | AvatarState | 单个头像状态（side, exists, path, size, mtime） | shared/types.ts |
 | AvatarCollectionState | 左右头像集合（left, right） | shared/types.ts |
 
+## 信息录入（选手/战队档案）
+
+| 类型名称 | 说明 | 文件 |
+|---------|------|------|
+| PlayerProfile | 选手录入（id, name, pets 常用精灵, declaration 宣言, rank 排名仅数字, avatarExists, avatarMtime） | shared/types.ts |
+| TeamProfile | 战队录入（id, name, captain 队长, declaration 宣言, logoExists, logoMtime） | shared/types.ts |
+| ProfileStoreState | 录入存储状态（players, teams, mtime），落盘 cache/profiles.json | shared/types.ts |
+
 ## 快照和通信
 
 | 类型名称 | 说明 | 文件 |
 |---------|------|------|
-| SnapshotPayload | Socket 快照负载（panels, page4, scoreboard, avatars, matches, stage, page6, page7, page8, page9, nextgame） | shared/types.ts |
+| SnapshotPayload | Socket 快照负载（panels, page4, scoreboard, avatars, matches, stage, page6, page7, page8, page9, nextgame, profiles） | shared/types.ts |
 | SOCKET_EVENTS | Socket 事件名称常量对象 | shared/events.ts |
 
 ## 数据统计（管理后台本地）

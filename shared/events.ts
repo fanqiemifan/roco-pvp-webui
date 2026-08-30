@@ -11,4 +11,5 @@ export const SOCKET_EVENTS = {
   page8Update: 'page8:update',
   page9Update: 'page9:update',
   nextgameUpdate: 'nextgame:update',
+  profilesUpdate: 'profiles:update',
 } as const;

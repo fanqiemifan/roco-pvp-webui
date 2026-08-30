@@ -5,6 +5,7 @@ import React, { startTransition, useDeferredValue, useEffect, useRef, useState }
 import {
   Alert,
   App,
+  AutoComplete,
   Badge,
   Button,
   Card,
@@ -21,6 +22,7 @@ import {
   List,
   Menu,
   Modal,
+  Popconfirm,
   Row,
   Segmented,
   Select,
@@ -57,6 +59,8 @@ import type {
   Page8State,
   Page9State,
   PanelState,
+  PlayerProfile,
+  ProfileStoreState,
   ScoreboardState,
   Page6Background,
   Page3SpriteSource,
@@ -65,6 +69,7 @@ import type {
   StageConfig,
   StagePageKey,
   StageTransitionType,
+  TeamProfile,
 } from '../../shared/types';
 
 import {
@@ -136,9 +141,11 @@ import type {
   Page4PanelEditorState,
   PanelEditorState,
   PanelSide,
+  PlayerProfileFormValues,
   PreviewSlotKey,
   ScoreboardFormValues,
   SpriteFilterState,
+  TeamProfileFormValues,
   ViewKey,
 } from './types';
 
@@ -377,6 +384,20 @@ function Dashboard() {
   );
   const [page9Saving, setPage9Saving] = useState(false);
   const [page9SettingsNotice, setPage9SettingsNotice] = useState<NoticeState>(null);
+  // === 信息录入（选手 / 战队） ===
+  const [profiles, setProfiles] = useState<ProfileStoreState | null>(null);
+  // 信息录入卡片内切换视图：players = 选手信息，teams = 战队信息
+  const [profileTab, setProfileTab] = useState<'players' | 'teams'>('players');
+  const [playerEditorOpen, setPlayerEditorOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<PlayerProfile | null>(null);
+  const [playerAvatarFile, setPlayerAvatarFile] = useState<File | null>(null);
+  const [playerAvatarUrl, setPlayerAvatarUrl] = useState<string | null>(null);
+  const [playerSaving, setPlayerSaving] = useState(false);
+  const [teamEditorOpen, setTeamEditorOpen] = useState(false);
+  const [editingTeam, setEditingTeam] = useState<TeamProfile | null>(null);
+  const [teamLogoFile, setTeamLogoFile] = useState<File | null>(null);
+  const [teamLogoUrl, setTeamLogoUrl] = useState<string | null>(null);
+  const [teamSaving, setTeamSaving] = useState(false);
   const [rosterNotice, setRosterNotice] = useState<NoticeState>(null);
   const [page4Notice, setPage4Notice] = useState<NoticeState>(null);
   const [historyNotice, setHistoryNotice] = useState<NoticeState>(null);
@@ -389,6 +410,8 @@ function Dashboard() {
   const [scoreboardForm] = Form.useForm<ScoreboardFormValues>();
   const [matchForm] = Form.useForm<MatchFormValues>();
   const [createMatchForm] = Form.useForm<CreateMatchValues>();
+  const [playerProfileForm] = Form.useForm<PlayerProfileFormValues>();
+  const [teamProfileForm] = Form.useForm<TeamProfileFormValues>();
 
   const liveApplyRef = useRef(false);
   const liveWriteRef = useRef(false);
@@ -508,6 +531,7 @@ function Dashboard() {
     page8?: Page8State;
     page9?: Page9State;
     nextgame?: NextGamePayload;
+    profiles?: ProfileStoreState;
   }) {
     startTransition(() => {
       if (payload.scoreboard) {
@@ -558,6 +582,9 @@ function Dashboard() {
       if (payload.page9) {
         setPage9(payload.page9);
       }
+      if (payload.profiles) {
+        setProfiles(payload.profiles);
+      }
     });
   }
 
@@ -566,7 +593,7 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage7, nextPage8, nextPage9, nextNextgame] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage7, nextPage8, nextPage9, nextNextgame, nextProfiles] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
@@ -580,6 +607,7 @@ function Dashboard() {
         requestJson<{ state: Page8State }>('/api/page8'),
         requestJson<{ state: Page9State }>('/api/page9'),
         requestJson<NextGamePayload>('/api/nextgame'),
+        requestJson<ProfileStoreState>('/api/profiles'),
       ]);
 
       if (!auth.authenticated) {
@@ -600,6 +628,7 @@ function Dashboard() {
         setPage8(nextPage8.state);
         setPage8Draft(nextPage8.state.matchIds);
         setPage9(nextPage9.state);
+        setProfiles(nextProfiles);
         setNextgame(nextNextgame.state);
         setNextgameMatch(nextNextgame.match ?? null);
         syncPanelFromApi('left', nextPanels.panels[0]);
@@ -726,6 +755,12 @@ function Dashboard() {
     socket.on(SOCKET_EVENTS.nextgameUpdate, (payload) => {
       if (payload?.state) {
         applyServerState({ nextgame: payload });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.profilesUpdate, (payload) => {
+      if (payload?.profiles) {
+        applyServerState({ profiles: payload.profiles });
       }
     });
 
@@ -1246,10 +1281,20 @@ function Dashboard() {
 
   async function createMatch(values: CreateMatchValues) {
     try {
+      // 所属战队：按名称匹配「信息录入」战队，命中则复用其 id（推流页可展示战队 logo）
+      const teamList = profiles?.teams ?? [];
+      const leftTeamName = (values.leftTeam ?? '').trim();
+      const rightTeamName = (values.rightTeam ?? '').trim();
+      const leftTeam = leftTeamName ? teamList.find((team) => team.name === leftTeamName) : undefined;
+      const rightTeam = rightTeamName ? teamList.find((team) => team.name === rightTeamName) : undefined;
       const data = await requestJson<{ success: boolean; store?: MatchStoreState; scoreboard?: ScoreboardState; panels?: PanelState[] }>('/api/matches', {
         method: 'POST',
         json: {
           ...values,
+          leftTeamName,
+          leftTeamId: leftTeam?.id ?? '',
+          rightTeamName,
+          rightTeamId: rightTeam?.id ?? '',
           tags: values.tags ?? [],
         },
       });
@@ -1307,6 +1352,164 @@ function Dashboard() {
     setCreateRightAvatar(null);
     setCreateLeftAvatarUrl(null);
     setCreateRightAvatarUrl(null);
+  }
+
+  // === 信息录入（选手 / 战队） ===
+  function clearProfileEditorImages() {
+    if (playerAvatarUrl) URL.revokeObjectURL(playerAvatarUrl);
+    if (teamLogoUrl) URL.revokeObjectURL(teamLogoUrl);
+    setPlayerAvatarFile(null);
+    setPlayerAvatarUrl(null);
+    setTeamLogoFile(null);
+    setTeamLogoUrl(null);
+  }
+
+  function openPlayerEditor(player: PlayerProfile | null) {
+    setEditingPlayer(player);
+    playerProfileForm.resetFields();
+    playerProfileForm.setFieldsValue({
+      name: player?.name ?? '',
+      pets: player?.pets ?? '',
+      declaration: player?.declaration ?? '',
+      rank: player?.rank ?? '',
+    });
+    clearProfileEditorImages();
+    setPlayerEditorOpen(true);
+  }
+
+  function openTeamEditor(team: TeamProfile | null) {
+    setEditingTeam(team);
+    teamProfileForm.resetFields();
+    teamProfileForm.setFieldsValue({
+      name: team?.name ?? '',
+      captain: team?.captain ?? '',
+      declaration: team?.declaration ?? '',
+    });
+    clearProfileEditorImages();
+    setTeamEditorOpen(true);
+  }
+
+  function pickPlayerAvatar(file: File) {
+    if (playerAvatarUrl) URL.revokeObjectURL(playerAvatarUrl);
+    setPlayerAvatarFile(file);
+    setPlayerAvatarUrl(URL.createObjectURL(file));
+  }
+
+  function pickTeamLogo(file: File) {
+    if (teamLogoUrl) URL.revokeObjectURL(teamLogoUrl);
+    setTeamLogoFile(file);
+    setTeamLogoUrl(URL.createObjectURL(file));
+  }
+
+  async function savePlayerProfile(values: PlayerProfileFormValues) {
+    setPlayerSaving(true);
+    try {
+      const data = await requestJson<{ success: boolean; profiles: ProfileStoreState }>('/api/profiles/players', {
+        method: 'POST',
+        json: {
+          id: editingPlayer?.id,
+          name: values.name,
+          pets: values.pets ?? '',
+          declaration: values.declaration ?? '',
+          rank: values.rank ?? '',
+        },
+      });
+      // 保存成功后再上传头像（新增时由后端按名字生成/复用记录）
+      const saved = data.profiles.players.find((item) => item.name === values.name.trim());
+      if (playerAvatarFile && saved) {
+        await uploadSingleFile(`/api/upload/player-avatar/${encodeURIComponent(saved.id)}`, playerAvatarFile);
+      }
+      const latest = await requestJson<ProfileStoreState>('/api/profiles');
+      setProfiles(latest);
+      setPlayerEditorOpen(false);
+      clearProfileEditorImages();
+      message.success(editingPlayer ? '选手信息已更新' : '选手信息已录入');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setPlayerSaving(false);
+    }
+  }
+
+  async function removePlayerProfile(player: PlayerProfile) {
+    try {
+      const data = await requestJson<{ success: boolean; profiles: ProfileStoreState }>(`/api/profiles/players/${encodeURIComponent(player.id)}`, {
+        method: 'DELETE',
+      });
+      setProfiles(data.profiles);
+      message.success(`已删除选手「${player.name}」`);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function saveTeamProfile(values: TeamProfileFormValues) {
+    setTeamSaving(true);
+    try {
+      const data = await requestJson<{ success: boolean; profiles: ProfileStoreState }>('/api/profiles/teams', {
+        method: 'POST',
+        json: {
+          id: editingTeam?.id,
+          name: values.name,
+          captain: values.captain ?? '',
+          declaration: values.declaration ?? '',
+        },
+      });
+      const saved = data.profiles.teams.find((item) => item.name === values.name.trim());
+      if (teamLogoFile && saved) {
+        await uploadSingleFile(`/api/upload/team-logo/${encodeURIComponent(saved.id)}`, teamLogoFile);
+      }
+      const latest = await requestJson<ProfileStoreState>('/api/profiles');
+      setProfiles(latest);
+      setTeamEditorOpen(false);
+      clearProfileEditorImages();
+      message.success(editingTeam ? '战队信息已更新' : '战队信息已录入');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setTeamSaving(false);
+    }
+  }
+
+  async function removeTeamProfile(team: TeamProfile) {
+    try {
+      const data = await requestJson<{ success: boolean; profiles: ProfileStoreState }>(`/api/profiles/teams/${encodeURIComponent(team.id)}`, {
+        method: 'DELETE',
+      });
+      setProfiles(data.profiles);
+      message.success(`已删除战队「${team.name}」`);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  /** 创建比赛时复用录入选手：自动带上排名与头像 */
+  async function reusePlayerProfile(side: PanelSide, player: PlayerProfile) {
+    createMatchForm.setFieldsValue({
+      ...(side === 'left' ? { leftRank: player.rank || '' } : { rightRank: player.rank || '' }),
+    });
+    if (!player.avatarExists) {
+      return;
+    }
+    try {
+      const response = await fetch(`/runtime/profiles/players/${encodeURIComponent(player.id)}.png`);
+      if (!response.ok) {
+        return;
+      }
+      const blob = await response.blob();
+      const file = new File([blob], `${player.id}.png`, { type: 'image/png' });
+      if (side === 'left') {
+        if (createLeftAvatarUrl) URL.revokeObjectURL(createLeftAvatarUrl);
+        setCreateLeftAvatar(file);
+        setCreateLeftAvatarUrl(URL.createObjectURL(file));
+      } else {
+        if (createRightAvatarUrl) URL.revokeObjectURL(createRightAvatarUrl);
+        setCreateRightAvatar(file);
+        setCreateRightAvatarUrl(URL.createObjectURL(file));
+      }
+    } catch {
+      // 头像复用失败不影响继续创建
+    }
   }
 
   async function deleteHistoryMatches(matchIds: string[]) {
@@ -1778,22 +1981,23 @@ function Dashboard() {
 
   async function saveStage(
     nextPage: StagePageKey,
-    options?: { silent?: boolean; transition?: StageTransitionType; page3SpriteSource?: Page3SpriteSource; page3RankVisible?: boolean; page5Player?: string; page5Tag?: string },
+    options?: { silent?: boolean; transition?: StageTransitionType; page3SpriteSource?: Page3SpriteSource; page3RankVisible?: boolean; page3TeamVisible?: boolean; page5Player?: string; page5Tag?: string },
   ) {
     const silent = options?.silent ?? false;
     const normalized = normalizeStagePage(nextPage);
     const transition = normalizeStageTransition(options?.transition ?? stage?.transition);
     const page3SpriteSource = options?.page3SpriteSource ?? stage?.page3SpriteSource ?? 'sprite';
     const page3RankVisible = options?.page3RankVisible ?? stage?.page3RankVisible ?? false;
+    const page3TeamVisible = options?.page3TeamVisible ?? stage?.page3TeamVisible ?? false;
     const page5Player = options?.page5Player ?? stage?.page5Player ?? '';
     const page5Tag = options?.page5Tag ?? stage?.page5Tag ?? '';
     // 乐观更新，避免切换回弹
-    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page3RankVisible, page5Player, page5Tag } : prev));
+    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page5Player, page5Tag } : prev));
     setStageSaving(true);
     try {
       const data = await requestJson<{ success: boolean; stage: StageConfig }>('/api/stage', {
         method: 'POST',
-        json: { page: normalized, transition, page3SpriteSource, page3RankVisible, page5Player, page5Tag },
+        json: { page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page5Player, page5Tag },
       });
       applyServerState({ stage: data.stage });
       if (!silent) {
@@ -2387,6 +2591,7 @@ function Dashboard() {
     { key: 'stage', label: '直播推流' },
     { key: 'live', label: '实时控制' },
     { key: 'history', label: '比赛历史' },
+    { key: 'profiles', label: '信息录入' },
     { key: 'stats', label: '数据统计' },
     { key: 'preview', label: '页面预览' },
     { key: 'page4', label: '仅显阵容' },
@@ -2644,7 +2849,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'stats' ? '数据统计' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'profiles' ? '信息录入' : view === 'stats' ? '数据统计' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -3194,6 +3399,130 @@ function Dashboard() {
             </Space>
           ) : null}
 
+          {view === 'profiles' ? (
+            <Card
+              title="信息录入"
+              extra={
+                <Space size={12}>
+                  <Segmented
+                    value={profileTab}
+                    options={[
+                      { value: 'players', label: '选手信息' },
+                      { value: 'teams', label: '战队信息' },
+                    ]}
+                    onChange={(value) => setProfileTab(value as 'players' | 'teams')}
+                  />
+                  {profileTab === 'players' ? (
+                    <Button type="primary" onClick={() => openPlayerEditor(null)}>新增选手</Button>
+                  ) : (
+                    <Button type="primary" onClick={() => openTeamEditor(null)}>新增战队</Button>
+                  )}
+                </Space>
+              }
+            >
+              {profileTab === 'players' ? (
+                <>
+                  <Table
+                    size="small"
+                    rowKey="id"
+                    dataSource={profiles?.players ?? []}
+                    pagination={false}
+                    locale={{ emptyText: '暂无选手录入，点击「新增选手」录入头像、名字、常用精灵、宣言与排名。' }}
+                    columns={[
+                      {
+                        title: '头像',
+                        key: 'avatar',
+                        width: 72,
+                        render: (_: unknown, record: PlayerProfile) => (
+                          <div className="player-avatar-circular">
+                            {record.avatarExists ? (
+                              <Image
+                                preview={false}
+                                src={`/runtime/profiles/players/${encodeURIComponent(record.id)}.png?t=${record.avatarMtime ?? 0}`}
+                                alt={record.name}
+                              />
+                            ) : (
+                              <Image preview={false} src="/assets/ui/left-avatar.png" alt="默认头像" />
+                            )}
+                          </div>
+                        ),
+                      },
+                      { title: '名字', dataIndex: 'name', key: 'name', render: (value: string) => <Text strong>{value}</Text> },
+                      { title: '排名', dataIndex: 'rank', key: 'rank', width: 80, render: (value: string) => value || '-' },
+                      { title: '常用精灵', dataIndex: 'pets', key: 'pets', ellipsis: true, render: (value: string) => value || '-' },
+                      { title: '宣言', dataIndex: 'declaration', key: 'declaration', ellipsis: true, render: (value: string) => value || '-' },
+                      {
+                        title: '操作',
+                        key: 'actions',
+                        width: 130,
+                        render: (_: unknown, record: PlayerProfile) => (
+                          <Space size={4}>
+                            <Button size="small" onClick={() => openPlayerEditor(record)}>编辑</Button>
+                            <Popconfirm title={`确认删除选手「${record.name}」？`} onConfirm={() => void removePlayerProfile(record)}>
+                              <Button size="small" danger>删除</Button>
+                            </Popconfirm>
+                          </Space>
+                        ),
+                      },
+                    ]}
+                  />
+                  <Paragraph type="secondary" style={{ marginTop: 12, marginBottom: 0 }}>
+                    创建赛事时输入选手名字会自动联想已录入选手，选中后自动复用其头像与排名。
+                  </Paragraph>
+                </>
+              ) : (
+                <>
+                  <Table
+                    size="small"
+                    rowKey="id"
+                    dataSource={profiles?.teams ?? []}
+                    pagination={false}
+                    locale={{ emptyText: '暂无战队录入，点击「新增战队」录入战队名称、队长、logo 与宣言。' }}
+                    columns={[
+                      {
+                        title: 'Logo',
+                        key: 'logo',
+                        width: 72,
+                        render: (_: unknown, record: TeamProfile) => (
+                          <div className="player-avatar-circular">
+                            {record.logoExists ? (
+                              <Image
+                                preview={false}
+                                src={`/runtime/profiles/teams/${encodeURIComponent(record.id)}.png?t=${record.logoMtime ?? 0}`}
+                                alt={record.name}
+                              />
+                            ) : (
+                              <Image preview={false} src="/assets/ui/left-avatar.png" alt="默认logo" />
+                            )}
+                          </div>
+                        ),
+                      },
+                      { title: '战队名称', dataIndex: 'name', key: 'name', render: (value: string) => <Text strong>{value}</Text> },
+                      { title: '队长', dataIndex: 'captain', key: 'captain', width: 120, render: (value: string) => value || '-' },
+                      { title: '宣言', dataIndex: 'declaration', key: 'declaration', ellipsis: true, render: (value: string) => value || '-' },
+                      {
+                        title: '操作',
+                        key: 'actions',
+                        width: 130,
+                        render: (_: unknown, record: TeamProfile) => (
+                          <Space size={4}>
+                            <Button size="small" onClick={() => openTeamEditor(record)}>编辑</Button>
+                            <Popconfirm title={`确认删除战队「${record.name}」？`} onConfirm={() => void removeTeamProfile(record)}>
+                              <Button size="small" danger>删除</Button>
+                            </Popconfirm>
+                          </Space>
+                        ),
+                      },
+                    ]}
+                  />
+                  <Paragraph type="secondary" style={{ marginTop: 12, marginBottom: 0 }}>
+                    创建赛事时可在「所属战队」中选择已录入战队复用；推流页面3 开启战队显示后会展示战队 logo 与名称。
+                  </Paragraph>
+                </>
+              )}
+            </Card>
+          ) : null}
+
           {view === 'stats' ? (
             <StatsView
               matches={matchStore.matches}
@@ -3551,6 +3880,25 @@ function Dashboard() {
                         </Space>
                       </Card>
                     </Col>
+                    <Col xs={24} md={8}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>推流页面3战队标识</Text>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            开启后在页面3左右两侧显示战队标识（战队 logo 与名称色块）；当前对局未填写所属战队的选手不显示战队标识。
+                          </Paragraph>
+                          <Space wrap>
+                            <Switch
+                              checked={stage?.page3TeamVisible ?? false}
+                              disabled={stageSaving}
+                              loading={stageSaving}
+                              onChange={(checked) => { void saveStage(stage?.page ?? 'page3', { silent: true, page3TeamVisible: checked }); }}
+                            />
+                            {stage?.page3TeamVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
+                          </Space>
+                        </Space>
+                      </Card>
+                    </Col>
                   </Row>
                   <Row gutter={[16, 16]} className="stage-config-cards">
                     <Col xs={24} md={12}>
@@ -3655,12 +4003,19 @@ function Dashboard() {
                             {page9TeamsDraft.map((team, index) => (
                               <Row key={index} gutter={[16, 8]} style={{ marginTop: 8 }}>
                                 <Col xs={24} md={10}>
-                                  <Input
-                                    maxLength={40}
-                                    placeholder={`战队 ${index + 1} 名称，可留空`}
+                                  <AutoComplete
                                     value={team.name}
-                                    onChange={(event) => updatePage9TeamDraft(index, 'name', event.target.value)}
-                                  />
+                                    options={(profiles?.teams ?? []).map((item) => ({ value: item.name }))}
+                                    filterOption={(input, option) =>
+                                      String(option?.value ?? '').toLowerCase().includes(input.trim().toLowerCase())
+                                    }
+                                    onChange={(value) => updatePage9TeamDraft(index, 'name', String(value ?? ''))}
+                                  >
+                                    <Input
+                                      maxLength={40}
+                                      placeholder={`战队 ${index + 1} 名称，可联想「信息录入」战队`}
+                                    />
+                                  </AutoComplete>
                                 </Col>
                                 <Col xs={8} md={4}>
                                   <Input
@@ -3956,10 +4311,32 @@ function Dashboard() {
           onFinish={(values) => void createMatch(values)}
         >
           <Form.Item label="左侧选手" name="leftPlayer" rules={[{ required: true, message: '请输入左侧选手名' }]}>
-            <Input maxLength={32} placeholder="例如：选手A" />
+            <AutoComplete
+              maxLength={32}
+              placeholder="输入名字联想「信息录入」选手，选中后自动复用头像与排名"
+              options={(profiles?.players ?? []).map((player) => ({ value: player.name, label: `${player.name}${player.rank ? `（排名 ${player.rank}）` : ''}` }))}
+              filterOption={(input, option) => String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())}
+              onSelect={(value) => {
+                const player = (profiles?.players ?? []).find((item) => item.name === value);
+                if (player) {
+                  void reusePlayerProfile('left', player);
+                }
+              }}
+            />
           </Form.Item>
           <Form.Item label="右侧选手" name="rightPlayer" rules={[{ required: true, message: '请输入右侧选手名' }]}>
-            <Input maxLength={32} placeholder="例如：选手B" />
+            <AutoComplete
+              maxLength={32}
+              placeholder="输入名字联想「信息录入」选手，选中后自动复用头像与排名"
+              options={(profiles?.players ?? []).map((player) => ({ value: player.name, label: `${player.name}${player.rank ? `（排名 ${player.rank}）` : ''}` }))}
+              filterOption={(input, option) => String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())}
+              onSelect={(value) => {
+                const player = (profiles?.players ?? []).find((item) => item.name === value);
+                if (player) {
+                  void reusePlayerProfile('right', player);
+                }
+              }}
+            />
           </Form.Item>
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
@@ -3980,6 +4357,30 @@ function Dashboard() {
                 getValueFromEvent={(event: React.ChangeEvent<HTMLInputElement>) => event.target.value.replace(/\D/g, '')}
               >
                 <Input maxLength={10} inputMode="numeric" placeholder="仅数字，例如：456" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Form.Item label="左侧所属战队（可选）" name="leftTeam">
+                <AutoComplete
+                  maxLength={40}
+                  placeholder="选择已录入战队复用，或手动输入"
+                  options={(profiles?.teams ?? []).map((team) => ({ value: team.name, label: team.name }))}
+                  filterOption={(input, option) => String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())}
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item label="右侧所属战队（可选）" name="rightTeam">
+                <AutoComplete
+                  maxLength={40}
+                  placeholder="选择已录入战队复用，或手动输入"
+                  options={(profiles?.teams ?? []).map((team) => ({ value: team.name, label: team.name }))}
+                  filterOption={(input, option) => String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())}
+                  allowClear
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -4046,6 +4447,135 @@ function Dashboard() {
               placeholder="可选，选择赛事标签"
               options={allHistoryTags.map((tag) => ({ value: tag, label: tag }))}
             />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingPlayer ? `编辑选手：${editingPlayer.name}` : '新增选手'}
+        open={playerEditorOpen}
+        onCancel={() => {
+          setPlayerEditorOpen(false);
+          clearProfileEditorImages();
+        }}
+        onOk={() => playerProfileForm.submit()}
+        okText="保存"
+        cancelText="取消"
+        confirmLoading={playerSaving}
+      >
+        <Form
+          form={playerProfileForm}
+          layout="vertical"
+          onFinish={(values) => void savePlayerProfile(values)}
+        >
+          <Form.Item label="选手头像（可选）">
+            <div className="create-avatar-row">
+              <div className="player-avatar-circular">
+                {playerAvatarUrl ? (
+                  <img src={playerAvatarUrl} alt="选手头像预览" />
+                ) : editingPlayer?.avatarExists ? (
+                  <Image
+                    preview={false}
+                    src={`/runtime/profiles/players/${encodeURIComponent(editingPlayer.id)}.png?t=${editingPlayer.avatarMtime ?? 0}`}
+                    alt="当前头像"
+                  />
+                ) : (
+                  <Image preview={false} src="/assets/ui/left-avatar.png" alt="默认头像" />
+                )}
+              </div>
+              <Upload
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  pickPlayerAvatar(file as File);
+                  return false;
+                }}
+              >
+                <Button>选择头像</Button>
+              </Upload>
+            </div>
+          </Form.Item>
+          <Form.Item label="名字" name="name" rules={[{ required: true, message: '请输入选手名字' }]}>
+            <Input maxLength={32} placeholder="例如：选手A（同名保存会更新已有录入）" />
+          </Form.Item>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="排名（可选）"
+                name="rank"
+                getValueFromEvent={(event: React.ChangeEvent<HTMLInputElement>) => event.target.value.replace(/\D/g, '')}
+              >
+                <Input maxLength={10} inputMode="numeric" placeholder="仅数字，例如：123" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item label="常用精灵（可选）" name="pets">
+                <Input maxLength={120} placeholder="例如：迪莫、霹雳迪迪" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item label="宣言（可选）" name="declaration">
+            <TextArea rows={2} maxLength={120} placeholder="例如：目标冠军！" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingTeam ? `编辑战队：${editingTeam.name}` : '新增战队'}
+        open={teamEditorOpen}
+        onCancel={() => {
+          setTeamEditorOpen(false);
+          clearProfileEditorImages();
+        }}
+        onOk={() => teamProfileForm.submit()}
+        okText="保存"
+        cancelText="取消"
+        confirmLoading={teamSaving}
+      >
+        <Form
+          form={teamProfileForm}
+          layout="vertical"
+          onFinish={(values) => void saveTeamProfile(values)}
+        >
+          <Form.Item label="战队 Logo / 头像（可选）">
+            <div className="create-avatar-row">
+              <div className="player-avatar-circular">
+                {teamLogoUrl ? (
+                  <img src={teamLogoUrl} alt="战队logo预览" />
+                ) : editingTeam?.logoExists ? (
+                  <Image
+                    preview={false}
+                    src={`/runtime/profiles/teams/${encodeURIComponent(editingTeam.id)}.png?t=${editingTeam.logoMtime ?? 0}`}
+                    alt="当前logo"
+                  />
+                ) : (
+                  <Image preview={false} src="/assets/ui/left-avatar.png" alt="默认logo" />
+                )}
+              </div>
+              <Upload
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  pickTeamLogo(file as File);
+                  return false;
+                }}
+              >
+                <Button>选择图片</Button>
+              </Upload>
+            </div>
+          </Form.Item>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Form.Item label="战队名称" name="name" rules={[{ required: true, message: '请输入战队名称' }]}>
+                <Input maxLength={40} placeholder="例如：星辰战队（同名保存会更新已有录入）" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item label="队长名称（可选）" name="captain">
+                <Input maxLength={32} placeholder="例如：选手A" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item label="宣言（可选）" name="declaration">
+            <TextArea rows={2} maxLength={120} placeholder="例如：为荣耀而战！" />
           </Form.Item>
         </Form>
       </Modal>

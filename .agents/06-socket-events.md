@@ -2,7 +2,7 @@
 
 | 自然语言描述 | 事件名称 | 方向 | 说明 | 负载结构 |
 |-------------|---------|------|------|---------|
-| 完整状态快照 | snapshot | Server → Client | 完整状态快照 | { panels, page4, scoreboard, avatars, matches, stage, page6, page7, page8, page9, nextgame } |
+| 完整状态快照 | snapshot | Server → Client | 完整状态快照 | { panels, page4, scoreboard, avatars, matches, stage, page6, page7, page8, page9, nextgame, profiles } |
 | 面板更新通知 | panel:update | Server → Client | 面板更新 | { panel: PanelState } |
 | 仅显阵容更新通知 | page4:update | Server → Client | page4 面板更新 | { panel: Page4PanelState } |
 | 记分牌更新通知 | scoreboard:update | Server → Client | 记分牌更新 | { scoreboard: ScoreboardState } |
@@ -13,6 +13,7 @@
 | 对局推送页更新通知 | page7:update | Server → Client | page7 配置更新 | { state: Page7State } |
 | 比赛预告页更新通知 | page8:update | Server → Client | page8 配置更新 | { state: Page8State } |
 | 团队积分榜页更新通知 | page9:update | Server → Client | page9 配置更新 | { state: Page9State } |
+| 信息录入更新通知 | profiles:update | Server → Client | 选手/战队录入变更（增删改/头像 logo 上传后广播，page3 战队标识实时刷新） | { profiles: ProfileStoreState } |
 
 # 数据流图
 

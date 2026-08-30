@@ -110,6 +110,14 @@ export interface MatchRecord {
   leftRank: string;
   /** 右侧选手排位排名（仅数字，空字符串 = 未输入） */
   rightRank: string;
+  /** 左侧选手所属战队 id（复用「信息录入」战队时记录，空字符串 = 手动输入或未填） */
+  leftTeamId: string;
+  /** 左侧选手所属战队名称（空字符串 = 未填） */
+  leftTeamName: string;
+  /** 右侧选手所属战队 id（复用「信息录入」战队时记录，空字符串 = 手动输入或未填） */
+  rightTeamId: string;
+  /** 右侧选手所属战队名称（空字符串 = 未填） */
+  rightTeamName: string;
   bestOf: number;
   games: GameRecord[];
   leftScore: number;
@@ -176,6 +184,8 @@ export interface StageConfig {
   page3SpriteSource: Page3SpriteSource;
   /** 推流页面3：是否显示比分栏中央两侧的排位排名图标 */
   page3RankVisible: boolean;
+  /** 推流页面3：是否显示比分栏两侧的战队 div（左右各一个：战队头像/logo + 底部名称色块） */
+  page3TeamVisible: boolean;
   /** 推流页面5：选手过滤（空字符串 = 全部选手） */
   page5Player: string;
   /** 推流页面5：赛事标签过滤（空字符串 = 全部标签） */
@@ -296,6 +306,50 @@ export interface SnapshotPayload {
   page8: Page8State;
   page9: Page9State;
   nextgame: NextGamePayload;
+  profiles: ProfileStoreState;
+}
+
+/**
+ * 「信息录入」选手录入项：头像、名字、常用精灵、宣言、排名。
+ * 创建比赛时可复用（名字 / 排名 / 头像）。
+ */
+export interface PlayerProfile {
+  id: string;
+  /** 选手名字 */
+  name: string;
+  /** 常用精灵（自由文本，空字符串 = 未输入） */
+  pets: string;
+  /** 宣言（空字符串 = 未输入） */
+  declaration: string;
+  /** 排位排名（仅数字，空字符串 = 未输入） */
+  rank: string;
+  /** 头像是否存在（文件位于 cache/profiles/players/{id}.png，公开访问路径 /runtime/profiles/players/{id}.png） */
+  avatarExists: boolean;
+  avatarMtime: number | null;
+}
+
+/**
+ * 「信息录入」战队录入项：战队名称、队长名称、logo或头像、宣言。
+ * 创建比赛（所属战队）与推流页面3 战队 div 可复用。
+ */
+export interface TeamProfile {
+  id: string;
+  /** 战队名称 */
+  name: string;
+  /** 队长名称（空字符串 = 未输入） */
+  captain: string;
+  /** 宣言（空字符串 = 未输入） */
+  declaration: string;
+  /** logo/头像是否存在（文件位于 cache/profiles/teams/{id}.png，公开访问路径 /runtime/profiles/teams/{id}.png） */
+  logoExists: boolean;
+  logoMtime: number | null;
+}
+
+/** 「信息录入」状态：选手 + 战队录入列表 */
+export interface ProfileStoreState {
+  players: PlayerProfile[];
+  teams: TeamProfile[];
+  mtime: number | null;
 }
 
 export interface QuickFillMatch {

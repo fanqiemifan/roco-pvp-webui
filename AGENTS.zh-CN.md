@@ -37,6 +37,8 @@ Roco PVP WebUI — 洛克王国比赛推流控制台。Electron（Express + Sock
 - 管理后台：`src/admin-antd/App.tsx`（阵容/实时控制/历史/数据统计/显示设置/直播推流/页面预览/关于），按视图拆在 `src/admin-antd/views/`，通用逻辑在 `lib/`、小组件在 `components/`。登录页：`src/login-antd/App.tsx`。
 - 推流/展示页面是纯原生 JS（`src/pages/*.html` + `src/scripts/*.js` + `src/styles/*.css`），其中 `page4`/`page5` 分别是仅显阵容页与使用率/胜率排行页，`page7` 是对局推送页（比赛历史勾选推送，标题/温馨提示在「直播推流」设置），`page9` 是团队积分榜页（后台录入战队名称与 R1/R2/R3 积分，留空显示 `-`，排名与总积分按总分降序自动计算），`float`/`float-menu` 是桌面悬浮窗页面。
 - 排位排名（page3 比分栏图标）：在「开一局」创建弹窗或赛事面板「当前比赛」表单输入（仅数字、可选），随对局存入 `matches.json` 并由 `syncScoreboardFromMatch` 同步到记分牌；「直播推流」面板的 `page3RankVisible` 开关控制推流页显隐（开启但未输入排名只显示图标，超过 10000 显示 `10000+`）。
+- 信息录入（选手/战队档案）：导航栏「信息录入」单卡片 + Segmented 切换选手/战队视图，服务在 `electron/services/profile-service.ts`，数据落盘 `cache/profiles.json`；选手头像与战队 logo 存于 `cache/profiles/{players,teams}/<id>.png`，经公开静态路径 `/runtime/profiles/**` 访问。创建赛事时输入选手名字自动联想已录入选手（复用头像/排名），「所属战队」可选录入战队或手填；page9 团队积分榜战队名称输入框同样联想录入战队。
+- 战队标识（page3 战队 div）：赛事携带 `leftTeamId/leftTeamName/rightTeamId/rightTeamName`，「直播推流」面板的 `page3TeamVisible` 开关控制显隐；开启后页面3 左右两侧（左 x257 y958 / 右 x1569 y958）显示 94×94 圆角 18 的战队 div，外描边 2px C9C9C9（box-shadow），底部 24px 高 F2ECDF 色块叠加战队名称（MiSans-Semibold 15px #585858，canvas 渲染 PNG 缓存避免字体兼容问题）；logo 优先按 teamId 匹配录入战队，未录入仅显示名称色块。
 - 详细索引（类型、API 路由、函数、socket 事件、常量、文件地图）在 `.agents/01..10-*.md` —— 遇到问题先查它们；行为有变化时要同步更新这些文档。
 
 ## 注意事项

@@ -1,7 +1,7 @@
 import type { QuickFillMatch, Page4SlotState, SlotState } from '../../shared/types';
 
 export type PanelSide = 'left' | 'right';
-export type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'stats' | 'preview' | 'stage' | 'about';
+export type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'stats' | 'preview' | 'stage' | 'profiles' | 'about';
 
 export type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'page5' | 'page6' | 'page7' | 'page8' | 'page9';
 
@@ -14,8 +14,27 @@ export type MatchFormValues = {
   rightPlayer: string;
   leftRank?: string;
   rightRank?: string;
+  /** 左侧选手所属战队名称（可选，可从「信息录入」战队复用或手动输入） */
+  leftTeam?: string;
+  /** 右侧选手所属战队名称（可选，可从「信息录入」战队复用或手动输入） */
+  rightTeam?: string;
   bestOf: number;
   tags?: string[];
+};
+
+/** 「信息录入」选手表单值 */
+export type PlayerProfileFormValues = {
+  name: string;
+  pets?: string;
+  declaration?: string;
+  rank?: string;
+};
+
+/** 「信息录入」战队表单值 */
+export type TeamProfileFormValues = {
+  name: string;
+  captain?: string;
+  declaration?: string;
 };
 
 export type CreateMatchValues = MatchFormValues;

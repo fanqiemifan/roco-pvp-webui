@@ -277,6 +277,60 @@ body {
     white-space: nowrap;
 }
 
+/* 战队标识：94×94 圆角 18，外描边 2px C9C9C9（box-shadow 贴合圆角、绘制在元素外侧，不与内容叠加故无像素泄漏），底部 F2ECDF 色块叠加战队名称 PNG */
+.page3-team {
+    position: absolute;
+    width: 94px;
+    height: 94px;
+    border-radius: 18px;
+    box-shadow: 0 0 0 2px #C9C9C9;
+    background: #fff;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.page3-team-left {
+    left: 257px;
+    top: 958px;
+}
+
+.page3-team-right {
+    left: 1569px;
+    top: 958px;
+}
+
+.page3-team-logo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.page3-team-logo.is-visible {
+    display: block;
+}
+
+.page3-team-plate {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 24px;
+    background: #F2ECDF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page3-team-name {
+    display: block;
+    max-width: 90px;
+    height: 15px;
+    object-fit: contain;
+}
+
 .page3-score {
     position: absolute;
     top: 50%;

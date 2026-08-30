@@ -16,9 +16,18 @@ import {
   getAvatarStates,
   saveAvatar,
   savePage8Wallpaper,
+  saveProfilePlayerAvatar,
+  saveProfileTeamLogo,
   deleteAvatar,
   readAvatarMimeType,
 } from './services/image-service.js';
+import {
+  getProfileStore,
+  savePlayerProfile,
+  deletePlayerProfile,
+  saveTeamProfile,
+  deleteTeamProfile,
+} from './services/profile-service.js';
 import { loadRuntimeConfig, saveRuntimeConfig } from './services/config-service.js';
 import {
   getStageState,
@@ -107,6 +116,7 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     page8: getPage8State(paths),
     page9: getPage9State(paths),
     nextgame: getNextGamePayload(paths),
+    profiles: getProfileStore(paths),
   };
 }
 
@@ -356,8 +366,8 @@ export async function createLocalServer(
         req.path === p || req.path.startsWith(p + '/')
       );
       const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/roco-pvp-page8.html', '/roco-pvp-page9.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
-      // 推流页面5/6/7/8/9 仅用于展示，所需的数据 GET 接口公开（写操作仍受保护）
-      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page6', '/api/page7', '/api/page8', '/api/page9', '/api/panels', '/api/matches', '/api/sprites', '/api/nextgame'].includes(req.path);
+      // 推流页面仅用于展示，所需的数据 GET 接口公开（含选手头像/录入信息/仅显阵容），写操作仍受保护
+      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page4', '/api/page6', '/api/page7', '/api/page8', '/api/page9', '/api/panels', '/api/matches', '/api/sprites', '/api/nextgame', '/api/profiles', '/api/avatars'].includes(req.path);
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 
@@ -509,6 +519,95 @@ export async function createLocalServer(
       const state = savePage9State(paths, request.body ?? {});
       io.emit(SOCKET_EVENTS.page9Update, { state });
       response.json({ success: true, state });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // === 信息录入（选手 / 战队） ===
+  // 选手头像与战队 logo 存于 cache/profiles/**，通过公开静态路径 /runtime/profiles/** 访问
+  app.get('/api/profiles', (_request, response) => {
+    response.json(getProfileStore(paths));
+  });
+
+  app.post('/api/profiles/players', (request, response) => {
+    try {
+      const profiles = savePlayerProfile(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.profilesUpdate, { profiles });
+      response.json({ success: true, profiles });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.delete('/api/profiles/players/:playerId', (request, response) => {
+    try {
+      const profiles = deletePlayerProfile(paths, request.params.playerId ?? '');
+      io.emit(SOCKET_EVENTS.profilesUpdate, { profiles });
+      response.json({ success: true, profiles });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/profiles/teams', (request, response) => {
+    try {
+      const profiles = saveTeamProfile(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.profilesUpdate, { profiles });
+      response.json({ success: true, profiles });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.delete('/api/profiles/teams/:teamId', (request, response) => {
+    try {
+      const profiles = deleteTeamProfile(paths, request.params.teamId ?? '');
+      io.emit(SOCKET_EVENTS.profilesUpdate, { profiles });
+      response.json({ success: true, profiles });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/upload/player-avatar/:playerId', upload.single('file'), async (request, response) => {
+    const playerId = String(request.params.playerId ?? '');
+    if (!playerId) {
+      response.status(400).json({ success: false, error: 'Invalid player id' });
+      return;
+    }
+    if (!request.file?.buffer) {
+      response.status(400).json({ success: false, error: 'No file data' });
+      return;
+    }
+
+    try {
+      // 基于文件魔数校验 + sharp 缩放压缩为 PNG，杜绝存储型同源 XSS
+      await saveProfilePlayerAvatar(paths, playerId, request.file.buffer);
+      const profiles = getProfileStore(paths);
+      io.emit(SOCKET_EVENTS.profilesUpdate, { profiles });
+      response.json({ success: true, profiles });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/upload/team-logo/:teamId', upload.single('file'), async (request, response) => {
+    const teamId = String(request.params.teamId ?? '');
+    if (!teamId) {
+      response.status(400).json({ success: false, error: 'Invalid team id' });
+      return;
+    }
+    if (!request.file?.buffer) {
+      response.status(400).json({ success: false, error: 'No file data' });
+      return;
+    }
+
+    try {
+      await saveProfileTeamLogo(paths, teamId, request.file.buffer);
+      const profiles = getProfileStore(paths);
+      io.emit(SOCKET_EVENTS.profilesUpdate, { profiles });
+      response.json({ success: true, profiles });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }

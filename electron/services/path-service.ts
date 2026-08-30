@@ -24,6 +24,11 @@ export interface AppPaths {
   page8WallpaperFile: string;
   nextgameFile: string;
   configFile: string;
+  profilesFile: string;
+  /** 「信息录入」选手头像文件（cache/profiles/players/{playerId}.png） */
+  profilePlayerAvatarFile(playerId: string): string;
+  /** 「信息录入」战队 logo/头像文件（cache/profiles/teams/{teamId}.png） */
+  profileTeamLogoFile(teamId: string): string;
   panelStatePath(position: 'left' | 'right'): string;
   avatarDir(matchId: string | null): string;
   avatarFile(side: 'left' | 'right', matchId: string | null): string;
@@ -58,6 +63,16 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     page8WallpaperFile: path.join(cacheDir, 'page8-wallpaper.jpg'),
     nextgameFile: path.join(cacheDir, 'nextgame.json'),
     configFile: path.join(runtimeDir, 'config.json'),
+    profilesFile: path.join(cacheDir, 'profiles.json'),
+    // profile id 仅允许字母数字与 -_，防止路径穿越
+    profilePlayerAvatarFile(playerId: string) {
+      const safeId = String(playerId ?? '').replace(/[^a-zA-Z0-9_-]/g, '');
+      return path.join(cacheDir, 'profiles', 'players', `${safeId}.png`);
+    },
+    profileTeamLogoFile(teamId: string) {
+      const safeId = String(teamId ?? '').replace(/[^a-zA-Z0-9_-]/g, '');
+      return path.join(cacheDir, 'profiles', 'teams', `${safeId}.png`);
+    },
     panelStatePath(position: 'left' | 'right') {
       return path.join(cacheDir, `${position}.json`);
     },

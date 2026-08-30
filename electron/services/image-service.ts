@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
 import sharp from 'sharp';
 
@@ -175,6 +176,45 @@ export function readAvatarMimeType(paths: AppPaths, side: AvatarSide, matchId: s
   } catch {
     return 'image/png';
   }
+}
+
+// ---------- 「信息录入」选手头像 / 战队 logo ----------
+
+/** 选手头像统一缩放并裁剪为 128×128 PNG（与赛事头像一致） */
+export async function saveProfilePlayerAvatar(paths: AppPaths, playerId: string, buffer: Buffer): Promise<void> {
+  const detectedMimeType = detectImageMimeType(buffer);
+  if (!detectedMimeType) {
+    throw new Error('仅支持 PNG / JPEG / GIF / WebP 图片文件');
+  }
+
+  ensureRuntimeDirs(paths);
+  const filePath = paths.profilePlayerAvatarFile(playerId);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  const resized = await sharp(buffer)
+    .rotate()
+    .resize(AVATAR_OUTPUT_SIZE, AVATAR_OUTPUT_SIZE, { fit: 'cover' })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+  fs.writeFileSync(filePath, resized);
+}
+
+/** 战队 logo 统一缩放为 192×192 PNG（等比 contain，透明背景，避免裁切主体） */
+export async function saveProfileTeamLogo(paths: AppPaths, teamId: string, buffer: Buffer): Promise<void> {
+  const detectedMimeType = detectImageMimeType(buffer);
+  if (!detectedMimeType) {
+    throw new Error('仅支持 PNG / JPEG / GIF / WebP 图片文件');
+  }
+
+  ensureRuntimeDirs(paths);
+  const filePath = paths.profileTeamLogoFile(teamId);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  // 战队 logo 铺满整个战队 div：cover 裁剪填满（与选手头像一致），非 contain 留边
+  const resized = await sharp(buffer)
+    .rotate()
+    .resize(192, 192, { fit: 'cover' })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+  fs.writeFileSync(filePath, resized);
 }
 
 // 比赛预告（page8）自定义壁纸统一缩放裁剪为 1920x1080，压缩为 JPEG 落盘
