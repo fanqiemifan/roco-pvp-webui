@@ -20,6 +20,7 @@ export const SUPPORTED_BEST_OF = new Set([1, 3, 5, 7]);
  * - page7: 推流页面7（对局推送）
  * - page8: 推流页面8（比赛预告）
  * - page9: 推流页面9（团队积分榜）
+ * - page10: 推流页面10（胜者结算画面）
  * - blank: 黑场
  */
 export const DEFAULT_STAGE_PAGE = 'page3';
@@ -32,6 +33,7 @@ export const SUPPORTED_STAGE_PAGES = new Set([
   'page7',
   'page8',
   'page9',
+  'page10',
   'blank',
 ]);
 
@@ -56,3 +58,10 @@ export const RANK_TEXT_MAX_LENGTH = 10;
 export const DEFAULT_NEXTGAME_DURATION = 1;
 export const DEFAULT_NEXTGAME_DURATION_UNIT = 'minutes' as const;
 export const SUPPORTED_NEXTGAME_DURATION_UNITS = new Set<string>(['seconds', 'minutes']);
+
+/**
+ * 胜者结算画面（page10）停留时长：
+ * 赛事面板登记本局胜负后自动切入，停留该时长后自动切回原推流页面；默认 5 秒。
+ */
+export const DEFAULT_PAGE10_DURATION = 5;
+export const DEFAULT_PAGE10_DURATION_UNIT = 'seconds' as const;

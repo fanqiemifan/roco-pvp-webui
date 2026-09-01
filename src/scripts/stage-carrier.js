@@ -17,7 +17,8 @@
      *   - page6         : 推流页面6（比赛结果）           -> /roco-pvp-page6.html
      *   - page7         : 推流页面7（对局推送）           -> /roco-pvp-page7.html
      *   - page8         : 推流页面8（比赛预告）           -> /roco-pvp-page8.html
-     *   - page9         : 推流页面9（团队积分榜）         -> /roco-pvp-page9.html
+     *   - page9         : 推流页面9（团队积分榜）       -> /roco-pvp-page9.html
+     *   - page10        : 推流页面10（胜者结算画面）    -> /roco-pvp-page10.html
      *   - blank         : 黑场（不加载任何画面）
      */
 
@@ -30,6 +31,7 @@
         'page7': { label: '推流页面7（对局推送）', path: '/roco-pvp-page7.html' },
         'page8': { label: '推流页面8（比赛预告）', path: '/roco-pvp-page8.html' },
         'page9': { label: '推流页面9（团队积分榜）', path: '/roco-pvp-page9.html' },
+        'page10': { label: '推流页面10（胜者结算画面）', path: '/roco-pvp-page10.html' },
         'blank': { label: '黑场', path: null }
     };
 

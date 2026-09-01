@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 
 import {
+  DEFAULT_PAGE10_DURATION,
+  DEFAULT_PAGE10_DURATION_UNIT,
   DEFAULT_STAGE_PAGE,
   DEFAULT_STAGE_TRANSITION,
   DEFAULT_PAGE3_RANK_VISIBLE,
@@ -10,7 +12,7 @@ import {
   SUPPORTED_STAGE_PAGES,
   SUPPORTED_STAGE_TRANSITIONS,
 } from '../../shared/constants.js';
-import type { Page3SpriteSource, StageConfig, StagePageKey, StageTransitionType } from '../../shared/types.js';
+import type { NextGameDurationUnit, Page3SpriteSource, StageConfig, StagePageKey, StageTransitionType } from '../../shared/types.js';
 import { ensureRuntimeDirs } from './image-service.js';
 import type { AppPaths } from './path-service.js';
 
@@ -50,6 +52,21 @@ function normalizePage3TeamVisible(value: unknown): boolean {
   return typeof value === 'boolean' ? value : DEFAULT_PAGE3_TEAM_VISIBLE;
 }
 
+/** 胜者结算画面（page10）停留时长单位：秒 / 分钟 */
+function normalizePage10DurationUnit(value: unknown): NextGameDurationUnit {
+  return value === 'minutes' ? 'minutes' : DEFAULT_PAGE10_DURATION_UNIT as NextGameDurationUnit;
+}
+
+/** 胜者结算画面（page10）停留时长：秒 1-3600，分钟 1-60 */
+function normalizePage10Duration(value: unknown, unit: NextGameDurationUnit): number {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_PAGE10_DURATION;
+  }
+  const max = unit === 'minutes' ? 60 : 3600;
+  return Math.min(max, Math.max(1, Math.round(numeric)));
+}
+
 function defaultStageState(): StageConfig {
   return {
     page: DEFAULT_STAGE_PAGE as StagePageKey,
@@ -59,6 +76,8 @@ function defaultStageState(): StageConfig {
     page3TeamVisible: DEFAULT_PAGE3_TEAM_VISIBLE,
     page5Player: '',
     page5Tag: '',
+    page10Duration: DEFAULT_PAGE10_DURATION,
+    page10DurationUnit: DEFAULT_PAGE10_DURATION_UNIT as NextGameDurationUnit,
     mtime: null,
   };
 }
@@ -71,6 +90,7 @@ export function getStageState(paths: AppPaths): StageConfig {
   try {
     const metadata = JSON.parse(fs.readFileSync(paths.stageFile, 'utf-8')) as Record<string, unknown>;
     const stat = fs.statSync(paths.stageFile);
+    const page10DurationUnit = normalizePage10DurationUnit(metadata.page10DurationUnit);
     return {
       page: normalizeStagePage(metadata.page),
       transition: normalizeStageTransition(metadata.transition),
@@ -79,6 +99,8 @@ export function getStageState(paths: AppPaths): StageConfig {
       page3TeamVisible: normalizePage3TeamVisible(metadata.page3TeamVisible),
       page5Player: normalizePage5Player(metadata.page5Player),
       page5Tag: normalizePage5Tag(metadata.page5Tag),
+      page10Duration: normalizePage10Duration(metadata.page10Duration, page10DurationUnit),
+      page10DurationUnit,
       mtime: stat.mtimeMs,
     };
   } catch {
@@ -95,6 +117,10 @@ export function saveStageState(paths: AppPaths, payload: unknown): StageConfig {
   ensureRuntimeDirs(paths);
   const current = getStageState(paths);
 
+  const page10DurationUnit = normalizePage10DurationUnit(
+    raw.page10DurationUnit === undefined ? current.page10DurationUnit : raw.page10DurationUnit,
+  );
+
   const metadata = {
     page: normalizeStagePage(raw.page),
     transition: normalizeStageTransition(raw.transition ?? current.transition),
@@ -103,6 +129,11 @@ export function saveStageState(paths: AppPaths, payload: unknown): StageConfig {
     page3TeamVisible: normalizePage3TeamVisible(raw.page3TeamVisible ?? current.page3TeamVisible),
     page5Player: normalizePage5Player(raw.page5Player),
     page5Tag: normalizePage5Tag(raw.page5Tag),
+    page10Duration: normalizePage10Duration(
+      raw.page10Duration === undefined ? current.page10Duration : raw.page10Duration,
+      page10DurationUnit,
+    ),
+    page10DurationUnit,
   };
 
   fs.writeFileSync(paths.stageFile, JSON.stringify(metadata, null, 2), 'utf-8');

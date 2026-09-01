@@ -55,6 +55,11 @@ export const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     fileName: 'roco-pvp-page9.html',
     path: '/roco-pvp-page9.html',
   },
+  page10: {
+    title: '推流页面10（胜者结算画面）',
+    fileName: 'roco-pvp-page10.html',
+    path: '/roco-pvp-page10.html',
+  },
 };
 
 export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; description: string; previewPath: string }> = [
@@ -105,6 +110,12 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
     label: '推流页面9',
     description: '团队积分榜（后台录入战队积分，排名与总积分自动计算）',
     previewPath: '/roco-pvp-page9.html',
+  },
+  {
+    value: 'page10',
+    label: '推流页面10（胜者结算）',
+    description: '胜者结算画面（登记本局胜负后自动切入展示，停留时长可设置）',
+    previewPath: '/roco-pvp-page10.html',
   },
   {
     value: 'blank',

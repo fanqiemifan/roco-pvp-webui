@@ -1,0 +1,134 @@
+/* 推流页面10：胜者结算画面（登记本局胜负后自动切入，停留设定时长后自动切回） */
+/* YouSheBiaoTiHei 不打包字体文件，改用系统安装字体，未安装时回退 MiSans */
+@font-face {
+    font-family: "YouSheBiaoTiHei";
+    src: local("YouSheBiaoTiHei");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MiSans-Heavy";
+    src: url("/assets/fonts/MiSans-Heavy.otf") format("opentype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "MiSans-Regular";
+    src: url("/assets/fonts/MiSans-Regular.otf") format("opentype");
+    font-display: swap;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+.page10-screen {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    /* 背景：winner-back.jpg */
+    background: url("/assets/ui/winner-back.jpg") no-repeat center / 100% 100%;
+    font-family: "YouSheBiaoTiHei", "MiSans-Heavy", "Microsoft YaHei", sans-serif;
+}
+
+/* ========== 前景层：1920x814，page10-back.png ========== */
+.page10-fore {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 814px;
+    background: url("/assets/ui/page10-back.png") no-repeat center / 100% 100%;
+    pointer-events: none;
+}
+
+/* ========== 副标题：居中对齐 y588，64px 2A2729 ========== */
+.page10-subtitle {
+    position: absolute;
+    left: 0;
+    top: 62px;
+    width: 100%;
+    text-align: center;
+    font-size: 64px;
+    line-height: 1;
+    color: #2A2729;
+}
+
+/* ========== 主标题：居中对齐 y661，200px 渐变字（头像放在左侧，距内容 12px） ========== */
+.page10-winner {
+    position: absolute;
+    left: 0;
+    top: 661px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* 头像 div：128x128，圆角 12px，外描边 4px B2B2B2 */
+.page10-avatar {
+    width: 128px;
+    height: 128px;
+    flex: none;
+    border-radius: 12px;
+    border: 4px solid #B2B2B2;
+    overflow: hidden;
+    background: #fff;
+}
+
+.page10-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 获胜选手名字：200px，渐变 0% 2A2729 / 57% 2A2729 / 100% C1704B */
+.page10-name {
+    font-size: 200px;
+    line-height: 1;
+    white-space: nowrap;
+    background: linear-gradient(86deg, #2A2729 0%, #2A2729 57%, #C1704B 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* ========== 获胜方阵容：winner-lineup-back.png，850x130，水平居中 y830 ========== */
+.winner-lineup-div {
+    position: absolute;
+    left: 50%;
+    top: 830px;
+    transform: translateX(-50%);
+    width: 850px;
+    height: 130px;
+    background: url("/assets/ui/winner-lineup-back.png") no-repeat center / 100% 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* petsdiv3 复用 page4.css 结构，底托比例缩至 72（scale = 72/98），间隔 12px 居中，整体下移 10px */
+.winner-lineup-pets {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transform: translateY(10px);
+}
+
+.winner-lineup-pets .petsdiv3 {
+    --petsdiv3-scale: 0.7346938775510204;
+}

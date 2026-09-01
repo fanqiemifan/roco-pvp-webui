@@ -163,6 +163,7 @@ export interface AvatarCollectionState {
  * - page7: 推流页面7（对局推送）
  * - page8: 推流页面8（比赛预告）
  * - page9: 推流页面9（团队积分榜）
+ * - page10: 推流页面10（胜者结算画面）
  * - blank: 黑场（不加载任何画面）
  */
 export type StagePageKey =
@@ -174,6 +175,7 @@ export type StagePageKey =
   | 'page7'
   | 'page8'
   | 'page9'
+  | 'page10'
   | 'blank';
 
 export type StageTransitionType = 'none' | 'blinds' | 'zoom';
@@ -192,6 +194,10 @@ export interface StageConfig {
   page5Player: string;
   /** 推流页面5：赛事标签过滤（空字符串 = 全部标签） */
   page5Tag: string;
+  /** 胜者结算画面（page10）：登记本局胜负后自动切入的停留时长 */
+  page10Duration: number;
+  /** 胜者结算画面（page10）：停留时长单位（秒 / 分钟） */
+  page10DurationUnit: NextGameDurationUnit;
   mtime: number | null;
 }
 

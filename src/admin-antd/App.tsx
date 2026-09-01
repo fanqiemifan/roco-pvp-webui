@@ -1981,7 +1981,7 @@ function Dashboard() {
 
   async function saveStage(
     nextPage: StagePageKey,
-    options?: { silent?: boolean; transition?: StageTransitionType; page3SpriteSource?: Page3SpriteSource; page3RankVisible?: boolean; page3TeamVisible?: boolean; page5Player?: string; page5Tag?: string },
+    options?: { silent?: boolean; transition?: StageTransitionType; page3SpriteSource?: Page3SpriteSource; page3RankVisible?: boolean; page3TeamVisible?: boolean; page5Player?: string; page5Tag?: string; page10Duration?: number; page10DurationUnit?: 'seconds' | 'minutes' },
   ) {
     const silent = options?.silent ?? false;
     const normalized = normalizeStagePage(nextPage);
@@ -1991,13 +1991,15 @@ function Dashboard() {
     const page3TeamVisible = options?.page3TeamVisible ?? stage?.page3TeamVisible ?? false;
     const page5Player = options?.page5Player ?? stage?.page5Player ?? '';
     const page5Tag = options?.page5Tag ?? stage?.page5Tag ?? '';
+    const page10Duration = options?.page10Duration ?? stage?.page10Duration ?? 5;
+    const page10DurationUnit = options?.page10DurationUnit ?? stage?.page10DurationUnit ?? 'seconds';
     // 乐观更新，避免切换回弹
-    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page5Player, page5Tag } : prev));
+    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page5Player, page5Tag, page10Duration, page10DurationUnit } : prev));
     setStageSaving(true);
     try {
       const data = await requestJson<{ success: boolean; stage: StageConfig }>('/api/stage', {
         method: 'POST',
-        json: { page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page5Player, page5Tag },
+        json: { page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page5Player, page5Tag, page10Duration, page10DurationUnit },
       });
       applyServerState({ stage: data.stage });
       if (!silent) {
@@ -3899,6 +3901,41 @@ function Dashboard() {
                         </Space>
                       </Card>
                     </Col>
+                    <Col xs={24} md={8}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>胜者结算画面（推流页面10）停留时长</Text>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            赛事面板登记本局胜负时，若当前画面是推流页面1-3，将自动切入胜者结算画面，停留设定时长后自动切回原画面；也可在上方页面卡片中手动切换。
+                          </Paragraph>
+                          <Space wrap>
+                            <InputNumber
+                              min={1}
+                              max={stage?.page10DurationUnit === 'minutes' ? 60 : 3600}
+                              value={stage?.page10Duration ?? 5}
+                              disabled={stageSaving}
+                              onChange={(value) => {
+                                void saveStage(stage?.page ?? 'page3', {
+                                  silent: true,
+                                  page10Duration: value === null || value === undefined ? 1 : Number(value),
+                                });
+                              }}
+                            />
+                            <Segmented
+                              value={stage?.page10DurationUnit ?? 'seconds'}
+                              disabled={stageSaving}
+                              options={[
+                                { value: 'seconds', label: '秒' },
+                                { value: 'minutes', label: '分钟' },
+                              ]}
+                              onChange={(value) => {
+                                void saveStage(stage?.page ?? 'page3', { silent: true, page10DurationUnit: value as 'seconds' | 'minutes' });
+                              }}
+                            />
+                          </Space>
+                        </Space>
+                      </Card>
+                    </Col>
                   </Row>
                   <Row gutter={[16, 16]} className="stage-config-cards">
                     <Col xs={24} md={12}>
@@ -4077,6 +4114,7 @@ function Dashboard() {
                       { value: 'page7', label: '推流页面7' },
                       { value: 'page8', label: '推流页面8' },
                       { value: 'page9', label: '推流页面9' },
+                      { value: 'page10', label: '推流页面10' },
                     ]}
                     onChange={(value) => setPreviewSlot(value as PreviewSlotKey)}
                   />

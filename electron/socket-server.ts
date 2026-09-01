@@ -8,7 +8,7 @@ import multer from 'multer';
 import { Server as SocketIOServer } from 'socket.io';
 
 import { SOCKET_EVENTS } from '../shared/events.js';
-import type { AvatarCollectionState, SnapshotPayload } from '../shared/types.js';
+import type { AvatarCollectionState, SnapshotPayload, StagePageKey } from '../shared/types.js';
 import { buildQuickFillPreview, listSprites, spriteMatchesKeyword } from './services/sprite-service.js';
 import { getSpriteRanking } from './services/stats-service.js';
 import {
@@ -256,6 +256,44 @@ export async function createLocalServer(
     },
   });
 
+  // === 胜者结算画面（page10）自动切回计时 ===
+  // 赛事面板登记本局胜负时，若当前画面是推流页面1-3，先切入 page10，停留设定时长后自动切回原画面。
+  let winnerStageReturnTimer: ReturnType<typeof setTimeout> | null = null;
+  let winnerStageReturnPage: StagePageKey | null = null;
+
+  function clearWinnerStageReturnTimer(): void {
+    if (winnerStageReturnTimer) {
+      clearTimeout(winnerStageReturnTimer);
+      winnerStageReturnTimer = null;
+    }
+    winnerStageReturnPage = null;
+  }
+
+  /** 登记胜负后自动切入胜者结算画面，并在设定时长后切回原推流页面 */
+  function triggerWinnerStage(): void {
+    const stageBefore = getStageState(paths);
+    if (stageBefore.page !== 'page1-overlay' && stageBefore.page !== 'page2' && stageBefore.page !== 'page3') {
+      return;
+    }
+
+    const stage = saveStageState(paths, { ...stageBefore, page: 'page10' });
+    io.emit(SOCKET_EVENTS.stageUpdate, { stage });
+
+    const durationMs = stage.page10Duration * (stage.page10DurationUnit === 'minutes' ? 60 : 1) * 1000;
+    clearWinnerStageReturnTimer();
+    winnerStageReturnPage = stageBefore.page;
+    winnerStageReturnTimer = setTimeout(() => {
+      winnerStageReturnTimer = null;
+      const current = getStageState(paths);
+      // 仍停留在胜者结算画面才自动切回（期间被手动切走则不再处理）
+      if (current.page === 'page10') {
+        const restored = saveStageState(paths, { ...current, page: winnerStageReturnPage ?? 'page3' });
+        io.emit(SOCKET_EVENTS.stageUpdate, { stage: restored });
+      }
+      winnerStageReturnPage = null;
+    }, durationMs);
+  }
+
   // 广播当前赛事对应的头像（活跃赛事变化时推流页等需要同步）
   const emitAvatarUpdate = (): void => {
     const matchId = getMatchStore(paths).activeMatchId;
@@ -310,6 +348,7 @@ export async function createLocalServer(
   app.get('/roco-pvp-page7.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page7.html'));
   app.get('/roco-pvp-page8.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page8.html'));
   app.get('/roco-pvp-page9.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page9.html'));
+  app.get('/roco-pvp-page10.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page10.html'));
   app.get('/roco-pvp-page1.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page1.html'));
   app.get('/float.html', (_request, response) => sendPage(paths, response, 'float.html'));
   app.get('/float-menu.html', (_request, response) => sendPage(paths, response, 'float-menu.html'));
@@ -365,13 +404,15 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/roco-pvp-page8.html', '/roco-pvp-page9.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/roco-pvp-page8.html', '/roco-pvp-page9.html', '/roco-pvp-page10.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
       // 推流页面仅用于展示，所需的数据 GET 接口公开（含选手头像/录入信息/仅显阵容），写操作仍受保护
-      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page4', '/api/page6', '/api/page7', '/api/page8', '/api/page9', '/api/panels', '/api/matches', '/api/sprites', '/api/nextgame', '/api/profiles', '/api/avatars'].includes(req.path);
+      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page4', '/api/page6', '/api/page7', '/api/page8', '/api/page9', '/api/page10', '/api/panels', '/api/matches', '/api/sprites', '/api/nextgame', '/api/profiles', '/api/avatars'].includes(req.path);
+      // 头像图片公开访问（含按赛事隔离的 /api/avatar/{matchId}/{side}-avatar.png），推流页无需登录
+      const isPublicAvatarImage = req.method === 'GET' && req.path.startsWith('/api/avatar/');
       const isAuthApi = req.path.startsWith('/api/auth/');
       const isFavicon = req.path === '/favicon.ico';
 
-      if (isPublicStatic || isPublicPage || isPublicPage5Api || isAuthApi || isFavicon) return next();
+      if (isPublicStatic || isPublicPage || isPublicPage5Api || isPublicAvatarImage || isAuthApi || isFavicon) return next();
       // Verify both authenticated flag AND single-session ID match
       if (req.session?.isAuthenticated && req.session.sessionId === activeSessionId) return next();
 
@@ -410,11 +451,25 @@ export async function createLocalServer(
   app.post('/api/stage', (request, response) => {
     try {
       const stage = saveStageState(paths, request.body ?? {});
+      // 管理端手动切走胜者结算画面时，取消尚未到期的自动切回计时
+      if (stage.page !== 'page10') {
+        clearWinnerStageReturnTimer();
+      }
       io.emit(SOCKET_EVENTS.stageUpdate, { stage });
       response.json({ success: true, stage });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
+  });
+
+  // 胜者结算画面（page10）：返回当前活跃比赛与双方头像，页面自行解析最近一个已分胜负的小局胜者
+  app.get('/api/page10', (_request, response) => {
+    const store = getMatchStore(paths);
+    const match = store.activeMatchId
+      ? store.matches.find((item) => item.id === store.activeMatchId) ?? null
+      : null;
+    const avatars = getAvatarStates(paths, store.activeMatchId);
+    response.json({ match, avatars });
   });
 
   app.get('/api/page6', (_request, response) => {
@@ -801,6 +856,8 @@ export async function createLocalServer(
       io.emit(SOCKET_EVENTS.matchesUpdate, { store: matches });
       io.emit(SOCKET_EVENTS.scoreboardUpdate, { scoreboard });
       panels.forEach((panel) => io.emit(SOCKET_EVENTS.panelUpdate, { panel }));
+      // 登记本局胜负：当前画面是推流页面1-3 时自动切入胜者结算画面（page10）
+      triggerWinnerStage();
       response.json({ success: true, store: matches, scoreboard, panels });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
