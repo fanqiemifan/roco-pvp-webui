@@ -3883,7 +3883,7 @@ function Dashboard() {
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>页面5标题：</Text>
                             <Input
                               maxLength={40}
-                              placeholder="例如：仙王杯（自动拼上赛事标签与精灵出场胜率）"
+                              placeholder="例如：洛克比赛（自动拼上赛事标签与精灵出场胜率）"
                               value={page5TitleDraft}
                               onChange={(event) => setPage5TitleDraft(event.target.value)}
                             />
