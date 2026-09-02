@@ -56,7 +56,7 @@
 - roco-pvp-page5.html + page5-display.js — 登场/胜率排行
 - roco-pvp-page6.html + page6-display.js — 比赛结果页（已结束比赛的结果展示）
 - roco-pvp-page7.html + page7-display.js — 对局推送页（比赛历史勾选已结束比赛推送；多场比赛逐行滚动展示选手对局信息；主标题/温馨提示在「直播推流」设置，留空用默认值）
-- roco-pvp-page8.html + page8-display.js — 比赛预告页（公开免鉴权，复用 page6 布局；选手对局信息卡 w860×h88 两列网格，最多 12 场，展示 vs + 双方选手名 + 排位排名图标（复用 page3 rank 样式）；不进直播推流可选画面，仅在页面预览展示）
+- roco-pvp-page8.html + page8-display.js — 比赛预告页（公开免鉴权，Match-Preview.jpg 背景板；主标题 YouSheBiaoTiHei 128 白色，最多 4 条比赛信息卡 1784×130（左右选手信息 div 820×130 背景 authorize-completed-.png：头像 84×84 + 选手名 64 白色居中 + 排位排名图标（复用 page3 rank 样式），中央 vs 72 黑色），支持 image/image-2/custom 背景切换）
 - roco-pvp-page9.html + page9-display.js — 团队积分榜页（奶白卡片 + 金黄描边字 + 底部波浪装饰图 page9-back-1.png；标题后台可改留空用「团队积分榜」；战队名称与 R1/R2/R3 积分后台录入，留空显示「-」；按三轮总分降序自动排名与总积分，同分保持录入顺序；名称与积分全空的行不展示；行高/字号按战队数量自适应）
 - float.html + float.js — 桌面阵容悬浮窗（透明置顶小窗）
 - float-menu.html + float-menu.js — 更换精灵菜单（形态选择 / 全新精灵选择器）

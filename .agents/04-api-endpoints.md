@@ -69,8 +69,8 @@
 
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
 |-------------|------|------|------|------|
-| 获取比赛预告页状态与已选比赛 | GET | /api/page8 | 获取 page8 状态与完整比赛数据（仅待开始/进行中，公开 GET） | electron/socket-server.ts |
-| 保存比赛预告配置 | POST | /api/page8 | 保存 page8 配置（matchIds 最多 12 个待开始/进行中比赛 / title / subtitle / background，已完成比赛会被过滤） | electron/socket-server.ts |
+| 获取比赛预告页状态与已选比赛 | GET | /api/page8 | 获取 page8 状态、完整比赛数据（仅待开始/进行中，公开 GET）与按赛事隔离的选手头像 | electron/socket-server.ts |
+| 保存比赛预告配置 | POST | /api/page8 | 保存 page8 配置（matchIds 最多 4 个待开始/进行中比赛 / title / background，已完成比赛会被过滤） | electron/socket-server.ts |
 | 上传自定义壁纸 | POST | /api/page8/wallpaper | 上传 page8 壁纸（魔数校验，缩放宽高 1920×1080 压缩为 JPEG，自动切到 custom 背景） | electron/socket-server.ts |
 | 删除自定义壁纸 | DELETE | /api/page8/wallpaper | 删除 page8 壁纸并回退到内置背景 | electron/socket-server.ts |
 

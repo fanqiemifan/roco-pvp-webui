@@ -234,23 +234,21 @@ export interface Page7State {
 
 /**
  * 比赛预告（page8）背景类型：
- * - image: 内置背景图 1（back.for-page6.jpg）
+ * - image: 内置背景图 1（Match-Preview.jpg）
  * - image-2: 内置背景图 2（back.for-page6-2.png）
  * - custom: 后台手动上传的自定义壁纸
  */
 export type Page8Background = 'image' | 'image-2' | 'custom';
 
 /**
- * 比赛预告（page8）状态：展示哪些待开始/进行中的比赛，以及标题、副标题与壁纸。
- * 复用 page6 的布局结构，但网格卡展示「选手对局信息」（选手名 + 排位排名 + vs）。
+ * 比赛预告（page8）状态：展示哪些待开始/进行中的比赛，以及主标题与壁纸。
+ * 每场比赛一行卡片：左右选手信息 div（头像 + 名字 + 排位排名）+ 中央 vs。
  */
 export interface Page8State {
-  /** 已选中的比赛 id（最多 12 个，顺序即展示顺序） */
+  /** 已选中的比赛 id（最多 4 个，顺序即展示顺序） */
   matchIds: string[];
   /** 主标题内容（后台输入，空字符串则隐藏） */
   title: string;
-  /** 副标题内容（后台输入，空字符串则隐藏） */
-  subtitle: string;
   /** 页面8背景类型 */
   background: Page8Background;
   /** 自定义壁纸访问 URL（background 为 custom 时使用，空字符串则回退内置图） */

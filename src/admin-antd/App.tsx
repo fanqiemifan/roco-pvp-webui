@@ -258,7 +258,7 @@ const HISTORY_STATUS_RANK: Record<MatchRecord['status'], number> = {
 };
 
 const PAGE6_MAX_MATCHES = 8;
-const PAGE8_MAX_MATCHES = 12;
+const PAGE8_MAX_MATCHES = 4;
 /** 团队积分榜（page9）后台可录入的战队行数 */
 const PAGE9_TEAM_COUNT = 4;
 
@@ -372,7 +372,6 @@ function Dashboard() {
   const [page7Pushing, setPage7Pushing] = useState(false);
   const [page8Draft, setPage8Draft] = useState<string[]>([]);
   const [page8TitleDraft, setPage8TitleDraft] = useState('');
-  const [page8SubtitleDraft, setPage8SubtitleDraft] = useState('');
   const [page8BackgroundDraft, setPage8BackgroundDraft] = useState<Page8Background>('image');
   const [page8Pushing, setPage8Pushing] = useState(false);
   const [page8Saving, setPage8Saving] = useState(false);
@@ -1811,9 +1810,8 @@ function Dashboard() {
 
   useEffect(() => {
     setPage8TitleDraft(page8?.title ?? '');
-    setPage8SubtitleDraft(page8?.subtitle ?? '');
     setPage8BackgroundDraft(page8?.background ?? 'image');
-  }, [page8?.title, page8?.subtitle, page8?.background]);
+  }, [page8?.title, page8?.background]);
 
   useEffect(() => {
     setPage7TitleDraft(page7?.title ?? '');
@@ -1914,7 +1912,6 @@ function Dashboard() {
         json: {
           matchIds: page8?.matchIds ?? page8Draft,
           title: page8TitleDraft,
-          subtitle: page8SubtitleDraft,
           background: page8BackgroundDraft,
         },
       });
@@ -4402,7 +4399,7 @@ function Dashboard() {
                           对局勾选与推送在「比赛历史」中完成：勾选「预告」列（最多 {PAGE8_MAX_MATCHES} 场，可勾选待开始与进行中的对局，已完成不可选）后点击「推送比赛预告」。
                         </Paragraph>
                         <Row gutter={[16, 16]}>
-                          <Col xs={24} md={8}>
+                          <Col xs={24} md={12}>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>主标题：</Text>
                             <Input
                               maxLength={40}
@@ -4411,16 +4408,7 @@ function Dashboard() {
                               onChange={(event) => setPage8TitleDraft(event.target.value)}
                             />
                           </Col>
-                          <Col xs={24} md={8}>
-                            <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>副标题：</Text>
-                            <Input
-                              maxLength={40}
-                              placeholder="例如：下一场对局早知道，可留空隐藏"
-                              value={page8SubtitleDraft}
-                              onChange={(event) => setPage8SubtitleDraft(event.target.value)}
-                            />
-                          </Col>
-                          <Col xs={24} md={8}>
+                          <Col xs={24} md={12}>
                             <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>壁纸：</Text>
                             <Space wrap>
                               <Segmented

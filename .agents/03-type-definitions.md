@@ -38,7 +38,7 @@
 | StageConfig | 推流载体配置（page, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page5Title, page5Player, page5Tag, mtime）。page3RankVisible 控制页面3排位排名图标显隐；page3TeamVisible 控制页面3左右两侧战队标识 div 显隐 | shared/types.ts |
 | Page6State | 比赛结果页配置（matchIds 最多 8 个已结束比赛, title 副标题, mtime） | shared/types.ts |
 | Page7State | 对局推送页配置（matchIds 已结束比赛, title 主标题留空用默认「对局推送」, notice 温馨提示留空用默认, mtime） | shared/types.ts |
-| Page8State | 比赛预告页配置（matchIds 最多 12 个待开始/进行中比赛, title/subtitle, background image/image-2/custom, wallpaperUrl, mtime） | shared/types.ts |
+| Page8State | 比赛预告页配置（matchIds 最多 4 个待开始/进行中比赛, title, background image/image-2/custom, wallpaperUrl, mtime） | shared/types.ts |
 | Page8Background | 页面8背景类型：image / image-2 / custom（自定义上传壁纸） | shared/types.ts |
 | Page9TeamEntry | 团队积分榜单支战队录入项（name 战队名称, r1/r2/r3 三轮积分仅数字字符串, 空字符串 = 未输入显示「-」） | shared/types.ts |
 | Page9State | 团队积分榜配置（title 主标题留空用默认「团队积分榜」, teams 最多 4 支战队, 排名与总积分由页面自动计算不落盘, mtime） | shared/types.ts |

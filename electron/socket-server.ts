@@ -523,13 +523,19 @@ export async function createLocalServer(
     }
   });
 
+  // 比赛预告（page8）：返回所选比赛完整数据与按赛事隔离的选手头像
   app.get('/api/page8', (_request, response) => {
     const state = getPage8State(paths);
     const matchStore = getMatchStore(paths);
     const matches = state.matchIds
       .map((id) => matchStore.matches.find((match) => match.id === id))
-      .filter((match) => match && (match.status === 'pending' || match.status === 'in_progress'));
-    response.json({ state, matches });
+      .filter((match): match is NonNullable<typeof match> => match != null && (match.status === 'pending' || match.status === 'in_progress'));
+    // 头像按赛事隔离：{ [matchId]: { left, right } }
+    const avatars: Record<string, AvatarCollectionState> = {};
+    for (const match of matches) {
+      avatars[match.id] = getAvatarStates(paths, match.id);
+    }
+    response.json({ state, matches, avatars });
   });
 
   app.post('/api/page8', (request, response) => {

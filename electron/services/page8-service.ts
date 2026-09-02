@@ -6,7 +6,7 @@ import { getMatchStore } from './match-service.js';
 import type { AppPaths } from './path-service.js';
 
 /** 比赛预告页（page8）最多展示的比赛数量 */
-export const PAGE8_MAX_MATCHES = 12;
+export const PAGE8_MAX_MATCHES = 4;
 
 /** 自定义壁纸访问 URL（/runtime 静态伺服 cacheDir） */
 export const PAGE8_WALLPAPER_URL = '/runtime/page8-wallpaper.jpg';
@@ -18,7 +18,6 @@ function defaultPage8State(): Page8State {
   return {
     matchIds: [],
     title: '',
-    subtitle: '',
     background: 'image',
     wallpaperUrl: '',
     mtime: null,
@@ -74,7 +73,6 @@ export function getPage8State(paths: AppPaths): Page8State {
     return {
       matchIds: normalizeMatchIds(metadata.matchIds),
       title: normalizeText(metadata.title),
-      subtitle: normalizeText(metadata.subtitle),
       background,
       wallpaperUrl: normalizeWallpaperUrl(metadata.wallpaperUrl),
       mtime: stat.mtimeMs,
@@ -98,7 +96,6 @@ export function savePage8State(paths: AppPaths, payload: unknown): Page8State {
   const raw = payload as Record<string, unknown>;
   const rawMatchIds = raw.matchIds === undefined ? getPage8State(paths).matchIds : normalizeMatchIds(raw.matchIds);
   const title = raw.title === undefined ? getPage8State(paths).title : normalizeText(raw.title);
-  const subtitle = raw.subtitle === undefined ? getPage8State(paths).subtitle : normalizeText(raw.subtitle);
   const background = raw.background === undefined ? getPage8State(paths).background : normalizeBackground(raw.background);
   const wallpaperUrl = raw.wallpaperUrl === undefined ? getPage8State(paths).wallpaperUrl : normalizeWallpaperUrl(raw.wallpaperUrl);
 
@@ -114,7 +111,7 @@ export function savePage8State(paths: AppPaths, payload: unknown): Page8State {
     ? PAGE8_WALLPAPER_URL
     : '';
 
-  const metadata = { matchIds, title, subtitle, background, wallpaperUrl: effectiveWallpaperUrl };
+  const metadata = { matchIds, title, background, wallpaperUrl: effectiveWallpaperUrl };
   fs.writeFileSync(paths.page8File, JSON.stringify(metadata, null, 2), 'utf-8');
   return getPage8State(paths);
 }

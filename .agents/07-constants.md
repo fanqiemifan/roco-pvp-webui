@@ -23,7 +23,7 @@
 | DEFAULT_PAGE3_TEAM_VISIBLE | false | 页面3战队标识 div 默认隐藏 | shared/constants.ts |
 | RANK_TEXT_MAX_LENGTH | 10 | 排位排名存储最大位数（超过 10000 显示 10000+） | shared/constants.ts |
 
-> 页面8（比赛预告）不在 shared/constants.ts 中，也不属于直播推流可选画面（SUPPORTED_STAGE_PAGES 不包含 page8）；其最多选 12 场的上限在 electron/services/page8-service.ts 的 PAGE8_MAX_MATCHES，前台常量 PAGE8_MAX_MATCHES 位于 src/admin-antd/App.tsx。
+> 页面8（比赛预告）的比赛上限常量 PAGE8_MAX_MATCHES = 4 位于 electron/services/page8-service.ts，前台同值常量 PAGE8_MAX_MATCHES 位于 src/admin-antd/App.tsx。
 >
 > 页面9（团队积分榜）在 SUPPORTED_STAGE_PAGES 中；战队上限常量 PAGE9_MAX_TEAMS = 4 位于 electron/services/page9-service.ts，后台表单行数常量 PAGE9_TEAM_COUNT = 4 位于 src/admin-antd/App.tsx；单项积分最长 3 位数字（0-999）。
 >
