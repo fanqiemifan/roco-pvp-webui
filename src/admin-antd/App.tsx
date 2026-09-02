@@ -159,6 +159,7 @@ const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
     version: '1.5.5',
     date: '2026-08',
     items: [
+      '直播推流画面切换卡片移除「黑场」选项（此前已保存的黑场状态仍有效，服务端与推流载体保持兼容）',
       '直播推流设置归一化：保存语义统一为即时保存（开关/选择/切换即点即存、文本输入失焦即存），移除「保存直播推流设置」「保存页面2设置」「保存对局推送设置」按钮（团队积分榜批量录入仍保留保存按钮）',
       '直播推流设置卡片重分组：页面3精灵图片/排位图标/战队标识合并为「推流页面3设置」，切换过渡效果与胜者结算停留时长合并为「画面切换行为」，选手介绍排位排名独立为「选手介绍显示」卡片',
       '直播推流设置卡片标题统一为 Card 标题，字段标签统一为 SettingField 组件（次级标签 + 说明 + 控件）',
@@ -4005,13 +4006,12 @@ function Dashboard() {
                   <Row gutter={[16, 16]}>
                     {STAGE_OPTIONS.map((option) => {
                       const active = (stage?.page ?? null) === option.value;
-                      const isBlank = option.value === 'blank';
                       return (
                         <Col xs={24} sm={12} md={8} key={option.value}>
                           <Card
                             size="small"
                             hoverable
-                            className={`stage-card ${active ? 'stage-card-active' : ''} ${isBlank ? 'stage-card-blank' : ''}`}
+                            className={`stage-card ${active ? 'stage-card-active' : ''}`}
                             onClick={() => void saveStage(option.value)}
                           >
                             <Space direction="vertical" size={6} className="page-stack" style={{ width: '100%' }}>
@@ -4020,13 +4020,7 @@ function Dashboard() {
                                 {active ? <Tag color="green">当前画面</Tag> : null}
                               </Space>
                               <Text type="secondary" style={{ fontSize: 12 }}>{option.description}</Text>
-                              {isBlank ? (
-                                <div className="stage-card-thumb stage-card-thumb-blank">
-                                  <span className="stage-card-thumb-mark">黑场</span>
-                                </div>
-                              ) : (
-                                <StageThumb label={option.label} previewPath={option.previewPath} />
-                              )}
+                              <StageThumb label={option.label} previewPath={option.previewPath} />
                             </Space>
                           </Card>
                         </Col>
@@ -4049,7 +4043,7 @@ function Dashboard() {
                               onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page3SpriteSource: value as Page3SpriteSource }); }}
                             />
                           </SettingField>
-                          <SettingField label="排位图标：" hint="开启后在页面3比分栏中央两侧显示选手排位排名图标；当前对局未输入排位排名的选手只显示图标，不显示排名数字。">
+                          <SettingField label="排位图标：" hint="比分栏中显示选手的排名">
                             <Space wrap>
                               <Switch
                                 checked={stage?.page3RankVisible ?? false}
@@ -4060,7 +4054,7 @@ function Dashboard() {
                               {stage?.page3RankVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
                             </Space>
                           </SettingField>
-                          <SettingField label="战队标识：" hint="开启后在页面3左右两侧显示战队标识（战队 logo 与名称色块）；当前对局未填写所属战队的选手不显示战队标识。">
+                          <SettingField label="战队标识：" hint="显示选手所在战队">
                             <Space wrap>
                               <Switch
                                 checked={stage?.page3TeamVisible ?? false}
@@ -4166,9 +4160,6 @@ function Dashboard() {
                     <Col xs={24} md={12}>
                       <Card size="small" className="subtle-card stage-settings-card" title="推流页面7标题文本设置">
                         <Space direction="vertical" size={12} className="page-stack" style={{ width: '100%' }}>
-                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                            对局勾选与推送在「比赛历史」中完成：勾选「对局」列后点击「推送对局推送」；主标题与温馨提示修改后即时保存。
-                          </Paragraph>
                           <Row gutter={[16, 16]}>
                             <Col xs={24} md={12}>
                               <SettingField label="主标题：">

@@ -150,15 +150,10 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
     description: '对战页：双方头像卡 + 当前阵容条 + 中央分割线',
     previewPath: '/roco-pvp-page11.html?mode=versus',
   },
-  {
-    value: 'blank',
-    label: '黑场',
-    description: '不加载任何画面（切黑）',
-    previewPath: '',
-  },
 ];
 
-export const STAGE_VALUE_SET = new Set(STAGE_OPTIONS.map((option) => option.value));
+// 黑场不作为可选切换卡片展示，但已保存的黑场状态仍为合法值（避免静默改写当前画面）
+export const STAGE_VALUE_SET = new Set<StagePageKey>([...STAGE_OPTIONS.map((option) => option.value), 'blank']);
 
 export const STAGE_TRANSITION_OPTIONS: Array<{ value: StageTransitionType; label: string }> = [
   { value: 'blinds', label: '百叶窗' },
