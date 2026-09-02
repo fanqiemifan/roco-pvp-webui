@@ -764,15 +764,30 @@
         const isVisible = Boolean(state.visible) && Boolean(match);
         const wasVisible = !el.hidden;
 
-        // 退场：先播放滑出动画，动画结束后再真正隐藏
+        // 退场：先播放滑出动画，动画结束后再真正隐藏（超时兜底防止动画事件未触发时卡住）
         if (!isVisible && wasVisible) {
             el.hidden = false;
             el.classList.add('is-exiting');
-            el.addEventListener('animationend', function handleExit() {
+            let exitFinished = false;
+            let exitTimer = null;
+            const finishExit = () => {
+                if (exitFinished) {
+                    return;
+                }
+                exitFinished = true;
+                if (exitTimer) {
+                    window.clearTimeout(exitTimer);
+                    exitTimer = null;
+                }
                 el.classList.remove('is-exiting');
                 el.hidden = true;
                 el.removeEventListener('animationend', handleExit);
-            });
+            };
+            const handleExit = () => {
+                finishExit();
+            };
+            el.addEventListener('animationend', handleExit);
+            exitTimer = window.setTimeout(finishExit, 500);
             return;
         }
 
