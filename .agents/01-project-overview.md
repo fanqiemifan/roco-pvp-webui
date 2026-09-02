@@ -102,7 +102,8 @@ pvp-webUI-for-roco/
 | page7-display.js | 对局推送页（page7）脚本（多场比赛逐行滚动展示） |
 | page8-display.js | 比赛预告页（page8）脚本 |
 | page9-display.js | 团队积分榜页（page9）脚本（排名与总积分自动计算） |
-| stage-carrier.js | 推流载体页（index.html）脚本，按 stage 配置加载对应页面 |
+| stage-carrier.js | 推流载体页（index.html）脚本，按 stage 配置加载对应页面；iframe 加载完成后 postMessage 通知页面播放入场动效 |
+| stage-enter.js | 推流页面入场动效控制脚本（配合 styles/stage-enter.css）：收载体 stage-enter 消息（或 onload 兜底）后加 is-stage-entered 并派发 stage-enter 事件，触发 .fx-enter 区块上浮淡入（fadeUp，内联 --fx-delay 控制延迟）；started 标志保证每页只播一次 |
 | float.js | 桌面阵容悬浮窗脚本 |
 | float-menu.js | 更换精灵菜单脚本 |
 
@@ -110,7 +111,7 @@ pvp-webUI-for-roco/
 
 | 文件路径 | 说明 |
 |---------|------|
-| index.html | 推流载体页（加载 stage 配置对应页面） |
+| index.html | 推流载体页（加载 stage 配置对应页面；切换时播全屏过渡 blinds/zoom，新页面加载完成后通知入场动效） |
 | roco-pvp-page1.html | 推流页面1（Overlay 比分栏） |
 | roco-pvp-page2.html | 推流页面2（全局阵容展示） |
 | roco-pvp-page3.html | 推流页面3（头像比分阵容） |
