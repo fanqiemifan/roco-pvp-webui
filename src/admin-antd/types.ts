@@ -39,14 +39,6 @@ export type TeamProfileFormValues = {
 
 export type CreateMatchValues = MatchFormValues;
 
-export type ScoreboardFormValues = {
-  eventTitle: string;
-  page2LineupDisplayMode: 'default' | 'avatar-only';
-  page5Title: string;
-  page6Title: string;
-  page6Background: 'image' | 'video';
-};
-
 export type PanelEditorState = {
   selected: SlotState[];
   activeSlot: number;
