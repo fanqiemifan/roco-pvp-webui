@@ -156,6 +156,14 @@ const { TextArea } = Input;
 
 const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
   {
+    version: '1.5.6',
+    date: '2026-09',
+    items: [
+      '推流页面切换入场动效：切到推流页面 1/2/3/5/6/7/8/9/10 时，页面内容区自上而下依次上浮淡入（fadeUp，--fx-delay 控制入场顺序）',
+      '推流页面3 每次切入播放一次阵容入场动画（左右阵容卡交错入场，复用现有阵容出入场动画）',
+    ],
+  },
+  {
     version: '1.5.5',
     date: '2026-08',
     items: [
@@ -4212,7 +4220,7 @@ function Dashboard() {
                           ) : null}
                           <Row gutter={[16, 16]}>
                             <Col xs={24} md={8}>
-                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>主标题：</Text>
+                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>标题：</Text>
                               <Input
                                 maxLength={40}
                                 placeholder="留空显示默认「团队积分榜」"
