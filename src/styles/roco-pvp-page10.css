@@ -57,7 +57,7 @@ body {
 .page10-subtitle {
     position: absolute;
     left: 0;
-    top: 62px;
+    top: 620px;
     width: 100%;
     text-align: center;
     font-size: 64px;
@@ -69,7 +69,7 @@ body {
 .page10-winner {
     position: absolute;
     left: 0;
-    top: 661px;
+    top: 660px;
     width: 100%;
     display: flex;
     align-items: center;
@@ -110,7 +110,7 @@ body {
 .winner-lineup-div {
     position: absolute;
     left: 50%;
-    top: 830px;
+    top: 834px;
     transform: translateX(-50%);
     width: 850px;
     height: 130px;

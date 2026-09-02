@@ -60,6 +60,21 @@ export const PREVIEW_PAGES: Record<PreviewSlotKey, PreviewConfig> = {
     fileName: 'roco-pvp-page10.html',
     path: '/roco-pvp-page10.html',
   },
+  page11: {
+    title: '选手介绍-左侧选手',
+    fileName: 'roco-pvp-page11.html',
+    path: '/roco-pvp-page11.html?mode=left',
+  },
+  page12: {
+    title: '选手介绍-右侧选手',
+    fileName: 'roco-pvp-page11.html',
+    path: '/roco-pvp-page11.html?mode=right',
+  },
+  page13: {
+    title: '选手介绍-对战页',
+    fileName: 'roco-pvp-page11.html',
+    path: '/roco-pvp-page11.html?mode=versus',
+  },
 };
 
 export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; description: string; previewPath: string }> = [
@@ -116,6 +131,24 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
     label: '推流页面10（胜者结算）',
     description: '胜者结算画面（登记本局胜负后自动切入展示，停留时长可设置）',
     previewPath: '/roco-pvp-page10.html',
+  },
+  {
+    value: 'page11',
+    label: '选手介绍-左侧选手',
+    description: '介绍左侧选手：人物立绘 + 头像卡 + 擅长精灵与比赛宣言',
+    previewPath: '/roco-pvp-page11.html?mode=left',
+  },
+  {
+    value: 'page12',
+    label: '选手介绍-右侧选手',
+    description: '介绍右侧选手：人物立绘 + 头像卡 + 擅长精灵与比赛宣言',
+    previewPath: '/roco-pvp-page11.html?mode=right',
+  },
+  {
+    value: 'page13',
+    label: '选手介绍-对战页',
+    description: '对战页：双方头像卡 + 当前阵容条 + 中央分割线',
+    previewPath: '/roco-pvp-page11.html?mode=versus',
   },
   {
     value: 'blank',

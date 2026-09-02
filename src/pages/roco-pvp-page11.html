@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洛克王国PVP - 选手介绍</title>
+    <!-- 复用 page4.css 的 petsdiv3（精灵卡）与 page10.css 的 winner-lineup-div（阵容条） -->
+    <link rel="stylesheet" href="/styles/roco-pvp-page4.css">
+    <link rel="stylesheet" href="/styles/roco-pvp-page10.css">
+    <link rel="stylesheet" href="/styles/roco-pvp-page11.css">
+</head>
+<body>
+    <!--
+        选手介绍页（一个文件三种画面，由 URL ?mode=left / right / versus 区分）：
+        - mode=left  ：介绍左侧选手（布局镜像：人物立绘在左，头像+内容卡在右）
+        - mode=right：介绍右侧选手（默认布局：人物立绘在右，头像+内容卡在左）
+        - mode=versus：对战页，仅保留双方头像与阵容条，人物/内容卡退场
+        数据来源 GET /api/page11：后台手动填写 / 当前赛事选手，按名字匹配「信息录入」补全介绍。
+    -->
+    <main class="page11-screen" id="page11Screen" data-mode="right" aria-label="洛克王国PVP选手介绍">
+        <!-- 人物立绘：612x852 mans.png，介绍右侧选手时 x1308 y228；左侧模式水平镜像到 x0 -->
+        <div class="page11-mans" aria-hidden="true">
+            <img src="/assets/ui/mans.png" alt="">
+        </div>
+
+        <!-- 头像卡：z1 头像（Mark.svg 蒙版）+ z2 相框 completed-card-photo-bg + z3 名字与排位 -->
+        <section class="page11-photo" aria-label="选手信息">
+            <div class="page11-photo-avatar">
+                <img class="page11-photo-mask-img" id="page11PhotoAvatar" alt="选手头像">
+                <img class="page11-photo-mask" src="/assets/ui/Mark.svg" alt="">
+            </div>
+            <img class="page11-photo-frame" src="/assets/ui/completed-card-photo-bg.6Vo9vsjF.png" alt="">
+            <div class="page11-photo-name">
+                <div class="page11-rank" id="page11RankWrap">
+                    <img class="page11-rank-icon" src="/assets/ui/7.Wku3bA4b.png" alt="">
+                    <span class="page11-rank-txt" id="page11RankTxt"></span>
+                </div>
+                <div class="page11-name" id="page11Name"></div>
+            </div>
+        </section>
+
+        <!-- 内容卡1：擅长精灵（petsdiv3 x N，复用推流页面1 比例 80） -->
+        <section class="page11-card page11-card-pets" aria-label="擅长精灵">
+            <div class="page11-card-title">擅长精灵</div>
+            <div class="page11-pets" id="page11Pets"></div>
+        </section>
+
+        <!-- 内容卡2：比赛宣言 -->
+        <section class="page11-card page11-card-declare" aria-label="比赛宣言">
+            <div class="page11-card-title">比赛宣言</div>
+            <div class="page11-declare" id="page11Declaration"></div>
+        </section>
+
+        <!-- 对战页（mode=versus）：双方头像 + 当前阵容 + 分割线 -->
+        <section class="page11-versus" aria-label="对战双方">
+            <div class="page11-versus-side page11-versus-left">
+                <div class="page11-versus-photo">
+                    <div class="page11-photo-avatar">
+                        <img class="page11-photo-mask-img" id="versusLeftAvatar" alt="左侧选手头像">
+                        <img class="page11-photo-mask" src="/assets/ui/Mark.svg" alt="">
+                    </div>
+                    <img class="page11-photo-frame" src="/assets/ui/completed-card-photo-bg.6Vo9vsjF.png" alt="">
+                    <div class="page11-photo-name">
+                        <div class="page11-rank" id="versusLeftRankWrap">
+                            <img class="page11-rank-icon" src="/assets/ui/7.Wku3bA4b.png" alt="">
+                            <span class="page11-rank-txt" id="versusLeftRankTxt"></span>
+                        </div>
+                        <div class="page11-name" id="versusLeftName"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="page11-versus-side page11-versus-right">
+                <div class="page11-versus-photo">
+                    <div class="page11-photo-avatar">
+                        <img class="page11-photo-mask-img" id="versusRightAvatar" alt="右侧选手头像">
+                        <img class="page11-photo-mask" src="/assets/ui/Mark.svg" alt="">
+                    </div>
+                    <img class="page11-photo-frame" src="/assets/ui/completed-card-photo-bg.6Vo9vsjF.png" alt="">
+                    <div class="page11-photo-name">
+                        <div class="page11-rank" id="versusRightRankWrap">
+                            <img class="page11-rank-icon" src="/assets/ui/7.Wku3bA4b.png" alt="">
+                            <span class="page11-rank-txt" id="versusRightRankTxt"></span>
+                        </div>
+                        <div class="page11-name" id="versusRightName"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- 当前阵容：复用 page10 的 winner-lineup-div 样式（左右各一条） -->
+            <div class="winner-lineup-div page11-versus-lineup page11-versus-lineup-left" aria-label="左侧阵容">
+                <div class="winner-lineup-pets" id="versusLeftPets"></div>
+            </div>
+            <div class="winner-lineup-div page11-versus-lineup page11-versus-lineup-right" aria-label="右侧阵容">
+                <div class="winner-lineup-pets" id="versusRightPets"></div>
+            </div>
+            <!-- 分割线：segmentation.svg 212x796 最顶层 -->
+            <img class="page11-segmentation" src="/assets/ui/segmentation.svg" alt="">
+        </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/scripts/page11-display.js"></script>
+</body>
+</html>

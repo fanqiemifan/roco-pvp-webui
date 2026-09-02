@@ -21,6 +21,8 @@ export interface AppPaths {
   page7File: string;
   page8File: string;
   page9File: string;
+  /** 选手介绍（page11-13）配置文件（cache/page11.json） */
+  page11File: string;
   page8WallpaperFile: string;
   nextgameFile: string;
   configFile: string;
@@ -60,6 +62,7 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     page7File: path.join(cacheDir, 'page7.json'),
     page8File: path.join(cacheDir, 'page8.json'),
     page9File: path.join(cacheDir, 'page9.json'),
+    page11File: path.join(cacheDir, 'page11.json'),
     page8WallpaperFile: path.join(cacheDir, 'page8-wallpaper.jpg'),
     nextgameFile: path.join(cacheDir, 'nextgame.json'),
     configFile: path.join(runtimeDir, 'config.json'),

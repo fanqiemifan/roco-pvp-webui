@@ -6,8 +6,8 @@ import sharp from 'sharp';
 import type { AvatarCollectionState, AvatarState } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
 
-// 上传头像统一缩放并压缩到该尺寸（64/72px 圆形显示，2x 兼顾高清屏）
-const AVATAR_OUTPUT_SIZE = 128;
+// 上传头像统一缩放并压缩到该尺寸（选手介绍页 390x416 大图展示需要高清源图）
+const AVATAR_OUTPUT_SIZE = 480;
 const AVATAR_OUTPUT_MIME = 'image/png';
 
 export function ensureRuntimeDirs(paths: AppPaths): void {
@@ -180,7 +180,7 @@ export function readAvatarMimeType(paths: AppPaths, side: AvatarSide, matchId: s
 
 // ---------- 「信息录入」选手头像 / 战队 logo ----------
 
-/** 选手头像统一缩放并裁剪为 128×128 PNG（与赛事头像一致） */
+/** 选手头像统一缩放并裁剪为 480×480 PNG（与赛事头像一致） */
 export async function saveProfilePlayerAvatar(paths: AppPaths, playerId: string, buffer: Buffer): Promise<void> {
   const detectedMimeType = detectImageMimeType(buffer);
   if (!detectedMimeType) {

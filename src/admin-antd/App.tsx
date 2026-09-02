@@ -58,6 +58,7 @@ import type {
   Page8Background,
   Page8State,
   Page9State,
+  Page11State,
   PanelState,
   PlayerProfile,
   ProfileStoreState,
@@ -378,6 +379,12 @@ function Dashboard() {
   const [page8WallpaperUploading, setPage8WallpaperUploading] = useState(false);
   const [page8SettingsNotice, setPage8SettingsNotice] = useState<NoticeState>(null);
   const [page9, setPage9] = useState<Page9State | null>(null);
+  const [page11, setPage11] = useState<Page11State | null>(null);
+  // 选手介绍手动填写草稿（左侧/右侧），source 切换时同步
+  const [page11LeftDraft, setPage11LeftDraft] = useState({ source: 'match' as 'manual' | 'match', name: '', rank: '', declaration: '', pets: '' });
+  const [page11RightDraft, setPage11RightDraft] = useState({ source: 'match' as 'manual' | 'match', name: '', rank: '', declaration: '', pets: '' });
+  const [page11Saving, setPage11Saving] = useState(false);
+  const [page11Notice, setPage11Notice] = useState<NoticeState>(null);
   const [page9TitleDraft, setPage9TitleDraft] = useState('');
   const [page9TeamsDraft, setPage9TeamsDraft] = useState<Array<{ name: string; r1: string; r2: string; r3: string }>>(
     () => Array.from({ length: PAGE9_TEAM_COUNT }, () => ({ name: '', r1: '', r2: '', r3: '' })),
@@ -420,6 +427,10 @@ function Dashboard() {
   const previewFrameShellRef = useRef<HTMLDivElement | null>(null);
 
   const spriteMap = buildSpriteLookup(sprites);
+  // 「信息录入」选手常用精灵多选选项：去重后的精灵名（选手介绍页按名字匹配精灵图渲染）
+  const playerPetOptions = Array.from(
+    new Set(sprites.map((sprite) => sprite.displayName.trim()).filter(Boolean)),
+  ).map((name) => ({ value: name, label: name }));
   const activeMatch = getActiveMatch(matchStore);
   const currentGame = getCurrentGame(activeMatch);
   const lineupLocked = activeMatch?.status === 'completed';
@@ -530,6 +541,7 @@ function Dashboard() {
     page7?: Page7State;
     page8?: Page8State;
     page9?: Page9State;
+    page11?: Page11State;
     nextgame?: NextGamePayload;
     profiles?: ProfileStoreState;
   }) {
@@ -582,6 +594,9 @@ function Dashboard() {
       if (payload.page9) {
         setPage9(payload.page9);
       }
+      if (payload.page11) {
+        setPage11(payload.page11);
+      }
       if (payload.profiles) {
         setProfiles(payload.profiles);
       }
@@ -593,7 +608,7 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage7, nextPage8, nextPage9, nextNextgame, nextProfiles] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage7, nextPage8, nextPage9, nextPage11, nextNextgame, nextProfiles] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
@@ -606,6 +621,7 @@ function Dashboard() {
         requestJson<{ state: Page7State }>('/api/page7'),
         requestJson<{ state: Page8State }>('/api/page8'),
         requestJson<{ state: Page9State }>('/api/page9'),
+        requestJson<{ state: Page11State }>('/api/page11'),
         requestJson<NextGamePayload>('/api/nextgame'),
         requestJson<ProfileStoreState>('/api/profiles'),
       ]);
@@ -628,6 +644,7 @@ function Dashboard() {
         setPage8(nextPage8.state);
         setPage8Draft(nextPage8.state.matchIds);
         setPage9(nextPage9.state);
+        setPage11(nextPage11.state);
         setProfiles(nextProfiles);
         setNextgame(nextNextgame.state);
         setNextgameMatch(nextNextgame.match ?? null);
@@ -749,6 +766,12 @@ function Dashboard() {
     socket.on(SOCKET_EVENTS.page9Update, (payload) => {
       if (payload?.state) {
         applyServerState({ page9: payload.state });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.page11Update, (payload) => {
+      if (payload?.state) {
+        applyServerState({ page11: payload.state });
       }
     });
 
@@ -1369,7 +1392,8 @@ function Dashboard() {
     playerProfileForm.resetFields();
     playerProfileForm.setFieldsValue({
       name: player?.name ?? '',
-      pets: player?.pets ?? '',
+      // 存储为「、」分隔文本，编辑时拆回多选数组
+      pets: (player?.pets ?? '').split(/[/、,，\s]+/).map((item) => item.trim()).filter(Boolean),
       declaration: player?.declaration ?? '',
       rank: player?.rank ?? '',
     });
@@ -1409,7 +1433,7 @@ function Dashboard() {
         json: {
           id: editingPlayer?.id,
           name: values.name,
-          pets: values.pets ?? '',
+          pets: Array.isArray(values.pets) ? values.pets.filter(Boolean).join('、') : (values.pets ?? ''),
           declaration: values.declaration ?? '',
           rank: values.rank ?? '',
         },
@@ -1812,6 +1836,48 @@ function Dashboard() {
       }),
     );
   }, [page9?.title, page9?.teams]);
+
+  // 选手介绍（page11-13）草稿：服务端状态变化时回填（避免编辑中频繁覆盖，仅在结构变化时同步）
+  useEffect(() => {
+    setPage11LeftDraft((prev) => {
+      const server = page11?.left;
+      if (!server) {
+        return prev;
+      }
+      return prev.source === server.source && prev.name === server.name && prev.rank === server.rank && prev.declaration === server.declaration && prev.pets === server.pets
+        ? prev
+        : { source: server.source, name: server.name, rank: server.rank, declaration: server.declaration, pets: server.pets };
+    });
+    setPage11RightDraft((prev) => {
+      const server = page11?.right;
+      if (!server) {
+        return prev;
+      }
+      return prev.source === server.source && prev.name === server.name && prev.rank === server.rank && prev.declaration === server.declaration && prev.pets === server.pets
+        ? prev
+        : { source: server.source, name: server.name, rank: server.rank, declaration: server.declaration, pets: server.pets };
+    });
+  }, [page11?.left, page11?.right]);
+
+  // 保存选手介绍配置（左右两侧数据来源与手动填写内容）
+  async function savePage11Settings(payload?: { left?: typeof page11LeftDraft; right?: typeof page11RightDraft }) {
+    setPage11Saving(true);
+    try {
+      const data = await requestJson<{ success: boolean; state: Page11State }>('/api/page11', {
+        method: 'POST',
+        json: {
+          left: payload?.left ?? page11LeftDraft,
+          right: payload?.right ?? page11RightDraft,
+        },
+      });
+      applyServerState({ page11: data.state });
+      setPage11Notice({ tone: 'success', text: '选手介绍设置已保存' });
+    } catch (error) {
+      setPage11Notice({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setPage11Saving(false);
+    }
+  }
 
   async function saveLiveStreamSettings() {
     try {
@@ -2594,6 +2660,7 @@ function Dashboard() {
     { key: 'live', label: '实时控制' },
     { key: 'history', label: '比赛历史' },
     { key: 'profiles', label: '信息录入' },
+    { key: 'page11', label: '选手介绍' },
     { key: 'stats', label: '数据统计' },
     { key: 'preview', label: '页面预览' },
     { key: 'page4', label: '仅显阵容' },
@@ -2851,7 +2918,7 @@ function Dashboard() {
           <div>
             <Text className="eyebrow">Admin Workspace</Text>
             <Title level={2}>
-              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'profiles' ? '信息录入' : view === 'stats' ? '数据统计' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
+              {view === 'roster' ? '赛事工作台' : view === 'live' ? '实时控制' : view === 'page4' ? '仅显阵容' : view === 'history' ? '比赛历史' : view === 'profiles' ? '信息录入' : view === 'page11' ? '选手介绍' : view === 'stats' ? '数据统计' : view === 'stage' ? '直播推流' : view === 'preview' ? '页面预览' : '关于项目'}
             </Title>
           </div>
           <Space wrap>
@@ -3523,6 +3590,143 @@ function Dashboard() {
                 </>
               )}
             </Card>
+          ) : null}
+
+          {view === 'page11' ? (
+            <Space direction="vertical" size={18} className="page-stack">
+              <Card
+                title="选手介绍画面切换"
+                extra={<Button href="/roco-pvp-page11.html?mode=left" target="_blank">打开介绍页面</Button>}
+              >
+                <Space direction="vertical" size={16} className="page-stack">
+                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                    切换选手介绍的三种推流画面；「选手介绍-左侧/右侧选手」依次展示单侧选手的立绘、头像、擅长精灵与比赛宣言，「对战页」展示双方头像与当前阵容。
+                  </Paragraph>
+                  <Row gutter={[16, 16]}>
+                    {([
+                      { value: 'page11', label: '介绍左侧选手', description: '立绘在左，介绍当前左侧选手' },
+                      { value: 'page12', label: '介绍右侧选手', description: '立绘在右，介绍当前右侧选手' },
+                      { value: 'page13', label: '对战页', description: '双方头像 + 当前阵容 + 分割线' },
+                    ] as Array<{ value: StagePageKey; label: string; description: string }>).map((option) => {
+                      const active = (stage?.page ?? null) === option.value;
+                      return (
+                        <Col xs={24} sm={8} key={option.value}>
+                          <Card
+                            size="small"
+                            hoverable
+                            className={`stage-card ${active ? 'stage-card-active' : ''}`}
+                            onClick={() => void saveStage(option.value)}
+                          >
+                            <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                              <Space style={{ justifyContent: 'space-between', width: '100%' }}>
+                                <Text strong>{option.label}</Text>
+                                {active ? <Tag color="green">当前画面</Tag> : null}
+                              </Space>
+                              <Text type="secondary" style={{ fontSize: 12 }}>{option.description}</Text>
+                            </Space>
+                          </Card>
+                        </Col>
+                      );
+                    })}
+                  </Row>
+                </Space>
+              </Card>
+
+              <Card
+                title="选手介绍数据"
+                extra={(
+                  <Button type="primary" loading={page11Saving} onClick={() => void savePage11Settings()}>
+                    保存选手介绍设置
+                  </Button>
+                )}
+              >
+                <Space direction="vertical" size={16} className="page-stack">
+                  {page11Notice ? (
+                    <Alert
+                      showIcon
+                      closable
+                      type={page11Notice.tone}
+                      message={page11Notice.text}
+                      onClose={() => setPage11Notice(null)}
+                    />
+                  ) : null}
+                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                    数据来源可选「当前赛事」（选手名/排名取当前赛事，介绍内容按名字匹配「信息录入」自动补全）或「手动填写」（留空的字段同样回退「信息录入」匹配值）。当前赛事：{activeMatch ? `${activeMatch.leftPlayer || '左侧'} vs ${activeMatch.rightPlayer || '右侧'}` : '未选择'}。
+                  </Paragraph>
+                  {(['left', 'right'] as const).map((side) => {
+                    const draft = side === 'left' ? page11LeftDraft : page11RightDraft;
+                    const setDraft = side === 'left' ? setPage11LeftDraft : setPage11RightDraft;
+                    return (
+                      <Card
+                        key={side}
+                        size="small"
+                        className="subtle-card"
+                        title={side === 'left' ? '左侧选手' : '右侧选手'}
+                        extra={(
+                          <Segmented
+                            value={draft.source}
+                            options={[
+                              { value: 'match', label: '当前赛事' },
+                              { value: 'manual', label: '手动填写' },
+                            ]}
+                            onChange={(value) => setDraft({ ...draft, source: value as 'manual' | 'match' })}
+                          />
+                        )}
+                      >
+                        {draft.source === 'manual' ? (
+                          <Row gutter={[16, 16]}>
+                            <Col xs={24} md={8}>
+                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>选手名字：</Text>
+                              <AutoComplete
+                                value={draft.name}
+                                options={(profiles?.players ?? []).map((item) => ({ value: item.name }))}
+                                filterOption={(input, option) =>
+                                  String(option?.value ?? '').toLowerCase().includes(input.trim().toLowerCase())
+                                }
+                                onChange={(value) => setDraft({ ...draft, name: String(value ?? '') })}
+                              >
+                                <Input maxLength={32} placeholder="输入或联想「信息录入」选手" />
+                              </AutoComplete>
+                            </Col>
+                            <Col xs={24} md={8}>
+                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>排位排名：</Text>
+                              <Input
+                                maxLength={10}
+                                placeholder="仅数字，留空回退赛事/信息录入"
+                                value={draft.rank}
+                                onChange={(event) => setDraft({ ...draft, rank: event.target.value.replace(/\D/g, '') })}
+                              />
+                            </Col>
+                            <Col xs={24} md={8}>
+                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>擅长精灵：</Text>
+                              <Input
+                                maxLength={200}
+                                placeholder="多个精灵用「、」或空格分隔，最多展示 6 个"
+                                value={draft.pets}
+                                onChange={(event) => setDraft({ ...draft, pets: event.target.value })}
+                              />
+                            </Col>
+                            <Col xs={24}>
+                              <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>比赛宣言：</Text>
+                              <Input
+                                maxLength={120}
+                                placeholder="留空回退「信息录入」宣言"
+                                value={draft.declaration}
+                                onChange={(event) => setDraft({ ...draft, declaration: event.target.value })}
+                              />
+                            </Col>
+                          </Row>
+                        ) : (
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            使用当前赛事选手：{activeMatch ? (side === 'left' ? activeMatch.leftPlayer : activeMatch.rightPlayer) || '未填写' : '未选择赛事'}；排名取赛事录入，宣言/擅长精灵按名字匹配「信息录入」。
+                          </Paragraph>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </Space>
+              </Card>
+            </Space>
           ) : null}
 
           {view === 'stats' ? (
@@ -4546,8 +4750,19 @@ function Dashboard() {
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item label="常用精灵（可选）" name="pets">
-                <Input maxLength={120} placeholder="例如：迪莫、霹雳迪迪" />
+              <Form.Item label="常用精灵（可选，最多 6 个，选手介绍页会复用展示）" name="pets">
+                <Select
+                  mode="multiple"
+                  allowClear
+                  showSearch
+                  maxCount={6}
+                  maxTagCount="responsive"
+                  placeholder="搜索并选择常用精灵"
+                  options={playerPetOptions}
+                  filterOption={(input, option) =>
+                    String(option?.value ?? '').toLowerCase().includes(input.trim().toLowerCase())
+                  }
+                />
               </Form.Item>
             </Col>
           </Row>

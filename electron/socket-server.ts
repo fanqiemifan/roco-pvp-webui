@@ -50,6 +50,10 @@ import {
   savePage9State,
 } from './services/page9-service.js';
 import {
+  getPage11State,
+  savePage11State,
+} from './services/page11-service.js';
+import {
   getNextGamePayload,
   hideNextGame,
   saveNextGameState,
@@ -115,6 +119,7 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     page7: getPage7State(paths),
     page8: getPage8State(paths),
     page9: getPage9State(paths),
+    page11: getPage11State(paths),
     nextgame: getNextGamePayload(paths),
     profiles: getProfileStore(paths),
   };
@@ -349,6 +354,8 @@ export async function createLocalServer(
   app.get('/roco-pvp-page8.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page8.html'));
   app.get('/roco-pvp-page9.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page9.html'));
   app.get('/roco-pvp-page10.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page10.html'));
+  // 选手介绍（page11-13）：同一页面文件通过 ?mode=left/right/versus 区分三种画面
+  app.get('/roco-pvp-page11.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page11.html'));
   app.get('/roco-pvp-page1.html', (_request, response) => sendPage(paths, response, 'roco-pvp-page1.html'));
   app.get('/float.html', (_request, response) => sendPage(paths, response, 'float.html'));
   app.get('/float-menu.html', (_request, response) => sendPage(paths, response, 'float-menu.html'));
@@ -404,9 +411,9 @@ export async function createLocalServer(
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')
       );
-      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/roco-pvp-page8.html', '/roco-pvp-page9.html', '/roco-pvp-page10.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
+      const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/roco-pvp-page8.html', '/roco-pvp-page9.html', '/roco-pvp-page10.html', '/roco-pvp-page11.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
       // 推流页面仅用于展示，所需的数据 GET 接口公开（含选手头像/录入信息/仅显阵容），写操作仍受保护
-      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page4', '/api/page6', '/api/page7', '/api/page8', '/api/page9', '/api/page10', '/api/panels', '/api/matches', '/api/sprites', '/api/nextgame', '/api/profiles', '/api/avatars'].includes(req.path);
+      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page4', '/api/page6', '/api/page7', '/api/page8', '/api/page9', '/api/page10', '/api/page11', '/api/panels', '/api/matches', '/api/sprites', '/api/nextgame', '/api/profiles', '/api/avatars'].includes(req.path);
       // 头像图片公开访问（含按赛事隔离的 /api/avatar/{matchId}/{side}-avatar.png），推流页无需登录
       const isPublicAvatarImage = req.method === 'GET' && req.path.startsWith('/api/avatar/');
       const isAuthApi = req.path.startsWith('/api/auth/');
@@ -573,6 +580,32 @@ export async function createLocalServer(
     try {
       const state = savePage9State(paths, request.body ?? {});
       io.emit(SOCKET_EVENTS.page9Update, { state });
+      response.json({ success: true, state });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // === 选手介绍（page11-13） ===
+  // 返回配置 + 信息录入 + 当前赛事（含头像）+ 实时阵容面板，页面按 mode 自行解析两侧选手
+  app.get('/api/page11', (_request, response) => {
+    const store = getMatchStore(paths);
+    const match = store.activeMatchId
+      ? store.matches.find((item) => item.id === store.activeMatchId) ?? null
+      : null;
+    response.json({
+      state: getPage11State(paths),
+      profiles: getProfileStore(paths),
+      match,
+      avatars: getAvatarStates(paths, store.activeMatchId),
+      panels: [getPanelState(paths, 'left'), getPanelState(paths, 'right')],
+    });
+  });
+
+  app.post('/api/page11', (request, response) => {
+    try {
+      const state = savePage11State(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.page11Update, { state });
       response.json({ success: true, state });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });

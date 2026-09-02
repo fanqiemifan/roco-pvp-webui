@@ -176,6 +176,9 @@ export type StagePageKey =
   | 'page8'
   | 'page9'
   | 'page10'
+  | 'page11'
+  | 'page12'
+  | 'page13'
   | 'blank';
 
 export type StageTransitionType = 'none' | 'blinds' | 'zoom';
@@ -278,6 +281,30 @@ export interface Page9State {
 }
 
 /**
+ * 选手介绍（page11-13）单侧选手配置：
+ * - source：数据来源。manual = 手动填写；match = 当前赛事（选手名取当前赛事，介绍按名字匹配「信息录入」）
+ * - 手动填写时 name/rank/declaration/pets 生效，留空的字段回退「信息录入」按名字匹配到的值
+ */
+export interface Page11SideConfig {
+  source: 'manual' | 'match';
+  /** 手动填写的选手名字 */
+  name: string;
+  /** 手动填写的排位排名（仅数字，空 = 回退信息录入匹配值） */
+  rank: string;
+  /** 手动填写的比赛宣言（空 = 回退信息录入匹配值） */
+  declaration: string;
+  /** 手动填写的擅长精灵（自由文本，空 = 回退信息录入匹配值） */
+  pets: string;
+}
+
+/** 选手介绍（page11-13）状态：左右两侧选手的介绍配置 */
+export interface Page11State {
+  left: Page11SideConfig;
+  right: Page11SideConfig;
+  mtime: number | null;
+}
+
+/**
  * 下一局比赛（page3 下场对局）配置：
  * - matchId：所选待开始比赛
  * - visible：当前是否正在显示
@@ -313,6 +340,7 @@ export interface SnapshotPayload {
   page7: Page7State;
   page8: Page8State;
   page9: Page9State;
+  page11: Page11State;
   nextgame: NextGamePayload;
   profiles: ProfileStoreState;
 }

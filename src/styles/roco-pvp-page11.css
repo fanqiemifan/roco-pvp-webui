@@ -1,0 +1,398 @@
+/* 推流页面11-13：选手介绍（left / right / versus 三种模式，见 data-mode） */
+/* YouSheBiaoTiHei 不打包字体文件，改用系统安装字体，未安装时回退 MiSans */
+@font-face {
+    font-family: "YouSheBiaoTiHei";
+    src: local("YouSheBiaoTiHei");
+    font-display: swap;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+.page11-screen {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    /* 背景：Participants-info.jpg */
+    background: url("/assets/ui/Participants-info.jpg") no-repeat center / 100% 100%;
+    font-family: "YouSheBiaoTiHei", "MiSans-Heavy", "Microsoft YaHei", sans-serif;
+    color: #2A2729;
+}
+
+/* ========== 人物立绘：612x852 mans.png，右侧模式 x1308 y228 ========== */
+.page11-mans {
+    position: absolute;
+    left: 1308px;
+    top: 228px;
+    width: 612px;
+    height: 852px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.page11-mans img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* ========== 头像卡 ========== */
+/* 位置 y340，右侧模式 x1002（介绍右侧选手，头像在人物左侧） */
+.page11-photo {
+    position: absolute;
+    left: 1002px;
+    top: 340px;
+    width: 390px;
+    height: 416px;
+    z-index: 3;
+}
+
+/* z1 头像：Mark.svg 蒙版填充（390x416 区域，Mark 383x402 居中） */
+.page11-photo-avatar {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    -webkit-mask-image: url("/assets/ui/Mark.svg");
+    mask-image: url("/assets/ui/Mark.svg");
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    background: #f7f2e8;
+}
+
+.page11-photo-mask-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 蒙版 svg 本身不参与显示（仅占位保持结构清晰） */
+.page11-photo-mask {
+    display: none;
+}
+
+/* z2 相框：completed-card-photo-bg.6Vo9vsjF.png 390x416 */
+.page11-photo-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* z3 名字与排位：名字 40px 白色 居中，rank 图标在名字左侧、距名字 8px */
+.page11-photo-name {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 16px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* 名字文字单独向下偏移（不动容器，rank div 不受影响） */
+.page11-name {
+    position: relative;
+    top: 12px;
+    font-size: 40px;
+    line-height: 1;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    white-space: nowrap;
+}
+
+/* rank div 隐藏（无排名数据）时：名字不再需要 top 偏移，回正显示 */
+.page11-rank[hidden] + .page11-name {
+    top: 0;
+}
+
+.page11-rank {
+    position: relative;
+    width: 53px;
+    height: 64px;
+    flex: none;
+}
+
+.page11-rank-icon {
+    display: block;
+    width: 53px;
+    height: 64px;
+    object-fit: contain;
+}
+
+/* 排名数字：叠在图标下方 */
+.page11-rank-txt {
+    position: absolute;
+    left: 50%;
+    top: 46px;
+    transform: translateX(-50%);
+    font-family: "MiSans-Heavy", "MiSans-Medium", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    color: #FEC55E;
+    background: #000;
+    padding: 4px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+/* ========== 内容卡：689x211 player-bg.png ========== */
+/* 内容卡1（擅长精灵）：x213 y340；内容卡2（比赛宣言）在其下方错开，避免重叠 */
+.page11-card {
+    position: absolute;
+    left: 213px;
+    top: 340px;
+    width: 689px;
+    height: 211px;
+    background: url("/assets/ui/player-bg.png") no-repeat center / 100% 100%;
+    z-index: 3;
+}
+
+/* 内容卡2（比赛宣言）：y340 + 卡高 211 + 间距 40 */
+.page11-card-declare {
+    top: 591px;
+}
+
+/* 标题：y20，64px 居中 5D5A54 */
+.page11-card-title {
+    position: absolute;
+    left: 0;
+    top: 26px;
+    width: 100%;
+    text-align: center;
+    font-size: 64px;
+    line-height: 1;
+    color: #5D5A54;
+}
+
+/* 阵容：复用 petsdiv3，距顶部 124px 居中 */
+.page11-pets {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 126px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* 比例缩至 80（80/98 ≈ 0.8163）：必须写在 .petsdiv3 自身上覆盖默认值 1，
+   写在父容器会被 .petsdiv3 自身的声明覆盖而无效 */
+.page11-pets .petsdiv3 {
+    --petsdiv3-scale: 0.8163;
+}
+
+/* 宣言内容：y128，64px 居中 000000 */
+.page11-declare {
+    position: absolute;
+    left: 40px;
+    right: 40px;
+    top: 128px;
+    text-align: center;
+    font-size: 64px;
+    line-height: 1.1;
+    color: #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ========== 对战页（mode=versus） ========== */
+.page11-versus {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+}
+
+/* 左侧选手头像：y312 x339 */
+.page11-versus-left .page11-versus-photo {
+    position: absolute;
+    left: 339px;
+    top: 312px;
+}
+
+/* 右侧选手头像：y312，距离右侧 339（镜像） */
+.page11-versus-right .page11-versus-photo {
+    position: absolute;
+    right: 339px;
+    top: 312px;
+}
+
+.page11-versus-photo {
+    width: 390px;
+    height: 416px;
+}
+
+/* 阵容条：复用 page10 winner-lineup-div（850x130），左右各一条 */
+.page11-versus-lineup-left {
+    left: 80px;
+    top: 747px;
+    transform: none;
+}
+
+.page11-versus-lineup-right {
+    left: auto;
+    right: 80px;
+    top: 747px;
+    transform: none;
+}
+
+/* 分割线：segmentation.svg 212x796 居中最顶层 */
+.page11-segmentation {
+    position: absolute;
+    left: 47%;
+    top: 142px;
+    transform: translateX(-50%);
+    width: 212px;
+    height: 796px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* ========== 模式控制 ========== */
+/* 三种画面是同一页面内容变动：左右互切时元素平滑滑动/翻转，进出对战页元素动效入场 */
+
+/* 左右互切：位置与翻转过渡（元素未被 display 隐藏，走 transition） */
+.page11-mans,
+.page11-photo,
+.page11-card {
+    transition: left 0.55s cubic-bezier(0.22, 0.61, 0.36, 1),
+        transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* 介绍左侧选手：布局镜像（人物去 x0 且水平翻转，头像/内容卡去右侧） */
+.page11-screen[data-mode="left"] .page11-mans {
+    left: 0;
+    transform: scaleX(-1);
+}
+
+/* 头像卡位置保持不变（右侧模式 x1002 y368；左侧模式镜像对称） */
+.page11-screen[data-mode="left"] .page11-photo {
+    left: 528px;
+}
+
+/* 左侧模式内容卡镜像到右侧 */
+.page11-screen[data-mode="left"] .page11-card {
+    left: 1018px;
+}
+
+/* 对战页：人物与内容卡退场 */
+.page11-screen[data-mode="versus"] .page11-mans,
+.page11-screen[data-mode="versus"] .page11-photo,
+.page11-screen[data-mode="versus"] .page11-card {
+    display: none;
+}
+
+.page11-screen[data-mode="versus"] .page11-versus {
+    display: block;
+}
+
+/* ========== 模式切换元素动效 ========== */
+@keyframes page11-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* 从对战页切回单侧介绍：人物/头像/内容卡整体淡入 */
+.page11-screen:not([data-mode="versus"]) .page11-mans,
+.page11-screen:not([data-mode="versus"]) .page11-photo,
+.page11-screen:not([data-mode="versus"]) .page11-card {
+    animation: page11-fade-in 0.55s ease both;
+}
+
+/* 进入对战页：双方头像从两侧滑入 */
+@keyframes page11-versus-photo-left-in {
+    from {
+        opacity: 0;
+        transform: translateX(-90px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes page11-versus-photo-right-in {
+    from {
+        opacity: 0;
+        transform: translateX(90px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.page11-screen[data-mode="versus"] .page11-versus-left .page11-versus-photo {
+    animation: page11-versus-photo-left-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.page11-screen[data-mode="versus"] .page11-versus-right .page11-versus-photo {
+    animation: page11-versus-photo-right-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* 对战页阵容条：下方上浮入场，左右依次延迟 */
+@keyframes page11-versus-lineup-in {
+    from {
+        opacity: 0;
+        transform: translateY(46px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page11-screen[data-mode="versus"] .page11-versus-lineup-left {
+    animation: page11-versus-lineup-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s both;
+}
+
+.page11-screen[data-mode="versus"] .page11-versus-lineup-right {
+    animation: page11-versus-lineup-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.22s both;
+}
+
+/* 分割线：中缝纵向展开 */
+@keyframes page11-segmentation-in {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) scaleY(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) scaleY(1);
+    }
+}
+
+.page11-screen[data-mode="versus"] .page11-segmentation {
+    animation: page11-segmentation-in 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) 0.1s both;
+}

@@ -1,9 +1,9 @@
 import type { QuickFillMatch, Page4SlotState, SlotState } from '../../shared/types';
 
 export type PanelSide = 'left' | 'right';
-export type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'stats' | 'preview' | 'stage' | 'profiles' | 'about';
+export type ViewKey = 'roster' | 'live' | 'page4' | 'history' | 'stats' | 'preview' | 'stage' | 'profiles' | 'page11' | 'about';
 
-export type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'page5' | 'page6' | 'page7' | 'page8' | 'page9' | 'page10';
+export type PreviewSlotKey = 'stage' | 'page1' | 'page2' | 'page3' | 'page4' | 'page5' | 'page6' | 'page7' | 'page8' | 'page9' | 'page10' | 'page11' | 'page12' | 'page13';
 
 export type JsonInit = RequestInit & {
   json?: unknown;
@@ -22,10 +22,10 @@ export type MatchFormValues = {
   tags?: string[];
 };
 
-/** 「信息录入」选手表单值 */
+/** 「信息录入」选手表单值（pets 为多选的常用精灵，保存时以「、」拼接为文本） */
 export type PlayerProfileFormValues = {
   name: string;
-  pets?: string;
+  pets?: string[];
   declaration?: string;
   rank?: string;
 };

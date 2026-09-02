@@ -19,6 +19,9 @@
      *   - page8         : 推流页面8（比赛预告）           -> /roco-pvp-page8.html
      *   - page9         : 推流页面9（团队积分榜）       -> /roco-pvp-page9.html
      *   - page10        : 推流页面10（胜者结算画面）    -> /roco-pvp-page10.html
+     *   - page11        : 选手介绍-左侧选手             -> /roco-pvp-page11.html?mode=left
+     *   - page12        : 选手介绍-右侧选手             -> /roco-pvp-page11.html?mode=right
+     *   - page13        : 选手介绍-对战页               -> /roco-pvp-page11.html?mode=versus
      *   - blank         : 黑场（不加载任何画面）
      */
 
@@ -32,12 +35,20 @@
         'page8': { label: '推流页面8（比赛预告）', path: '/roco-pvp-page8.html' },
         'page9': { label: '推流页面9（团队积分榜）', path: '/roco-pvp-page9.html' },
         'page10': { label: '推流页面10（胜者结算画面）', path: '/roco-pvp-page10.html' },
+        'page11': { label: '选手介绍-左侧选手', path: '/roco-pvp-page11.html?mode=left' },
+        'page12': { label: '选手介绍-右侧选手', path: '/roco-pvp-page11.html?mode=right' },
+        'page13': { label: '选手介绍-对战页', path: '/roco-pvp-page11.html?mode=versus' },
         'blank': { label: '黑场', path: null }
     };
 
     var DEFAULT_PAGE = 'page3';
     var DEFAULT_TRANSITION = 'blinds';
     var TRANSITION_MS = 420;
+
+    // 选手介绍三画面（page11/12/13）共用同一页面文件，仅 mode 不同：
+    // 家族内切换不重载 iframe、不播全屏过渡，直接通知页面内部切换 mode，
+    // 由页面内的元素动效完成变换（本身就是同一画面的内容变动）
+    var INTRO_FAMILY = { page11: 'left', page12: 'right', page13: 'versus' };
 
     var carrier = document.getElementById('stageCarrier');
     var frame = document.getElementById('stageFrame');
@@ -177,6 +188,20 @@
 
         if (currentPage === nextKey && frame.getAttribute('src') === stage.path) {
             // 已经是目标画面，无需重复加载
+            return;
+        }
+
+        // 选手介绍家族内切换（page11 <-> page12 <-> page13）：同一画面内容变动，
+        // 不重载 iframe，postMessage 通知页面切换 mode，元素动效由页面自身 CSS 完成
+        if (currentPage && INTRO_FAMILY[currentPage] && INTRO_FAMILY[nextKey]) {
+            currentPage = nextKey;
+            setCarrierStage(nextKey);
+            frame.classList.remove('is-hidden');
+            try {
+                frame.contentWindow.postMessage({ type: 'page11-mode', mode: INTRO_FAMILY[nextKey] }, '*');
+            } catch (error) {
+                console.error('选手介绍模式切换通知失败:', error);
+            }
             return;
         }
 
