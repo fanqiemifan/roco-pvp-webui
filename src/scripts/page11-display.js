@@ -50,6 +50,8 @@
     let renderSignature = null;
     // 最近一次拉取的数据缓存：仅切换 mode（无数据变化）时直接用它重渲染
     let lastData = null;
+    // 「直播推流」面板开关：是否显示选手排位排名 div（关闭后三画面均不显示）
+    let page11RankVisible = true;
 
     /* ---------- 通用工具（与 page10-display.js 保持一致） ---------- */
 
@@ -266,8 +268,9 @@
             target.name.textContent = info.name || '待定';
         }
         const rankDigits = String(info.rank || '').replace(/\D/g, '');
+        const rankVisible = page11RankVisible && Boolean(rankDigits);
         if (target.rankWrap) {
-            target.rankWrap.hidden = !rankDigits;
+            target.rankWrap.hidden = !rankVisible;
         }
         if (target.rankTxt) {
             target.rankTxt.textContent = rankDigits;
@@ -304,6 +307,9 @@
     }
 
     function applyAll(data) {
+        page11RankVisible = Boolean(data && data.stage && data.stage.page11RankVisible !== undefined
+            ? data.stage.page11RankVisible
+            : true);
         screenEl.setAttribute('data-mode', mode);
 
         const leftInfo = resolveSide(data, 'left');
@@ -336,6 +342,7 @@
     function buildSignature(data) {
         return JSON.stringify({
             mode,
+            stageRankVisible: data && data.stage ? data.stage.page11RankVisible : true,
             state: data.state,
             profiles: data.profiles && Array.isArray(data.profiles.players)
                 ? data.profiles.players.map((item) => [item.name, item.rank, item.declaration, item.pets, item.avatarMtime])
@@ -421,6 +428,10 @@
         });
 
         socket.on('panel:update', () => {
+            void loadData();
+        });
+
+        socket.on('stage:update', () => {
             void loadData();
         });
 

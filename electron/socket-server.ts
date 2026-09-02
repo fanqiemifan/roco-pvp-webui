@@ -599,6 +599,7 @@ export async function createLocalServer(
       match,
       avatars: getAvatarStates(paths, store.activeMatchId),
       panels: [getPanelState(paths, 'left'), getPanelState(paths, 'right')],
+      stage: getStageState(paths),
     });
   });
 

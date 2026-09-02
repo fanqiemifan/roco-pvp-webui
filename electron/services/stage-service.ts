@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import {
   DEFAULT_PAGE10_DURATION,
   DEFAULT_PAGE10_DURATION_UNIT,
+  DEFAULT_PAGE11_RANK_VISIBLE,
   DEFAULT_STAGE_PAGE,
   DEFAULT_STAGE_TRANSITION,
   DEFAULT_PAGE3_RANK_VISIBLE,
@@ -52,6 +53,10 @@ function normalizePage3TeamVisible(value: unknown): boolean {
   return typeof value === 'boolean' ? value : DEFAULT_PAGE3_TEAM_VISIBLE;
 }
 
+function normalizePage11RankVisible(value: unknown): boolean {
+  return typeof value === 'boolean' ? value : DEFAULT_PAGE11_RANK_VISIBLE;
+}
+
 /** 胜者结算画面（page10）停留时长单位：秒 / 分钟 */
 function normalizePage10DurationUnit(value: unknown): NextGameDurationUnit {
   return value === 'minutes' ? 'minutes' : DEFAULT_PAGE10_DURATION_UNIT as NextGameDurationUnit;
@@ -74,6 +79,7 @@ function defaultStageState(): StageConfig {
     page3SpriteSource: DEFAULT_PAGE3_SPRITE_SOURCE,
     page3RankVisible: DEFAULT_PAGE3_RANK_VISIBLE,
     page3TeamVisible: DEFAULT_PAGE3_TEAM_VISIBLE,
+    page11RankVisible: DEFAULT_PAGE11_RANK_VISIBLE,
     page5Player: '',
     page5Tag: '',
     page10Duration: DEFAULT_PAGE10_DURATION,
@@ -97,6 +103,7 @@ export function getStageState(paths: AppPaths): StageConfig {
       page3SpriteSource: normalizePage3SpriteSource(metadata.page3SpriteSource),
       page3RankVisible: normalizePage3RankVisible(metadata.page3RankVisible),
       page3TeamVisible: normalizePage3TeamVisible(metadata.page3TeamVisible),
+      page11RankVisible: normalizePage11RankVisible(metadata.page11RankVisible),
       page5Player: normalizePage5Player(metadata.page5Player),
       page5Tag: normalizePage5Tag(metadata.page5Tag),
       page10Duration: normalizePage10Duration(metadata.page10Duration, page10DurationUnit),
@@ -127,6 +134,7 @@ export function saveStageState(paths: AppPaths, payload: unknown): StageConfig {
     page3SpriteSource: normalizePage3SpriteSource(raw.page3SpriteSource ?? current.page3SpriteSource),
     page3RankVisible: normalizePage3RankVisible(raw.page3RankVisible ?? current.page3RankVisible),
     page3TeamVisible: normalizePage3TeamVisible(raw.page3TeamVisible ?? current.page3TeamVisible),
+    page11RankVisible: normalizePage11RankVisible(raw.page11RankVisible ?? current.page11RankVisible),
     page5Player: normalizePage5Player(raw.page5Player),
     page5Tag: normalizePage5Tag(raw.page5Tag),
     page10Duration: normalizePage10Duration(

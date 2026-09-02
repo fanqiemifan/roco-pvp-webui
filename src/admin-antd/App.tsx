@@ -2047,7 +2047,7 @@ function Dashboard() {
 
   async function saveStage(
     nextPage: StagePageKey,
-    options?: { silent?: boolean; transition?: StageTransitionType; page3SpriteSource?: Page3SpriteSource; page3RankVisible?: boolean; page3TeamVisible?: boolean; page5Player?: string; page5Tag?: string; page10Duration?: number; page10DurationUnit?: 'seconds' | 'minutes' },
+    options?: { silent?: boolean; transition?: StageTransitionType; page3SpriteSource?: Page3SpriteSource; page3RankVisible?: boolean; page3TeamVisible?: boolean; page11RankVisible?: boolean; page5Player?: string; page5Tag?: string; page10Duration?: number; page10DurationUnit?: 'seconds' | 'minutes' },
   ) {
     const silent = options?.silent ?? false;
     const normalized = normalizeStagePage(nextPage);
@@ -2055,17 +2055,18 @@ function Dashboard() {
     const page3SpriteSource = options?.page3SpriteSource ?? stage?.page3SpriteSource ?? 'sprite';
     const page3RankVisible = options?.page3RankVisible ?? stage?.page3RankVisible ?? false;
     const page3TeamVisible = options?.page3TeamVisible ?? stage?.page3TeamVisible ?? false;
+    const page11RankVisible = options?.page11RankVisible ?? stage?.page11RankVisible ?? true;
     const page5Player = options?.page5Player ?? stage?.page5Player ?? '';
     const page5Tag = options?.page5Tag ?? stage?.page5Tag ?? '';
     const page10Duration = options?.page10Duration ?? stage?.page10Duration ?? 5;
     const page10DurationUnit = options?.page10DurationUnit ?? stage?.page10DurationUnit ?? 'seconds';
     // 乐观更新，避免切换回弹
-    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page5Player, page5Tag, page10Duration, page10DurationUnit } : prev));
+    setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page11RankVisible, page5Player, page5Tag, page10Duration, page10DurationUnit } : prev));
     setStageSaving(true);
     try {
       const data = await requestJson<{ success: boolean; stage: StageConfig }>('/api/stage', {
         method: 'POST',
-        json: { page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page5Player, page5Tag, page10Duration, page10DurationUnit },
+        json: { page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page11RankVisible, page5Player, page5Tag, page10Duration, page10DurationUnit },
       });
       applyServerState({ stage: data.stage });
       if (!silent) {
@@ -4101,6 +4102,25 @@ function Dashboard() {
                               onChange={(checked) => { void saveStage(stage?.page ?? 'page3', { silent: true, page3TeamVisible: checked }); }}
                             />
                             {stage?.page3TeamVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
+                          </Space>
+                        </Space>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Card size="small" className="subtle-card">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <Text strong>选手介绍排位排名（推流页面11-13）</Text>
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            关闭后选手介绍三种画面均不显示排位排名 div；开启时选手有排名才显示。
+                          </Paragraph>
+                          <Space wrap>
+                            <Switch
+                              checked={stage?.page11RankVisible ?? true}
+                              disabled={stageSaving}
+                              loading={stageSaving}
+                              onChange={(checked) => { void saveStage(stage?.page ?? 'page3', { silent: true, page11RankVisible: checked }); }}
+                            />
+                            {stage?.page11RankVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
                           </Space>
                         </Space>
                       </Card>

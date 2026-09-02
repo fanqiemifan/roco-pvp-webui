@@ -193,6 +193,8 @@ export interface StageConfig {
   page3RankVisible: boolean;
   /** 推流页面3：是否显示比分栏两侧的战队 div（左右各一个：战队头像/logo + 底部名称色块） */
   page3TeamVisible: boolean;
+  /** 选手介绍（page11-13）：是否显示选手排位排名 div */
+  page11RankVisible: boolean;
   /** 推流页面5：选手过滤（空字符串 = 全部选手） */
   page5Player: string;
   /** 推流页面5：赛事标签过滤（空字符串 = 全部标签） */
