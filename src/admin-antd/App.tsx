@@ -3145,6 +3145,7 @@ function Dashboard() {
                             <Col xs={24} md={8}>
                               <Form.Item label="比赛赛制" name="bestOf">
                                 <Select
+                                  style={{ width: '100%' }}
                                   options={[
                                     { value: 1, label: 'BO1' },
                                     { value: 3, label: 'BO3' },
@@ -3676,9 +3677,10 @@ function Dashboard() {
                       >
                         {draft.source === 'manual' ? (
                           <Row gutter={[16, 16]}>
-                            <Col xs={24} md={8}>
+                            <Col xs={24} md={6}>
                               <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>选手名字：</Text>
                               <AutoComplete
+                                style={{ width: '100%' }}
                                 value={draft.name}
                                 options={(profiles?.players ?? []).map((item) => ({ value: item.name }))}
                                 filterOption={(input, option) =>
@@ -3689,7 +3691,7 @@ function Dashboard() {
                                 <Input maxLength={32} placeholder="输入或联想「信息录入」选手" />
                               </AutoComplete>
                             </Col>
-                            <Col xs={24} md={8}>
+                            <Col xs={24} md={4}>
                               <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>排位排名：</Text>
                               <Input
                                 maxLength={10}
@@ -3698,13 +3700,22 @@ function Dashboard() {
                                 onChange={(event) => setDraft({ ...draft, rank: event.target.value.replace(/\D/g, '') })}
                               />
                             </Col>
-                            <Col xs={24} md={8}>
+                            <Col xs={24} md={14}>
                               <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>擅长精灵：</Text>
-                              <Input
-                                maxLength={200}
-                                placeholder="多个精灵用「、」或空格分隔，最多展示 6 个"
-                                value={draft.pets}
-                                onChange={(event) => setDraft({ ...draft, pets: event.target.value })}
+                              <Select
+                                mode="multiple"
+                                allowClear
+                                showSearch
+                                maxCount={6}
+                                popupMatchSelectWidth={false}
+                                style={{ width: '100%' }}
+                                placeholder="搜索并选择擅长精灵，最多 6 个"
+                                options={playerPetOptions}
+                                value={draft.pets.split(/[/、,，\s]+/).map((item) => item.trim()).filter(Boolean)}
+                                filterOption={(input, option) =>
+                                  String(option?.value ?? '').toLowerCase().includes(input.trim().toLowerCase())
+                                }
+                                onChange={(values) => setDraft({ ...draft, pets: Array.isArray(values) ? values.filter(Boolean).join('、') : '' })}
                               />
                             </Col>
                             <Col xs={24}>
@@ -4174,6 +4185,7 @@ function Dashboard() {
                             <Col xs={24} md={12}>
                               <Form.Item label="页面2阵容展示" name="page2LineupDisplayMode">
                                 <Select
+                                  style={{ width: '100%' }}
                                   options={[
                                     { value: 'default', label: '默认血量展示' },
                                     { value: 'avatar-only', label: '仅头像展示' },
@@ -4256,15 +4268,16 @@ function Dashboard() {
                           </Row>
                           <div>
                             <Row gutter={[16, 8]}>
-                              <Col xs={24} md={10}><Text type="secondary">战队名称</Text></Col>
+                              <Col xs={24} md={12}><Text type="secondary">战队名称</Text></Col>
                               <Col xs={8} md={4}><Text type="secondary">R1 积分</Text></Col>
                               <Col xs={8} md={4}><Text type="secondary">R2 积分</Text></Col>
                               <Col xs={8} md={4}><Text type="secondary">R3 积分</Text></Col>
                             </Row>
                             {page9TeamsDraft.map((team, index) => (
                               <Row key={index} gutter={[16, 8]} style={{ marginTop: 8 }}>
-                                <Col xs={24} md={10}>
+                                <Col xs={24} md={12}>
                                   <AutoComplete
+                                    style={{ width: '100%' }}
                                     value={team.name}
                                     options={(profiles?.teams ?? []).map((item) => ({ value: item.name }))}
                                     filterOption={(input, option) =>
@@ -4575,6 +4588,7 @@ function Dashboard() {
           <Form.Item label="左侧选手" name="leftPlayer" rules={[{ required: true, message: '请输入左侧选手名' }]}>
             <AutoComplete
               maxLength={32}
+              style={{ width: '100%' }}
               placeholder="输入名字联想「信息录入」选手，选中后自动复用头像与排名"
               options={(profiles?.players ?? []).map((player) => ({ value: player.name, label: `${player.name}${player.rank ? `（排名 ${player.rank}）` : ''}` }))}
               filterOption={(input, option) => String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())}
@@ -4589,6 +4603,7 @@ function Dashboard() {
           <Form.Item label="右侧选手" name="rightPlayer" rules={[{ required: true, message: '请输入右侧选手名' }]}>
             <AutoComplete
               maxLength={32}
+              style={{ width: '100%' }}
               placeholder="输入名字联想「信息录入」选手，选中后自动复用头像与排名"
               options={(profiles?.players ?? []).map((player) => ({ value: player.name, label: `${player.name}${player.rank ? `（排名 ${player.rank}）` : ''}` }))}
               filterOption={(input, option) => String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())}
@@ -4627,6 +4642,7 @@ function Dashboard() {
               <Form.Item label="左侧所属战队（可选）" name="leftTeam">
                 <AutoComplete
                   maxLength={40}
+                  style={{ width: '100%' }}
                   placeholder="选择已录入战队复用，或手动输入"
                   options={(profiles?.teams ?? []).map((team) => ({ value: team.name, label: team.name }))}
                   filterOption={(input, option) => String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())}
@@ -4638,6 +4654,7 @@ function Dashboard() {
               <Form.Item label="右侧所属战队（可选）" name="rightTeam">
                 <AutoComplete
                   maxLength={40}
+                  style={{ width: '100%' }}
                   placeholder="选择已录入战队复用，或手动输入"
                   options={(profiles?.teams ?? []).map((team) => ({ value: team.name, label: team.name }))}
                   filterOption={(input, option) => String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())}
@@ -4694,6 +4711,7 @@ function Dashboard() {
           </Row>
           <Form.Item label="比赛赛制" name="bestOf" rules={[{ required: true, message: '请选择比赛赛制' }]}>
             <Select
+              style={{ width: '100%' }}
               options={[
                 { value: 1, label: 'BO1' },
                 { value: 3, label: 'BO3' },
@@ -4706,6 +4724,7 @@ function Dashboard() {
             <Select
               mode="multiple"
               allowClear
+              style={{ width: '100%' }}
               placeholder="可选，选择赛事标签"
               options={allHistoryTags.map((tag) => ({ value: tag, label: tag }))}
             />
@@ -4759,33 +4778,24 @@ function Dashboard() {
           <Form.Item label="名字" name="name" rules={[{ required: true, message: '请输入选手名字' }]}>
             <Input maxLength={32} placeholder="例如：选手A（同名保存会更新已有录入）" />
           </Form.Item>
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="排名（可选）"
-                name="rank"
-                getValueFromEvent={(event: React.ChangeEvent<HTMLInputElement>) => event.target.value.replace(/\D/g, '')}
-              >
-                <Input maxLength={10} inputMode="numeric" placeholder="仅数字，例如：123" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item label="常用精灵（可选，最多 6 个，选手介绍页会复用展示）" name="pets">
-                <Select
-                  mode="multiple"
-                  allowClear
-                  showSearch
-                  maxCount={6}
-                  maxTagCount="responsive"
-                  placeholder="搜索并选择常用精灵"
-                  options={playerPetOptions}
-                  filterOption={(input, option) =>
-                    String(option?.value ?? '').toLowerCase().includes(input.trim().toLowerCase())
-                  }
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item label="排名（可选）" name="rank" getValueFromEvent={(event: React.ChangeEvent<HTMLInputElement>) => event.target.value.replace(/\D/g, '')}>
+            <Input maxLength={10} inputMode="numeric" placeholder="仅数字，例如：123" />
+          </Form.Item>
+          <Form.Item label="常用精灵（可选，最多 6 个，选手介绍页会复用展示）" name="pets">
+            <Select
+              mode="multiple"
+              allowClear
+              showSearch
+              maxCount={6}
+              popupMatchSelectWidth={false}
+              style={{ width: '100%' }}
+              placeholder="搜索并选择常用精灵"
+              options={playerPetOptions}
+              filterOption={(input, option) =>
+                String(option?.value ?? '').toLowerCase().includes(input.trim().toLowerCase())
+              }
+            />
+          </Form.Item>
           <Form.Item label="宣言（可选）" name="declaration">
             <TextArea rows={2} maxLength={120} placeholder="例如：目标冠军！" />
           </Form.Item>
