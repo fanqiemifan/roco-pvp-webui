@@ -7,6 +7,7 @@
     <!-- 复用推流页面1 的 petsdiv3 样式（阵容精灵卡） -->
     <link rel="stylesheet" href="/styles/roco-pvp-page4.css">
     <link rel="stylesheet" href="/styles/roco-pvp-page10.css">
+    <link rel="stylesheet" href="/styles/stage-enter.css">
 </head>
 <body>
     <!--
@@ -20,7 +21,7 @@
         <div class="page10-fore" aria-hidden="true"></div>
 
         <!-- 副标题 + 主标题（头像 + 获胜选手名字） -->
-        <section class="page10-hero" aria-label="本局比赛获胜者">
+        <section class="page10-hero fx-enter" aria-label="本局比赛获胜者">
             <div class="page10-subtitle">本局比赛获胜者</div>
             <div class="page10-winner">
                 <div class="page10-avatar"><img id="page10Avatar" alt="获胜选手头像"></div>
@@ -29,12 +30,13 @@
         </section>
 
         <!-- 获胜方阵容：复用推流页面1 的 petsdiv3 -->
-        <section class="winner-lineup-div" aria-label="获胜方阵容">
+        <section class="winner-lineup-div fx-enter" aria-label="获胜方阵容" style="--fx-delay:150ms">
             <div class="winner-lineup-pets" id="page10Pets"></div>
         </section>
     </main>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/scripts/page10-display.js"></script>
+    <script src="/scripts/stage-enter.js"></script>
 </body>
 </html>

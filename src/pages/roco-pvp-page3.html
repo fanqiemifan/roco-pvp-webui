@@ -6,6 +6,7 @@
     <title>洛克王国PVP - 推流页面3</title>
     <link rel="stylesheet" href="/styles/sprite-pet-card.css">
     <link rel="stylesheet" href="/styles/roco-pvp-page3.css">
+    <link rel="stylesheet" href="/styles/stage-enter.css">
 </head>
 <body>
     <main class="page3-screen" aria-label="洛克王国PVP推流页面3">
@@ -29,7 +30,7 @@
 
         <div id="page3LineupExitLayer" class="page3-lineup-exit-layer" aria-hidden="true"></div>
 
-        <section class="page3-scoreboard" id="page3Scoreboard" aria-label="比分栏">
+        <section class="page3-scoreboard fx-enter" id="page3Scoreboard" aria-label="比分栏">
             <div class="page3-scoreboard-track"></div>
 
             <div class="page3-player page3-player-left">
@@ -83,7 +84,7 @@
             </div>
         </div>
 
-        <section class="page3-nextgame" id="page3NextGame" aria-label="下场对局" hidden>
+        <section class="page3-nextgame fx-enter" id="page3NextGame" aria-label="下场对局" hidden style="--fx-delay:240ms">
             <div class="page3-nextgame-title">下场对局</div>
             <div class="page3-nextgame-body">
                 <div class="page3-nextgame-player page3-nextgame-player-left">
@@ -109,5 +110,6 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/scripts/page3-display.js"></script>
+    <script src="/scripts/stage-enter.js"></script>
 </body>
 </html>

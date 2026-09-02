@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>洛克王国PVP - 推流页面8（比赛预告）</title>
     <link rel="stylesheet" href="/styles/roco-pvp-page8.css">
+    <link rel="stylesheet" href="/styles/stage-enter.css">
 </head>
 <body>
     <main class="page8-screen" id="page8Screen" aria-label="洛克王国PVP比赛预告">
-        <div class="page8-title" id="page8Title"></div>
+        <div class="page8-title fx-enter" id="page8Title"></div>
 
-        <div class="page8-grid" id="page8Grid"></div>
+        <div class="page8-grid fx-enter" id="page8Grid" style="--fx-delay:150ms"></div>
     </main>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/scripts/page8-display.js"></script>
+    <script src="/scripts/stage-enter.js"></script>
 </body>
 </html>

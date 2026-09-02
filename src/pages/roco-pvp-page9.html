@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>洛克王国PVP - 推流页面9（团队积分榜）</title>
     <link rel="stylesheet" href="/styles/roco-pvp-page9.css">
+    <link rel="stylesheet" href="/styles/stage-enter.css">
 </head>
 <body>
     <main class="page9-screen" id="page9Screen" aria-label="洛克王国PVP团队积分榜">
@@ -14,7 +15,7 @@
         </div>
 
         <!-- 积分榜卡片 -->
-        <div class="page9-card">
+        <div class="page9-card fx-enter">
             <div class="page9-inner">
                 <!-- 顶部深色标题条：标题可在后台修改，留空显示默认「团队积分榜」 -->
                 <div class="page9-header"><span id="page9Title">团队积分榜</span></div>
@@ -42,5 +43,6 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/scripts/page9-display.js"></script>
+    <script src="/scripts/stage-enter.js"></script>
 </body>
 </html>

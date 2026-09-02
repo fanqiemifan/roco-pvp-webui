@@ -211,6 +211,12 @@
         var done = function () {
             frame.classList.remove('is-hidden');
             applyFallback(false, '');
+            // 通知新页面内容依次入场（fadeUp）：页面 stage-enter.js 收信后触发 .fx-enter 区块动画
+            try {
+                frame.contentWindow.postMessage({ type: 'stage-enter' }, '*');
+            } catch (error) {
+                console.error('推流页面入场通知失败:', error);
+            }
         };
 
         // 切换路径。先置空再赋值可强制触发某些页面的重新初始化。

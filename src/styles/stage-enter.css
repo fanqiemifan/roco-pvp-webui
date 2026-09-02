@@ -1,0 +1,44 @@
+/* ============================================================
+ * 推流页面切换入场动效：上浮淡入（fadeUp）
+ *
+ * 用法：
+ *   1. 页面引入本 CSS 与 scripts/stage-enter.js；
+ *   2. 给需要依次入场的区块加 class="fx-enter"，并用内联
+ *      style="--fx-delay:120ms" 控制入场延迟（自上而下递增）；
+ *   3. 推流载体（index.html）完成 iframe 加载后会 postMessage
+ *      通知页面（stage-enter），脚本在根节点加 is-stage-entered
+ *      触发动画；非载体直开页面时由脚本在 onload 后兜底触发。
+ *
+ * 说明：入场位移用 margin-top 而非 transform，避免 transform
+ * 创建 containing block 影响页面内绝对定位子元素的布局。
+ * ============================================================ */
+
+/* 仅当 stage-enter.js 运行后才隐藏内容；脚本缺失时页面保持原样可见 */
+.js-stage-enter .fx-enter {
+    opacity: 0;
+}
+
+.js-stage-enter.is-stage-entered .fx-enter {
+    animation: stage-fade-up 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    animation-delay: var(--fx-delay, 0ms);
+}
+
+@keyframes stage-fade-up {
+    from {
+        opacity: 0;
+        margin-top: 24px;
+    }
+    to {
+        opacity: 1;
+        margin-top: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .js-stage-enter .fx-enter,
+    .js-stage-enter.is-stage-entered .fx-enter {
+        animation: none;
+        opacity: 1;
+        margin-top: 0;
+    }
+}

@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>洛克王国PVP - 全局阵容展示</title>
     <link rel="stylesheet" href="/styles/roco-pvp-display.css">
+    <link rel="stylesheet" href="/styles/stage-enter.css">
 </head>
 <body>
     <main class="pvp-screen" aria-label="洛克王国PVP全局阵容展示">
         <div class="pvp-background"></div>
 
-        <section class="lineup-bar">
+        <section class="lineup-bar fx-enter">
             <div class="lineup-panel lineup-panel-left" data-panel="left" aria-label="左侧阵容">
                 <article class="spirit-slot" data-slot="0"></article>
                 <article class="spirit-slot" data-slot="1"></article>
@@ -60,5 +61,6 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/scripts/lineup-display.js"></script>
+    <script src="/scripts/stage-enter.js"></script>
 </body>
 </html>

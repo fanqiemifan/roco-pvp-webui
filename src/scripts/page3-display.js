@@ -896,6 +896,17 @@
         });
     }
 
+    // 直播推流切换到页面3（iframe 重新加载）时播放一次阵容入场动画：
+    // 载体 index.html 完成加载后派发 stage-enter 事件（scripts/stage-enter.js，
+    // 该脚本保证每次切入只触发一次）。
+    // - 切入时本局尚未开始：observeMatchPhase 首帧只记录不触发，这里补一次入场；
+    // - 切入时数据尚未渲染完：animateLineup('enter') 先置 lineupAnimationMode，
+    //   renderSlot 渲染槽位时自动带上 is-lineup-entering，动画不丢帧；
+    // - 切入后开局：observeMatchPhase 会再触发一次入场，语义上属于新对局的业务动画。
+    document.addEventListener('stage-enter', () => {
+        animateLineup('enter');
+    });
+
     document.addEventListener('DOMContentLoaded', async () => {
         try {
             await loadInitialState();

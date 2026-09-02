@@ -6,12 +6,13 @@
     <title>洛克王国PVP - 推流页面5（登场/胜率排行）</title>
     <link rel="stylesheet" href="/styles/sprite-pet-card.css">
     <link rel="stylesheet" href="/styles/roco-pvp-page5.css">
+    <link rel="stylesheet" href="/styles/stage-enter.css">
 </head>
 <body>
     <main class="page5-screen" aria-label="洛克王国PVP登场胜率排行">
-        <div id="page5Title" class="page5-title">精灵出场胜率</div>
+        <div id="page5Title" class="page5-title fx-enter">精灵出场胜率</div>
 
-        <div class="page5-content">
+        <div class="page5-content fx-enter" style="--fx-delay:120ms">
             <section class="page5-column page5-column-left" aria-label="第1-5名">
                 <div class="page5-table-header">
                     <span class="page5-header-item page5-header-count">登场</span>
@@ -32,5 +33,6 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/scripts/page5-display.js"></script>
+    <script src="/scripts/stage-enter.js"></script>
 </body>
 </html>

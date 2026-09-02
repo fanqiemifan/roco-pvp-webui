@@ -5,23 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>洛克王国PVP - 推流页面6（比赛结果）</title>
     <link rel="stylesheet" href="/styles/roco-pvp-page6.css">
+    <link rel="stylesheet" href="/styles/stage-enter.css">
 </head>
 <body>
     <main class="page6-screen" id="page6Screen" aria-label="洛克王国PVP比赛结果">
         <video class="page6-back-video" id="page6BackVideo" autoplay loop muted playsinline preload="auto">
             <source src="/assets/ui/backvideo-for-page6.mp4" type="video/mp4">
         </video>
-        <div class="page6-title">比赛结果</div>
-        <div class="page6-subtitle" id="page6Subtitle"></div>
+        <div class="page6-title fx-enter">比赛结果</div>
+        <div class="page6-subtitle fx-enter" id="page6Subtitle" style="--fx-delay:100ms"></div>
 
         <div class="page6-decor page6-decor-1">ROCO<br>KINGDOM</div>
         <div class="page6-decor page6-decor-2">ROCO</div>
         <div class="page6-decor page6-decor-3">PVP</div>
 
-        <div class="page6-grid" id="page6Grid"></div>
+        <div class="page6-grid fx-enter" id="page6Grid" style="--fx-delay:200ms"></div>
     </main>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/scripts/page6-display.js"></script>
+    <script src="/scripts/stage-enter.js"></script>
 </body>
 </html>
