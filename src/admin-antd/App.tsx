@@ -110,6 +110,7 @@ import {
   getMatchStatusColor,
   getMatchStatusLabel,
   getNoticeTagColor,
+  getPendingDraftContext,
   summarizeSeriesForBestOf,
 } from './lib/match';
 import {
@@ -123,6 +124,7 @@ import {
   createPage4PanelEditorState,
   createPanelEditorState,
   createSpriteFilterState,
+  draftSlotsToSelected,
   page4PanelStateToSelected,
   panelStateToSelected,
 } from './lib/panel';
@@ -155,6 +157,14 @@ const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
 
 const CHANGELOG: Array<{ version: string; date: string; items: string[] }> = [
+  {
+    version: '1.5.7',
+    date: '2026-09',
+    items: [
+      '修复阵容编辑器显示：切回待开始小局的赛事时改用该局草稿槽位回填编辑器（此前显示被清空的全局面板，造成“已登记阵容消失”的错觉，实际草稿一直保存于赛事记录）；推流页与悬浮窗行为不变，未开局阵容仍不上推流页',
+      '待开始状态下编辑器缓冲区随草稿回填且切换赛事时自动取消未完成的防抖保存，避免误点精灵/快速填充把整份草稿覆盖为空或半份阵容',
+    ],
+  },
   {
     version: '1.5.6',
     date: '2026-09',
@@ -434,6 +444,11 @@ function Dashboard() {
   const liveSaveTimerRef = useRef<number | null>(null);
   const livePollTimerRef = useRef<number | null>(null);
   const previewFrameShellRef = useRef<HTMLDivElement | null>(null);
+  // 待开始小局草稿上下文（getPendingDraftContext）：pending 时编辑器显示源为赛事草稿、全局面板仅供推流页，
+  // 由 applyServerState / loadInitialData 应用 store 时同步维护，避免渲染闭包读到旧状态
+  const pendingDraftRef = useRef<ReturnType<typeof getPendingDraftContext>>(null);
+  // 已回填过的草稿上下文键（matchId|gameNumber），防止保存回显等 store 更新反复覆写编辑中的缓冲区
+  const draftBackfillKeyRef = useRef<string | null>(null);
 
   const spriteMap = buildSpriteLookup(sprites);
   // 「信息录入」选手常用精灵多选选项：去重后的精灵名（选手介绍页按名字匹配精灵图渲染）
@@ -518,7 +533,9 @@ function Dashboard() {
       ...prev,
       [side]: {
         ...prev[side],
-        selected: panelStateToSelected(panel),
+        // 待开始小局：全局面板按设计为空（未开局阵容不上推流页），保留编辑器缓冲区等待草稿回填，
+        // 仅重置 dirty/saving 让防抖自动保存随上下文切换一并取消，避免旧编辑写入新赛事草稿
+        selected: pendingDraftRef.current ? prev[side].selected : panelStateToSelected(panel),
         dirty: false,
         saving: false,
       },
@@ -560,6 +577,9 @@ function Dashboard() {
       }
       if (payload.store) {
         setMatchStore(payload.store);
+        // 先于同批 panels 处理维护草稿上下文：snapshot/select 响应里 store 与空 panels 同批到达时，
+        // syncPanelFromApi 需据此判断当前是否 pending（pending 时全局面板不覆写编辑器）
+        pendingDraftRef.current = getPendingDraftContext(payload.store);
       }
       if (payload.avatars) {
         setAvatars(payload.avatars);
@@ -657,6 +677,8 @@ function Dashboard() {
         setProfiles(nextProfiles);
         setNextgame(nextNextgame.state);
         setNextgameMatch(nextNextgame.match ?? null);
+        // 与 applyServerState 一致：先维护草稿上下文再同步面板，避免 pending 时全局面板覆写编辑器
+        pendingDraftRef.current = getPendingDraftContext(nextMatches);
         syncPanelFromApi('left', nextPanels.panels[0]);
         syncPanelFromApi('right', nextPanels.panels[1]);
         syncPage4PanelFromApi('left', nextPage4.panels[0]);
@@ -682,6 +704,33 @@ function Dashboard() {
   useEffect(() => {
     void loadInitialData();
   }, []);
+
+  // 切换/回显到待开始小局时，用赛事草稿槽位回填阵容编辑器：
+  // pending 状态下全局面板被服务端清空（未开局阵容不上推流页），此前编辑器直接显示空面板，
+  // 造成“已登记阵容消失”的错觉，且空缓冲区被误编辑后自动保存会覆盖整份草稿
+  useEffect(() => {
+    const draft = pendingDraftRef.current;
+    if (!draft) {
+      // 离开 pending 上下文（开局/完赛/切走）时重置键，下次回到 pending 会重新回填
+      draftBackfillKeyRef.current = null;
+      return;
+    }
+    const key = `${draft.matchId}|${draft.gameNumber}`;
+    if (draftBackfillKeyRef.current === key) {
+      return;
+    }
+    // 精灵库未加载完成（如 socket 快照先于初始加载到达）先不回填也不记键，待加载后重试
+    if (!sprites.length) {
+      return;
+    }
+    draftBackfillKeyRef.current = key;
+    const leftSelected = draftSlotsToSelected(draft.leftSlots, spriteMap);
+    const rightSelected = draftSlotsToSelected(draft.rightSlots, spriteMap);
+    setPanels((prev) => ({
+      left: { ...prev.left, selected: leftSelected, dirty: false, saving: false },
+      right: { ...prev.right, selected: rightSelected, dirty: false, saving: false },
+    }));
+  }, [matchStore, sprites]);
 
   useEffect(() => {
     if (!activeMatch) {

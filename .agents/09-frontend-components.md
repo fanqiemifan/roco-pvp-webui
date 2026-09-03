@@ -10,7 +10,7 @@
 - constants.ts / types.ts — 本地常量与类型
 
 ### 视图页面（ViewKey）
-- roster - 阵容编辑（RosterPanelEditor：左右面板编辑、精灵搜索、快速填充；顶部「当前比赛」表单含左右选手名+排位排名（仅数字，PATCH 保存比赛信息时一并提交））
+- roster - 阵容编辑（RosterPanelEditor：左右面板编辑、精灵搜索、快速填充；顶部「当前比赛」表单含左右选手名+排位排名（仅数字，PATCH 保存比赛信息时一并提交）；待开始小局时编辑器显示源为赛事草稿（getPendingDraftContext + 草稿回填 effect，按 matchId|gameNumber 去重），全局面板仅供推流页、不覆写编辑器（syncPanelFromApi pending 感知），推流页仍不显示未开局阵容）
 - live - 实时控制（比赛开始、胜负记录、撤销/恢复）
 - history - 比赛历史（列表、删除、批量删除、撤销删除；「推送」勾选列推送比赛结果到页面6、「预告」勾选列推送比赛预告到页面8、「对局」勾选列配合「推送对局推送」按钮推送对局到页面7，可勾选待开始与进行中的对局）
 - stats - 数据统计（StatsView：使用率/上场率排行、属性分布、标签趋势；1920px 断点布局）
@@ -25,9 +25,9 @@
 
 ### 核心逻辑（lib/）
 - request.ts - fetch 封装
-- sprite.ts - 精灵数据辅助
-- match.ts - 比赛操作辅助
-- panel.ts - 面板状态辅助
+- sprite.ts - 精灵数据辅助（buildSpriteLookup：id/文件名/别名多键查找）
+- match.ts - 比赛操作辅助（getPendingDraftContext：当前小局 pending 且赛事未完赛时返回该局草稿槽位上下文）
+- panel.ts - 面板状态辅助（draftSlotsToSelected：赛事草稿快照 spriteId → 编辑器槽位，查不到的精灵降级空槽位）
 - live.ts - 实时控制辅助
 - history.ts - 历史记录辅助
 - stats.ts - 统计聚合（buildUsageStats、buildStatsCsv）

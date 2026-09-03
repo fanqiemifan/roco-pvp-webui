@@ -1,4 +1,4 @@
-import type { Page4PanelState, Page4SlotState, PanelState, SlotState } from '../../../shared/types';
+import type { MatchSlotSnapshot, Page4PanelState, Page4SlotState, PanelState, SlotState, SpriteRecord } from '../../../shared/types';
 import type { Page4PanelEditorState, PanelEditorState, SpriteFilterState } from '../types';
 
 export function createEmptySlot(index: number): SlotState {
@@ -97,6 +97,36 @@ export function clonePage4Selected(selected: Page4SlotState[] | undefined): Page
 
 export function panelStateToSelected(panel: PanelState | null | undefined): SlotState[] {
   return cloneSelected(panel?.selected);
+}
+
+/**
+ * 赛事草稿快照（MatchSlotSnapshot，按 spriteId 存储）→ 编辑器槽位（需要完整精灵记录）。
+ * 精灵库查不到的 id（已删除/改名）降级为空槽位，不报错。
+ */
+export function draftSlotsToSelected(
+  slots: MatchSlotSnapshot[] | null | undefined,
+  lookup: Map<string, SpriteRecord>,
+): SlotState[] {
+  return Array.from({ length: 6 }, (_, index) => {
+    const snapshot = slots?.[index];
+    const sprite = snapshot?.spriteId ? lookup.get(snapshot.spriteId) ?? null : null;
+    if (!sprite) {
+      return createEmptySlot(index);
+    }
+    return {
+      slot: index,
+      sprite,
+      opacityEnabled: Boolean(snapshot?.opacityEnabled),
+      opacity: typeof snapshot?.opacity === 'number' ? snapshot.opacity : 0.5,
+      effectiveOpacity: snapshot?.opacityEnabled
+        ? (typeof snapshot.opacity === 'number' ? snapshot.opacity : 0.5)
+        : 1,
+      saturation: typeof snapshot?.saturation === 'number' ? snapshot.saturation : 1,
+      healthEnabled: snapshot?.healthEnabled !== false,
+      healthPercent: typeof snapshot?.healthPercent === 'number' ? snapshot.healthPercent : 100,
+      energyValue: typeof snapshot?.energyValue === 'number' ? snapshot.energyValue : 10,
+    };
+  });
 }
 
 export function page4PanelStateToSelected(panel: Page4PanelState | null | undefined): Page4SlotState[] {
