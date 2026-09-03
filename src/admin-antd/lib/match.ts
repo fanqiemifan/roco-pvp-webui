@@ -51,6 +51,27 @@ export function getCurrentGame(match: MatchRecord | null) {
     ?? null;
 }
 
+/**
+ * 待开始小局的草稿上下文：当前赛事未完赛且当前小局为 pending 时返回该局草稿槽位。
+ * pending 状态下全局面板按设计为空（未开局阵容不上推流页），阵容编辑器的显示源应为赛事草稿。
+ */
+export function getPendingDraftContext(matchStore: MatchStoreState) {
+  const match = getActiveMatch(matchStore);
+  if (!match || match.status === 'completed') {
+    return null;
+  }
+  const game = getCurrentGame(match);
+  if (!game || game.status !== 'pending') {
+    return null;
+  }
+  return {
+    matchId: match.id,
+    gameNumber: game.gameNumber,
+    leftSlots: game.leftSlots,
+    rightSlots: game.rightSlots,
+  };
+}
+
 export function formatLineupSummary(lineup: string[], spriteMap: Map<string, SpriteRecord>): string {
   if (!lineup.length) {
     return '待设置';
