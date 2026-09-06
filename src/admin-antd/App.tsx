@@ -4157,36 +4157,6 @@ function Dashboard() {
                         </Space>
                       </Card>
                     </Col>
-                    <Col xs={24} md={12} xl={8}>
-                      <Card size="small" className="subtle-card" title="推流页面6-比赛结果标题与背景切换">
-                        <Space direction="vertical" size={12} className="control-stack">
-                          <SettingField label="推流页面6副标题：">
-                            <Input
-                              maxLength={40}
-                              placeholder="页面6比赛结果页标题2内容，可留空"
-                              value={page6TitleDraft}
-                              onChange={(event) => setPage6TitleDraft(event.target.value)}
-                              onBlur={() => { void savePage6FieldNow({ title: page6TitleDraft }); }}
-                            />
-                          </SettingField>
-                          <SettingField label="推流页面6背景：">
-                            <Segmented
-                              block
-                              value={page6BackgroundDraft}
-                              options={[
-                                { value: 'image', label: '图片' },
-                                { value: 'image-2', label: '图片2' },
-                                { value: 'video', label: '视频' },
-                              ]}
-                              onChange={(value) => {
-                                setPage6BackgroundDraft(value as Page6Background);
-                                void savePage6FieldNow({ background: value as Page6Background });
-                              }}
-                            />
-                          </SettingField>
-                        </Space>
-                      </Card>
-                    </Col>
                   </Row>
                   <Row gutter={[16, 16]}>
                     {STAGE_OPTIONS.map((option) => {
@@ -4296,23 +4266,38 @@ function Dashboard() {
                       </Card>
                     </Col>
                     <Col xs={24} md={8}>
-                      <Card size="small" className="subtle-card" title="选手介绍显示（推流页面11-13）">
-                        <SettingField label="排位排名：" hint="关闭后选手介绍三种画面均不显示排位排名；开启时选手有排名才显示。">
-                          <Space wrap>
-                            <Switch
-                              checked={stage?.page11RankVisible ?? true}
-                              disabled={stageSaving}
-                              loading={stageSaving}
-                              onChange={(checked) => { void saveStage(stage?.page ?? 'page3', { silent: true, page11RankVisible: checked }); }}
+                      <Card size="small" className="subtle-card" title="推流页面6-比赛结果标题与背景切换">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <SettingField label="推流页面6副标题：">
+                            <Input
+                              maxLength={40}
+                              placeholder="页面6比赛结果页标题2内容，可留空"
+                              value={page6TitleDraft}
+                              onChange={(event) => setPage6TitleDraft(event.target.value)}
+                              onBlur={() => { void savePage6FieldNow({ title: page6TitleDraft }); }}
                             />
-                            {stage?.page11RankVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
-                          </Space>
-                        </SettingField>
+                          </SettingField>
+                          <SettingField label="推流页面6背景：">
+                            <Segmented
+                              block
+                              value={page6BackgroundDraft}
+                              options={[
+                                { value: 'image', label: '图片' },
+                                { value: 'image-2', label: '图片2' },
+                                { value: 'video', label: '视频' },
+                              ]}
+                              onChange={(value) => {
+                                setPage6BackgroundDraft(value as Page6Background);
+                                void savePage6FieldNow({ background: value as Page6Background });
+                              }}
+                            />
+                          </SettingField>
+                        </Space>
                       </Card>
                     </Col>
                   </Row>
                   <Row gutter={[16, 16]} className="stage-config-cards">
-                    <Col xs={24} md={12}>
+                    <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card stage-settings-card" title="推流页面2设置">
                         <Row gutter={[16, 16]}>
                           <Col xs={24} md={12}>
@@ -4342,7 +4327,22 @@ function Dashboard() {
                         </Row>
                       </Card>
                     </Col>
-                    <Col xs={24} md={12}>
+                    <Col xs={24} md={12} xl={8}>
+                      <Card size="small" className="subtle-card stage-settings-card" title="选手介绍显示（推流页面11-13）">
+                        <SettingField label="排位排名：" hint="关闭后选手介绍三种画面均不显示排位排名；开启时选手有排名才显示。">
+                          <Space wrap>
+                            <Switch
+                              checked={stage?.page11RankVisible ?? true}
+                              disabled={stageSaving}
+                              loading={stageSaving}
+                              onChange={(checked) => { void saveStage(stage?.page ?? 'page3', { silent: true, page11RankVisible: checked }); }}
+                            />
+                            {stage?.page11RankVisible ? <Tag color="green">已开启</Tag> : <Tag>已关闭</Tag>}
+                          </Space>
+                        </SettingField>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={12} xl={8}>
                       <Card size="small" className="subtle-card stage-settings-card" title="推流页面7标题文本设置">
                         <Space direction="vertical" size={12} className="page-stack" style={{ width: '100%' }}>
                           <Row gutter={[16, 16]}>

@@ -12,6 +12,9 @@
      *
      * 时间计算：running 时以服务端 endAt 为准，用 serverNow 校准客户端时钟偏差，
      * 本地每 200ms 刷新一次显示；静止时直接显示 remainingSeconds。
+     *
+     * 几何：位置固定在 1920x1080 设计坐标系（left 710px 顶部居中、贴顶、500x120），
+     * 由 countdown-overlay.css 纯 CSS 定义，不随视口尺寸/缩放变动。
      */
 
     var overlayEl = document.getElementById('countdownOverlay');

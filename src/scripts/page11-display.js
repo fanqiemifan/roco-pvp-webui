@@ -281,19 +281,24 @@
             return;
         }
 
-        // 1) 逐步缩小字号，尽量单行完整显示
+        // 1) 逐步缩小字号，尽量单行完整显示；字号缩小后 top 调整为 140（设计稿基线）
         let size = DECLARE_FONT_MAX;
         el.style.fontSize = `${size}px`;
+        el.style.top = '';
         while (size > DECLARE_FONT_MIN && el.scrollWidth > el.clientWidth) {
             size -= 2;
             el.style.fontSize = `${size}px`;
         }
         if (el.scrollWidth <= el.clientWidth) {
+            if (size < DECLARE_FONT_MAX) {
+                el.style.top = '140px';
+            }
             return;
         }
 
-        // 2) 最小字号仍放不下：包一层 span 做横向往返滚动
+        // 2) 最小字号仍放不下：包一层 span 做横向往返滚动（滚动模式同样 top 140）
         el.textContent = '';
+        el.style.top = '140px';
         const inner = document.createElement('span');
         inner.className = 'page11-declare-text';
         inner.textContent = text;
