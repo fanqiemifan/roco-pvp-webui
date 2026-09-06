@@ -4052,32 +4052,52 @@ function Dashboard() {
                       </Card>
                     </Col>
                     <Col xs={24} md={12} xl={8}>
-                      <Card size="small" className="subtle-card" title="推流页面6-比赛结果标题与背景切换">
+                      <Card size="small" className="subtle-card" title="倒计时插件">
                         <Space direction="vertical" size={12} className="control-stack">
-                          <SettingField label="推流页面6副标题：">
-                            <Input
-                              maxLength={40}
-                              placeholder="页面6比赛结果页标题2内容，可留空"
-                              value={page6TitleDraft}
-                              onChange={(event) => setPage6TitleDraft(event.target.value)}
-                              onBlur={() => { void savePage6FieldNow({ title: page6TitleDraft }); }}
-                            />
-                          </SettingField>
-                          <SettingField label="推流页面6背景：">
-                            <Segmented
-                              block
-                              value={page6BackgroundDraft}
-                              options={[
-                                { value: 'image', label: '图片' },
-                                { value: 'image-2', label: '图片2' },
-                                { value: 'video', label: '视频' },
-                              ]}
+                          <SettingField label="倒计时时长（分钟）：">
+                            <InputNumber
+                              style={{ width: '100%' }}
+                              min={1}
+                              max={60}
+                              value={countdown?.duration ?? 5}
+                              disabled={countdownSaving}
                               onChange={(value) => {
-                                setPage6BackgroundDraft(value as Page6Background);
-                                void savePage6FieldNow({ background: value as Page6Background });
+                                void saveCountdown({ duration: value === null || value === undefined ? 5 : Number(value) });
                               }}
                             />
                           </SettingField>
+                          <SettingField label="配色：">
+                            <Segmented
+                              block
+                              value={countdown?.theme ?? 'dark'}
+                              disabled={countdownSaving}
+                              options={[
+                                { value: 'dark', label: '深色' },
+                                { value: 'light', label: '浅色' },
+                              ]}
+                              onChange={(value) => { void saveCountdown({ theme: value as 'dark' | 'light' }); }}
+                            />
+                          </SettingField>
+                          <Space wrap>
+                            {countdown?.visible ? (
+                              <>
+                                {countdown.running ? (
+                                  <Button disabled={countdownSaving} onClick={() => void countdownAction('pause')}>暂停倒计时</Button>
+                                ) : (
+                                  <Button type="primary" disabled={countdownSaving} onClick={() => void countdownAction('start')}>开始倒计时</Button>
+                                )}
+                                <Button disabled={countdownSaving} onClick={() => void countdownAction('reset')}>重置</Button>
+                                <Button danger disabled={countdownSaving} onClick={() => void countdownAction('hide')}>关闭显示</Button>
+                              </>
+                            ) : (
+                              <Button type="primary" disabled={countdownSaving} onClick={() => void countdownAction('show')}>开启显示</Button>
+                            )}
+                          </Space>
+                          <Space size={8} wrap>
+                            {countdown?.visible ? <Tag color="green">显示中</Tag> : <Tag>已关闭</Tag>}
+                            {countdown?.running ? <Tag color="blue">倒计时中</Tag> : <Tag>时间静止</Tag>}
+                            {countdown ? <Text strong style={{ fontSize: 16 }}>剩余 {formatCountdownText(countdown)}</Text> : null}
+                          </Space>
                         </Space>
                       </Card>
                     </Col>
@@ -4138,52 +4158,32 @@ function Dashboard() {
                       </Card>
                     </Col>
                     <Col xs={24} md={12} xl={8}>
-                      <Card size="small" className="subtle-card" title="倒计时插件">
+                      <Card size="small" className="subtle-card" title="推流页面6-比赛结果标题与背景切换">
                         <Space direction="vertical" size={12} className="control-stack">
-                          <SettingField label="倒计时时长（分钟）：" hint="推流画面顶部小插件的倒计时总时长；修改后需重置才生效。">
-                            <InputNumber
-                              style={{ width: '100%' }}
-                              min={1}
-                              max={60}
-                              value={countdown?.duration ?? 5}
-                              disabled={countdownSaving}
+                          <SettingField label="推流页面6副标题：">
+                            <Input
+                              maxLength={40}
+                              placeholder="页面6比赛结果页标题2内容，可留空"
+                              value={page6TitleDraft}
+                              onChange={(event) => setPage6TitleDraft(event.target.value)}
+                              onBlur={() => { void savePage6FieldNow({ title: page6TitleDraft }); }}
+                            />
+                          </SettingField>
+                          <SettingField label="推流页面6背景：">
+                            <Segmented
+                              block
+                              value={page6BackgroundDraft}
+                              options={[
+                                { value: 'image', label: '图片' },
+                                { value: 'image-2', label: '图片2' },
+                                { value: 'video', label: '视频' },
+                              ]}
                               onChange={(value) => {
-                                void saveCountdown({ duration: value === null || value === undefined ? 5 : Number(value) });
+                                setPage6BackgroundDraft(value as Page6Background);
+                                void savePage6FieldNow({ background: value as Page6Background });
                               }}
                             />
                           </SettingField>
-                          <SettingField label="配色：" hint="小插件的颜色模式，默认深色。">
-                            <Segmented
-                              block
-                              value={countdown?.theme ?? 'dark'}
-                              disabled={countdownSaving}
-                              options={[
-                                { value: 'dark', label: '深色' },
-                                { value: 'light', label: '浅色' },
-                              ]}
-                              onChange={(value) => { void saveCountdown({ theme: value as 'dark' | 'light' }); }}
-                            />
-                          </SettingField>
-                          <Space wrap>
-                            {countdown?.visible ? (
-                              <>
-                                {countdown.running ? (
-                                  <Button disabled={countdownSaving} onClick={() => void countdownAction('pause')}>暂停倒计时</Button>
-                                ) : (
-                                  <Button type="primary" disabled={countdownSaving} onClick={() => void countdownAction('start')}>开始倒计时</Button>
-                                )}
-                                <Button disabled={countdownSaving} onClick={() => void countdownAction('reset')}>重置</Button>
-                                <Button danger disabled={countdownSaving} onClick={() => void countdownAction('hide')}>关闭显示</Button>
-                              </>
-                            ) : (
-                              <Button type="primary" disabled={countdownSaving} onClick={() => void countdownAction('show')}>开启显示</Button>
-                            )}
-                          </Space>
-                          <Space size={8} wrap>
-                            {countdown?.visible ? <Tag color="green">显示中</Tag> : <Tag>已关闭</Tag>}
-                            {countdown?.running ? <Tag color="blue">倒计时中</Tag> : <Tag>时间静止</Tag>}
-                            {countdown ? <Text strong style={{ fontSize: 16 }}>剩余 {formatCountdownText(countdown)}</Text> : null}
-                          </Space>
                         </Space>
                       </Card>
                     </Col>

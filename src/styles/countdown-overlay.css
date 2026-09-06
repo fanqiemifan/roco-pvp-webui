@@ -14,7 +14,8 @@
     left: calc(50% - 250px);
     width: 500px;
     height: 120px;
-    z-index: 10;
+    /* 层级：高于推流画面 iframe（auto）与过渡动画层（20），切换画面/过渡动画期间也保持最上层 */
+    z-index: 30;
     pointer-events: none;
     background: url("/assets/ui/timing-back-dark.svg") no-repeat center / 100% 100%;
     font-family: "YouSheBiaoTiHei", "MiSans-Heavy", "Microsoft YaHei", sans-serif;
