@@ -2116,7 +2116,7 @@ function Dashboard() {
     const page11RankVisible = options?.page11RankVisible ?? stage?.page11RankVisible ?? true;
     const page5Player = options?.page5Player ?? stage?.page5Player ?? '';
     const page5Tag = options?.page5Tag ?? stage?.page5Tag ?? '';
-    const page10Duration = options?.page10Duration ?? stage?.page10Duration ?? 5;
+    const page10Duration = options?.page10Duration ?? stage?.page10Duration ?? 30;
     const page10DurationUnit = options?.page10DurationUnit ?? stage?.page10DurationUnit ?? 'seconds';
     // 乐观更新，避免切换回弹
     setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page11RankVisible, page5Player, page5Tag, page10Duration, page10DurationUnit } : prev));
@@ -4137,12 +4137,12 @@ function Dashboard() {
                               onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, transition: value as StageTransitionType }); }}
                             />
                           </SettingField>
-                          <SettingField label="胜者结算停留时长（推流页面10）：" hint="赛事面板登记本局胜负时，若当前画面是推流页面1-3，将自动切入胜者结算画面，停留设定时长后自动切回原画面；也可在上方页面卡片中手动切换。">
+                          <SettingField label="胜者结算停留时长（推流页面10）：" hint="赛事面板登记本局胜负时自动显示">
                             <Space wrap>
                               <InputNumber
                                 min={1}
                                 max={stage?.page10DurationUnit === 'minutes' ? 60 : 3600}
-                                value={stage?.page10Duration ?? 5}
+                                value={stage?.page10Duration ?? 30}
                                 disabled={stageSaving}
                                 onChange={(value) => {
                                   void saveStage(stage?.page ?? 'page3', {

@@ -258,6 +258,54 @@
         return { name, rank, declaration, pets, avatarState, profileAvatar };
     }
 
+    /* ---------- 比赛宣言自适应：先缩字号，仍超长再横向滚动 ---------- */
+
+    const DECLARE_FONT_MAX = 64;
+    const DECLARE_FONT_MIN = 36;
+
+    /**
+     * 比赛宣言渲染：
+     * 1. 默认 64px 单行居中；文本超宽时逐步缩小字号（最小 36px）尽量完整显示。
+     * 2. 缩到最小仍放不下时改用横向往返滚动（CSS marquee）展示全文。
+     */
+    function renderDeclaration(el, text) {
+        if (!el) {
+            return;
+        }
+        // 复位：清除上次渲染可能残留的行内字号与滚动状态
+        el.classList.remove('is-scroll');
+        el.style.fontSize = '';
+        el.textContent = text;
+
+        if (!text) {
+            return;
+        }
+
+        // 1) 逐步缩小字号，尽量单行完整显示
+        let size = DECLARE_FONT_MAX;
+        el.style.fontSize = `${size}px`;
+        while (size > DECLARE_FONT_MIN && el.scrollWidth > el.clientWidth) {
+            size -= 2;
+            el.style.fontSize = `${size}px`;
+        }
+        if (el.scrollWidth <= el.clientWidth) {
+            return;
+        }
+
+        // 2) 最小字号仍放不下：包一层 span 做横向往返滚动
+        el.textContent = '';
+        const inner = document.createElement('span');
+        inner.className = 'page11-declare-text';
+        inner.textContent = text;
+        el.appendChild(inner);
+        el.classList.add('is-scroll');
+
+        // 滚动距离 = 文本宽 - 容器宽；时长按约 60px/秒 估算，至少 6 秒
+        const shift = Math.max(0, inner.offsetWidth - el.clientWidth);
+        inner.style.setProperty('--declare-shift', `-${shift}px`);
+        inner.style.animationDuration = `${Math.max(6, Math.ceil(shift / 60))}s`;
+    }
+
     /* ---------- 渲染 ---------- */
 
     function renderPhoto(target, info, avatarState) {
@@ -332,7 +380,7 @@
             const info = side === 'left' ? leftInfo : rightInfo;
             renderPhoto(els, info, data.avatars ? data.avatars[side] : null);
             renderPets(els.pets, info.pets);
-            els.declaration.textContent = info.declaration || '';
+            renderDeclaration(els.declaration, info.declaration || '');
         }
 
         renderSignature = buildSignature(data);

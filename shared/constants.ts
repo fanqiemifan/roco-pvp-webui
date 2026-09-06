@@ -69,7 +69,7 @@ export const SUPPORTED_NEXTGAME_DURATION_UNITS = new Set<string>(['seconds', 'mi
 
 /**
  * 胜者结算画面（page10）停留时长：
- * 赛事面板登记本局胜负后自动切入，停留该时长后自动切回原推流页面；默认 5 秒。
+ * 赛事面板登记本局胜负后自动切入，停留该时长后自动切回原推流页面；默认 30 秒。
  */
-export const DEFAULT_PAGE10_DURATION = 5;
+export const DEFAULT_PAGE10_DURATION = 30;
 export const DEFAULT_PAGE10_DURATION_UNIT = 'seconds' as const;

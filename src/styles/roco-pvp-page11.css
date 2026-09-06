@@ -67,8 +67,13 @@ body {
     z-index: 1;
     -webkit-mask-image: url("/assets/ui/Mark.svg");
     mask-image: url("/assets/ui/Mark.svg");
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
+    /* 蒙版整体内缩 3px/边并居中：头像卡带 left 过渡动画，动画结束后渲染层
+       （合成层光栅化）可能出现 1-2px 错位，Mark 收进相框边框（8-9px 厚）之内，
+       错位时也不会从相框边缘漏出米色像素 */
+    -webkit-mask-size: calc(100% - 6px) calc(100% - 6px);
+    mask-size: calc(100% - 6px) calc(100% - 6px);
+    -webkit-mask-position: center;
+    mask-position: center;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
     background: #f7f2e8;
@@ -202,7 +207,7 @@ body {
     --petsdiv3-scale: 0.8163;
 }
 
-/* 宣言内容：y128，64px 居中 000000 */
+/* 宣言内容：y128，64px 居中 000000；超长时 JS 逐步缩小字号（最小 36px） */
 .page11-declare {
     position: absolute;
     left: 40px;
@@ -215,6 +220,31 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* 最小字号仍放不下：横向往返滚动显示全文（左对齐、去省略号） */
+.page11-declare.is-scroll {
+    text-align: left;
+    text-overflow: clip;
+}
+
+.page11-declare-text {
+    display: inline-block;
+    white-space: nowrap;
+    /* 两端各停留 12% 时间便于阅读，duration 与滚动距离由 JS 按文本长度设置 */
+    animation: page11-declare-marquee 12s ease-in-out infinite alternate;
+}
+
+@keyframes page11-declare-marquee {
+    0%,
+    12% {
+        transform: translateX(0);
+    }
+
+    88%,
+    100% {
+        transform: translateX(var(--declare-shift, -100px));
+    }
 }
 
 /* ========== 对战页（mode=versus） ========== */
