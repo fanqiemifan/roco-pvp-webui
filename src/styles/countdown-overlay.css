@@ -1,0 +1,76 @@
+/* 倒计时插件：叠加在推流载体页之上的顶部小插件（500x120，水平居中紧贴顶部）
+   由后台「直播推流-倒计时插件」控制显示/配色/开始/暂停/重置 */
+/* YouSheBiaoTiHei 不打包字体文件，改用系统安装字体，未安装时回退 MiSans */
+@font-face {
+    font-family: "YouSheBiaoTiHei";
+    src: local("YouSheBiaoTiHei");
+    font-display: swap;
+}
+
+.countdown-overlay {
+    position: absolute;
+    top: 0;
+    /* 水平居中：500px 宽，左偏移 50% - 250px（transform 留给进退场动效） */
+    left: calc(50% - 250px);
+    width: 500px;
+    height: 120px;
+    z-index: 10;
+    pointer-events: none;
+    background: url("/assets/ui/timing-back-dark.svg") no-repeat center / 100% 100%;
+    font-family: "YouSheBiaoTiHei", "MiSans-Heavy", "Microsoft YaHei", sans-serif;
+    /* 退场动效：向顶部滑出 + 淡出 */
+    transform: translateY(-110%);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1),
+        opacity 0.4s ease,
+        visibility 0s linear 0.55s;
+}
+
+/* 进场动效：从顶部滑入 + 淡入 */
+.countdown-overlay.is-visible {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1),
+        opacity 0.4s ease 0.1s,
+        visibility 0s;
+}
+
+/* 浅色配色：切换背景图 */
+.countdown-overlay[data-theme="light"] {
+    background-image: url("/assets/ui/timing-back-light.svg");
+}
+
+/* 标题：24px 行高32 居中 距顶38px */
+.countdown-title {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 38px;
+    text-align: center;
+    font-size: 24px;
+    line-height: 32px;
+    color: #929086;
+    white-space: nowrap;
+}
+
+/* 倒计时：36px 行高44 居中 距顶62px，mm:ss 自动播放 */
+.countdown-time {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 62px;
+    text-align: center;
+    font-size: 36px;
+    line-height: 44px;
+    color: #929284;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* 浅色配色文字 */
+.countdown-overlay[data-theme="light"] .countdown-title,
+.countdown-overlay[data-theme="light"] .countdown-time {
+    color: #736C69;
+}

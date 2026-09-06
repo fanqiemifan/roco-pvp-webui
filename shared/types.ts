@@ -329,6 +329,33 @@ export interface NextGamePayload {
   avatars: AvatarCollectionState;
 }
 
+/**
+ * 倒计时插件（推流载体顶部叠加小插件）状态：
+ * - visible：是否显示在推流画面（叠加在当前推流页面之上）
+ * - running：倒计时是否进行中（false = 时间静止显示 remainingSeconds）
+ * - duration：配置的倒计时总时长（分钟）
+ * - remainingSeconds：静止状态下的剩余秒数（running 时以 endAt 为准）
+ * - endAt：running 时的截止时间戳（ms，服务端时钟）
+ * - theme：配色（dark 深色 / light 浅色）
+ */
+export type CountdownTheme = 'dark' | 'light';
+
+export interface CountdownState {
+  visible: boolean;
+  running: boolean;
+  duration: number;
+  remainingSeconds: number;
+  endAt: number | null;
+  theme: CountdownTheme;
+  mtime: number | null;
+}
+
+/** 倒计时插件 API / Socket 载荷：serverNow 供客户端校准时钟偏差 */
+export interface CountdownPayload {
+  state: CountdownState;
+  serverNow: number;
+}
+
 export interface SnapshotPayload {
   panels: [PanelState, PanelState];
   page4: Page4State;
@@ -343,6 +370,7 @@ export interface SnapshotPayload {
   page11: Page11State;
   nextgame: NextGamePayload;
   profiles: ProfileStoreState;
+  countdown: CountdownState;
 }
 
 /**

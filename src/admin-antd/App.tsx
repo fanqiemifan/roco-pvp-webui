@@ -46,6 +46,8 @@ import { io } from 'socket.io-client';
 import { SOCKET_EVENTS } from '../../shared/events';
 import type {
   AvatarCollectionState,
+  CountdownPayload,
+  CountdownState,
   MatchRecord,
   MatchStoreState,
   NextGamePayload,
@@ -378,6 +380,12 @@ function Dashboard() {
   const [nextgame, setNextgame] = useState<NextGameState | null>(null);
   const [nextgameMatch, setNextgameMatch] = useState<MatchRecord | null>(null);
   const [nextgameSaving, setNextgameSaving] = useState(false);
+  // 倒计时插件：服务端时钟偏差（serverNow - 本地时间）用于 running 时计算剩余时间
+  const [countdown, setCountdown] = useState<CountdownState | null>(null);
+  const [countdownSaving, setCountdownSaving] = useState(false);
+  const countdownClockRef = useRef({ offset: 0 });
+  // running 时每秒强制刷新以更新剩余时间显示
+  const [, setCountdownTick] = useState(0);
   const [page6, setPage6] = useState<Page6State | null>(null);
   const [page5TitleDraft, setPage5TitleDraft] = useState('');
   const [page6TitleDraft, setPage6TitleDraft] = useState('');
@@ -570,6 +578,7 @@ function Dashboard() {
     page11?: Page11State;
     nextgame?: NextGamePayload;
     profiles?: ProfileStoreState;
+    countdown?: CountdownPayload;
   }) {
     startTransition(() => {
       if (payload.scoreboard) {
@@ -587,6 +596,10 @@ function Dashboard() {
       if (payload.nextgame) {
         setNextgame(payload.nextgame.state);
         setNextgameMatch(payload.nextgame.match ?? null);
+      }
+      if (payload.countdown) {
+        countdownClockRef.current.offset = payload.countdown.serverNow - Date.now();
+        setCountdown(payload.countdown.state);
       }
       if (Array.isArray(payload.panels)) {
         payload.panels.forEach((panel) => {
@@ -637,7 +650,7 @@ function Dashboard() {
     setPageError('');
 
     try {
-      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage7, nextPage8, nextPage9, nextPage11, nextNextgame, nextProfiles] = await Promise.all([
+      const [auth, nextScoreboard, nextMatches, nextAvatars, nextPanels, nextPage4, nextSprites, nextStage, nextPage6, nextPage7, nextPage8, nextPage9, nextPage11, nextNextgame, nextProfiles, nextCountdown] = await Promise.all([
         requestJson<{ authenticated: boolean }>('/api/auth/check'),
         requestJson<ScoreboardState>('/api/scoreboard'),
         requestJson<MatchStoreState>('/api/matches'),
@@ -653,6 +666,7 @@ function Dashboard() {
         requestJson<{ state: Page11State }>('/api/page11'),
         requestJson<NextGamePayload>('/api/nextgame'),
         requestJson<ProfileStoreState>('/api/profiles'),
+        requestJson<CountdownPayload>('/api/countdown'),
       ]);
 
       if (!auth.authenticated) {
@@ -704,6 +718,17 @@ function Dashboard() {
   useEffect(() => {
     void loadInitialData();
   }, []);
+
+  // 倒计时进行中：本地节拍刷新后台的剩余时间显示
+  useEffect(() => {
+    if (!countdown?.running) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      setCountdownTick((value) => value + 1);
+    }, 500);
+    return () => window.clearInterval(timer);
+  }, [countdown?.running]);
 
   // 切换/回显到待开始小局时，用赛事草稿槽位回填阵容编辑器：
   // pending 状态下全局面板被服务端清空（未开局阵容不上推流页），此前编辑器直接显示空面板，
@@ -825,6 +850,12 @@ function Dashboard() {
     socket.on(SOCKET_EVENTS.nextgameUpdate, (payload) => {
       if (payload?.state) {
         applyServerState({ nextgame: payload });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.countdownUpdate, (payload) => {
+      if (payload?.state) {
+        applyServerState({ countdown: payload });
       }
     });
 
@@ -2195,6 +2226,53 @@ function Dashboard() {
     } finally {
       setNextgameSaving(false);
     }
+  }
+
+  /** 倒计时插件：保存配置（时长 / 配色），不改变显示与进行状态 */
+  async function saveCountdown(payload: { duration?: number; theme?: 'dark' | 'light' }) {
+    setCountdownSaving(true);
+    try {
+      const data = await requestJson<{ success: boolean } & CountdownPayload>('/api/countdown', {
+        method: 'POST',
+        json: payload,
+      });
+      applyServerState({ countdown: data });
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCountdownSaving(false);
+    }
+  }
+
+  /** 倒计时插件操作：开启显示 / 关闭 / 开始 / 暂停 / 重置 */
+  async function countdownAction(action: 'show' | 'hide' | 'start' | 'pause' | 'reset') {
+    setCountdownSaving(true);
+    try {
+      const data = await requestJson<{ success: boolean } & CountdownPayload>(`/api/countdown/${action}`, {
+        method: 'POST',
+        json: {},
+      });
+      applyServerState({ countdown: data });
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCountdownSaving(false);
+    }
+  }
+
+  /** 倒计时当前剩余秒数：running 用 endAt 实时计算（按服务端时钟偏差校准） */
+  function countdownRemainingSeconds(state: CountdownState): number {
+    if (!state.running || state.endAt === null) {
+      return Math.max(0, Math.round(state.remainingSeconds));
+    }
+    return Math.max(0, Math.ceil((state.endAt - (Date.now() + countdownClockRef.current.offset)) / 1000));
+  }
+
+  function formatCountdownText(state: CountdownState): string {
+    const seconds = countdownRemainingSeconds(state);
+    const mm = Math.floor(seconds / 60);
+    const ss = seconds % 60;
+    return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
   }
 
   async function saveMatchTags(matchId: string, tags: string[]) {
@@ -4055,6 +4133,56 @@ function Dashboard() {
                               关闭
                             </Button>
                             {nextgame?.visible ? <Tag color="green">正在显示</Tag> : <Tag>已隐藏</Tag>}
+                          </Space>
+                        </Space>
+                      </Card>
+                    </Col>
+                    <Col xs={24} md={12} xl={8}>
+                      <Card size="small" className="subtle-card" title="倒计时插件">
+                        <Space direction="vertical" size={12} className="control-stack">
+                          <SettingField label="倒计时时长（分钟）：" hint="推流画面顶部小插件的倒计时总时长；修改后需重置才生效。">
+                            <InputNumber
+                              style={{ width: '100%' }}
+                              min={1}
+                              max={60}
+                              value={countdown?.duration ?? 5}
+                              disabled={countdownSaving}
+                              onChange={(value) => {
+                                void saveCountdown({ duration: value === null || value === undefined ? 5 : Number(value) });
+                              }}
+                            />
+                          </SettingField>
+                          <SettingField label="配色：" hint="小插件的颜色模式，默认深色。">
+                            <Segmented
+                              block
+                              value={countdown?.theme ?? 'dark'}
+                              disabled={countdownSaving}
+                              options={[
+                                { value: 'dark', label: '深色' },
+                                { value: 'light', label: '浅色' },
+                              ]}
+                              onChange={(value) => { void saveCountdown({ theme: value as 'dark' | 'light' }); }}
+                            />
+                          </SettingField>
+                          <Space wrap>
+                            {countdown?.visible ? (
+                              <>
+                                {countdown.running ? (
+                                  <Button disabled={countdownSaving} onClick={() => void countdownAction('pause')}>暂停倒计时</Button>
+                                ) : (
+                                  <Button type="primary" disabled={countdownSaving} onClick={() => void countdownAction('start')}>开始倒计时</Button>
+                                )}
+                                <Button disabled={countdownSaving} onClick={() => void countdownAction('reset')}>重置</Button>
+                                <Button danger disabled={countdownSaving} onClick={() => void countdownAction('hide')}>关闭显示</Button>
+                              </>
+                            ) : (
+                              <Button type="primary" disabled={countdownSaving} onClick={() => void countdownAction('show')}>开启显示</Button>
+                            )}
+                          </Space>
+                          <Space size={8} wrap>
+                            {countdown?.visible ? <Tag color="green">显示中</Tag> : <Tag>已关闭</Tag>}
+                            {countdown?.running ? <Tag color="blue">倒计时中</Tag> : <Tag>时间静止</Tag>}
+                            {countdown ? <Text strong style={{ fontSize: 16 }}>剩余 {formatCountdownText(countdown)}</Text> : null}
                           </Space>
                         </Space>
                       </Card>

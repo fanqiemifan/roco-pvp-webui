@@ -8,7 +8,7 @@ import multer from 'multer';
 import { Server as SocketIOServer } from 'socket.io';
 
 import { SOCKET_EVENTS } from '../shared/events.js';
-import type { AvatarCollectionState, SnapshotPayload, StagePageKey } from '../shared/types.js';
+import type { AvatarCollectionState, CountdownState, SnapshotPayload, StagePageKey } from '../shared/types.js';
 import { buildQuickFillPreview, listSprites, spriteMatchesKeyword } from './services/sprite-service.js';
 import { getSpriteRanking } from './services/stats-service.js';
 import {
@@ -59,6 +59,15 @@ import {
   saveNextGameState,
   showNextGame,
 } from './services/nextgame-service.js';
+import {
+  getCountdownState,
+  hideCountdown,
+  pauseCountdown,
+  resetCountdown,
+  saveCountdownState,
+  showCountdown,
+  startCountdown,
+} from './services/countdown-service.js';
 import {
   clearPage4State,
   getPage4State,
@@ -122,6 +131,7 @@ function snapshotPayload(paths: AppPaths): SnapshotPayload {
     page11: getPage11State(paths),
     nextgame: getNextGamePayload(paths),
     profiles: getProfileStore(paths),
+    countdown: getCountdownState(paths),
   };
 }
 
@@ -413,7 +423,7 @@ export async function createLocalServer(
       );
       const isPublicPage = ['/', '/login.html', '/roco-pvp-page1.html', '/roco-pvp-page2.html', '/roco-pvp-page3.html', '/page4.html', '/roco-pvp-page4.html', '/roco-pvp-page5.html', '/roco-pvp-page6.html', '/roco-pvp-page7.html', '/roco-pvp-page8.html', '/roco-pvp-page9.html', '/roco-pvp-page10.html', '/roco-pvp-page11.html', '/float.html', '/float-menu.html', '/float-nextgame.html'].includes(req.path);
       // 推流页面仅用于展示，所需的数据 GET 接口公开（含选手头像/录入信息/仅显阵容），写操作仍受保护
-      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page4', '/api/page6', '/api/page7', '/api/page8', '/api/page9', '/api/page10', '/api/page11', '/api/panels', '/api/matches', '/api/sprites', '/api/nextgame', '/api/profiles', '/api/avatars'].includes(req.path);
+      const isPublicPage5Api = req.method === 'GET' && ['/api/stage', '/api/scoreboard', '/api/stats/ranking', '/api/page4', '/api/page6', '/api/page7', '/api/page8', '/api/page9', '/api/page10', '/api/page11', '/api/panels', '/api/matches', '/api/sprites', '/api/nextgame', '/api/profiles', '/api/avatars', '/api/countdown'].includes(req.path);
       // 头像图片公开访问（含按赛事隔离的 /api/avatar/{matchId}/{side}-avatar.png），推流页无需登录
       const isPublicAvatarImage = req.method === 'GET' && req.path.startsWith('/api/avatar/');
       const isAuthApi = req.path.startsWith('/api/auth/');
@@ -771,6 +781,79 @@ export async function createLocalServer(
       io.emit(SOCKET_EVENTS.nextgameUpdate, payload);
       scheduleNextGameAutoHide();
       response.json({ success: true, ...payload });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // === 倒计时插件（推流载体顶部叠加小插件） ===
+  // GET 公开：推流载体页轮询/首拉；POST 需登录（后台控制）
+
+  // 倒计时归零广播定时器：running 到期后广播静止 00:00 状态
+  let countdownZeroTimer: NodeJS.Timeout | null = null;
+  function scheduleCountdownZero(): void {
+    if (countdownZeroTimer) {
+      clearTimeout(countdownZeroTimer);
+      countdownZeroTimer = null;
+    }
+    const state = getCountdownState(paths);
+    if (!state.running || state.endAt === null) {
+      return;
+    }
+    const remaining = state.endAt - Date.now();
+    if (remaining <= 0) {
+      const next = getCountdownState(paths); // 懒归一化已把状态落地为静止 00:00
+      io.emit(SOCKET_EVENTS.countdownUpdate, { state: next, serverNow: Date.now() });
+      return;
+    }
+    countdownZeroTimer = setTimeout(() => {
+      const next = getCountdownState(paths);
+      io.emit(SOCKET_EVENTS.countdownUpdate, { state: next, serverNow: Date.now() });
+    }, remaining + 50);
+  }
+  scheduleCountdownZero();
+
+  function applyCountdownAction(action: 'show' | 'hide' | 'start' | 'pause' | 'reset'): CountdownState {
+    switch (action) {
+      case 'show':
+        return showCountdown(paths);
+      case 'hide':
+        return hideCountdown(paths);
+      case 'start':
+        return startCountdown(paths);
+      case 'pause':
+        return pauseCountdown(paths);
+      case 'reset':
+        return resetCountdown(paths);
+    }
+  }
+
+  app.get('/api/countdown', (_request, response) => {
+    response.json({ state: getCountdownState(paths), serverNow: Date.now() });
+  });
+
+  app.post('/api/countdown', (request, response) => {
+    try {
+      const state = saveCountdownState(paths, request.body ?? {});
+      io.emit(SOCKET_EVENTS.countdownUpdate, { state, serverNow: Date.now() });
+      scheduleCountdownZero();
+      response.json({ success: true, state, serverNow: Date.now() });
+    } catch (error) {
+      response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/countdown/:action', (request, response) => {
+    const action = request.params.action;
+    if (action !== 'show' && action !== 'hide' && action !== 'start' && action !== 'pause' && action !== 'reset') {
+      response.status(404).json({ success: false, error: `未知的倒计时操作: ${action}` });
+      return;
+    }
+    try {
+      const state = applyCountdownAction(action);
+      io.emit(SOCKET_EVENTS.countdownUpdate, { state, serverNow: Date.now() });
+      scheduleCountdownZero();
+      response.json({ success: true, state, serverNow: Date.now() });
     } catch (error) {
       response.status(400).json({ success: false, error: error instanceof Error ? error.message : String(error) });
     }
@@ -1307,6 +1390,10 @@ export async function createLocalServer(
       if (nextgameTimer) {
         clearTimeout(nextgameTimer);
         nextgameTimer = null;
+      }
+      if (countdownZeroTimer) {
+        clearTimeout(countdownZeroTimer);
+        countdownZeroTimer = null;
       }
       await new Promise<void>((resolve, reject) => {
         io.close(() => {

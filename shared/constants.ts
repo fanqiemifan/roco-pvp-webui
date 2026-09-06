@@ -73,3 +73,13 @@ export const SUPPORTED_NEXTGAME_DURATION_UNITS = new Set<string>(['seconds', 'mi
  */
 export const DEFAULT_PAGE10_DURATION = 30;
 export const DEFAULT_PAGE10_DURATION_UNIT = 'seconds' as const;
+
+/**
+ * 倒计时插件（推流载体顶部叠加小插件）：
+ * 在直播推流画面顶部居中叠加显示，不影响原有推流页面；默认深色配色，默认 5 分钟。
+ */
+export const DEFAULT_COUNTDOWN_THEME = 'dark' as const;
+export const DEFAULT_COUNTDOWN_DURATION = 5;
+export const SUPPORTED_COUNTDOWN_THEMES = new Set(['dark', 'light']);
+/** 倒计时时长上限（分钟） */
+export const COUNTDOWN_DURATION_MAX = 60;
