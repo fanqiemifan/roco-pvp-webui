@@ -21,3 +21,4 @@ scripts/deploy-prod.sh
 /release-new
 /.reasonix
 transition-demo.html
+/.workbuddy

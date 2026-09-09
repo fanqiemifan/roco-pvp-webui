@@ -18,10 +18,12 @@ files:
   - "src/assets/fonts/MiSans-*.otf"
 extraMetadata:
   main: dist-electron/electron/main.js
+icon: build/icon.ico
 mac:
   category: public.app-category.games
 win:
   executableName: RocoPVPControlPanel
+  icon: build/icon.ico
   artifactName: ${productName}-Setup-${version}.${ext}
   target:
     - target: nsis

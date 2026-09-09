@@ -1,0 +1,21 @@
+<svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" rx="44" fill="#D85A30"/>
+  <g transform="translate(26,71) scale(0.54)" fill="#FFFFFF">
+    <rect x="0" y="0" width="20" height="20" rx="4"/><rect x="22" y="0" width="20" height="20" rx="4"/><rect x="44" y="0" width="20" height="20" rx="4"/>
+    <rect x="0" y="22" width="20" height="20" rx="4"/><rect x="44" y="22" width="20" height="20" rx="4"/>
+    <rect x="0" y="44" width="20" height="20" rx="4"/><rect x="22" y="44" width="20" height="20" rx="4"/><rect x="44" y="44" width="20" height="20" rx="4"/>
+    <rect x="0" y="66" width="20" height="20" rx="4"/>
+    <rect x="0" y="88" width="20" height="20" rx="4"/>
+    <rect x="88" y="0" width="20" height="20" rx="4"/><rect x="132" y="0" width="20" height="20" rx="4"/>
+    <rect x="88" y="22" width="20" height="20" rx="4"/><rect x="132" y="22" width="20" height="20" rx="4"/>
+    <rect x="88" y="44" width="20" height="20" rx="4"/><rect x="132" y="44" width="20" height="20" rx="4"/>
+    <rect x="88" y="66" width="20" height="20" rx="4"/><rect x="132" y="66" width="20" height="20" rx="4"/>
+    <rect x="110" y="88" width="20" height="20" rx="4"/>
+    <rect x="176" y="0" width="20" height="20" rx="4"/><rect x="198" y="0" width="20" height="20" rx="4"/><rect x="220" y="0" width="20" height="20" rx="4"/>
+    <rect x="176" y="22" width="20" height="20" rx="4"/><rect x="220" y="22" width="20" height="20" rx="4"/>
+    <rect x="176" y="44" width="20" height="20" rx="4"/><rect x="198" y="44" width="20" height="20" rx="4"/><rect x="220" y="44" width="20" height="20" rx="4"/>
+    <rect x="176" y="66" width="20" height="20" rx="4"/>
+    <rect x="176" y="88" width="20" height="20" rx="4"/>
+    <rect x="254" y="0" width="20" height="20" rx="4" fill="#FAC775"/>
+  </g>
+</svg>
