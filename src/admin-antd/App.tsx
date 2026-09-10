@@ -4193,7 +4193,7 @@ function Dashboard() {
                               disabled={stageSaving}
                               options={[
                                 { value: 'sprite', label: '精灵原图' },
-                                { value: 'thumbnail', label: 'Thumbnail' },
+                                { value: 'thumbnail', label: '精灵头像' },
                               ]}
                               onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page3SpriteSource: value as Page3SpriteSource }); }}
                             />

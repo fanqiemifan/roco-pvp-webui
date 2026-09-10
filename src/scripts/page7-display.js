@@ -21,8 +21,9 @@
     const FAIL_ICON = '/assets/ui/fail-icon.ChpzWjNv.png';
     const STAY_TUNED_ICON = '/assets/ui/icon-stay-tuned.DHbzz5us.png';
     const RANK_ICON = '/assets/ui/7.Wku3bA4b.png';
-    const SPIRIT_INDEX_URL = '/resources/data/sprites.json';
-    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
+    const SPIRIT_INDEX_URL = '/resources/data/pets.json';
+    // 精灵头像目录（sprites-icon，与 sprites-img 立绘同命名：{pet_id}_{name}.png）
+    const SPRITE_ICON_RESOURCE_BASE = '/resources/sprites-icon';
 
     // 复用 page3 的排名数字偏移：按显示位数设置数字距图标左侧的 x（10000+ 视为 6 位）
     const RANK_TEXT_LEFT_BY_LENGTH = { 1: 22, 2: 16, 3: 12, 4: 7, 5: 3, 6: -2 };
@@ -60,14 +61,6 @@
         return normalized || '';
     }
 
-    function toRootPath(value) {
-        const text = String(value ?? '').trim();
-        if (!text) {
-            return '';
-        }
-        return text.startsWith('/') ? text : `/${text.replace(/^\/+/, '')}`;
-    }
-
     function formatRankText(value) {
         const digits = String(value || '').replace(/\D/g, '');
         if (!digits) {
@@ -102,14 +95,18 @@
             throw new Error(`精灵索引加载失败: ${response.status}`);
         }
         const payload = await response.json();
-        const records = (Array.isArray(payload) ? payload : (payload.spirits || []))
-            .map((record) => ({
-                // sprites.json 原始字段为中文名（精灵名称/精灵名字2/缩略图图片ID），与 sprite-service 的解析保持一致
-                displayName: String(record.displayName || record.name || record['精灵名字2'] || record['精灵名称'] || '').trim(),
-                path: toRootPath(record.path),
-                thumbnailId: String(record.thumbnailId || record['缩略图图片ID'] || '').trim(),
-            }))
-            .filter((record) => record.displayName);
+        const records = (Array.isArray(payload) ? payload : (payload.items || []))
+            .map((record) => {
+                // pets.json 字段：pet_id / name；本地图片统一按 {pet_id}_{name}.png 命名（与 sync-spirits-assets 一致）
+                const petId = sanitizeFilenameSegment(record.pet_id);
+                const name = sanitizeFilenameSegment(record.name);
+                return {
+                    displayName: name,
+                    path: petId && name ? `/resources/sprites-img/${petId}_${name}.png` : '',
+                    thumbnailId: petId,
+                };
+            })
+            .filter((record) => record.displayName && record.path);
         spriteLookup = buildSpriteLookup(records);
     }
 
@@ -122,7 +119,7 @@
         return spriteLookup.byName.get(name) || spriteLookup.byBaseName.get(base) || null;
     }
 
-    /* ---------- 单个精灵卡（参考 page1 petsdiv3：缩略图优先 + 圆形底托，比例 80x80） ---------- */
+    /* ---------- 单个精灵卡（参考 page1 petsdiv3：精灵头像优先 + 圆形底托，比例 80x80） ---------- */
 
     function basename(value) {
         return String(value || '').split('/').filter(Boolean).pop() || '';
@@ -152,9 +149,9 @@
             basename(record.path),
         ].map(sanitizeFilenameSegment).filter(Boolean)));
 
-        // 候选图：缩略图（thumbnailId_名字.png）优先，失败后回退精灵原图
+        // 候选图：精灵头像（petId_name.png）优先，失败后回退精灵立绘
         const sources = record.thumbnailId
-            ? candidateNames.map((name) => `${THUMBNAIL_RESOURCE_BASE}/${record.thumbnailId}_${name}.png`)
+            ? candidateNames.map((name) => `${SPRITE_ICON_RESOURCE_BASE}/${record.thumbnailId}_${name}.png`)
             : [];
         if (record.path) {
             sources.push(record.path);

@@ -2,8 +2,9 @@
     'use strict';
 
     const MAX_SLOTS = 6;
-    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
-    const unavailableThumbnailPaths = new Set();
+    // 精灵头像目录（sprites-icon，与 sprites-img 立绘同命名：{pet_id}_{name}.png）
+    const SPRITE_ICON_RESOURCE_BASE = '/resources/sprites-icon';
+    const unavailableIconPaths = new Set();
 
     const panelStates = {
         left: { signatures: new Array(MAX_SLOTS).fill(null) },
@@ -32,7 +33,7 @@
         return String(sprite.cardName || sprite.displayName || sprite.chineseName || sprite.name || basename(sprite.path) || '').trim();
     }
 
-    function buildThumbnailCandidates(sprite) {
+    function buildSpriteIconCandidates(sprite) {
         const thumbnailId = String(sprite && sprite.thumbnailId ? sprite.thumbnailId : '').trim();
         if (!thumbnailId) {
             return [];
@@ -48,21 +49,21 @@
             .map((value) => sanitizeFilenameSegment(value))
             .filter(Boolean);
 
-        return Array.from(new Set(candidateNames)).map((name) => `${THUMBNAIL_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
+        return Array.from(new Set(candidateNames)).map((name) => `${SPRITE_ICON_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
     }
 
     function resolveSpriteImageSources(sprite) {
         const fallbackSrc = sprite && sprite.path ? String(sprite.path) : '';
-        const thumbnailCandidates = buildThumbnailCandidates(sprite).filter((path) => !unavailableThumbnailPaths.has(path));
+        const spriteIconCandidates = buildSpriteIconCandidates(sprite).filter((path) => !unavailableIconPaths.has(path));
 
         return {
             fallbackSrc,
-            thumbnailCandidates,
+            spriteIconCandidates,
         };
     }
 
     function syncImageState(slotEl, imageSrc) {
-        slotEl.classList.toggle('is-thumbnail', String(imageSrc || '').startsWith(THUMBNAIL_RESOURCE_BASE));
+        slotEl.classList.toggle('is-sprite-icon', String(imageSrc || '').startsWith(SPRITE_ICON_RESOURCE_BASE));
     }
 
     function applySpriteImage(imgEl, sprite) {
@@ -71,7 +72,7 @@
         }
 
         const imageSources = resolveSpriteImageSources(sprite);
-        const sourceQueue = [...imageSources.thumbnailCandidates, ...(imageSources.fallbackSrc ? [imageSources.fallbackSrc] : [])];
+        const sourceQueue = [...imageSources.spriteIconCandidates, ...(imageSources.fallbackSrc ? [imageSources.fallbackSrc] : [])];
 
         if (sourceQueue.length === 0) {
             imgEl.removeAttribute('src');
@@ -96,8 +97,8 @@
 
         imgEl.onerror = () => {
             const failedSrc = imgEl.dataset.currentSrc || '';
-            if (failedSrc.startsWith(THUMBNAIL_RESOURCE_BASE)) {
-                unavailableThumbnailPaths.add(failedSrc);
+            if (failedSrc.startsWith(SPRITE_ICON_RESOURCE_BASE)) {
+                unavailableIconPaths.add(failedSrc);
             }
 
             currentIndex += 1;

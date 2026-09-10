@@ -2,7 +2,7 @@
     'use strict';
 
     const MAX_SLOTS = 6;
-    const SPIRIT_INDEX_URL = '/resources/data/sprites.json';
+    const SPIRIT_INDEX_URL = '/resources/data/pets.json';
     const DEFAULT_EVENT_TITLE = '';
     const DEFAULT_BEST_OF = 7;
     const ROUND_BOX_WIDTH = 32;
@@ -12,7 +12,8 @@
         default: 78,
         'avatar-only': 98
     };
-    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
+    // 精灵头像目录（sprites-icon，与 sprites-img 立绘同命名：{pet_id}_{name}.png）
+    const SPRITE_ICON_RESOURCE_BASE = '/resources/sprites-icon';
     const PANEL_SLOT_POSITIONS = {
         left: ['0', '1', '2', '3', '4', '5'],
         right: ['0', '1', '2', '3', '4', '5']
@@ -26,7 +27,7 @@
     let lookup = null;
     let scoreboardSignature = null;
     let currentLineupDisplayMode = DEFAULT_LINEUP_DISPLAY_MODE;
-    const unavailableThumbnailPaths = new Set();
+    const unavailableIconPaths = new Set();
 
     function normalizeText(value) {
         return String(value ?? '')
@@ -75,10 +76,6 @@
         return normalized || fallback;
     }
 
-    function getFilename(path) {
-        return String(path || '').split('/').filter(Boolean).pop() || '';
-    }
-
     function clamp(value, min, max, fallback) {
         const number = Number(value);
         if (Number.isNaN(number)) {
@@ -110,20 +107,16 @@
             return null;
         }
 
-        const rawPath = typeof record.path === 'string' ? record.path : '';
-        const filename = getFilename(rawPath);
-        const displayName = String(
-            record.displayName
-            || record['精灵名字2']
-            || record['精灵名称']
-            || record.name
-            || filename.replace(/\.[^.]+$/, '')
-        ).trim();
-        const number = normalizeNumber(record.number || record['精灵编号']);
-
-        if (!filename || !displayName) {
+        // pets.json 字段：pet_id / name / handbook_no；本地图片统一按 {pet_id}_{name}.png 命名（与 sync-spirits-assets 一致）
+        const petId = sanitizeFilenameSegment(record.pet_id);
+        const name = sanitizeFilenameSegment(record.name);
+        if (!petId || !name) {
             return null;
         }
+
+        const filename = `${petId}_${name}.png`;
+        const displayName = name;
+        const number = normalizeNumber(record.handbook_no);
 
         return {
             ...record,
@@ -131,8 +124,8 @@
             displayName,
             cardName: stripVariantName(displayName),
             filename,
-            path: toRootPath(rawPath),
-            thumbnailId: String(record.thumbnailId || record['缩略图图片ID'] || '').trim()
+            path: `/resources/sprites-img/${filename}`,
+            thumbnailId: petId
         };
     }
 
@@ -194,11 +187,10 @@
         return PESTDIV2_SLOT_SIZES[currentLineupDisplayMode] || PESTDIV2_SLOT_SIZES.default;
     }
 
-    function buildThumbnailCandidates(displaySpirit, sourceSprite, spiritName) {
+    function buildSpriteIconCandidates(displaySpirit, sourceSprite, spiritName) {
         const thumbnailId = String(
             (displaySpirit && displaySpirit.thumbnailId)
             || sourceSprite?.thumbnailId
-            || sourceSprite?.['缩略图图片ID']
             || ''
         ).trim();
 
@@ -217,7 +209,7 @@
             .filter(Boolean);
 
         return Array.from(new Set(candidateNames))
-            .map(name => `${THUMBNAIL_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
+            .map(name => `${SPRITE_ICON_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
     }
 
     function resolveSpriteImageSources(displaySpirit, sourceSprite, spiritName) {
@@ -226,12 +218,12 @@
             || sourceSprite?.path
             || ''
         );
-        const thumbnailCandidates = buildThumbnailCandidates(displaySpirit, sourceSprite, spiritName)
-            .filter(path => !unavailableThumbnailPaths.has(path));
+        const spriteIconCandidates = buildSpriteIconCandidates(displaySpirit, sourceSprite, spiritName)
+            .filter(path => !unavailableIconPaths.has(path));
 
         return {
             fallbackSrc,
-            thumbnailCandidates
+            spriteIconCandidates
         };
     }
 
@@ -251,12 +243,12 @@
         };
     }
 
-    function syncPestdiv2ThumbnailState(container, imageSrc) {
+    function syncPestdiv2IconState(container, imageSrc) {
         if (!container) {
             return;
         }
 
-        container.classList.toggle('pestdiv2-has-thumbnail', String(imageSrc || '').startsWith(THUMBNAIL_RESOURCE_BASE));
+        container.classList.toggle('pestdiv2-has-icon', String(imageSrc || '').startsWith(SPRITE_ICON_RESOURCE_BASE));
     }
 
     function applySpiritImage(thumbEl, spiritName, imageSources) {
@@ -265,8 +257,8 @@
         }
 
         const fallbackSrc = imageSources?.fallbackSrc || '';
-        const candidateList = Array.isArray(imageSources?.thumbnailCandidates)
-            ? imageSources.thumbnailCandidates.slice()
+        const candidateList = Array.isArray(imageSources?.spriteIconCandidates)
+            ? imageSources.spriteIconCandidates.slice()
             : [];
         const sourceQueue = [...candidateList, ...(fallbackSrc ? [fallbackSrc] : [])];
 
@@ -276,7 +268,7 @@
             thumbEl.removeAttribute('src');
             delete thumbEl.dataset.currentSrc;
             thumbEl.onerror = null;
-            syncPestdiv2ThumbnailState(thumbEl.closest('.pestdiv2'), '');
+            syncPestdiv2IconState(thumbEl.closest('.pestdiv2'), '');
             return;
         }
 
@@ -291,14 +283,14 @@
         const assignNext = () => {
             const nextSrc = sourceQueue[currentIndex];
             thumbEl.dataset.currentSrc = nextSrc;
-            syncPestdiv2ThumbnailState(thumbEl.closest('.pestdiv2'), nextSrc);
+            syncPestdiv2IconState(thumbEl.closest('.pestdiv2'), nextSrc);
             thumbEl.src = nextSrc;
         };
 
         thumbEl.onerror = () => {
             const failedSrc = thumbEl.dataset.currentSrc || '';
-            if (failedSrc.startsWith(THUMBNAIL_RESOURCE_BASE)) {
-                unavailableThumbnailPaths.add(failedSrc);
+            if (failedSrc.startsWith(SPRITE_ICON_RESOURCE_BASE)) {
+                unavailableIconPaths.add(failedSrc);
             }
 
             currentIndex += 1;
@@ -383,7 +375,7 @@
         return JSON.stringify({
             mode: currentLineupDisplayMode,
             spritePath: spiritVisual.imageSources.fallbackSrc,
-            thumbnailCandidates: spiritVisual.imageSources.thumbnailCandidates,
+            spriteIconCandidates: spiritVisual.imageSources.spriteIconCandidates,
             name: spiritVisual.spiritName,
             sourceName: getSpriteDisplayName(spiritVisual.sourceSprite),
             number: getSpriteNumber(spiritVisual.sourceSprite),
@@ -499,7 +491,7 @@
         const spiritName = spiritVisual.spiritName;
         const spriteKey = JSON.stringify({
             fallbackSrc: spiritVisual.imageSources.fallbackSrc,
-            thumbnailCandidates: spiritVisual.imageSources.thumbnailCandidates,
+            spriteIconCandidates: spiritVisual.imageSources.spriteIconCandidates,
             spiritName,
             size: spiritVisual.size
         });
@@ -684,7 +676,7 @@
         }
 
         const payload = await response.json();
-        const records = Array.isArray(payload) ? payload : (payload.spirits || []);
+        const records = Array.isArray(payload) ? payload : (payload.items || []);
         lookup = buildLookup(records.map(toSpiritRecord).filter(Boolean));
     }
 

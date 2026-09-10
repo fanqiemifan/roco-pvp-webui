@@ -252,7 +252,7 @@ body[data-page2-lineup-display-mode="avatar-only"] .spirit-slot::before {
     transform: translate(-50%, -50%);
 }
 
-.pestdiv2.pestdiv2-has-thumbnail .pestdiv2-circle {
+.pestdiv2.pestdiv2-has-icon .pestdiv2-circle {
     display: block;
 }
 

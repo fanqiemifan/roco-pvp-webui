@@ -232,7 +232,7 @@
         buildSlotCard(slotEl, sprite, spiritName, imageCandidates[0] || '');
         const spriteImage = slotEl.querySelector('.sprite-pet-card-sprite');
         if (page3SpriteSource === 'thumbnail' && slotEl.dataset.side === 'right') {
-            spriteImage.classList.add('is-page3-thumbnail-flipped');
+            spriteImage.classList.add('is-page3-icon-flipped');
         }
         let imageIndex = 0;
         spriteImage.onerror = () => {
@@ -300,7 +300,7 @@
             .map(sanitizeFilenameSegment)
             .filter(Boolean);
         const thumbnails = Array.from(new Set(names)).map((name) =>
-            `/resources/Thumbnail/${sanitizeFilenameSegment(sprite.thumbnailId)}_${name}.png`
+            `/resources/sprites-icon/${sanitizeFilenameSegment(sprite.thumbnailId)}_${name}.png`
         );
         return [...thumbnails, ...(fallback ? [fallback] : [])];
     }

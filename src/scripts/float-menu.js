@@ -41,10 +41,16 @@
         return sprite && sprite.path ? String(sprite.path) : FALLBACK_IMG;
     }
 
-    // 多形态匹配：同文件名基名（去掉 -N / _N 变体后缀），如 NO.020_岚鸟-1 / -2 / -3 / -4
+    // 多形态匹配：同图鉴编号 + 同名（如 鸭吉吉 的多种样子/多个 pet_id 变体）；
+    // pets.json 命名后文件名基名不再共享，改为按 number（handbook_no）+ cardName 分组
     function variantGroupKey(sprite) {
         if (!sprite || typeof sprite !== 'object') {
             return '';
+        }
+        const number = sprite.number ? String(sprite.number) : '';
+        const name = String(sprite.cardName || sprite.displayName || sprite.chineseName || sprite.name || '').trim();
+        if (number && name) {
+            return `${number}|${name}`;
         }
         const filename = String(sprite.filename || sprite.id || basename(sprite.path || '') || '').trim();
         return basename(filename)

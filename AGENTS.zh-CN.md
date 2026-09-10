@@ -4,7 +4,7 @@ Roco PVP WebUI — 洛克王国比赛推流控制台。Electron（Express + Sock
 
 ## 常用命令（全部来自 `package.json` 的 scripts）
 
-- `npm run build` — 构建 renderer + electron。会触发 `prebuild` → `npm run sync:sprites`，该脚本会**从网络下载精灵图片**（数据源为 `热补丁索引/spirits_index.json`）。如果只想重新生成索引、不想下载图片，运行 `node scripts/sync-spirits-assets.mjs --skip-download`。
+- `npm run build` — 构建 renderer + electron。会触发 `prebuild` → `npm run sync:sprites`，该脚本会**从网络下载精灵图片**（数据源为 `resources/data/pets.json` 的 `official_small_icon` 与 `icon_url`）。如果只想校验数据、不想下载图片，运行 `node scripts/sync-spirits-assets.mjs --skip-download`。
 - `npm run dev` — 构建 renderer + electron，然后启动 Electron 桌面应用。
 - `npm run serve:node` — 构建 + 无头 Node 服务器（默认 `--host 127.0.0.1 --port 9988`）。Docker 使用的就是这个模式。
 - `npm run package` — 构建 + electron-builder，产出 Windows NSIS 安装包到 `release/`（已被 gitignore）。
@@ -27,7 +27,7 @@ Roco PVP WebUI — 洛克王国比赛推流控制台。Electron（Express + Sock
 - 面板/记分牌/比赛/page4/导播台/头像状态以及端口配置，都以 JSON/PNG 形式存放在某个 userData 目录下的 `runtime/cache/` 中，路径解析逻辑在 `electron/services/path-service.ts`：
   - 桌面模式：Electron `app.getPath('userData')`。
   - Node/Docker 模式：`<项目根目录>/LuokePVPWebui`（可用 `ROCO_DATA_DIR` 覆盖）。
-- `resources/data/sprites.json` 和 `resources/sprites-img/` 由 `scripts/sync-spirits-assets.mjs` 从 `热补丁索引/spirits_index.json` **生成**（精灵图片目录就是 `/img/` 伺服的那个目录）。精灵数据变化后要重新跑脚本（或改 `spirits_index.json` 再重新生成）；**不要手改 `sprites.json`**。
+- 精灵数据索引是 `resources/data/pets.json`（源数据，勿手改字段名）；`resources/sprites-img/`（official_small_icon 展示图）与 `resources/sprites-icon/`（icon_url 头像图标）由 `scripts/sync-spirits-assets.mjs` 按 `{pet_id}_{name}.png` 命名下载（sprites-img 目录就是 `/img/` 伺服的那个目录）。精灵数据变化后更新 pets.json 再重新跑脚本；图片已存在时会跳过（幂等）。
 
 ## 架构
 

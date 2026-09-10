@@ -28,10 +28,10 @@ pvp-webUI-for-roco/
 │   ├── styles/         # 原生 CSS 样式
 │   └── assets/         # UI 资源（图标、字体）
 └── resources/          # 游戏资源
-    ├── sprites-img/    # 精灵图片（/img/）
+    ├── sprites-img/    # 精灵立绘（official_small_icon，/img/）
+    ├── sprites-icon/   # 精灵头像（icon_url + 原 Thumbnail 迁移，/resources/sprites-icon/）
     ├── sprites-alt/    # 备用精灵图片（/img-2/）
-    ├── Thumbnail/      # 精灵缩略图
-    ├── data/           # 数据文件（sprites.json 等）
+    ├── data/           # 数据文件（pets.json、attribute_mapping.json 等）
     └── ...
 ```
 

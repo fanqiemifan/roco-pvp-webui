@@ -2,7 +2,8 @@
     'use strict';
 
     const MAX_SLOTS = 6;
-    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
+    // 精灵头像目录（sprites-icon，与 sprites-img 立绘同命名：{pet_id}_{name}.png）
+    const SPRITE_ICON_RESOURCE_BASE = '/resources/sprites-icon';
     const FALLBACK_IMG = '/assets/ui/back.png';
 
     // 阵容条原始尺寸与整体缩放：内容按 782×74 布局，缩放到 0.75 后为 587×56
@@ -26,7 +27,7 @@
         right: document.querySelector('.lineup-right'),
     };
 
-    const unavailableThumbnailPaths = new Set();
+    const unavailableIconPaths = new Set();
 
     function basename(value) {
         return String(value || '').split('/').filter(Boolean).pop() || '';
@@ -50,7 +51,7 @@
         return String(sprite.name || sprite.chineseName || sprite.displayName || sprite.cardName || basename(sprite.path) || '').trim();
     }
 
-    function buildThumbnailCandidates(sprite) {
+    function buildSpriteIconCandidates(sprite) {
         const thumbnailId = String(sprite && sprite.thumbnailId ? sprite.thumbnailId : '').trim();
         if (!thumbnailId) {
             return [];
@@ -64,13 +65,13 @@
         ]
             .map((value) => sanitizeFilenameSegment(value))
             .filter(Boolean);
-        return Array.from(new Set(candidateNames)).map((name) => `${THUMBNAIL_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
+        return Array.from(new Set(candidateNames)).map((name) => `${SPRITE_ICON_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
     }
 
     function applySpriteImage(imgEl, sprite) {
         const fallbackSrc = sprite && sprite.path ? String(sprite.path) : '';
-        const thumbnailCandidates = buildThumbnailCandidates(sprite).filter((path) => !unavailableThumbnailPaths.has(path));
-        const sourceQueue = [...thumbnailCandidates, ...(fallbackSrc ? [fallbackSrc] : [])];
+        const spriteIconCandidates = buildSpriteIconCandidates(sprite).filter((path) => !unavailableIconPaths.has(path));
+        const sourceQueue = [...spriteIconCandidates, ...(fallbackSrc ? [fallbackSrc] : [])];
 
         if (sourceQueue.length === 0) {
             imgEl.removeAttribute('src');
@@ -95,8 +96,8 @@
 
         imgEl.onerror = () => {
             const failedSrc = imgEl.dataset.currentSrc || '';
-            if (failedSrc.startsWith(THUMBNAIL_RESOURCE_BASE)) {
-                unavailableThumbnailPaths.add(failedSrc);
+            if (failedSrc.startsWith(SPRITE_ICON_RESOURCE_BASE)) {
+                unavailableIconPaths.add(failedSrc);
             }
             currentIndex += 1;
             if (currentIndex >= sourceQueue.length) {
