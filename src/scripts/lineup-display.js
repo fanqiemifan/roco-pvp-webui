@@ -2,7 +2,7 @@
     'use strict';
 
     const MAX_SLOTS = 6;
-    const SPIRIT_INDEX_URL = '/resources/data/pets.json';
+    const SPIRIT_INDEX_URL = '/api/sprites';
     const DEFAULT_EVENT_TITLE = '';
     const DEFAULT_BEST_OF = 7;
     const ROUND_BOX_WIDTH = 32;
@@ -65,16 +65,6 @@
         return text.startsWith('/') ? text : `/${text.replace(/^\/+/, '')}`;
     }
 
-    function sanitizeFilenameSegment(value, fallback = '') {
-        const normalized = String(value ?? '')
-            .normalize('NFC')
-            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
-            .replace(/\s+/g, '')
-            .replace(/\.+$/g, '')
-            .trim();
-
-        return normalized || fallback;
-    }
 
     function clamp(value, min, max, fallback) {
         const number = Number(value);
@@ -107,25 +97,11 @@
             return null;
         }
 
-        // pets.json 字段：pet_id / name / handbook_no；本地图片统一按 {pet_id}_{name}.png 命名（与 sync-spirits-assets 一致）
-        const petId = sanitizeFilenameSegment(record.pet_id);
-        const name = sanitizeFilenameSegment(record.name);
-        if (!petId || !name) {
-            return null;
-        }
-
-        const filename = `${petId}_${name}.png`;
-        const displayName = name;
-        const number = normalizeNumber(record.handbook_no);
-
+        // /api/sprites 记录已含 id / filename / displayName / number / path / iconUrl
         return {
             ...record,
-            number,
-            displayName,
-            cardName: stripVariantName(displayName),
-            filename,
-            path: `/resources/sprites-img/${filename}`,
-            thumbnailId: petId
+            number: normalizeNumber(record.number),
+            cardName: stripVariantName(String(record.displayName || '')),
         };
     }
 
@@ -179,37 +155,19 @@
         return sprite.displayName || sprite.chineseName || sprite.name || sprite.filename || '';
     }
 
-    function getSpriteCardName(sprite) {
-        return displaySpiritName(getSpriteDisplayName(sprite));
-    }
 
     function getPestdiv2Size() {
         return PESTDIV2_SLOT_SIZES[currentLineupDisplayMode] || PESTDIV2_SLOT_SIZES.default;
     }
 
     function buildSpriteIconCandidates(displaySpirit, sourceSprite, spiritName) {
-        const thumbnailId = String(
-            (displaySpirit && displaySpirit.thumbnailId)
-            || sourceSprite?.thumbnailId
+        const iconUrl = String(
+            (displaySpirit && displaySpirit.iconUrl)
+            || sourceSprite?.iconUrl
             || ''
         ).trim();
 
-        if (!thumbnailId) {
-            return [];
-        }
-
-        const candidateNames = [
-            displaySpirit?.cardName,
-            displaySpirit?.displayName,
-            getSpriteCardName(sourceSprite),
-            getSpriteDisplayName(sourceSprite),
-            spiritName
-        ]
-            .map(value => sanitizeFilenameSegment(value))
-            .filter(Boolean);
-
-        return Array.from(new Set(candidateNames))
-            .map(name => `${SPRITE_ICON_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
+        return iconUrl ? [iconUrl] : [];
     }
 
     function resolveSpriteImageSources(displaySpirit, sourceSprite, spiritName) {
@@ -676,7 +634,8 @@
         }
 
         const payload = await response.json();
-        const records = Array.isArray(payload) ? payload : (payload.items || []);
+        // /api/sprites 返回 { sprites, count }
+        const records = Array.isArray(payload) ? payload : (payload.sprites || []);
         lookup = buildLookup(records.map(toSpiritRecord).filter(Boolean));
     }
 

@@ -12,7 +12,8 @@ export interface SpriteRecord {
   attributeCodes: string[];
   attributeIcon1: string;
   attributeIcon2: string;
-  thumbnailId: string;
+  /** 精灵头像 URL（resources/sprites-icon，命名 {pet_id}_{name}.png；空串 = 无头像图，展示端回退立绘 path） */
+  iconUrl: string;
   /** 形态筛选标签：由 pets.json stage 转换（一阶/二阶/三阶/首领） */
   form: string;
   /** pets.json 原始 form 字段（如 春天的样子，空字符串 = 无特殊形态），持久化快照用 */

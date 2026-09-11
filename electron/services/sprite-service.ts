@@ -6,6 +6,7 @@ import type { QuickFillPreview, SpriteRecord } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
 
 const SPRITE_RESOURCE_BASE = '/resources/sprites-img';
+const SPRITE_ICON_RESOURCE_BASE = '/resources/sprites-icon';
 const ATTRIBUTE_ICON_BASE = '/resources/attribute';
 
 // pets.json 的 stage → 精灵形态标签（4 = 首领）
@@ -18,6 +19,7 @@ const STAGE_FORM_LABELS: Record<number, string> = {
 
 let cachedAttributeCodeByName: Map<string, string> | null = null;
 let cachedFinalFormIds: Set<string> | null = null;
+let cachedIconFilenameByPetId: Map<string, string> | null = null;
 
 function normalizeSpriteAttributes(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -77,7 +79,7 @@ function spriteNumberAliases(sprite: SpriteRecord): string[] {
   ];
 }
 
-function buildSpriteEntry(filename: string): SpriteRecord {
+function buildSpriteEntry(filename: string, paths: AppPaths): SpriteRecord {
   const stem = path.parse(filename).name;
   const displayName = stem.includes('_') ? stem.split('_', 2)[1] : stem;
 
@@ -95,7 +97,9 @@ function buildSpriteEntry(filename: string): SpriteRecord {
     attributeCodes: [],
     attributeIcon1: '',
     attributeIcon2: '',
-    thumbnailId: '',
+    iconUrl: fs.existsSync(path.join(paths.spritesIconDir, filename))
+      ? `${SPRITE_ICON_RESOURCE_BASE}/${filename}`
+      : '',
     form: '',
     petForm: '',
     isFinalForm: false,
@@ -151,6 +155,49 @@ function loadFinalFormIds(paths: AppPaths): Set<string> {
   return lookup;
 }
 
+// 建 {pet_id → sprites-icon 实际文件名} 映射：sprites-icon 里同一 pet_id 可能存在多个历史残留文件，
+// 取字典序第一个作为兜底；正常情况由 resolveIconUrl 精确命中 {pet_id}_{name}.png。
+function loadIconFilenameByPetId(paths: AppPaths): Map<string, string> {
+  if (cachedIconFilenameByPetId) {
+    return cachedIconFilenameByPetId;
+  }
+
+  const lookup = new Map<string, string>();
+
+  try {
+    const filenames = fs.readdirSync(paths.spritesIconDir).sort();
+    for (const filename of filenames) {
+      if (!SUPPORTED_IMAGE_EXTENSIONS.has(path.extname(filename).toLowerCase())) {
+        continue;
+      }
+      const match = /^(\d+)_/.exec(filename);
+      if (!match) {
+        continue;
+      }
+      const petId = match[1];
+      if (!lookup.has(petId)) {
+        lookup.set(petId, filename);
+      }
+    }
+  } catch {
+    // Best effort only; consumers can still fall back to the sprite art (path).
+  }
+
+  cachedIconFilenameByPetId = lookup;
+  return lookup;
+}
+
+// 精灵头像 URL：优先精确匹配 {pet_id}_{name}.png，否则退回该 pet_id 的任一图标文件，都没有则返回空串（展示端回退立绘）
+function resolveIconUrl(petId: string, name: string, paths: AppPaths): string {
+  const exact = `${sanitizeFilenameSegment(petId)}_${sanitizeFilenameSegment(name)}.png`;
+  if (fs.existsSync(path.join(paths.spritesIconDir, exact))) {
+    return `${SPRITE_ICON_RESOURCE_BASE}/${exact}`;
+  }
+
+  const fallback = loadIconFilenameByPetId(paths).get(sanitizeFilenameSegment(petId));
+  return fallback ? `${SPRITE_ICON_RESOURCE_BASE}/${fallback}` : '';
+}
+
 // pets.json 单条记录 → SpriteRecord
 // 字段对应：精灵编号=handbook_no、精灵名称=name、精灵属性=elements、精灵形态=stage（4=首领）
 function normalizePetRecord(record: unknown, paths: AppPaths): SpriteRecord | null {
@@ -181,7 +228,6 @@ function normalizePetRecord(record: unknown, paths: AppPaths): SpriteRecord | nu
     .slice(0, 2);
 
   const finalFormIds = loadFinalFormIds(paths);
-  const thumbnailId = petId;
   const number = spriteNumberFromValue(item.handbook_no);
 
   const aliases: string[] = [];
@@ -218,10 +264,10 @@ function normalizePetRecord(record: unknown, paths: AppPaths): SpriteRecord | nu
     attributeCodes,
     attributeIcon1: attributeCodes[0] ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[0]}.png` : '',
     attributeIcon2: attributeCodes[1] ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[1]}.png` : '',
-    thumbnailId,
+    iconUrl: resolveIconUrl(petId, name, paths),
     form,
     petForm: formText,
-    isFinalForm: Boolean(thumbnailId && finalFormIds.has(thumbnailId)),
+    isFinalForm: finalFormIds.has(petId),
   };
 }
 
@@ -267,7 +313,7 @@ export function listSprites(paths: AppPaths): SpriteRecord[] {
   const sprites = fs
     .readdirSync(paths.spritesDir)
     .filter((filename) => SUPPORTED_IMAGE_EXTENSIONS.has(path.extname(filename).toLowerCase()))
-    .map((filename) => buildSpriteEntry(filename));
+    .map((filename) => buildSpriteEntry(filename, paths));
 
   sprites.sort((left, right) => {
     const leftNumber = left.number ?? Number.MAX_SAFE_INTEGER;

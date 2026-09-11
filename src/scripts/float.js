@@ -33,15 +33,6 @@
         return String(value || '').split('/').filter(Boolean).pop() || '';
     }
 
-    function sanitizeFilenameSegment(value, fallback = '') {
-        const normalized = String(value ?? '')
-            .normalize('NFC')
-            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
-            .replace(/\s+/g, '')
-            .replace(/\.+$/g, '')
-            .trim();
-        return normalized || fallback;
-    }
 
     function getSpriteDisplayName(sprite) {
         if (!sprite || typeof sprite !== 'object') {
@@ -52,20 +43,8 @@
     }
 
     function buildSpriteIconCandidates(sprite) {
-        const thumbnailId = String(sprite && sprite.thumbnailId ? sprite.thumbnailId : '').trim();
-        if (!thumbnailId) {
-            return [];
-        }
-        const candidateNames = [
-            sprite && sprite.cardName,
-            sprite && sprite.displayName,
-            sprite && sprite.chineseName,
-            sprite && sprite.name,
-            sprite && sprite.path ? basename(sprite.path) : '',
-        ]
-            .map((value) => sanitizeFilenameSegment(value))
-            .filter(Boolean);
-        return Array.from(new Set(candidateNames)).map((name) => `${SPRITE_ICON_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
+        const iconUrl = String(sprite && sprite.iconUrl ? sprite.iconUrl : '').trim();
+        return iconUrl ? [iconUrl] : [];
     }
 
     function applySpriteImage(imgEl, sprite) {

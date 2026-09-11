@@ -282,27 +282,14 @@
         });
     }
 
-    function sanitizeFilenameSegment(value) {
-        return String(value || '')
-            .normalize('NFC')
-            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
-            .replace(/\s+/g, '')
-            .replace(/\.+$/g, '')
-            .trim();
-    }
 
     function getSpriteImageCandidates(sprite) {
         const fallback = sprite && sprite.path ? String(sprite.path) : '';
-        if (page3SpriteSource !== 'thumbnail' || !sprite || !sprite.thumbnailId) {
+        const iconUrl = sprite && sprite.iconUrl ? String(sprite.iconUrl).trim() : '';
+        if (page3SpriteSource !== 'thumbnail' || !iconUrl) {
             return fallback ? [fallback] : [];
         }
-        const names = [sprite.cardName, sprite.displayName, sprite.chineseName, sprite.name]
-            .map(sanitizeFilenameSegment)
-            .filter(Boolean);
-        const thumbnails = Array.from(new Set(names)).map((name) =>
-            `/resources/sprites-icon/${sanitizeFilenameSegment(sprite.thumbnailId)}_${name}.png`
-        );
-        return [...thumbnails, ...(fallback ? [fallback] : [])];
+        return [iconUrl, ...(fallback ? [fallback] : [])];
     }
 
     function getMatchPhase(payload) {
