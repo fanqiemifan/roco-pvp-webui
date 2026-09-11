@@ -14,7 +14,10 @@ export interface SpriteRecord {
   attributeIcon1: string;
   attributeIcon2: string;
   thumbnailId: string;
+  /** 形态筛选标签：由 pets.json stage 转换（一阶/二阶/三阶/首领） */
   form: string;
+  /** pets.json 原始 form 字段（如 春天的样子，空字符串 = 无特殊形态），持久化快照用 */
+  petForm: string;
   isFinalForm: boolean;
 }
 
@@ -80,7 +83,12 @@ export type Page6Background = 'image' | 'image-2' | 'video';
 
 export interface MatchSlotSnapshot {
   slot: number;
+  /** 精灵 id（pet_id），持久化主键 */
   spriteId: string | null;
+  /** 精灵名称快照（冗余，便于人工核对持久化数据；以 spriteId 为准） */
+  name: string;
+  /** 精灵形态快照（pets.json 原始 form，如 春天的样子，空 = 无特殊形态；以 spriteId 为准） */
+  form: string;
   opacityEnabled: boolean;
   opacity: number;
   saturation: number;

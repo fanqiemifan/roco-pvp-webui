@@ -109,6 +109,7 @@ function buildSpriteEntry(filename: string): SpriteRecord {
     attributeIcon2: '',
     thumbnailId: '',
     form: '',
+    petForm: '',
     isFinalForm: false,
   };
 }
@@ -232,8 +233,40 @@ function normalizePetRecord(record: unknown, paths: AppPaths): SpriteRecord | nu
     attributeIcon2: attributeCodes[1] ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[1]}.png` : '',
     thumbnailId,
     form,
+    petForm: formText,
     isFinalForm: Boolean(thumbnailId && finalFormIds.has(thumbnailId)),
   };
+}
+
+// 旧索引兼容：旧数据的「精灵名字2」以 -N 后缀区分同图鉴多形态（如 岚鸟-1=本来的样子、岚鸟-2=春天的样子），
+// 按图鉴编号 + 名称分组（组内 pet_id 升序 = 图鉴内形态顺序），注入 `${名称}-${序号}` 别名，
+// 使历史 spriteId（岚鸟-1 等）可迁移到对应形态的 pet_id
+function attachLegacyVariantAliases(sprites: SpriteRecord[]): void {
+  const groups = new Map<string, SpriteRecord[]>();
+  for (const sprite of sprites) {
+    const key = sprite.number != null ? `${sprite.number}|${sprite.displayName}` : '';
+    if (!key) {
+      continue;
+    }
+    const group = groups.get(key);
+    if (group) {
+      group.push(sprite);
+    } else {
+      groups.set(key, [sprite]);
+    }
+  }
+
+  for (const group of groups.values()) {
+    if (group.length <= 1) {
+      continue;
+    }
+    group.forEach((sprite, index) => {
+      const alias = `${sprite.displayName}-${index + 1}`;
+      if (!sprite.aliases.includes(alias)) {
+        sprite.aliases.push(alias);
+      }
+    });
+  }
 }
 
 export function loadSpriteIndex(paths: AppPaths): SpriteRecord[] {
@@ -259,6 +292,8 @@ export function loadSpriteIndex(paths: AppPaths): SpriteRecord[] {
       if (left.variant !== right.variant) return left.variant - right.variant;
       return left.filename.localeCompare(right.filename);
     });
+
+    attachLegacyVariantAliases(normalized);
 
     return normalized;
   } catch {

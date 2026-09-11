@@ -10,7 +10,12 @@ const MAX_PAGE4_SLOTS = 6;
 
 interface Page4StoredSlot {
   slot: number;
+  /** 精灵 id（pet_id），持久化主键 */
   spriteId: string | null;
+  /** 精灵名称快照（冗余，便于人工核对持久化数据；以 spriteId 为准） */
+  name: string;
+  /** 精灵形态快照（pets.json 原始 form，如 春天的样子，空 = 无特殊形态；以 spriteId 为准） */
+  form: string;
   isDead: boolean;
 }
 
@@ -27,6 +32,8 @@ function defaultStoredSlot(index: number): Page4StoredSlot {
   return {
     slot: index,
     spriteId: null,
+    name: '',
+    form: '',
     isDead: false,
   };
 }
@@ -44,6 +51,7 @@ function defaultStoreFile(): Page4StoreFile {
   };
 }
 
+// 持久化的 spriteId 统一存 pet_id（精灵 id）；历史数据存的是精灵名字，读时经索引归一化为 pet_id
 function normalizeStoredSpriteId(value: unknown, lookup?: Map<string, SpriteRecord>): string | null {
   if (typeof value !== 'string' || !value.trim()) {
     return null;
@@ -55,8 +63,8 @@ function normalizeStoredSpriteId(value: unknown, lookup?: Map<string, SpriteReco
   }
 
   const sprite = lookup.get(rawValue) ?? lookup.get(path.basename(rawValue));
-  const displayName = typeof sprite?.displayName === 'string' ? sprite.displayName.trim() : '';
-  return displayName || rawValue;
+  const id = typeof sprite?.id === 'string' ? sprite.id.trim() : '';
+  return id || rawValue;
 }
 
 function normalizeStoredSlot(item: unknown, index: number, lookup?: Map<string, SpriteRecord>): Page4StoredSlot {
@@ -85,7 +93,10 @@ function normalizeStoredSlot(item: unknown, index: number, lookup?: Map<string, 
     if (!sprite) {
       throw new Error(`Sprite not found: ${normalizedName}`);
     }
-    slot.spriteId = sprite.displayName?.trim() || normalizedName;
+    slot.spriteId = sprite.id?.trim() || normalizedName;
+    // name/form 冗余快照：以索引为准刷新（form 为 pets.json 原始形态，如 春天的样子）
+    slot.name = sprite.displayName?.trim() || '';
+    slot.form = sprite.petForm?.trim() || '';
   }
 
   return slot;
@@ -144,6 +155,8 @@ function hydratePanel(position: 'left' | 'right', panel: Page4StoredPanel, looku
   const selected = panel.selected.slice(0, MAX_PAGE4_SLOTS).map((slot, index) => hydrateSlot({
     slot: index,
     spriteId: slot.spriteId,
+    name: slot.name,
+    form: slot.form,
     isDead: slot.isDead,
   }, lookup));
 

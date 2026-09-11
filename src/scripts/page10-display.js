@@ -59,13 +59,19 @@
     /* ---------- 精灵索引（把小局阵容的 spriteId 解析成图片） ---------- */
 
     function buildSpriteLookup(records) {
+        const byId = new Map();
         const byName = new Map();
         const byBaseName = new Map();
         records.forEach((record) => {
+            // spriteId 持久化的是 pet_id，优先按 id 匹配；名字匹配兜底兼容旧数据
+            const idKey = String(record.thumbnailId || '').trim();
             const displayName = String(record.displayName || '').trim();
             const cardName = stripVariantName(displayName);
             const nameKey = normalizeText(displayName);
             const baseKey = normalizeText(cardName);
+            if (idKey && !byId.has(idKey)) {
+                byId.set(idKey, record);
+            }
             if (nameKey && !byName.has(nameKey)) {
                 byName.set(nameKey, record);
             }
@@ -73,7 +79,7 @@
                 byBaseName.set(baseKey, record);
             }
         });
-        return { byName, byBaseName };
+        return { byId, byName, byBaseName };
     }
 
     async function loadSpriteIndex() {
@@ -101,9 +107,10 @@
         if (!spriteId || !spriteLookup) {
             return null;
         }
-        const name = normalizeText(spriteId);
-        const base = normalizeText(stripVariantName(spriteId));
-        return spriteLookup.byName.get(name) || spriteLookup.byBaseName.get(base) || null;
+        const raw = String(spriteId).trim();
+        const name = normalizeText(raw);
+        const base = normalizeText(stripVariantName(raw));
+        return spriteLookup.byId.get(raw) || spriteLookup.byName.get(name) || spriteLookup.byBaseName.get(base) || null;
     }
 
     /* ---------- petsdiv3 渲染（复用推流页面1 的结构与候选图逻辑） ---------- */

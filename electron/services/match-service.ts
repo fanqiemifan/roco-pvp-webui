@@ -101,6 +101,8 @@ function createEmptySlotSnapshot(index: number): MatchSlotSnapshot {
   return {
     slot: index,
     spriteId: null,
+    name: '',
+    form: '',
     opacityEnabled: false,
     opacity: 0.5,
     saturation: 1,
@@ -110,6 +112,7 @@ function createEmptySlotSnapshot(index: number): MatchSlotSnapshot {
   };
 }
 
+// 持久化的 spriteId 统一存 pet_id（精灵 id）；历史数据存的是精灵名字，读时经索引归一化为 pet_id
 function normalizeStoredSpriteId(value: unknown, lookup?: Map<string, SpriteRecord>): string | null {
   if (typeof value !== 'string' || !value.trim()) {
     return null;
@@ -121,8 +124,8 @@ function normalizeStoredSpriteId(value: unknown, lookup?: Map<string, SpriteReco
   }
 
   const sprite = lookup.get(rawValue) ?? lookup.get(path.basename(rawValue));
-  const displayName = typeof sprite?.displayName === 'string' ? sprite.displayName.trim() : '';
-  return displayName || rawValue;
+  const id = typeof sprite?.id === 'string' ? sprite.id.trim() : '';
+  return id || rawValue;
 }
 
 function snapshotSpriteIdFromRecord(sprite: SpriteRecord | null | undefined): string | null {
@@ -130,13 +133,14 @@ function snapshotSpriteIdFromRecord(sprite: SpriteRecord | null | undefined): st
     return null;
   }
 
-  const displayName = String(sprite.displayName ?? '').trim();
-  if (displayName) {
-    return displayName;
+  // 快照持久化 pet_id，避免改名/重名导致历史统计错位
+  const id = String(sprite.id ?? '').trim();
+  if (id) {
+    return id;
   }
 
-  const spriteId = String(sprite.id ?? '').trim();
-  return spriteId || null;
+  const displayName = String(sprite.displayName ?? '').trim();
+  return displayName || null;
 }
 
 function sanitizeLineup(lineup: unknown, lookup?: Map<string, SpriteRecord>): string[] {
@@ -162,9 +166,14 @@ function sanitizeSlotSnapshots(slots: unknown, lookup?: Map<string, SpriteRecord
     }
 
     const raw = item as Record<string, unknown>;
+    const spriteId = normalizeStoredSpriteId(raw.spriteId, lookup);
+    // name/form 为冗余快照字段：优先保留持久化值，精灵仍在索引中时以索引为准刷新
+    const sprite = spriteId && lookup ? (lookup.get(spriteId) ?? null) : null;
     normalized[index] = {
       slot: index,
-      spriteId: normalizeStoredSpriteId(raw.spriteId, lookup),
+      spriteId,
+      name: sprite?.displayName?.trim() || (typeof raw.name === 'string' ? raw.name.trim() : ''),
+      form: sprite?.petForm?.trim() || (typeof raw.form === 'string' ? raw.form.trim() : ''),
       opacityEnabled: Boolean(raw.opacityEnabled),
       opacity: Number.isFinite(Number(raw.opacity)) ? Number(raw.opacity) : 0.5,
       saturation: Number.isFinite(Number(raw.saturation)) ? Number(raw.saturation) : 1,
@@ -185,6 +194,8 @@ function capturePanelSnapshot(paths: AppPaths, position: 'left' | 'right'): Matc
   return getPanelState(paths, position).selected.slice(0, MAX_GAME_SLOTS).map((slot, index) => ({
     slot: index,
     spriteId: snapshotSpriteIdFromRecord(slot.sprite),
+    name: slot.sprite?.displayName?.trim() ?? '',
+    form: slot.sprite?.petForm?.trim() ?? '',
     opacityEnabled: Boolean(slot.opacityEnabled),
     opacity: Number(slot.opacity ?? 0.5),
     saturation: Number(slot.saturation ?? 1),
@@ -910,9 +921,13 @@ function parseSelectedSlots(paths: AppPaths, selectedSlots: unknown): MatchSlotS
         ? (rawSprite as Record<string, unknown>).id
         : rawSprite;
 
+    const normalizedSpriteId = normalizeStoredSpriteId(spriteId, lookup);
+    const sprite = normalizedSpriteId ? (lookup.get(normalizedSpriteId) ?? null) : null;
     nextSlots[index] = {
       slot: index,
-      spriteId: normalizeStoredSpriteId(spriteId, lookup),
+      spriteId: normalizedSpriteId,
+      name: sprite?.displayName?.trim() ?? '',
+      form: sprite?.petForm?.trim() ?? '',
       opacityEnabled: Boolean(raw.opacityEnabled),
       opacity: Number.isFinite(Number(raw.opacity)) ? Number(raw.opacity) : 0.5,
       saturation: Number.isFinite(Number(raw.saturation)) ? Number(raw.saturation) : 1,

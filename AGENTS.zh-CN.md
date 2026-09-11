@@ -27,7 +27,9 @@ Roco PVP WebUI — 洛克王国比赛推流控制台。Electron（Express + Sock
 - 面板/记分牌/比赛/page4/导播台/头像状态以及端口配置，都以 JSON/PNG 形式存放在某个 userData 目录下的 `runtime/cache/` 中，路径解析逻辑在 `electron/services/path-service.ts`：
   - 桌面模式：Electron `app.getPath('userData')`。
   - Node/Docker 模式：`<项目根目录>/LuokePVPWebui`（可用 `ROCO_DATA_DIR` 覆盖）。
-- 精灵数据索引是 `resources/data/pets.json`（源数据，勿手改字段名）；`resources/sprites-img/`（official_small_icon 展示图）与 `resources/sprites-icon/`（icon_url 头像图标）由 `scripts/sync-spirits-assets.mjs` 按 `{pet_id}_{name}.png` 命名下载（sprites-img 目录就是 `/img/` 伺服的那个目录）。精灵数据变化后更新 pets.json 再重新跑脚本；图片已存在时会跳过（幂等）。
+- 精灵数据索引是 `resources/data/pets.json`（源数据，勿手改字段名）；`resources/sprites-img/`（official_small_icon 精灵立绘）与 `resources/sprites-icon/`（icon_url 精灵头像）由 `scripts/sync-spirits-assets.mjs` 按 `{pet_id}_{name}.png` 命名下载（sprites-img 目录就是 `/img/` 伺服的那个目录；sprites-icon 经 `/resources/sprites-icon/` 伺服，petsdiv 头像统一用它）。精灵数据变化后更新 pets.json 再重新跑脚本；图片已存在时会跳过（幂等），源图缺失自动降级（small→official_icon→image_url / icon_url→official_icon）。
+- **精灵字段映射**（`sprite-service.ts` 的 `normalizePetRecord`）：精灵编号=handbook_no、精灵名称=name、精灵属性=elements（经 `attribute_mapping.json` 转属性码，与 pets.json 的 element_id 已校验一致）、精灵形态=stage（1=一阶 2=二阶 3=三阶 4=首领）。多形态记录：`name` 带形态后缀（如 卡瓦重（草地附近的样子）），`displayName` 保持纯名。
+- **持久化 spriteId 口径 = pet_id**（精灵 id）：比赛快照/阵容/历史（matches.json）、page4 面板均存 pet_id。旧数据存的是精灵名字（含 `岚鸟-1` 这类同图鉴变体名），服务端读取时经 `normalizeStoredSpriteId` 自动归一化为 pet_id 并回写；旧变体名别名由 `attachLegacyVariantAliases` 注入（按图鉴号+名称分组，组内 pet_id 升序编号）。
 
 ## 架构
 
