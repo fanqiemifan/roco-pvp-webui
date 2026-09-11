@@ -69,14 +69,14 @@
         return Number(digits) > 10000 ? '10000+' : digits;
     }
 
-    /* ---------- 精灵索引（用于把小局阵容的 spriteId 解析成图片） ---------- */
+    /* ---------- 精灵索引（用于把小局阵容的 pet_id 解析成图片） ---------- */
 
     function buildSpriteLookup(records) {
         const byId = new Map();
         const byName = new Map();
         const byBaseName = new Map();
         records.forEach((record) => {
-            // spriteId 持久化的是 pet_id，优先按 id 匹配；名字匹配兜底兼容旧数据
+            // 阵容槽位存 pet_id，优先按 id 匹配；名字匹配兜底兼容旧数据
             const idKey = String(record.thumbnailId || '').trim();
             const displayName = String(record.displayName || '').trim();
             const cardName = stripVariantName(displayName);
@@ -116,11 +116,11 @@
         spriteLookup = buildSpriteLookup(records);
     }
 
-    function resolveSprite(spriteId) {
-        if (!spriteId || !spriteLookup) {
+    function resolveSprite(petId) {
+        if (!petId || !spriteLookup) {
             return null;
         }
-        const raw = String(spriteId).trim();
+        const raw = String(petId).trim();
         const name = normalizeText(raw);
         const base = normalizeText(stripVariantName(raw));
         return spriteLookup.byId.get(raw) || spriteLookup.byName.get(name) || spriteLookup.byBaseName.get(base) || null;
@@ -132,7 +132,7 @@
         return String(value || '').split('/').filter(Boolean).pop() || '';
     }
 
-    function buildPetCard(spriteId) {
+    function buildPetCard(petId) {
         const card = document.createElement('div');
         card.className = 'page7-pet';
 
@@ -140,19 +140,19 @@
         image.alt = '';
         card.appendChild(image);
 
-        const record = resolveSprite(spriteId);
+        const record = resolveSprite(petId);
         if (!record) {
-            console.warn('[page7] 精灵索引中未找到:', spriteId);
+            console.warn('[page7] 精灵索引中未找到:', petId);
             return card;
         }
 
         card.classList.add('is-active');
 
-        // 候选名：显示名 / 去变体后缀名 / 原始 spriteId / 文件名（与 page1 的候选逻辑一致）
+        // 候选名：显示名 / 去变体后缀名 / 原始 pet_id / 文件名（与 page1 的候选逻辑一致）
         const candidateNames = Array.from(new Set([
             record.displayName,
             stripVariantName(record.displayName),
-            String(spriteId || '').trim(),
+            String(petId || '').trim(),
             basename(record.path),
         ].map(sanitizeFilenameSegment).filter(Boolean)));
 
@@ -256,8 +256,8 @@
         pets.className = 'page7-pets';
         const slots = game ? (side === 'left' ? game.leftSlots : game.rightSlots) : null;
         (slots || []).forEach((slot) => {
-            if (slot && slot.spriteId) {
-                pets.appendChild(buildPetCard(slot.spriteId));
+            if (slot && slot.pet_id) {
+                pets.appendChild(buildPetCard(slot.pet_id));
             }
         });
         sideEl.appendChild(pets);

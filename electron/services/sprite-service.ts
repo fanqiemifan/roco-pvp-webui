@@ -182,7 +182,7 @@ function normalizePetRecord(record: unknown, paths: AppPaths): SpriteRecord | nu
   const stage = Number(item.stage);
   const form = STAGE_FORM_LABELS[stage] ?? (Number.isFinite(stage) && stage > 0 ? String(stage) : '');
   // 多形态变体（如 卡瓦重-草地附近的样子）：原始名称带形态后缀，便于悬浮窗切换与统计区分；
-  // displayName 保持纯名称，用于阵容快照（spriteId）与名称查找
+  // displayName 保持纯名称，用于阵容快照（pet_id）与名称查找
   const fullName = formText ? `${name}（${formText}）` : name;
 
   const attributes = normalizeSpriteAttributes(item.elements);
@@ -238,37 +238,6 @@ function normalizePetRecord(record: unknown, paths: AppPaths): SpriteRecord | nu
   };
 }
 
-// 旧索引兼容：旧数据的「精灵名字2」以 -N 后缀区分同图鉴多形态（如 岚鸟-1=本来的样子、岚鸟-2=春天的样子），
-// 按图鉴编号 + 名称分组（组内 pet_id 升序 = 图鉴内形态顺序），注入 `${名称}-${序号}` 别名，
-// 使历史 spriteId（岚鸟-1 等）可迁移到对应形态的 pet_id
-function attachLegacyVariantAliases(sprites: SpriteRecord[]): void {
-  const groups = new Map<string, SpriteRecord[]>();
-  for (const sprite of sprites) {
-    const key = sprite.number != null ? `${sprite.number}|${sprite.displayName}` : '';
-    if (!key) {
-      continue;
-    }
-    const group = groups.get(key);
-    if (group) {
-      group.push(sprite);
-    } else {
-      groups.set(key, [sprite]);
-    }
-  }
-
-  for (const group of groups.values()) {
-    if (group.length <= 1) {
-      continue;
-    }
-    group.forEach((sprite, index) => {
-      const alias = `${sprite.displayName}-${index + 1}`;
-      if (!sprite.aliases.includes(alias)) {
-        sprite.aliases.push(alias);
-      }
-    });
-  }
-}
-
 export function loadSpriteIndex(paths: AppPaths): SpriteRecord[] {
   const indexFile = path.join(paths.dataDir, 'pets.json');
   if (!fs.existsSync(indexFile)) {
@@ -292,8 +261,6 @@ export function loadSpriteIndex(paths: AppPaths): SpriteRecord[] {
       if (left.variant !== right.variant) return left.variant - right.variant;
       return left.filename.localeCompare(right.filename);
     });
-
-    attachLegacyVariantAliases(normalized);
 
     return normalized;
   } catch {

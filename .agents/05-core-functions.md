@@ -2,7 +2,7 @@
 
 ## 比赛管理 (match-service.ts)
 
-持久化 spriteId 口径 = pet_id（精灵 id）：快照槽位/阵容/撤销重做栈/删除历史均存 pet_id；旧数据存精灵名字（含 `岚鸟-1` 变体名），读取时经 `normalizeStoredSpriteId` 自动归一化为 pet_id 并回写。
+持久化精灵主键字段 = `pet_id`（精灵 id）：快照槽位/阵容/撤销重做栈/删除历史均存 pet_id。不做旧数据兼容——pet_id 必须是精灵索引中存在的 id。
 
 | 自然语言描述 | 函数名 | 签名 | 说明 |
 |-------------|-------|------|------|
@@ -46,7 +46,7 @@
 
 | 自然语言描述 | 函数名 | 签名 | 说明 |
 |-------------|-------|------|------|
-| 加载精灵索引 | loadSpriteIndex | (paths: AppPaths) => SpriteRecord[] | 从 pets.json 加载并注入旧变体名别名（attachLegacyVariantAliases） |
+| 加载精灵索引 | loadSpriteIndex | (paths: AppPaths) => SpriteRecord[] | 从 pets.json 加载精灵索引 |
 | 获取精灵列表 | listSprites | (paths: AppPaths) => SpriteRecord[] | 获取精灵列表（优先索引，否则扫描目录） |
 | 创建精灵查找表 | spriteLookup | (paths: AppPaths) => Map<string, SpriteRecord> | 创建精灵查找 Map（key: pet_id/filename/名称/别名） |
 | 搜索精灵 | spriteMatchesKeyword | (sprite: SpriteRecord, keyword: string) => boolean | 检查精灵是否匹配关键词 |

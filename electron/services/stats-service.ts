@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { getMatchStore } from './match-service.js';
 import { spriteLookup } from './sprite-service.js';
 import type { AppPaths } from './path-service.js';
@@ -20,10 +18,6 @@ export type StatsRankingRow = {
   usagePercent: number;
   winRate: number | null;
 };
-
-function basename(value: string): string {
-  return path.basename(String(value ?? '').trim());
-}
 
 function spriteDisplayName(sprite: unknown): string {
   if (!sprite || typeof sprite !== 'object') {
@@ -90,9 +84,9 @@ export function getSpriteRanking(
 
       const appearances = new Map<string, { onLeft: boolean; onRight: boolean }>();
       for (const { lineup, side } of sides) {
-        for (const spriteId of lineup) {
-          const sprite = lookup.get(basename(spriteId)) ?? null;
-          const key = sprite ? sprite.id : basename(spriteId);
+        for (const petId of lineup) {
+          const sprite = lookup.get(petId) ?? null;
+          const key = sprite ? sprite.id : petId;
           let entry = acc.get(key);
           if (!entry) {
             entry = { picks: 0, games: 0, wins: 0 };
@@ -133,13 +127,13 @@ export function getSpriteRanking(
 
   const rows: StatsRankingRow[] = [];
   for (const [key, entry] of acc) {
-    const sprite = lookup.get(basename(key)) ?? null;
+    const sprite = lookup.get(key) ?? null;
     rows.push({
       key,
-      name: sprite ? spriteDisplayName(sprite) : basename(key),
+      name: sprite ? spriteDisplayName(sprite) : key,
       cardName: sprite ? spriteField(sprite, 'cardName') : '',
       displayName: sprite ? spriteField(sprite, 'displayName') : '',
-      filename: sprite ? basename(spriteField(sprite, 'filename') || spriteField(sprite, 'id')) : '',
+      filename: sprite ? (spriteField(sprite, 'filename') || spriteField(sprite, 'id')) : '',
       spritePath: sprite ? sprite.path : '',
       thumbnailId: sprite ? sprite.thumbnailId : '',
       attributeIcon1: sprite ? spriteField(sprite, 'attributeIcon1') : '',

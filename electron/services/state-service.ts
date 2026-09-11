@@ -1,6 +1,4 @@
 import fs from 'node:fs';
-import path from 'node:path';
-
 import {
   DEFAULT_BEST_OF,
   DEFAULT_ENERGY_VALUE,
@@ -130,7 +128,7 @@ function parseSlotStateInput(paths: AppPaths, index: number, item: unknown): Slo
   const lookup = spriteLookup(paths);
   const raw = item as Record<string, unknown>;
   const rawSprite = raw.sprite;
-  const spriteId =
+  const petId =
     rawSprite && typeof rawSprite === 'object' && typeof (rawSprite as Record<string, unknown>).id === 'string'
       ? (rawSprite as Record<string, unknown>).id
       : rawSprite;
@@ -143,14 +141,14 @@ function parseSlotStateInput(paths: AppPaths, index: number, item: unknown): Slo
   slot.healthPercent = normalizeHealthPercent(raw.healthPercent ?? raw.protectionPercent);
   slot.energyValue = normalizeEnergyValue(raw.energyValue);
 
-  if (spriteId !== null && spriteId !== undefined) {
-    if (typeof spriteId !== 'string') {
+  if (petId !== null && petId !== undefined) {
+    if (typeof petId !== 'string') {
       throw new Error('sprite id must be a string or null');
     }
-    const normalizedName = path.basename(spriteId);
-    const sprite = lookup.get(normalizedName);
+    const normalizedId = petId.trim();
+    const sprite = lookup.get(normalizedId);
     if (!sprite) {
-      throw new Error(`Sprite not found: ${normalizedName}`);
+      throw new Error(`Sprite not found: ${normalizedId}`);
     }
     slot.sprite = sprite;
   }
@@ -194,7 +192,7 @@ function hydrateSelected(paths: AppPaths, rawSelected: unknown[]): SlotState[] {
 
     const raw = item as Record<string, unknown>;
     const rawSprite = raw.sprite;
-    const spriteId =
+    const petId =
       rawSprite && typeof rawSprite === 'object' && typeof (rawSprite as Record<string, unknown>).id === 'string'
         ? (rawSprite as Record<string, unknown>).id
         : rawSprite;
@@ -211,9 +209,8 @@ function hydrateSelected(paths: AppPaths, rawSelected: unknown[]): SlotState[] {
     slot.healthPercent = normalizeHealthPercent(raw.healthPercent ?? raw.protectionPercent);
     slot.energyValue = normalizeEnergyValue(raw.energyValue);
 
-    if (typeof spriteId === 'string') {
-      const normalizedName = path.basename(spriteId);
-      slot.sprite = lookup.get(normalizedName) ?? null;
+    if (typeof petId === 'string') {
+      slot.sprite = lookup.get(petId.trim()) ?? null;
     }
 
     slot.effectiveOpacity = slot.opacityEnabled ? slot.opacity : 1;

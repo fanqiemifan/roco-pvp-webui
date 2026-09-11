@@ -100,7 +100,7 @@ export function panelStateToSelected(panel: PanelState | null | undefined): Slot
 }
 
 /**
- * 赛事草稿快照（MatchSlotSnapshot，按 spriteId 存储）→ 编辑器槽位（需要完整精灵记录）。
+ * 赛事草稿快照（MatchSlotSnapshot，按 pet_id 存储）→ 编辑器槽位（需要完整精灵记录）。
  * 精灵库查不到的 id（已删除/改名）降级为空槽位，不报错。
  */
 export function draftSlotsToSelected(
@@ -109,7 +109,7 @@ export function draftSlotsToSelected(
 ): SlotState[] {
   return Array.from({ length: 6 }, (_, index) => {
     const snapshot = slots?.[index];
-    const sprite = snapshot?.spriteId ? lookup.get(snapshot.spriteId) ?? null : null;
+    const sprite = snapshot?.pet_id ? lookup.get(snapshot.pet_id) ?? null : null;
     if (!sprite) {
       return createEmptySlot(index);
     }

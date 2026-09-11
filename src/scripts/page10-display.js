@@ -56,14 +56,14 @@
         return String(value || '').split('/').filter(Boolean).pop() || '';
     }
 
-    /* ---------- 精灵索引（把小局阵容的 spriteId 解析成图片） ---------- */
+    /* ---------- 精灵索引（把小局阵容的 pet_id 解析成图片） ---------- */
 
     function buildSpriteLookup(records) {
         const byId = new Map();
         const byName = new Map();
         const byBaseName = new Map();
         records.forEach((record) => {
-            // spriteId 持久化的是 pet_id，优先按 id 匹配；名字匹配兜底兼容旧数据
+            // 阵容槽位存 pet_id，优先按 id 匹配；名字匹配兜底兼容旧数据
             const idKey = String(record.thumbnailId || '').trim();
             const displayName = String(record.displayName || '').trim();
             const cardName = stripVariantName(displayName);
@@ -103,11 +103,11 @@
         spriteLookup = buildSpriteLookup(records);
     }
 
-    function resolveSprite(spriteId) {
-        if (!spriteId || !spriteLookup) {
+    function resolveSprite(petId) {
+        if (!petId || !spriteLookup) {
             return null;
         }
-        const raw = String(spriteId).trim();
+        const raw = String(petId).trim();
         const name = normalizeText(raw);
         const base = normalizeText(stripVariantName(raw));
         return spriteLookup.byId.get(raw) || spriteLookup.byName.get(name) || spriteLookup.byBaseName.get(base) || null;
@@ -117,25 +117,25 @@
 
     function buildPetSlot(slotData) {
         const slotEl = document.createElement('div');
-        const spriteId = slotData && slotData.spriteId ? String(slotData.spriteId).trim() : '';
-        if (!spriteId) {
+        const petId = slotData && slotData.pet_id ? String(slotData.pet_id).trim() : '';
+        if (!petId) {
             slotEl.className = 'petsdiv3 is-empty';
             return slotEl;
         }
 
-        const record = resolveSprite(spriteId);
+        const record = resolveSprite(petId);
         const isDead = Boolean(slotData.healthEnabled && Number(slotData.healthPercent) <= 0);
         slotEl.className = `petsdiv3 is-active${isDead ? ' is-dead' : ''}`;
 
         const imgEl = document.createElement('img');
-        imgEl.alt = record ? record.displayName : spriteId;
+        imgEl.alt = record ? record.displayName : petId;
         slotEl.appendChild(imgEl);
 
-        // 候选名：索引显示名 / 去变体后缀名 / 原始 spriteId / 文件名
+        // 候选名：索引显示名 / 去变体后缀名 / 原始 pet_id / 文件名
         const candidateNames = Array.from(new Set([
             record ? record.displayName : '',
             record ? stripVariantName(record.displayName) : '',
-            spriteId,
+            petId,
             record ? basename(record.path) : '',
         ].map(sanitizeFilenameSegment).filter(Boolean)));
 

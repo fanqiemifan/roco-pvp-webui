@@ -84,10 +84,10 @@ export type Page6Background = 'image' | 'image-2' | 'video';
 export interface MatchSlotSnapshot {
   slot: number;
   /** 精灵 id（pet_id），持久化主键 */
-  spriteId: string | null;
-  /** 精灵名称快照（冗余，便于人工核对持久化数据；以 spriteId 为准） */
+  pet_id: string | null;
+  /** 精灵名称快照（冗余，便于人工核对持久化数据；以 pet_id 为准） */
   name: string;
-  /** 精灵形态快照（pets.json 原始 form，如 春天的样子，空 = 无特殊形态；以 spriteId 为准） */
+  /** 精灵形态快照（pets.json 原始 form，如 春天的样子，空 = 无特殊形态；以 pet_id 为准） */
   form: string;
   opacityEnabled: boolean;
   opacity: number;

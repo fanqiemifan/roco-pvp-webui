@@ -1,6 +1,4 @@
 import fs from 'node:fs';
-import path from 'node:path';
-
 import { DEFAULT_BEST_OF, SUPPORTED_BEST_OF } from '../../shared/constants.js';
 import type {
   GameRecord,
@@ -100,7 +98,7 @@ function winsNeeded(bestOf: number): number {
 function createEmptySlotSnapshot(index: number): MatchSlotSnapshot {
   return {
     slot: index,
-    spriteId: null,
+    pet_id: null,
     name: '',
     form: '',
     opacityEnabled: false,
@@ -112,44 +110,28 @@ function createEmptySlotSnapshot(index: number): MatchSlotSnapshot {
   };
 }
 
-// 持久化的 spriteId 统一存 pet_id（精灵 id）；历史数据存的是精灵名字，读时经索引归一化为 pet_id
-function normalizeStoredSpriteId(value: unknown, lookup?: Map<string, SpriteRecord>): string | null {
+// 持久化的精灵主键统一存 pet_id（精灵 id）
+function normalizeStoredPetId(value: unknown): string | null {
   if (typeof value !== 'string' || !value.trim()) {
     return null;
   }
-
-  const rawValue = value.trim();
-  if (!lookup) {
-    return rawValue;
-  }
-
-  const sprite = lookup.get(rawValue) ?? lookup.get(path.basename(rawValue));
-  const id = typeof sprite?.id === 'string' ? sprite.id.trim() : '';
-  return id || rawValue;
+  return value.trim();
 }
 
-function snapshotSpriteIdFromRecord(sprite: SpriteRecord | null | undefined): string | null {
+function snapshotPetIdFromRecord(sprite: SpriteRecord | null | undefined): string | null {
   if (!sprite) {
     return null;
   }
-
-  // 快照持久化 pet_id，避免改名/重名导致历史统计错位
-  const id = String(sprite.id ?? '').trim();
-  if (id) {
-    return id;
-  }
-
-  const displayName = String(sprite.displayName ?? '').trim();
-  return displayName || null;
+  return String(sprite.id ?? '').trim() || null;
 }
 
-function sanitizeLineup(lineup: unknown, lookup?: Map<string, SpriteRecord>): string[] {
+function sanitizeLineup(lineup: unknown): string[] {
   if (!Array.isArray(lineup)) {
     return [];
   }
 
   return lineup
-    .map((item) => normalizeStoredSpriteId(item, lookup))
+    .map((item) => normalizeStoredPetId(item))
     .filter((item): item is string => Boolean(item))
     .slice(0, MAX_GAME_SLOTS);
 }
@@ -166,12 +148,12 @@ function sanitizeSlotSnapshots(slots: unknown, lookup?: Map<string, SpriteRecord
     }
 
     const raw = item as Record<string, unknown>;
-    const spriteId = normalizeStoredSpriteId(raw.spriteId, lookup);
+    const petId = normalizeStoredPetId(raw.pet_id);
     // name/form 为冗余快照字段：优先保留持久化值，精灵仍在索引中时以索引为准刷新
-    const sprite = spriteId && lookup ? (lookup.get(spriteId) ?? null) : null;
+    const sprite = petId && lookup ? (lookup.get(petId) ?? null) : null;
     normalized[index] = {
       slot: index,
-      spriteId,
+      pet_id: petId,
       name: sprite?.displayName?.trim() || (typeof raw.name === 'string' ? raw.name.trim() : ''),
       form: sprite?.petForm?.trim() || (typeof raw.form === 'string' ? raw.form.trim() : ''),
       opacityEnabled: Boolean(raw.opacityEnabled),
@@ -187,13 +169,13 @@ function sanitizeSlotSnapshots(slots: unknown, lookup?: Map<string, SpriteRecord
 }
 
 function lineupFromSlots(slots: MatchSlotSnapshot[]): string[] {
-  return slots.map((slot) => slot.spriteId).filter((spriteId): spriteId is string => Boolean(spriteId));
+  return slots.map((slot) => slot.pet_id).filter((petId): petId is string => Boolean(petId));
 }
 
 function capturePanelSnapshot(paths: AppPaths, position: 'left' | 'right'): MatchSlotSnapshot[] {
   return getPanelState(paths, position).selected.slice(0, MAX_GAME_SLOTS).map((slot, index) => ({
     slot: index,
-    spriteId: snapshotSpriteIdFromRecord(slot.sprite),
+    pet_id: snapshotPetIdFromRecord(slot.sprite),
     name: slot.sprite?.displayName?.trim() ?? '',
     form: slot.sprite?.petForm?.trim() ?? '',
     opacityEnabled: Boolean(slot.opacityEnabled),
@@ -404,8 +386,8 @@ function normalizeGameRecord(game: unknown, index: number, lookup?: Map<string, 
   const raw = game as Record<string, unknown>;
   const leftSlots = sanitizeSlotSnapshots(raw.leftSlots, lookup);
   const rightSlots = sanitizeSlotSnapshots(raw.rightSlots, lookup);
-  const leftLineup = sanitizeLineup(raw.leftLineup, lookup);
-  const rightLineup = sanitizeLineup(raw.rightLineup, lookup);
+  const leftLineup = sanitizeLineup(raw.leftLineup);
+  const rightLineup = sanitizeLineup(raw.rightLineup);
   const status =
     raw.status === 'in_progress' || raw.status === 'completed'
       ? raw.status
@@ -808,7 +790,7 @@ function restorePanelFromSlots(paths: AppPaths, position: 'left' | 'right', slot
   ensureRuntimeDirs(paths);
   const selected = sanitizeSlotSnapshots(slots).map((slot) => ({
     slot: slot.slot,
-    sprite: slot.spriteId,
+    sprite: slot.pet_id,
     opacityEnabled: slot.opacityEnabled,
     opacity: slot.opacity,
     saturation: slot.saturation,
@@ -916,16 +898,16 @@ function parseSelectedSlots(paths: AppPaths, selectedSlots: unknown): MatchSlotS
 
     const raw = item as Record<string, unknown>;
     const rawSprite = raw.sprite;
-    const spriteId =
+    const petId =
       rawSprite && typeof rawSprite === 'object' && typeof (rawSprite as Record<string, unknown>).id === 'string'
         ? (rawSprite as Record<string, unknown>).id
         : rawSprite;
 
-    const normalizedSpriteId = normalizeStoredSpriteId(spriteId, lookup);
-    const sprite = normalizedSpriteId ? (lookup.get(normalizedSpriteId) ?? null) : null;
+    const normalizedPetId = normalizeStoredPetId(petId);
+    const sprite = normalizedPetId ? (lookup.get(normalizedPetId) ?? null) : null;
     nextSlots[index] = {
       slot: index,
-      spriteId: normalizedSpriteId,
+      pet_id: normalizedPetId,
       name: sprite?.displayName?.trim() ?? '',
       form: sprite?.petForm?.trim() ?? '',
       opacityEnabled: Boolean(raw.opacityEnabled),

@@ -27,7 +27,7 @@
 - request.ts - fetch 封装
 - sprite.ts - 精灵数据辅助（buildSpriteLookup：id/文件名/别名多键查找）
 - match.ts - 比赛操作辅助（getPendingDraftContext：当前小局 pending 且赛事未完赛时返回该局草稿槽位上下文）
-- panel.ts - 面板状态辅助（draftSlotsToSelected：赛事草稿快照 spriteId → 编辑器槽位，查不到的精灵降级空槽位）
+- panel.ts - 面板状态辅助（draftSlotsToSelected：赛事草稿快照 pet_id → 编辑器槽位，查不到的精灵降级空槽位）
 - live.ts - 实时控制辅助
 - history.ts - 历史记录辅助
 - stats.ts - 统计聚合（buildUsageStats、buildStatsCsv）

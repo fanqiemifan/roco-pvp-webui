@@ -77,7 +77,7 @@ export function formatLineupSummary(lineup: string[], spriteMap: Map<string, Spr
     return '待设置';
   }
   return lineup
-    .map((spriteId) => spriteMap.get(spriteId)?.displayName ?? spriteId)
+    .map((petId) => spriteMap.get(petId)?.displayName ?? petId)
     .join(' / ');
 }
 

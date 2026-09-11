@@ -91,10 +91,10 @@
         spriteCache = Array.isArray(sprites.sprites) ? sprites.sprites : [];
     }
 
-    function buildPayload(spriteId) {
+    function buildPayload(petId) {
         return {
             slot: slotIndex,
-            sprite: spriteId,
+            sprite: petId,
             opacityEnabled: Boolean(slotData && slotData.opacityEnabled),
             opacity: Number(slotData && slotData.opacity) || 1,
             saturation: Number(slotData && slotData.saturation) || 1,
@@ -104,11 +104,11 @@
         };
     }
 
-    async function replaceSlot(spriteId) {
+    async function replaceSlot(petId) {
         try {
             await requestJson(`/api/panels/${side}/slots/${slotIndex}`, {
                 method: 'PATCH',
-                body: JSON.stringify({ slot: buildPayload(spriteId) }),
+                body: JSON.stringify({ slot: buildPayload(petId) }),
             });
         } catch (error) {
             console.error('更换精灵失败:', error);

@@ -101,9 +101,9 @@ function collectUsageStats(
       let gameCounted = false;
       const appearances = new Map<string, { onLeft: boolean; onRight: boolean }>();
       sides.forEach(({ lineup, side }) => {
-        lineup.forEach((spriteId) => {
-          const sprite = spriteMap.get(spriteId);
-          const name = resolveSpriteStatsName(sprite, spriteId);
+        lineup.forEach((petId) => {
+          const sprite = spriteMap.get(petId);
+          const name = resolveSpriteStatsName(sprite, petId);
           let acc = spriteAcc.get(name);
           if (!acc) {
             acc = { picks: 0, games: 0, wins: 0, deaths: 0 };
@@ -158,10 +158,10 @@ function collectUsageStats(
       if (game.status === 'completed') {
         for (const slots of [game.leftSlots, game.rightSlots]) {
           for (const slot of slots) {
-            if (!slot.spriteId || slot.healthEnabled === false || slot.healthPercent !== 0) {
+            if (!slot.pet_id || slot.healthEnabled === false || slot.healthPercent !== 0) {
               continue;
             }
-            const name = resolveSpriteStatsName(spriteMap.get(slot.spriteId), slot.spriteId);
+            const name = resolveSpriteStatsName(spriteMap.get(slot.pet_id), slot.pet_id);
             let acc = spriteAcc.get(name);
             if (!acc) {
               acc = { picks: 0, games: 0, wins: 0, deaths: 0 };
