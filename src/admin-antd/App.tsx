@@ -2147,7 +2147,7 @@ function Dashboard() {
     const page11RankVisible = options?.page11RankVisible ?? stage?.page11RankVisible ?? true;
     const page5Player = options?.page5Player ?? stage?.page5Player ?? '';
     const page5Tag = options?.page5Tag ?? stage?.page5Tag ?? '';
-    const page10Duration = options?.page10Duration ?? stage?.page10Duration ?? 30;
+    const page10Duration = options?.page10Duration ?? stage?.page10Duration ?? 10;
     const page10DurationUnit = options?.page10DurationUnit ?? stage?.page10DurationUnit ?? 'seconds';
     // 乐观更新，避免切换回弹
     setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page11RankVisible, page5Player, page5Tag, page10Duration, page10DurationUnit } : prev));
@@ -4240,7 +4240,7 @@ function Dashboard() {
                               <InputNumber
                                 min={1}
                                 max={stage?.page10DurationUnit === 'minutes' ? 60 : 3600}
-                                value={stage?.page10Duration ?? 30}
+                                value={stage?.page10Duration ?? 10}
                                 disabled={stageSaving}
                                 onChange={(value) => {
                                   void saveStage(stage?.page ?? 'page3', {
