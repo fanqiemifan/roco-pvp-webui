@@ -3028,7 +3028,7 @@ function Dashboard() {
       <Sider width={292} breakpoint="lg" collapsedWidth={0} className="admin-sider">
         <div className="brand-block">
           <Text className="eyebrow">Control Room</Text>
-          <Title level={3}>洛克王国 PVP 后台</Title>
+          <Title level={3}>洛克王国世界阵容同步推流</Title>
           <Space wrap>
             <Tag color="gold">赛事管理</Tag>
             <Tag color="success">阵容编辑</Tag>

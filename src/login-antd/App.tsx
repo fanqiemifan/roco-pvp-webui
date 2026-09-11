@@ -109,7 +109,7 @@ function LoginPage() {
             <div className="login-brand-mark">PVP</div>
             <Space direction="vertical" size={8}>
               <Typography.Text className="login-eyebrow">Roco Arena Control</Typography.Text>
-              <Typography.Title level={2} className="login-title">洛克王国 PVP 后台登录</Typography.Title>
+              <Typography.Title level={2} className="login-title">洛克王国世界阵容同步推流</Typography.Title>
               <Typography.Paragraph className="login-description">
                 使用现有管理账号进入直播控制台，配置对阵、面板和实时展示内容。
               </Typography.Paragraph>
