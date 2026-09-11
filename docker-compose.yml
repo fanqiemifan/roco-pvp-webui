@@ -1,11 +1,12 @@
-name: rocom-pvp-battle-array--v2
+name: roco-pvp-lineup
 
 services:
-  rocom-pvp-battle-array-v2:
+  roco-pvp-lineup:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: rocom-pvp-battle-array--v2
+    image: roco-pvp-lineup:latest
+    container_name: roco-pvp-lineup
     ports:
       - "9988:9988"
     volumes:

@@ -3,7 +3,7 @@
 ## 项目架构
 
 ```
-pvp-webUI-for-roco/
+roco-pvp-lineup/
 ├── electron/           # Electron 主进程
 │   ├── services/       # 核心业务服务（纯文件型存储）
 │   ├── ipc/            # IPC 通信

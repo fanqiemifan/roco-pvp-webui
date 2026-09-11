@@ -1,6 +1,6 @@
 # AGENTS.md（中文版）
 
-Roco PVP WebUI — 洛克王国比赛推流控制台。Electron（Express + Socket.IO）后端 + React/AntD 管理后台。代码注释、提交信息以及 `.agents/` 里的文档均为中文。
+洛克王国世界阵容同步推流（roco-pvp-lineup）— 洛克王国赛事推流控制台。Electron（Express + Socket.IO）后端 + React/AntD 管理后台。代码注释、提交信息以及 `.agents/` 里的文档均为中文。
 
 ## 常用命令（全部来自 `package.json` 的 scripts）
 

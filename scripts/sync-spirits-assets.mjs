@@ -43,7 +43,7 @@ async function downloadBuffer(url) {
   const response = await fetch(url, {
     redirect: 'follow',
     headers: {
-      'user-agent': 'pvp-webui-for-roco/1.0',
+      'user-agent': 'roco-pvp-lineup/1.0',
     },
   });
 

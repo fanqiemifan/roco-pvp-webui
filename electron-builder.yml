@@ -1,5 +1,5 @@
 appId: com.roco.pvp.controlpanel
-productName: Roco PVP Control Panel
+productName: 洛克王国世界阵容同步推流
 compression: store
 directories:
   output: release
@@ -22,9 +22,9 @@ icon: build/icon.ico
 mac:
   category: public.app-category.games
 win:
-  executableName: RocoPVPControlPanel
+  executableName: RocoPVPLineup
   icon: build/icon.ico
-  artifactName: ${productName}-Setup-${version}.${ext}
+  artifactName: ${name}-Setup-${version}.${ext}
   target:
     - target: nsis
       arch:
@@ -36,8 +36,8 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: always
   createStartMenuShortcut: true
-  shortcutName: Roco PVP Control Panel
-  uninstallDisplayName: Roco PVP Control Panel
+  shortcutName: 洛克王国世界阵容同步推流
+  uninstallDisplayName: 洛克王国世界阵容同步推流
   runAfterFinish: false
   warningsAsErrors: false
   deleteAppDataOnUninstall: true
