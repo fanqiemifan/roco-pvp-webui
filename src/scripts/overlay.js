@@ -2,8 +2,9 @@
     'use strict';
 
     const MAX_SLOTS = 6;
-    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
-    const unavailableThumbnailPaths = new Set();
+    // 精灵头像目录（sprites-icon，与 sprites-img 立绘同命名：{pet_id}_{name}.png）
+    const SPRITE_ICON_RESOURCE_BASE = '/resources/sprites-icon';
+    const unavailableIconPaths = new Set();
 
     const panelStates = {
         left: { signatures: new Array(MAX_SLOTS).fill(null) },
@@ -14,16 +15,6 @@
         return String(value || '').split('/').filter(Boolean).pop() || '';
     }
 
-    function sanitizeFilenameSegment(value, fallback = '') {
-        const normalized = String(value ?? '')
-            .normalize('NFC')
-            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
-            .replace(/\s+/g, '')
-            .replace(/\.+$/g, '')
-            .trim();
-
-        return normalized || fallback;
-    }
 
     function getSpriteDisplayName(sprite) {
         if (!sprite || typeof sprite !== 'object') {
@@ -32,37 +23,23 @@
         return String(sprite.cardName || sprite.displayName || sprite.chineseName || sprite.name || basename(sprite.path) || '').trim();
     }
 
-    function buildThumbnailCandidates(sprite) {
-        const thumbnailId = String(sprite && sprite.thumbnailId ? sprite.thumbnailId : '').trim();
-        if (!thumbnailId) {
-            return [];
-        }
-
-        const candidateNames = [
-            sprite && sprite.cardName,
-            sprite && sprite.displayName,
-            sprite && sprite.chineseName,
-            sprite && sprite.name,
-            sprite && sprite.path ? basename(sprite.path) : '',
-        ]
-            .map((value) => sanitizeFilenameSegment(value))
-            .filter(Boolean);
-
-        return Array.from(new Set(candidateNames)).map((name) => `${THUMBNAIL_RESOURCE_BASE}/${thumbnailId}_${name}.png`);
+    function buildSpriteIconCandidates(sprite) {
+        const iconUrl = String(sprite && sprite.iconUrl ? sprite.iconUrl : '').trim();
+        return iconUrl ? [iconUrl] : [];
     }
 
     function resolveSpriteImageSources(sprite) {
         const fallbackSrc = sprite && sprite.path ? String(sprite.path) : '';
-        const thumbnailCandidates = buildThumbnailCandidates(sprite).filter((path) => !unavailableThumbnailPaths.has(path));
+        const spriteIconCandidates = buildSpriteIconCandidates(sprite).filter((path) => !unavailableIconPaths.has(path));
 
         return {
             fallbackSrc,
-            thumbnailCandidates,
+            spriteIconCandidates,
         };
     }
 
     function syncImageState(slotEl, imageSrc) {
-        slotEl.classList.toggle('is-thumbnail', String(imageSrc || '').startsWith(THUMBNAIL_RESOURCE_BASE));
+        slotEl.classList.toggle('is-sprite-icon', String(imageSrc || '').startsWith(SPRITE_ICON_RESOURCE_BASE));
     }
 
     function applySpriteImage(imgEl, sprite) {
@@ -71,7 +48,7 @@
         }
 
         const imageSources = resolveSpriteImageSources(sprite);
-        const sourceQueue = [...imageSources.thumbnailCandidates, ...(imageSources.fallbackSrc ? [imageSources.fallbackSrc] : [])];
+        const sourceQueue = [...imageSources.spriteIconCandidates, ...(imageSources.fallbackSrc ? [imageSources.fallbackSrc] : [])];
 
         if (sourceQueue.length === 0) {
             imgEl.removeAttribute('src');
@@ -96,8 +73,8 @@
 
         imgEl.onerror = () => {
             const failedSrc = imgEl.dataset.currentSrc || '';
-            if (failedSrc.startsWith(THUMBNAIL_RESOURCE_BASE)) {
-                unavailableThumbnailPaths.add(failedSrc);
+            if (failedSrc.startsWith(SPRITE_ICON_RESOURCE_BASE)) {
+                unavailableIconPaths.add(failedSrc);
             }
 
             currentIndex += 1;
@@ -134,7 +111,7 @@
             id: sprite.id || sprite.path || getSpriteDisplayName(sprite),
             name: getSpriteDisplayName(sprite),
             path: sprite.path || '',
-            thumbnailId: sprite.thumbnailId || '',
+            iconUrl: sprite.iconUrl || '',
             isDead,
         });
 

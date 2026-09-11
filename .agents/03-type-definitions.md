@@ -4,7 +4,7 @@
 
 | 类型名称 | 说明 | 文件 |
 |---------|------|------|
-| SpriteRecord | 精灵记录（id, name, displayName, chineseName, number, variant, filename, path, attributes, aliases, form） | shared/types.ts |
+| SpriteRecord | 精灵记录（id, name, displayName, chineseName, number, variant, filename, path, iconUrl, attributes, aliases, form）。iconUrl 为精灵头像 URL（/resources/sprites-icon/{pet_id}_{name}.png，空串表示无头像，展示端回退立绘 path） | shared/types.ts |
 | QuickFillMatch | 快速填充匹配结果（sprite, formLabel, rank） | shared/types.ts |
 | QuickFillPreview | 快速填充预览结果汇总（matches, message） | shared/types.ts |
 
@@ -48,7 +48,7 @@
 
 | 类型名称 | 说明 | 文件 |
 |---------|------|------|
-| MatchSlotSnapshot | 比赛格子快照（slotIndex, spriteId, spritePath） | shared/types.ts |
+| MatchSlotSnapshot | 比赛格子快照（slot, pet_id, name, form 及外观/血量字段） | shared/types.ts |
 | GameRecord | 单局比赛记录（gameNumber, status, leftLineup, rightLineup, winner） | shared/types.ts |
 | MatchRecord | 完整比赛记录（id, createdAt, updatedAt, status, leftPlayer, rightPlayer, leftRank, rightRank, leftTeamId, leftTeamName, rightTeamId, rightTeamName, bestOf, games, leftScore, rightScore, winner, completedAt, tags）。leftRank/rightRank 为左右选手排位排名（仅数字字符串，空 = 未输入）；leftTeamId/rightTeamId 为所属战队 id（命中「信息录入」战队时有值），leftTeamName/rightTeamName 为战队名称（空 = 未填写） | shared/types.ts |
 | MatchStoreState | 比赛存储状态（matches, activeMatchId, mtime） | shared/types.ts |

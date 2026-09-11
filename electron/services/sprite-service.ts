@@ -6,10 +6,20 @@ import type { QuickFillPreview, SpriteRecord } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
 
 const SPRITE_RESOURCE_BASE = '/resources/sprites-img';
+const SPRITE_ICON_RESOURCE_BASE = '/resources/sprites-icon';
 const ATTRIBUTE_ICON_BASE = '/resources/attribute';
+
+// pets.json 的 stage → 精灵形态标签（4 = 首领）
+const STAGE_FORM_LABELS: Record<number, string> = {
+  1: '一阶',
+  2: '二阶',
+  3: '三阶',
+  4: '首领',
+};
 
 let cachedAttributeCodeByName: Map<string, string> | null = null;
 let cachedFinalFormIds: Set<string> | null = null;
+let cachedIconFilenameByPetId: Map<string, string> | null = null;
 
 function normalizeSpriteAttributes(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -24,14 +34,19 @@ function normalizeSpriteAttributes(value: unknown): string[] {
     .filter(Boolean);
 }
 
-function spriteNumberFromFilename(filename: string): number | null {
-  const match = /^NO\.(\d+)_/.exec(filename || '');
-  return match ? Number(match[1]) : null;
+function sanitizeFilenameSegment(value: unknown): string {
+  return String(value ?? '')
+    .normalize('NFC')
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/gu, '-')
+    .replace(/\s+/gu, '')
+    .replace(/\.+$/gu, '')
+    .trim();
 }
 
-function spriteVariantFromFilename(filename: string): number {
-  const match = /-(\d+)$/.exec(path.parse(filename || '').name);
-  return match ? Number(match[1]) : 0;
+function spriteNumberFromFilename(filename: string): number | null {
+  // 兼容两种命名：`NO.001_迪莫.png`（旧）与 `3004_迪莫.png`（pets.json 新命名，前导数字为 pet_id）
+  const match = /^(?:NO\.)?(\d+)_/i.exec(filename || '');
+  return match ? Number(match[1]) : null;
 }
 
 function spriteNumberFromValue(value: unknown): number | null {
@@ -46,16 +61,10 @@ function normalizeSearchName(value: unknown): string {
     .replace(/\s+/g, '');
 }
 
-function stripVariantSuffix(value: unknown): string {
-  return String(value ?? '').trim().replace(/[-_](\d+)$/u, '');
-}
-
-function spriteVariantGroup(sprite: SpriteRecord): string {
-  const displayName = sprite.displayName || '';
-  if (displayName) {
-    return normalizeSearchName(stripVariantSuffix(displayName));
-  }
-  return normalizeSearchName(stripVariantSuffix(path.parse(sprite.filename).name));
+// 同名分组键：pets.json 中多形态精灵共享同一 name（displayName），按名称归组用于候选切换
+function spriteNameGroup(sprite: SpriteRecord): string {
+  const displayName = sprite.displayName || path.parse(sprite.filename).name;
+  return normalizeSearchName(displayName);
 }
 
 function spriteNumberAliases(sprite: SpriteRecord): string[] {
@@ -70,7 +79,7 @@ function spriteNumberAliases(sprite: SpriteRecord): string[] {
   ];
 }
 
-function buildSpriteEntry(filename: string): SpriteRecord {
+function buildSpriteEntry(filename: string, paths: AppPaths): SpriteRecord {
   const stem = path.parse(filename).name;
   const displayName = stem.includes('_') ? stem.split('_', 2)[1] : stem;
 
@@ -80,17 +89,19 @@ function buildSpriteEntry(filename: string): SpriteRecord {
     displayName,
     name: displayName,
     chineseName: displayName,
-    cardName: stripVariantSuffix(displayName),
+    cardName: displayName,
     path: `${SPRITE_RESOURCE_BASE}/${filename}`,
     aliases: [filename, stem],
     number: spriteNumberFromFilename(filename),
-    variant: spriteVariantFromFilename(filename),
     attribute: '',
     attributeCodes: [],
     attributeIcon1: '',
     attributeIcon2: '',
-    thumbnailId: '',
+    iconUrl: fs.existsSync(path.join(paths.spritesIconDir, filename))
+      ? `${SPRITE_ICON_RESOURCE_BASE}/${filename}`
+      : '',
     form: '',
+    petForm: '',
     isFinalForm: false,
   };
 }
@@ -144,48 +155,86 @@ function loadFinalFormIds(paths: AppPaths): Set<string> {
   return lookup;
 }
 
-function normalizeSpriteRecord(record: unknown, paths: AppPaths): SpriteRecord | null {
+// 建 {pet_id → sprites-icon 实际文件名} 映射：sprites-icon 里同一 pet_id 可能存在多个历史残留文件，
+// 取字典序第一个作为兜底；正常情况由 resolveIconUrl 精确命中 {pet_id}_{name}.png。
+function loadIconFilenameByPetId(paths: AppPaths): Map<string, string> {
+  if (cachedIconFilenameByPetId) {
+    return cachedIconFilenameByPetId;
+  }
+
+  const lookup = new Map<string, string>();
+
+  try {
+    const filenames = fs.readdirSync(paths.spritesIconDir).sort();
+    for (const filename of filenames) {
+      if (!SUPPORTED_IMAGE_EXTENSIONS.has(path.extname(filename).toLowerCase())) {
+        continue;
+      }
+      const match = /^(\d+)_/.exec(filename);
+      if (!match) {
+        continue;
+      }
+      const petId = match[1];
+      if (!lookup.has(petId)) {
+        lookup.set(petId, filename);
+      }
+    }
+  } catch {
+    // Best effort only; consumers can still fall back to the sprite art (path).
+  }
+
+  cachedIconFilenameByPetId = lookup;
+  return lookup;
+}
+
+// 精灵头像 URL：优先精确匹配 {pet_id}_{name}.png，否则退回该 pet_id 的任一图标文件，都没有则返回空串（展示端回退立绘）
+function resolveIconUrl(petId: string, name: string, paths: AppPaths): string {
+  const exact = `${sanitizeFilenameSegment(petId)}_${sanitizeFilenameSegment(name)}.png`;
+  if (fs.existsSync(path.join(paths.spritesIconDir, exact))) {
+    return `${SPRITE_ICON_RESOURCE_BASE}/${exact}`;
+  }
+
+  const fallback = loadIconFilenameByPetId(paths).get(sanitizeFilenameSegment(petId));
+  return fallback ? `${SPRITE_ICON_RESOURCE_BASE}/${fallback}` : '';
+}
+
+// pets.json 单条记录 → SpriteRecord
+// 字段对应：精灵编号=handbook_no、精灵名称=name、精灵属性=elements、精灵形态=stage（4=首领）
+function normalizePetRecord(record: unknown, paths: AppPaths): SpriteRecord | null {
   if (!record || typeof record !== 'object') {
     return null;
   }
 
   const item = record as Record<string, unknown>;
-  const pathValue = typeof item.path === 'string' ? item.path : '';
-  const filenameValue =
-    typeof item.filename === 'string'
-      ? item.filename
-      : typeof item.id === 'string'
-        ? item.id
-        : pathValue
-          ? path.basename(pathValue)
-          : '';
-
-  if (!filenameValue) {
+  const petId = String(item.pet_id ?? '').trim();
+  const name = String(item.name ?? '').trim();
+  if (!petId || !name) {
     return null;
   }
 
-  const filename = path.basename(filenameValue);
-  const rawDisplayName =
-    item.displayName
-    ?? item['精灵名字2']
-    ?? item['精灵名称']
-    ?? item.chineseName
-    ?? item.name
-    ?? path.parse(filename).name;
-  const displayName = String(
-    rawDisplayName,
-  );
-  const aliases: string[] = [];
+  const filename = `${sanitizeFilenameSegment(petId)}_${sanitizeFilenameSegment(name)}.png`;
+  const formText = String(item.form ?? '').trim();
+  const stage = Number(item.stage);
+  const form = STAGE_FORM_LABELS[stage] ?? (Number.isFinite(stage) && stage > 0 ? String(stage) : '');
+  // 多形态变体（如 卡瓦重-草地附近的样子）：原始名称带形态后缀，便于悬浮窗切换与统计区分；
+  // displayName 保持纯名称，用于阵容快照（pet_id）与名称查找
+  const fullName = formText ? `${name}（${formText}）` : name;
 
+  const attributes = normalizeSpriteAttributes(item.elements);
+  const attributeLookup = loadAttributeCodeByName(paths);
+  const attributeCodes = attributes
+    .map((attributeName) => attributeLookup.get(attributeName) ?? '')
+    .filter(Boolean)
+    .slice(0, 2);
+
+  const finalFormIds = loadFinalFormIds(paths);
+  const number = spriteNumberFromValue(item.handbook_no);
+
+  const aliases: string[] = [];
   for (const alias of [
-    ...(Array.isArray(item.aliases) ? item.aliases : []),
-    displayName,
-    item['精灵名字2'],
-    item['精灵名称'],
-    item['精灵编号'],
-    item.chineseName,
-    item.name,
-    stripVariantSuffix(displayName),
+    name,
+    formText ? `${name}（${formText}）` : '',
+    petId,
     filename,
     path.parse(filename).name,
   ]) {
@@ -193,11 +242,6 @@ function normalizeSpriteRecord(record: unknown, paths: AppPaths): SpriteRecord |
       aliases.push(alias.trim());
     }
   }
-
-  const number =
-    typeof item.number === 'number'
-      ? item.number
-      : spriteNumberFromValue(item['精灵编号']) ?? spriteNumberFromFilename(filename);
   if (typeof number === 'number') {
     for (const alias of [String(number), `${number}`.padStart(3, '0'), `NO.${`${number}`.padStart(3, '0')}`]) {
       if (!aliases.includes(alias)) {
@@ -206,63 +250,40 @@ function normalizeSpriteRecord(record: unknown, paths: AppPaths): SpriteRecord |
     }
   }
 
-  const attribute = normalizeSpriteAttributes(item.attribute ?? item['精灵属性']).join('、');
-  const attributeLookup = loadAttributeCodeByName(paths);
-  const finalFormIds = loadFinalFormIds(paths);
-  const attributeCodes = Array.isArray(item.attributeCodes)
-    ? item.attributeCodes.filter((code): code is string => typeof code === 'string' && code.trim().length > 0)
-    : normalizeSpriteAttributes(item.attribute ?? item['精灵属性'])
-      .map((attributeName) => attributeLookup.get(attributeName) ?? '')
-      .filter(Boolean)
-      .slice(0, 2);
-  const thumbnailId = String(item.thumbnailId ?? item['缩略图图片ID'] ?? '').trim();
-
   return {
-    id: typeof item.id === 'string' && item.id.trim() ? item.id.trim() : filename,
+    id: petId,
     filename,
-    displayName,
-    name: String(item.name ?? item['精灵名称'] ?? displayName).trim() || displayName,
-    chineseName: String(item.chineseName ?? item['精灵名称'] ?? displayName).trim() || displayName,
-    cardName: String(item.cardName ?? stripVariantSuffix(displayName)).trim() || stripVariantSuffix(displayName),
-    path: typeof item.path === 'string' && item.path.trim()
-      ? item.path.trim()
-      : `${SPRITE_RESOURCE_BASE}/${filename}`,
+    displayName: name,
+    name: fullName,
+    chineseName: fullName,
+    cardName: name,
+    path: `${SPRITE_RESOURCE_BASE}/${filename}`,
     aliases,
     number,
-    variant: typeof item.variant === 'number' ? item.variant : spriteVariantFromFilename(filename),
-    attribute,
+    attribute: attributes.join('、'),
     attributeCodes,
-    attributeIcon1:
-      typeof item.attributeIcon1 === 'string' && item.attributeIcon1.trim()
-        ? item.attributeIcon1
-        : attributeCodes[0]
-          ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[0]}.png`
-          : '',
-    attributeIcon2:
-      typeof item.attributeIcon2 === 'string' && item.attributeIcon2.trim()
-        ? item.attributeIcon2
-        : attributeCodes[1]
-          ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[1]}.png`
-          : '',
-    thumbnailId,
-    form: String(item.form ?? item['精灵形态'] ?? '').trim(),
-    isFinalForm: Boolean(thumbnailId && finalFormIds.has(thumbnailId)),
+    attributeIcon1: attributeCodes[0] ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[0]}.png` : '',
+    attributeIcon2: attributeCodes[1] ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[1]}.png` : '',
+    iconUrl: resolveIconUrl(petId, name, paths),
+    form,
+    petForm: formText,
+    isFinalForm: finalFormIds.has(petId),
   };
 }
 
 export function loadSpriteIndex(paths: AppPaths): SpriteRecord[] {
-  const indexFile = path.join(paths.dataDir, 'sprites.json');
+  const indexFile = path.join(paths.dataDir, 'pets.json');
   if (!fs.existsSync(indexFile)) {
     return [];
   }
 
   try {
     const payload = JSON.parse(fs.readFileSync(indexFile, 'utf-8')) as
-      | { sprites?: unknown[] }
+      | { items?: unknown[] }
       | unknown[];
-    const sprites = Array.isArray(payload) ? payload : Array.isArray(payload.sprites) ? payload.sprites : [];
-    const normalized = sprites
-      .map((item) => normalizeSpriteRecord(item, paths))
+    const pets = Array.isArray(payload) ? payload : Array.isArray(payload.items) ? payload.items : [];
+    const normalized = pets
+      .map((item) => normalizePetRecord(item, paths))
       .filter((item): item is SpriteRecord => Boolean(item))
       .filter((item) => fs.existsSync(path.join(paths.spritesDir, item.filename)));
 
@@ -270,7 +291,6 @@ export function loadSpriteIndex(paths: AppPaths): SpriteRecord[] {
       const leftNumber = left.number ?? Number.MAX_SAFE_INTEGER;
       const rightNumber = right.number ?? Number.MAX_SAFE_INTEGER;
       if (leftNumber !== rightNumber) return leftNumber - rightNumber;
-      if (left.variant !== right.variant) return left.variant - right.variant;
       return left.filename.localeCompare(right.filename);
     });
 
@@ -293,13 +313,12 @@ export function listSprites(paths: AppPaths): SpriteRecord[] {
   const sprites = fs
     .readdirSync(paths.spritesDir)
     .filter((filename) => SUPPORTED_IMAGE_EXTENSIONS.has(path.extname(filename).toLowerCase()))
-    .map((filename) => buildSpriteEntry(filename));
+    .map((filename) => buildSpriteEntry(filename, paths));
 
   sprites.sort((left, right) => {
     const leftNumber = left.number ?? Number.MAX_SAFE_INTEGER;
     const rightNumber = right.number ?? Number.MAX_SAFE_INTEGER;
     if (leftNumber !== rightNumber) return leftNumber - rightNumber;
-    if (left.variant !== right.variant) return left.variant - right.variant;
     return left.filename.localeCompare(right.filename);
   });
 
@@ -350,7 +369,7 @@ function collectSpriteMatches(query: string, sprites: SpriteRecord[]): Array<{
       rank = [0, displayName.length, sprite.path];
       matchType = 'exact-name';
     } else if (numberNames.includes(normalizedQuery)) {
-      rank = [1, sprite.variant || 0, sprite.path];
+      rank = [1, sprite.path];
       matchType = 'exact-number';
     } else if (aliasNames.includes(normalizedQuery)) {
       rank = [2, normalizedQuery.length, sprite.path];
@@ -422,12 +441,12 @@ function buildQuickFillCandidates(
   sprites: SpriteRecord[],
   rankedMatches: ReturnType<typeof collectSpriteMatches>,
 ): SpriteRecord[] {
-  const variantGroup = spriteVariantGroup(bestMatch);
-  if (!variantGroup) {
+  const nameGroup = spriteNameGroup(bestMatch);
+  if (!nameGroup) {
     return [bestMatch];
   }
 
-  const family = sprites.filter((sprite) => spriteVariantGroup(sprite) === variantGroup);
+  const family = sprites.filter((sprite) => spriteNameGroup(sprite) === nameGroup);
   if (family.length <= 1) {
     return [bestMatch];
   }
@@ -444,10 +463,10 @@ function buildQuickFillCandidates(
     if (leftRank) return -1;
     if (rightRank) return 1;
 
-    const leftRelated = [left.displayName, left.filename, variantGroup].some((value) =>
+    const leftRelated = [left.displayName, left.filename, nameGroup].some((value) =>
       normalizeSearchName(value).includes(normalizedQuery),
     );
-    const rightRelated = [right.displayName, right.filename, variantGroup].some((value) =>
+    const rightRelated = [right.displayName, right.filename, nameGroup].some((value) =>
       normalizeSearchName(value).includes(normalizedQuery),
     );
     if (leftRelated !== rightRelated) return leftRelated ? -1 : 1;

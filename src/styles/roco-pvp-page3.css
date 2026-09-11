@@ -194,8 +194,9 @@ body {
     filter: saturate(0.1) grayscale(0.2);
 }
 
+/* 阵亡（HP=0）降低透明度 */
 .page3-spirit-slot.is-done .sprite-pet-card-sprite {
-    opacity: 0.52;
+    opacity: 0.90;
 }
 
 .page3-scoreboard {

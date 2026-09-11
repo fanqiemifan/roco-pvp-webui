@@ -1,6 +1,6 @@
-# pvp-webUI-for-roco
+# 洛克王国世界阵容同步推流
 
-洛克王国 PVP 比赛推流控制台 —— Electron（Express + Socket.IO）+ React/Ant Design 管理后台，用于赛事录入、阵容同步、比分控制、素材管理与推流页面预览。
+洛克王国世界阵容同步推流 —— Electron（Express + Socket.IO）+ React/Ant Design 管理后台，用于赛事录入、阵容同步、比分控制、素材管理与推流页面预览。
 
 ## 作者与许可
 
@@ -39,7 +39,7 @@
 
 
 ## 项目结构
-pvp-webUI-for-roco/
+roco-pvp-lineup/
 ├── electron/           # Electron 主进程
 │   ├── services/       # 核心业务服务
 │   ├── ipc/            # IPC 通信
