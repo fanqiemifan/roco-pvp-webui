@@ -7,9 +7,7 @@ export type StatsRankingRow = {
   name: string;
   cardName: string;
   displayName: string;
-  filename: string;
   spritePath: string;
-  thumbnailId: string;
   attributeIcon1: string;
   attributeIcon2: string;
   picks: number;
@@ -133,9 +131,7 @@ export function getSpriteRanking(
       name: sprite ? spriteDisplayName(sprite) : key,
       cardName: sprite ? spriteField(sprite, 'cardName') : '',
       displayName: sprite ? spriteField(sprite, 'displayName') : '',
-      filename: sprite ? (spriteField(sprite, 'filename') || spriteField(sprite, 'id')) : '',
       spritePath: sprite ? sprite.path : '',
-      thumbnailId: sprite ? sprite.thumbnailId : '',
       attributeIcon1: sprite ? spriteField(sprite, 'attributeIcon1') : '',
       attributeIcon2: sprite ? spriteField(sprite, 'attributeIcon2') : '',
       picks: entry.picks,

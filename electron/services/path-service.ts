@@ -9,7 +9,6 @@ export interface AppPaths {
   assetsDir: string;
   resourcesDir: string;
   spritesDir: string;
-  spritesAltDir: string;
   dataDir: string;
   runtimeDir: string;
   cacheDir: string;
@@ -52,7 +51,6 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     assetsDir: path.join(projectRoot, 'src', 'assets'),
     resourcesDir: path.join(projectRoot, 'resources'),
     spritesDir: path.join(projectRoot, 'resources', 'sprites-img'),
-    spritesAltDir: path.join(projectRoot, 'resources', 'sprites-alt'),
     dataDir: path.join(projectRoot, 'resources', 'data'),
     runtimeDir,
     cacheDir,

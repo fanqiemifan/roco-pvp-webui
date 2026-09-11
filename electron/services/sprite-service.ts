@@ -47,11 +47,6 @@ function spriteNumberFromFilename(filename: string): number | null {
   return match ? Number(match[1]) : null;
 }
 
-function spriteVariantFromFilename(filename: string): number {
-  const match = /-(\d+)$/.exec(path.parse(filename || '').name);
-  return match ? Number(match[1]) : 0;
-}
-
 function spriteNumberFromValue(value: unknown): number | null {
   const match = /(\d+)/.exec(String(value ?? '').trim());
   return match ? Number(match[1]) : null;
@@ -64,16 +59,10 @@ function normalizeSearchName(value: unknown): string {
     .replace(/\s+/g, '');
 }
 
-function stripVariantSuffix(value: unknown): string {
-  return String(value ?? '').trim().replace(/[-_](\d+)$/u, '');
-}
-
-function spriteVariantGroup(sprite: SpriteRecord): string {
-  const displayName = sprite.displayName || '';
-  if (displayName) {
-    return normalizeSearchName(stripVariantSuffix(displayName));
-  }
-  return normalizeSearchName(stripVariantSuffix(path.parse(sprite.filename).name));
+// 同名分组键：pets.json 中多形态精灵共享同一 name（displayName），按名称归组用于候选切换
+function spriteNameGroup(sprite: SpriteRecord): string {
+  const displayName = sprite.displayName || path.parse(sprite.filename).name;
+  return normalizeSearchName(displayName);
 }
 
 function spriteNumberAliases(sprite: SpriteRecord): string[] {
@@ -98,11 +87,10 @@ function buildSpriteEntry(filename: string): SpriteRecord {
     displayName,
     name: displayName,
     chineseName: displayName,
-    cardName: stripVariantSuffix(displayName),
+    cardName: displayName,
     path: `${SPRITE_RESOURCE_BASE}/${filename}`,
     aliases: [filename, stem],
     number: spriteNumberFromFilename(filename),
-    variant: spriteVariantFromFilename(filename),
     attribute: '',
     attributeCodes: [],
     attributeIcon1: '',
@@ -226,7 +214,6 @@ function normalizePetRecord(record: unknown, paths: AppPaths): SpriteRecord | nu
     path: `${SPRITE_RESOURCE_BASE}/${filename}`,
     aliases,
     number,
-    variant: spriteVariantFromFilename(filename),
     attribute: attributes.join('、'),
     attributeCodes,
     attributeIcon1: attributeCodes[0] ? `${ATTRIBUTE_ICON_BASE}/${attributeCodes[0]}.png` : '',
@@ -258,7 +245,6 @@ export function loadSpriteIndex(paths: AppPaths): SpriteRecord[] {
       const leftNumber = left.number ?? Number.MAX_SAFE_INTEGER;
       const rightNumber = right.number ?? Number.MAX_SAFE_INTEGER;
       if (leftNumber !== rightNumber) return leftNumber - rightNumber;
-      if (left.variant !== right.variant) return left.variant - right.variant;
       return left.filename.localeCompare(right.filename);
     });
 
@@ -287,7 +273,6 @@ export function listSprites(paths: AppPaths): SpriteRecord[] {
     const leftNumber = left.number ?? Number.MAX_SAFE_INTEGER;
     const rightNumber = right.number ?? Number.MAX_SAFE_INTEGER;
     if (leftNumber !== rightNumber) return leftNumber - rightNumber;
-    if (left.variant !== right.variant) return left.variant - right.variant;
     return left.filename.localeCompare(right.filename);
   });
 
@@ -338,7 +323,7 @@ function collectSpriteMatches(query: string, sprites: SpriteRecord[]): Array<{
       rank = [0, displayName.length, sprite.path];
       matchType = 'exact-name';
     } else if (numberNames.includes(normalizedQuery)) {
-      rank = [1, sprite.variant || 0, sprite.path];
+      rank = [1, sprite.path];
       matchType = 'exact-number';
     } else if (aliasNames.includes(normalizedQuery)) {
       rank = [2, normalizedQuery.length, sprite.path];
@@ -410,12 +395,12 @@ function buildQuickFillCandidates(
   sprites: SpriteRecord[],
   rankedMatches: ReturnType<typeof collectSpriteMatches>,
 ): SpriteRecord[] {
-  const variantGroup = spriteVariantGroup(bestMatch);
-  if (!variantGroup) {
+  const nameGroup = spriteNameGroup(bestMatch);
+  if (!nameGroup) {
     return [bestMatch];
   }
 
-  const family = sprites.filter((sprite) => spriteVariantGroup(sprite) === variantGroup);
+  const family = sprites.filter((sprite) => spriteNameGroup(sprite) === nameGroup);
   if (family.length <= 1) {
     return [bestMatch];
   }
@@ -432,10 +417,10 @@ function buildQuickFillCandidates(
     if (leftRank) return -1;
     if (rightRank) return 1;
 
-    const leftRelated = [left.displayName, left.filename, variantGroup].some((value) =>
+    const leftRelated = [left.displayName, left.filename, nameGroup].some((value) =>
       normalizeSearchName(value).includes(normalizedQuery),
     );
-    const rightRelated = [right.displayName, right.filename, variantGroup].some((value) =>
+    const rightRelated = [right.displayName, right.filename, nameGroup].some((value) =>
       normalizeSearchName(value).includes(normalizedQuery),
     );
     if (leftRelated !== rightRelated) return leftRelated ? -1 : 1;

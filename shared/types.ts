@@ -8,7 +8,6 @@ export interface SpriteRecord {
   path: string;
   aliases: string[];
   number: number | null;
-  variant: number;
   attribute: string;
   attributeCodes: string[];
   attributeIcon1: string;
