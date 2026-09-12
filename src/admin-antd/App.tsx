@@ -4607,8 +4607,8 @@ function Dashboard() {
                 <Space wrap size={12}>
                   <Link href="/login.html" target="_blank">登录页入口</Link>
                   <Link href="/admin.html" target="_blank">当前后台入口</Link>
-                  <Link href="/roco-pvp-page2.html" target="_blank">推流页面 2</Link>
-                  <Link href="https://wiki.biligame.com/rocom/" target="_blank">精灵图素材来源</Link>
+                  <Link href="/roco-pvp-page3.html" target="_blank">推流页面 3</Link>
+                  <Link href="rocom.shallow.ink" target="_blank">精灵图素材来源</Link>
                   <Link href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</Link>
                 </Space>
               </Card>
@@ -4616,10 +4616,10 @@ function Dashboard() {
                 <Space direction="vertical" size={16} className="page-stack">
                       <div>
                         <Text className="eyebrow">About This Site</Text>
-                        <Title level={3}>关于这个新的后台</Title>
+                        <Title level={3}>关于这应用的说明</Title>
                       </div>
                       <Paragraph>
-                        这个后台面向洛克王国 PVP 直播场景，把赛事录入、阵容同步、比分控制、素材管理和推流页面预览统一收口到同一套 Ant Design 工作台里。
+                        这个应用面向洛克王国 PVP 直播场景，把赛事录入、阵容同步、比分控制、素材管理和推流页面预览统一收口到同一套 Ant Design 工作台里。
                       </Paragraph>
                       <Row gutter={[16, 16]}>
                         <Col xs={24} md={8}>
@@ -4667,6 +4667,13 @@ function Dashboard() {
                             <Link href="https://www.fonts.net.cn/font-38213257557.html" target="_blank">免登录下载</Link>
                             &nbsp;·&nbsp;
                             <Link href="https://www.uisdc.com/uisdc-first-free-font" target="_blank">官网下载（需登录）</Link>
+                          </Paragraph>
+                        </Space>
+                      </Card>
+                      <Card size="small" className="subtle-card" title="数据来源">
+                        <Space direction="vertical" size={8} className="page-stack">
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            本应用相关数据由洛克魔法书（rocom.shallow.ink）提供，仅供娱乐参考。数据源于民间整理、用户授权接口返回或算法推断，非《洛克王国》官方数据，与官方无任何关联。游戏素材及版权归属于《洛克王国》项目组，准确信息请以官方游戏内为准。因使用数据产生的任何后果与争议，由使用者自行承担，本应用及洛克魔法书团队不承担任何责任。
                           </Paragraph>
                         </Space>
                       </Card>
