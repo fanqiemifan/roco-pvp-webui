@@ -112,7 +112,7 @@
 
 | 自然语言描述 | 方法 | 路径 | 说明 | 文件 |
 |-------------|------|------|------|------|
-| 搜索精灵 | GET | /api/sprites | 搜索精灵（支持 q 参数） | electron/socket-server.ts |
+| 搜索精灵 | GET | /api/sprites | 搜索精灵（支持 q 参数），返回 `{ sprites, count }`；每条记录含 id / path（立绘）/ iconUrl（头像，/resources/sprites-icon/{pet_id}_{name}.png，空串回退立绘） | electron/socket-server.ts |
 | 快速填充 | POST | /api/quick-fill | 快速填充阵容 | electron/socket-server.ts |
 
 ## 图片接口

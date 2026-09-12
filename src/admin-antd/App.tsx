@@ -2147,7 +2147,7 @@ function Dashboard() {
     const page11RankVisible = options?.page11RankVisible ?? stage?.page11RankVisible ?? true;
     const page5Player = options?.page5Player ?? stage?.page5Player ?? '';
     const page5Tag = options?.page5Tag ?? stage?.page5Tag ?? '';
-    const page10Duration = options?.page10Duration ?? stage?.page10Duration ?? 30;
+    const page10Duration = options?.page10Duration ?? stage?.page10Duration ?? 10;
     const page10DurationUnit = options?.page10DurationUnit ?? stage?.page10DurationUnit ?? 'seconds';
     // 乐观更新，避免切换回弹
     setStage((prev) => (prev ? { ...prev, page: normalized, transition, page3SpriteSource, page3RankVisible, page3TeamVisible, page11RankVisible, page5Player, page5Tag, page10Duration, page10DurationUnit } : prev));
@@ -3028,7 +3028,7 @@ function Dashboard() {
       <Sider width={292} breakpoint="lg" collapsedWidth={0} className="admin-sider">
         <div className="brand-block">
           <Text className="eyebrow">Control Room</Text>
-          <Title level={3}>洛克王国 PVP 后台</Title>
+          <Title level={3}>洛克王国世界阵容同步推流</Title>
           <Space wrap>
             <Tag color="gold">赛事管理</Tag>
             <Tag color="success">阵容编辑</Tag>
@@ -4193,7 +4193,7 @@ function Dashboard() {
                               disabled={stageSaving}
                               options={[
                                 { value: 'sprite', label: '精灵原图' },
-                                { value: 'thumbnail', label: 'Thumbnail' },
+                                { value: 'thumbnail', label: '精灵头像' },
                               ]}
                               onChange={(value) => { void saveStage(stage?.page ?? 'page3', { silent: true, page3SpriteSource: value as Page3SpriteSource }); }}
                             />
@@ -4240,7 +4240,7 @@ function Dashboard() {
                               <InputNumber
                                 min={1}
                                 max={stage?.page10DurationUnit === 'minutes' ? 60 : 3600}
-                                value={stage?.page10Duration ?? 30}
+                                value={stage?.page10Duration ?? 10}
                                 disabled={stageSaving}
                                 onChange={(value) => {
                                   void saveStage(stage?.page ?? 'page3', {
@@ -4607,8 +4607,8 @@ function Dashboard() {
                 <Space wrap size={12}>
                   <Link href="/login.html" target="_blank">登录页入口</Link>
                   <Link href="/admin.html" target="_blank">当前后台入口</Link>
-                  <Link href="/roco-pvp-page2.html" target="_blank">推流页面 2</Link>
-                  <Link href="https://wiki.biligame.com/rocom/" target="_blank">精灵图素材来源</Link>
+                  <Link href="/roco-pvp-page3.html" target="_blank">推流页面 3</Link>
+                  <Link href="rocom.shallow.ink" target="_blank">精灵图素材来源</Link>
                   <Link href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank">CC BY-NC-SA 4.0</Link>
                 </Space>
               </Card>
@@ -4616,10 +4616,10 @@ function Dashboard() {
                 <Space direction="vertical" size={16} className="page-stack">
                       <div>
                         <Text className="eyebrow">About This Site</Text>
-                        <Title level={3}>关于这个新的后台</Title>
+                        <Title level={3}>关于这应用的说明</Title>
                       </div>
                       <Paragraph>
-                        这个后台面向洛克王国 PVP 直播场景，把赛事录入、阵容同步、比分控制、素材管理和推流页面预览统一收口到同一套 Ant Design 工作台里。
+                        这个应用面向洛克王国 PVP 直播场景，把赛事录入、阵容同步、比分控制、素材管理和推流页面预览统一收口到同一套 Ant Design 工作台里。
                       </Paragraph>
                       <Row gutter={[16, 16]}>
                         <Col xs={24} md={8}>
@@ -4667,6 +4667,13 @@ function Dashboard() {
                             <Link href="https://www.fonts.net.cn/font-38213257557.html" target="_blank">免登录下载</Link>
                             &nbsp;·&nbsp;
                             <Link href="https://www.uisdc.com/uisdc-first-free-font" target="_blank">官网下载（需登录）</Link>
+                          </Paragraph>
+                        </Space>
+                      </Card>
+                      <Card size="small" className="subtle-card" title="数据来源">
+                        <Space direction="vertical" size={8} className="page-stack">
+                          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            本应用相关数据由洛克魔法书（rocom.shallow.ink）提供，仅供娱乐参考。数据源于民间整理、用户授权接口返回或算法推断，非《洛克王国》官方数据，与官方无任何关联。游戏素材及版权归属于《洛克王国》项目组，准确信息请以官方游戏内为准。因使用数据产生的任何后果与争议，由使用者自行承担，本应用及洛克魔法书团队不承担任何责任。
                           </Paragraph>
                         </Space>
                       </Card>

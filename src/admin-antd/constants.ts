@@ -128,7 +128,7 @@ export const STAGE_OPTIONS: Array<{ value: StagePageKey; label: string; descript
   },
   {
     value: 'page10',
-    label: '推流页面10（胜者结算）',
+    label: '推流页面10',
     description: '胜者结算画面（登记本局胜负后自动切入展示，停留时长可设置）',
     previewPath: '/roco-pvp-page10.html',
   },

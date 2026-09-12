@@ -38,19 +38,16 @@ if (!hasSingleInstanceLock) {
   app.quit();
 }
 
-function resolveTrayIconPath(): string {
-  const candidates = [
-    path.join(projectRoot, 'src', 'assets', 'ui', 'start-1.png'),
-    path.join(projectRoot, 'src', 'assets', 'ui', 'start-2.png'),
-    path.join(projectRoot, 'src', 'assets', 'ui', 'start-3.png'),
-  ];
-
-  const iconPath = candidates.find((candidate) => fs.existsSync(candidate));
-  if (!iconPath) {
-    throw new Error('Tray icon asset not found.');
+function resolveAppIconPath(): string {
+  const iconPath = path.join(projectRoot, 'src', 'assets', 'ui', 'logo.png');
+  if (!fs.existsSync(iconPath)) {
+    throw new Error('App icon asset not found.');
   }
-
   return iconPath;
+}
+
+function resolveTrayIconPath(): string {
+  return resolveAppIconPath();
 }
 
 function showMainWindow(): void {
@@ -173,6 +170,7 @@ function configureWindowOpenHandler(window: BrowserWindow): void {
       frame: !isFloatPage,
       transparent: isFloatPage,
       backgroundColor: isFloatPage ? '#00000000' : '#f4efe6',
+      icon: resolveAppIconPath(),
       title: preset.title,
       resizable: !isFloatPage,
       maximizable: !isFloatPage,
@@ -276,6 +274,7 @@ async function createMainWindow(): Promise<void> {
     minWidth: 1280,
     minHeight: 800,
     backgroundColor: '#f4efe6',
+    icon: resolveAppIconPath(),
     title: '洛克王国 PVP WebUI',
     autoHideMenuBar: true,
     webPreferences: {

@@ -873,10 +873,10 @@
   },
   {
     "id": 3236,
-    "name": "超能球球",
+    "name": "星星眼",
     "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": "幻",
+    "main_type": "幻",
+    "sub_type": null,
     "implemented": true
   },
   {
@@ -1987,8 +1987,8 @@
     "id": 3542,
     "name": "未完虫",
     "leader_potential": false,
-    "main_type": "虫",
-    "sub_type": "幽",
+    "main_type": "幽",
+    "sub_type": "虫",
     "implemented": false
   },
   {
@@ -2168,14 +2168,6 @@
     "implemented": true
   },
   {
-    "id": 3574,
-    "name": "热团团",
-    "leader_potential": false,
-    "main_type": "火",
-    "sub_type": null,
-    "implemented": false
-  },
-  {
     "id": 3575,
     "name": "焰米龙",
     "leader_potential": false,
@@ -2188,7 +2180,7 @@
     "name": "圣凯布米龙",
     "leader_potential": false,
     "main_type": "火",
-    "sub_type": null,
+    "sub_type": "虫",
     "implemented": false
   },
   {
@@ -2928,51 +2920,19 @@
     "implemented": true
   },
   {
-    "id": 3761,
-    "name": "诅咒狼灵",
-    "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
-    "id": 3762,
-    "name": "新月狼灵",
-    "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
     "id": 3763,
     "name": "银月狼王",
     "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
-    "id": 3764,
-    "name": "新月鹭",
-    "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
-    "id": 3765,
-    "name": "月辉鹭",
-    "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
+    "main_type": "幽",
+    "sub_type": "幻",
     "implemented": true
   },
   {
     "id": 3766,
     "name": "月使鹭纳",
     "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
+    "main_type": "翼",
+    "sub_type": "冰",
     "implemented": true
   },
   {
@@ -2987,8 +2947,8 @@
     "id": 3768,
     "name": "智辉章脑",
     "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
+    "main_type": "光",
+    "sub_type": "水",
     "implemented": true
   },
   {
@@ -3008,18 +2968,10 @@
     "implemented": true
   },
   {
-    "id": 3771,
-    "name": "小浣蛋",
-    "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
     "id": 3772,
     "name": "黑手浣熊",
     "leader_potential": false,
-    "main_type": "萌",
+    "main_type": "恶",
     "sub_type": null,
     "implemented": true
   },
@@ -3035,15 +2987,7 @@
     "id": 3774,
     "name": "摇铃魔偶",
     "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
-    "implemented": true
-  },
-  {
-    "id": 3775,
-    "name": "布灵",
-    "leader_potential": false,
-    "main_type": "萌",
+    "main_type": "幽",
     "sub_type": null,
     "implemented": true
   },
@@ -3051,8 +2995,8 @@
     "id": 3776,
     "name": "布灵布灵",
     "leader_potential": false,
-    "main_type": "萌",
-    "sub_type": null,
+    "main_type": "幻",
+    "sub_type": "光",
     "implemented": true
   },
   {
@@ -3062,6 +3006,14 @@
     "main_type": "草",
     "sub_type": "幽",
     "implemented": true
+  },
+  {
+    "id": 3796,
+    "name": "果实立方人",
+    "leader_potential": false,
+    "main_type": "机械",
+    "sub_type": "草",
+    "implemented": false
   },
   {
     "id": 8001,

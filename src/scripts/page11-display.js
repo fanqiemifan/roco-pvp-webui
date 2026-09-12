@@ -11,8 +11,7 @@
      * - panels：左右实时阵容（对战页阵容条使用）
      */
 
-    const SPIRIT_INDEX_URL = '/resources/data/sprites.json';
-    const THUMBNAIL_RESOURCE_BASE = '/resources/Thumbnail';
+    const SPIRIT_INDEX_URL = '/api/sprites';
     const MAX_PETS = 6;
     const DEFAULT_AVATAR = '/assets/ui/left-avatar.png';
 
@@ -67,38 +66,24 @@
         return String(value ?? '').trim().replace(/[-_－—]\d+$/, '');
     }
 
-    function sanitizeFilenameSegment(value) {
-        const normalized = String(value ?? '')
-            .normalize('NFC')
-            .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
-            .replace(/\s+/g, '')
-            .replace(/\.+$/g, '')
-            .trim();
-        return normalized || '';
-    }
 
-    function toRootPath(value) {
-        const text = String(value ?? '').trim();
-        if (!text) {
-            return '';
-        }
-        return text.startsWith('/') ? text : `/${text.replace(/^\/+/, '')}`;
-    }
-
-    function basename(value) {
-        return String(value || '').split('/').filter(Boolean).pop() || '';
-    }
 
     /* ---------- 精灵索引 ---------- */
 
     function buildSpriteLookup(records) {
+        const byId = new Map();
         const byName = new Map();
         const byBaseName = new Map();
         records.forEach((record) => {
+            // 阵容槽位存 pet_id，优先按 id 匹配；名字匹配兜底兼容旧数据
+            const idKey = String(record.id || '').trim();
             const displayName = String(record.displayName || '').trim();
             const cardName = stripVariantName(displayName);
             const nameKey = normalizeText(displayName);
             const baseKey = normalizeText(cardName);
+            if (idKey && !byId.has(idKey)) {
+                byId.set(idKey, record);
+            }
             if (nameKey && !byName.has(nameKey)) {
                 byName.set(nameKey, record);
             }
@@ -106,7 +91,7 @@
                 byBaseName.set(baseKey, record);
             }
         });
-        return { byName, byBaseName };
+        return { byId, byName, byBaseName };
     }
 
     async function loadSpriteIndex() {
@@ -115,53 +100,44 @@
             throw new Error(`精灵索引加载失败: ${response.status}`);
         }
         const payload = await response.json();
-        const records = (Array.isArray(payload) ? payload : (payload.spirits || []))
-            .map((record) => ({
-                displayName: String(record.displayName || record.name || record['精灵名字2'] || record['精灵名称'] || '').trim(),
-                path: toRootPath(record.path),
-                thumbnailId: String(record.thumbnailId || record['缩略图图片ID'] || '').trim(),
-            }))
-            .filter((record) => record.displayName);
+        // /api/sprites 返回 { sprites, count }，记录已含 id / displayName / path / iconUrl
+        const records = Array.isArray(payload) ? payload : (payload.sprites || []);
         spriteLookup = buildSpriteLookup(records);
     }
 
-    function resolveSprite(spriteId) {
-        if (!spriteId || !spriteLookup) {
+    function resolveSprite(petId) {
+        if (!petId || !spriteLookup) {
             return null;
         }
-        const name = normalizeText(spriteId);
-        const base = normalizeText(stripVariantName(spriteId));
-        return spriteLookup.byName.get(name) || spriteLookup.byBaseName.get(base) || null;
+        const raw = String(petId).trim();
+        const name = normalizeText(raw);
+        const base = normalizeText(stripVariantName(raw));
+        return spriteLookup.byId.get(raw) || spriteLookup.byName.get(name) || spriteLookup.byBaseName.get(base) || null;
     }
 
     /* ---------- petsdiv3 渲染（复用推流页面1 的结构与候选图逻辑） ---------- */
 
     function buildPetSlot(slotData) {
         const slotEl = document.createElement('div');
-        const spriteId = slotData && slotData.spriteId ? String(slotData.spriteId).trim() : '';
-        if (!spriteId) {
+        const petId = slotData && slotData.pet_id ? String(slotData.pet_id).trim() : '';
+        if (!petId) {
             slotEl.className = 'petsdiv3 is-empty';
             return slotEl;
         }
 
-        const record = resolveSprite(spriteId);
+        const record = resolveSprite(petId);
         const isDead = Boolean(slotData.healthEnabled && Number(slotData.healthPercent) <= 0);
         slotEl.className = `petsdiv3 is-active${isDead ? ' is-dead' : ''}`;
 
         const imgEl = document.createElement('img');
-        imgEl.alt = record ? record.displayName : spriteId;
+        imgEl.alt = record ? record.displayName : petId;
         slotEl.appendChild(imgEl);
 
-        const candidateNames = Array.from(new Set([
-            record ? record.displayName : '',
-            record ? stripVariantName(record.displayName) : '',
-            spriteId,
-            record ? basename(record.path) : '',
-        ].map(sanitizeFilenameSegment).filter(Boolean)));
-
-        const sources = record && record.thumbnailId
-            ? candidateNames.map((name) => `${THUMBNAIL_RESOURCE_BASE}/${record.thumbnailId}_${name}.png`)
-            : [];
+        // 头像优先，失败后回退精灵立绘
+        const sources = [];
+        if (record && record.iconUrl) {
+            sources.push(record.iconUrl);
+        }
         if (record && record.path) {
             sources.push(record.path);
         }
@@ -187,14 +163,15 @@
         return slotEl;
     }
 
-    /* ---------- 面板槽位转 spriteId ---------- */
+    /* ---------- 面板槽位转阵容槽位（pet_id） ---------- */
 
     function panelToSlots(panel) {
         if (!panel || !Array.isArray(panel.selected)) {
             return [];
         }
+        // pet_id 用精灵 id，与持久化口径一致
         return panel.selected.map((slot) => ({
-            spriteId: slot.sprite ? (slot.sprite.displayName || slot.sprite.name || '') : '',
+            pet_id: slot.sprite ? String(slot.sprite.id || slot.sprite.displayName || '') : '',
             healthEnabled: Boolean(slot.healthEnabled),
             healthPercent: slot.healthPercent,
         }));
@@ -355,7 +332,7 @@
         }
         el.innerHTML = '';
         parsePetsText(petsText).forEach((name) => {
-            el.appendChild(buildPetSlot({ spriteId: name }));
+            el.appendChild(buildPetSlot({ pet_id: name }));
         });
     }
 

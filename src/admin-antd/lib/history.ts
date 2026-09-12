@@ -13,14 +13,14 @@ export function buildHistoryLineupEntries(
   const slotSource = side === 'left' ? game.leftSlots : game.rightSlots;
   const lineupSource = side === 'left' ? game.leftLineup : game.rightLineup;
   const slotEntries = slotSource
-    .filter((slot) => slot?.spriteId)
-    .map((slot) => slot.spriteId as string);
+    .filter((slot) => slot?.pet_id)
+    .map((slot) => slot.pet_id as string);
   const source = slotEntries.length ? slotEntries : lineupSource;
-  const entries: Array<{ id: string; name: string; path: string } | null> = source.slice(0, 6).map((spriteId) => {
-    const sprite = spriteMap.get(spriteId);
+  const entries: Array<{ id: string; name: string; path: string } | null> = source.slice(0, 6).map((petId) => {
+    const sprite = spriteMap.get(petId);
     return {
-      id: spriteId,
-      name: sprite?.displayName ?? spriteId,
+      id: petId,
+      name: sprite?.displayName ?? petId,
       path: sprite?.path ?? '',
     };
   });

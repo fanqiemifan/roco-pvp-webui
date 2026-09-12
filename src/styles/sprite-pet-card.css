@@ -19,7 +19,9 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background-image: url("/resources/sprites-icon/pets-background.svg");
+  /* 静态页面（page3/page5）直接 <link> 加载本文件，url 必须用服务器已挂载的静态前缀：
+     /image → src/assets/ui（本底图所在目录），勿写成 /src/...（无该路由，会 302 到登录页） */
+  background-image: url("/image/pets-background.svg");
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -36,7 +38,7 @@
   transform: translate(-50%, -50%);
 }
 
-.sprite-pet-card-sprite.is-page3-thumbnail-flipped {
+.sprite-pet-card-sprite.is-page3-icon-flipped {
   transform: translate(-50%, -50%) scaleX(-1);
 }
 

@@ -35,7 +35,7 @@ async function main(): Promise<void> {
 
   const localServer = await createLocalServer(paths, port, host, authConfig);
   console.log(
-    `Roco PVP WebUI server started at http://${host}:${localServer.port}` +
+    `洛克王国世界阵容同步推流 server started at http://${host}:${localServer.port}` +
     ` (认证已启用${defaultPass ? '，默认密码: admin123' : ''})`,
   );
 

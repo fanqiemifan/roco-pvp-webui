@@ -346,7 +346,6 @@ export async function createLocalServer(
   app.use('/runtime', express.static(paths.cacheDir));
 
   app.use('/img', express.static(paths.spritesDir));
-  app.use('/img-2', express.static(paths.spritesAltDir));
   app.use('/json', express.static(paths.dataDir));
   app.use('/image', express.static(path.join(paths.assetsDir, 'ui')));
   app.use('/font', express.static(path.join(paths.assetsDir, 'fonts')));
@@ -416,7 +415,7 @@ export async function createLocalServer(
     app.use((req, res, next) => {
       const publicStaticPrefixes = [
         '/scripts', '/styles', '/assets', '/resources', '/runtime',
-        '/img-2', '/img', '/image', '/json', '/font', '/cache',
+        '/img', '/image', '/json', '/font', '/cache',
       ];
       const isPublicStatic = publicStaticPrefixes.some(p =>
         req.path === p || req.path.startsWith(p + '/')

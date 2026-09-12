@@ -1,6 +1,4 @@
 import fs from 'node:fs';
-import path from 'node:path';
-
 import type { Page4PanelState, Page4SlotState, Page4State, SpriteRecord } from '../../shared/types.js';
 import type { AppPaths } from './path-service.js';
 import { ensureRuntimeDirs } from './image-service.js';
@@ -10,7 +8,12 @@ const MAX_PAGE4_SLOTS = 6;
 
 interface Page4StoredSlot {
   slot: number;
-  spriteId: string | null;
+  /** 精灵 id（pet_id），持久化主键 */
+  pet_id: string | null;
+  /** 精灵名称快照（冗余，便于人工核对持久化数据；以 pet_id 为准） */
+  name: string;
+  /** 精灵形态快照（pets.json 原始 form，如 春天的样子，空 = 无特殊形态；以 pet_id 为准） */
+  form: string;
   isDead: boolean;
 }
 
@@ -26,7 +29,9 @@ interface Page4StoreFile {
 function defaultStoredSlot(index: number): Page4StoredSlot {
   return {
     slot: index,
-    spriteId: null,
+    pet_id: null,
+    name: '',
+    form: '',
     isDead: false,
   };
 }
@@ -44,21 +49,6 @@ function defaultStoreFile(): Page4StoreFile {
   };
 }
 
-function normalizeStoredSpriteId(value: unknown, lookup?: Map<string, SpriteRecord>): string | null {
-  if (typeof value !== 'string' || !value.trim()) {
-    return null;
-  }
-
-  const rawValue = value.trim();
-  if (!lookup) {
-    return rawValue;
-  }
-
-  const sprite = lookup.get(rawValue) ?? lookup.get(path.basename(rawValue));
-  const displayName = typeof sprite?.displayName === 'string' ? sprite.displayName.trim() : '';
-  return displayName || rawValue;
-}
-
 function normalizeStoredSlot(item: unknown, index: number, lookup?: Map<string, SpriteRecord>): Page4StoredSlot {
   const slot = defaultStoredSlot(index);
   if (!item || typeof item !== 'object') {
@@ -67,25 +57,27 @@ function normalizeStoredSlot(item: unknown, index: number, lookup?: Map<string, 
 
   const raw = item as Record<string, unknown>;
   const rawSprite = raw.sprite;
-  const spriteId =
-    typeof raw.spriteId === 'string'
-      ? raw.spriteId
+  const petId =
+    typeof raw.pet_id === 'string'
+      ? raw.pet_id
       : rawSprite && typeof rawSprite === 'object' && typeof (rawSprite as Record<string, unknown>).id === 'string'
         ? (rawSprite as Record<string, unknown>).id
         : rawSprite;
 
   slot.isDead = typeof raw.isDead === 'boolean' ? raw.isDead : Boolean(raw.dead);
 
-  if (spriteId !== null && spriteId !== undefined) {
-    if (typeof spriteId !== 'string') {
+  if (petId !== null && petId !== undefined) {
+    if (typeof petId !== 'string') {
       throw new Error('sprite id must be a string or null');
     }
-    const normalizedName = path.basename(spriteId);
-    const sprite = lookup?.get(normalizedName);
+    const sprite = lookup?.get(petId.trim());
     if (!sprite) {
-      throw new Error(`Sprite not found: ${normalizedName}`);
+      throw new Error(`Sprite not found: ${petId}`);
     }
-    slot.spriteId = sprite.displayName?.trim() || normalizedName;
+    slot.pet_id = petId.trim();
+    // name/form 冗余快照：以索引为准刷新（form 为 pets.json 原始形态，如 春天的样子）
+    slot.name = sprite.displayName?.trim() || '';
+    slot.form = sprite.petForm?.trim() || '';
   }
 
   return slot;
@@ -135,7 +127,7 @@ function writeStoreFile(paths: AppPaths, store: Page4StoreFile): { store: Page4S
 function hydrateSlot(slot: Page4StoredSlot, lookup: Map<string, SpriteRecord>): Page4SlotState {
   return {
     slot: slot.slot,
-    sprite: slot.spriteId ? (lookup.get(slot.spriteId) ?? lookup.get(path.basename(slot.spriteId)) ?? null) : null,
+    sprite: slot.pet_id ? (lookup.get(slot.pet_id) ?? null) : null,
     isDead: Boolean(slot.isDead),
   };
 }
@@ -143,7 +135,9 @@ function hydrateSlot(slot: Page4StoredSlot, lookup: Map<string, SpriteRecord>): 
 function hydratePanel(position: 'left' | 'right', panel: Page4StoredPanel, lookup: Map<string, SpriteRecord>, mtime: number | null): Page4PanelState {
   const selected = panel.selected.slice(0, MAX_PAGE4_SLOTS).map((slot, index) => hydrateSlot({
     slot: index,
-    spriteId: slot.spriteId,
+    pet_id: slot.pet_id,
+    name: slot.name,
+    form: slot.form,
     isDead: slot.isDead,
   }, lookup));
 

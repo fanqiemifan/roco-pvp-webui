@@ -13,6 +13,14 @@ const DEFAULT_FLOAT_SHAPE = { x: 0, y: 0, width: FLOAT_WINDOW_WIDTH, height: FLO
 const FLOAT_MENU_WIDTH = 240;
 const FLOAT_MENU_HEIGHT = 240;
 
+const directRoot = path.resolve(__dirname, '..');
+const fallbackRoot = path.resolve(__dirname, '..', '..');
+const projectRoot = fs.existsSync(path.join(directRoot, 'src', 'pages')) ? directRoot : fallbackRoot;
+
+function resolveFloatIconPath(): string {
+  return path.join(projectRoot, 'src', 'assets', 'ui', 'logo.png');
+}
+
 let floatWindow: BrowserWindow | null = null;
 let floatMenuWindow: BrowserWindow | null = null;
 let floatShapeSet = false;
@@ -84,6 +92,7 @@ function createFloatWindow(getPort: () => number): BrowserWindow {
     fullscreenable: false,
     skipTaskbar: true,
     hasShadow: false,
+    icon: resolveFloatIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -238,6 +247,7 @@ function openFloatMenuWindow(
     fullscreenable: false,
     skipTaskbar: true,
     hasShadow: false,
+    icon: resolveFloatIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

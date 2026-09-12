@@ -252,7 +252,7 @@ body[data-page2-lineup-display-mode="avatar-only"] .spirit-slot::before {
     transform: translate(-50%, -50%);
 }
 
-.pestdiv2.pestdiv2-has-thumbnail .pestdiv2-circle {
+.pestdiv2.pestdiv2-has-icon .pestdiv2-circle {
     display: block;
 }
 
@@ -264,6 +264,8 @@ body[data-page2-lineup-display-mode="avatar-only"] .spirit-slot::before {
     height: 100%;
     object-fit: contain;
     transform: translate(-50%, -50%);
+    /* 阵亡变灰渐变（.spirit-slot.is-done） */
+    transition: filter 240ms ease-out;
 }
 
 body[data-page2-lineup-display-mode="avatar-only"] .pestdiv2 {
@@ -288,6 +290,7 @@ body[data-page2-lineup-display-mode="avatar-only"] .pestdiv2 {
     white-space: nowrap;
     text-overflow: ellipsis;
     color: #fff;
+    transition: color 240ms ease-out;
 }
 
 .spirit-slot.is-done .spirit-name {
@@ -349,6 +352,7 @@ body[data-page2-lineup-display-mode="avatar-only"] .pestdiv2 {
     white-space: nowrap;
     color: #fff;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: color 240ms ease-out;
 }
 
 .spirit-slot.is-done .stat-label {

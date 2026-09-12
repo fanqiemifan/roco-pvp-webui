@@ -87,6 +87,8 @@ body {
     height: calc(98px * var(--petsdiv3-scale));
     overflow: visible;
     flex: none;
+    /* 阵亡变黑渐变：filter 作用在常驻的槽位上，立绘更换时也不会生硬跳变 */
+    transition: filter 240ms ease-out;
 }
 
 .lineup .petsdiv3 {
@@ -127,16 +129,24 @@ body {
     filter: grayscale(1) brightness(0.72);
 }
 
-.petsdiv3.is-dead::after {
+/* 阵亡斜杠：常驻伪元素，靠 opacity/transform 过渡，阵亡与复活两个方向都是渐变 */
+.petsdiv3::after {
     content: "";
     position: absolute;
     left: 50%;
     top: 50%;
     width: calc(70px * var(--petsdiv3-scale));
     height: calc(4px * var(--petsdiv3-scale));
-    transform: translate(-50%, -50%) rotate(-28deg);
+    transform: translate(-50%, -50%) rotate(-28deg) scale(0.6);
     border-radius: 999px;
     background: rgba(214, 73, 60, 0.92);
     box-shadow: 0 0 0 1px rgba(120, 18, 18, 0.16);
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 240ms ease-out, transform 240ms ease-out;
+}
+
+.petsdiv3.is-dead::after {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-28deg) scale(1);
 }

@@ -9,7 +9,8 @@ export interface AppPaths {
   assetsDir: string;
   resourcesDir: string;
   spritesDir: string;
-  spritesAltDir: string;
+  /** 精灵头像图标目录（resources/sprites-icon，命名 {pet_id}_{name}.png） */
+  spritesIconDir: string;
   dataDir: string;
   runtimeDir: string;
   cacheDir: string;
@@ -52,7 +53,7 @@ export function createAppPaths(projectRoot: string, userDataDir: string): AppPat
     assetsDir: path.join(projectRoot, 'src', 'assets'),
     resourcesDir: path.join(projectRoot, 'resources'),
     spritesDir: path.join(projectRoot, 'resources', 'sprites-img'),
-    spritesAltDir: path.join(projectRoot, 'resources', 'sprites-alt'),
+    spritesIconDir: path.join(projectRoot, 'resources', 'sprites-icon'),
     dataDir: path.join(projectRoot, 'resources', 'data'),
     runtimeDir,
     cacheDir,

@@ -71,7 +71,9 @@ body {
     height: 108px;
     opacity: 0;
     transform: scale(0.96);
-    transition: opacity 180ms ease, transform 180ms ease;
+    /* filter 放在常驻的槽位上：卡片 DOM 每次数据变化都会重建，
+       挂在 .sprite-pet-card 上的渐变不会触发 */
+    transition: opacity 180ms ease, transform 180ms ease, filter 240ms ease-out;
     pointer-events: none;
 }
 
@@ -186,16 +188,13 @@ body {
 .page3-spirit-slot[data-side="right"][data-slot="4"] { left: 1756px; top: 660px; }
 .page3-spirit-slot[data-side="right"][data-slot="5"] { left: 1718px; top: 776px; }
 
-.page3-spirit-slot .sprite-pet-card {
-    transition: filter 180ms ease, opacity 180ms ease;
-}
-
-.page3-spirit-slot.is-done .sprite-pet-card {
+.page3-spirit-slot.is-done {
     filter: saturate(0.1) grayscale(0.2);
 }
 
+/* 阵亡（HP=0）降低透明度 */
 .page3-spirit-slot.is-done .sprite-pet-card-sprite {
-    opacity: 0.52;
+    opacity: 0.90;
 }
 
 .page3-scoreboard {
