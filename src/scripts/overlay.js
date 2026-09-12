@@ -107,12 +107,13 @@
         }
 
         const isDead = isSlotDead(slotData);
+        // 阵亡状态只切换 className（CSS 负责 240ms 渐变），不进图片签名，
+        // 否则每次阵亡都会重建 <img> 导致立绘重新加载、渐变被打断。
         const signature = JSON.stringify({
             id: sprite.id || sprite.path || getSpriteDisplayName(sprite),
             name: getSpriteDisplayName(sprite),
             path: sprite.path || '',
             iconUrl: sprite.iconUrl || '',
-            isDead,
         });
 
         slotEl.className = `petsdiv3 is-active${isDead ? ' is-dead' : ''}`;
